@@ -1,6 +1,8 @@
 import os
 from datetime import timedelta
 
+SECRET_KEY = '3^a%5=f#(3eyozrxer7)$mz#pk158#9+pm3#j#++p99_if9ee('
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 DEBUG = True
