@@ -1,0 +1,5 @@
+/venv/Lib/site-packages/
+.idea
+/config/migrations/
+/main/migrations/
+/users/migrations/
