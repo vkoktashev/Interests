@@ -1,8 +1,7 @@
-/venv/Lib/site-packages/
-.idea
+/.idea/
 /config/migrations/
 /main/migrations/
 /users/migrations/
-venv
-/__pycache__
-/.vscode
+/venv/
+/__pycache__/
+/.vscode/
