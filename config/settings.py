@@ -18,7 +18,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'MapData',
+    'main',
     'debug_toolbar',
 ]
 
@@ -36,7 +36,7 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
-    'DEFAULT_AUTHENTICATION_CLASSES' : ('rest_framework_simplejwt.authentication.JWTAuthentication',) 
+    'DEFAULT_AUTHENTICATION_CLASSES': ('rest_framework_simplejwt.authentication.JWTAuthentication',)
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -52,7 +52,7 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
-ROOT_URLCONF = 'interests.urls'
+ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
     {
@@ -70,7 +70,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'interests.wsgi.application'
+WSGI_APPLICATION = 'config.wsgi.application'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
@@ -78,9 +78,8 @@ MEDIA_URL = '/media/'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'interestsDB',                      
+        'NAME': 'interestsDB',
         'USER': 'postgres',
-        #'PASSWORD': '48915623#',
         'PASSWORD': '8080',
         'HOST': 'localhost',
         'PORT': '5432',
@@ -118,4 +117,3 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-
