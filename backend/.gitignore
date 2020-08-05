@@ -4,3 +4,5 @@
 /main/migrations/
 /users/migrations/
 venv
+/__pycache__
+/.vscode
