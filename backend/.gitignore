@@ -3,3 +3,4 @@
 /config/migrations/
 /main/migrations/
 /users/migrations/
+venv
