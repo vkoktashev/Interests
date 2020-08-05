@@ -1,8 +1,0 @@
-Django
-django-cors-headers
-djangorestframework
-djangorestframework_simplejwt
-django-debug-toolbar
-Pillow
-psycopg2
-Fabric3
