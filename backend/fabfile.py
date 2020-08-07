@@ -2,7 +2,7 @@ from fabric.api import local
 
 
 def run(port=8000):
-    local("python manage.py runserver 0.0.0.0:{}".format(port))
+    local(f"python manage.py runserver 0.0.0.0:{port}")
 
 
 def start():
@@ -32,7 +32,7 @@ def createsuperuser():
 
 
 def createapp(name):
-    local("python manage.py startapp {}".format(name))
+    local(f"python manage.py startapp {name}")
 
 
 def test():
