@@ -4,7 +4,7 @@ from users.models import User
 
 
 class EmailOrUsernameModelBackend(ModelBackend):
-    def authenticate(self, username=None, password=None, **kwargs):
+    def authenticate(self, request, username=None, password=None, **kwargs):
         if '@' in username:
             kwargs = {'email': username}
         else:

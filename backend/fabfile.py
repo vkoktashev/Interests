@@ -5,6 +5,14 @@ def run(port=8000):
     local("python manage.py runserver 0.0.0.0:{}".format(port))
 
 
+def start():
+    local("cd ../frontend && npm start")
+
+
+def install():
+    local("cd ../frontend && npm install")
+
+
 def update():
     local("python -m pip install -U pip")
     local("pip install --upgrade -r requirements.txt")
