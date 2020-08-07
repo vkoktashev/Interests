@@ -1,26 +1,37 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, {useEffect} from "react";
+import { BrowserRouter as Router } from "react-router-dom";
+import { connect } from 'react-redux'; 
+import Routes from "./Routes";
+import * as actions from "./store/actions";
+import 'react-toastify/dist/ReactToastify.css';
 
-function App() {
+function App({onLoad}) {
+
+  useEffect(
+    () => {
+        onLoad();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div className="flyout">
+        <main>
+          <Routes />
+        </main>
+      </div>
+    </Router>
   );
 }
 
-export default App;
+const mapDispatchToProps = (dispatch) => {
+	return {
+    onLoad: () => {
+      dispatch(actions.checkAuthorization());
+		},
+	}
+};
+
+export default connect(null, mapDispatchToProps)(App);
