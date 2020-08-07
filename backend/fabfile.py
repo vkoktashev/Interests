@@ -25,3 +25,7 @@ def createsuperuser():
 
 def createapp(name):
     local("python manage.py startapp {}".format(name))
+
+
+def test():
+    local("python manage.py test")
