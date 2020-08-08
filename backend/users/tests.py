@@ -108,10 +108,10 @@ class AuthTests(TestCase):
         uid64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = account_activation_token.make_token(user)
 
-        activation_link = f"{url}/{uid64}/random_string/"
+        activation_link = f"{url}?uid64={uid64}&token=random_string"
         response = c.get(activation_link)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        activation_link = f"{url}/{uid64}/{token}/"
+        activation_link = f"{url}?uid64={uid64}&token={token}"
         response = c.get(activation_link)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
