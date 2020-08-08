@@ -110,6 +110,12 @@ AUTH_USER_MODEL = 'users.User'
 
 AUTHENTICATION_BACKENDS = ['users.backends.EmailOrUsernameModelBackend']
 
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.mail.ru'
+EMAIL_HOST_USER = 'your_interests@mail.ru'
+EMAIL_HOST_PASSWORD = 'uApP)iyuHK22'
+EMAIL_PORT = 465
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7)
