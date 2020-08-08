@@ -32,8 +32,6 @@ class UserView(APIView):
 
 
 class EmailView(APIView):
-    permission_classes = [AllowAny]
-
     def get(self, request, uid64, token):
         try:
             uid = force_text(urlsafe_base64_decode(uid64))

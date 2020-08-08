@@ -6,3 +6,5 @@ django-debug-toolbar
 Pillow
 psycopg2
 Fabric3
+howlongtobeatpy
+rawgpy

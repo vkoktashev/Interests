@@ -22,7 +22,8 @@ INSTALLED_APPS = [
     'debug_toolbar',
 
     # our apps
-    'users.apps.UsersConfig',
+    'users',
+    'games'
 ]
 
 MIDDLEWARE = [
