@@ -1,6 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from rest_framework import status
+
+from users.tokens import account_activation_token
 
 
 class UsersManagersTests(TestCase):
@@ -91,4 +95,23 @@ class AuthTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_email_confirmation(self):
-        pass
+        c = Client()
+
+        User = get_user_model()
+        email = 'kononkov98@mail.ru'
+        password = 'smith'
+        username = 'john'
+        user = User.objects.create_user(username=username, email=email, password=password)
+        self.assertEqual(user.is_active, False)
+
+        url = '/users/auth/confirm-email'
+        uid64 = urlsafe_base64_encode(force_bytes(user.pk))
+        token = account_activation_token.make_token(user)
+
+        activation_link = f"{url}/{uid64}/random_string/"
+        response = c.get(activation_link)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        activation_link = f"{url}/{uid64}/{token}/"
+        response = c.get(activation_link)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

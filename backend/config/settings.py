@@ -110,7 +110,7 @@ AUTH_USER_MODEL = 'users.User'
 
 AUTHENTICATION_BACKENDS = ['users.backends.EmailOrUsernameModelBackend']
 
-EMAIL_USE_TLS = True
+EMAIL_USE_SSL = True
 EMAIL_HOST = 'smtp.mail.ru'
 EMAIL_HOST_USER = 'your_interests@mail.ru'
 EMAIL_HOST_PASSWORD = 'uApP)iyuHK22'
