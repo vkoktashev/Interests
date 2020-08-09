@@ -1,11 +1,11 @@
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from games.models import Game
 from .managers import UserManager
 
 
@@ -28,7 +28,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
-    games = models.ManyToManyField(Game)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
@@ -37,3 +36,16 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
+
+
+class UserScore(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    score = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)])
+    review = models.CharField(max_length=300)
+
+    def new_score(self, score, review):
+        self.score = score
+        self.review = review
+
+    class Meta:
+        abstract = True
