@@ -19,9 +19,8 @@ def search(request):
 
 
 @api_view(['GET'])
-def get_game(request):
+def get_game(request, slug):
     rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
-    slug = request.GET.get('name', '')
     try:
         game = rawg.get_game(slug)
     except KeyError:
@@ -33,6 +32,13 @@ def get_game(request):
         best_element = max(results_list, key=lambda element: element.similarity)
         hltb = {'id': best_element.game_id, 'name': best_element.game_name,
                 'gameplay_main': best_element.gameplay_main,
+                'gameplay_main_unit': best_element.gameplay_main_unit,
+                'gameplay_main_label': best_element.gameplay_main_label,
                 'gameplay_main_extra': best_element.gameplay_main_extra,
-                'gameplay_completionist': best_element.gameplay_completionist}
+                'gameplay_main_extra_unit': best_element.gameplay_main_extra_unit,
+                'gameplay_main_extra_label': best_element.gameplay_main_extra_label,
+                'gameplay_completionist': best_element.gameplay_completionist,
+                'gameplay_completionist_unit': best_element.gameplay_completionist_unit,
+                'gameplay_completionist_label': best_element.gameplay_completionist_label,
+                'similarity': best_element.similarity}
     return Response({'rawg': game.json, 'hltb': hltb})
