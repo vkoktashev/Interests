@@ -118,7 +118,7 @@ EMAIL_HOST_PASSWORD = 'uApP)iyuHK22'
 EMAIL_PORT = 465
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7)
 }
 
