@@ -1,5 +1,7 @@
 import rawgpy
 from django.core.exceptions import ValidationError
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -7,7 +9,12 @@ from rest_framework.response import Response
 
 from games.models import Game, UserGameScore
 
+query_param = openapi.Parameter('query', openapi.IN_QUERY, description="Поисковый запрос", type=openapi.TYPE_STRING)
+page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
+                               type=openapi.TYPE_INTEGER, default=1)
 
+
+@swagger_auto_schema(method='GET', manual_parameters=[query_param, page_param])
 @api_view(['GET'])
 def search(request):
     rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
@@ -47,11 +54,22 @@ def get_game(request, slug):
     return Response({'rawg': game.json, 'hltb': hltb})
 
 
+@swagger_auto_schema(method='POST', request_body=openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'rawg_id': openapi.Schema(type=openapi.TYPE_INTEGER),
+        'score': openapi.Schema(type=openapi.TYPE_INTEGER, description="Оценка", minimum=0, maximum=10),
+    }
+))
 @api_view(['POST'])
 def set_score(request):
     user = request.user
-    rawg_id = request.data['rawg_id']
-    score = request.data['score']
+    try:
+        rawg_id = request.data['rawg_id']
+        score = request.data['score']
+    except KeyError as e:
+        return Response(f'Something wrong with parameters. Did you forget \'{e.args[0]}\' parameter?',
+                        status=status.HTTP_400_BAD_REQUEST)
 
     try:
         game = Game.objects.get(rawg_id=rawg_id)
@@ -60,7 +78,7 @@ def set_score(request):
         try:
             rawg_game = rawg.get_game(rawg_id)
         except KeyError:
-            return Response('Wrong slug', status=status.HTTP_400_BAD_REQUEST)
+            return Response('Wrong rawg_id', status=status.HTTP_400_BAD_REQUEST)
 
         results_list = HowLongToBeat().search(rawg_game.name)
         hltb_game = None
@@ -89,4 +107,7 @@ def set_score(request):
 
 @api_view(['POST'])
 def set_review(request):
+    """
+    В разработке
+    """
     pass

@@ -1,6 +1,8 @@
 from django.core.mail import EmailMessage
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import AllowAny
@@ -12,6 +14,14 @@ from .models import User
 from .tokens import account_activation_token
 
 
+@swagger_auto_schema(method='POST', request_body=openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'username': openapi.Schema(type=openapi.TYPE_STRING),
+        'email': openapi.Schema(type=openapi.TYPE_INTEGER),
+        'password': openapi.Schema(type=openapi.TYPE_INTEGER),
+    }
+))
 @api_view(['POST'])
 @permission_classes([AllowAny, ])
 def signup(request):
@@ -30,15 +40,24 @@ def signup(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+uid64_param = openapi.Parameter('uid64', openapi.IN_QUERY, description="Зашифрованный первичный ключ пользователя",
+                                type=openapi.TYPE_STRING)
+token_param = openapi.Parameter('token', openapi.IN_QUERY, description="Специальный токен для подтверждения",
+                                type=openapi.TYPE_STRING)
+
+
+@swagger_auto_schema(method='GET', manual_parameters=[uid64_param, token_param])
 @api_view(['GET'])
 def confirmation(request):
     uid64 = request.GET.get('uid64', '')
     token = request.GET.get('token', '')
+
     try:
         uid = force_text(urlsafe_base64_decode(uid64))
         user = User.objects.get(pk=uid)
     except(TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
+
     if user is not None and account_activation_token.check_token(user, token):
         user.is_active = True
         user.save()
