@@ -34,7 +34,6 @@ def get_game(request, slug):
         game = rawg.get_game(slug)
     except KeyError:
         return Response('Wrong slug', status=status.HTTP_400_BAD_REQUEST)
-    print(game.json)
     results_list = HowLongToBeat().search(game.name)
     hltb = None
     if results_list is not None and len(results_list) > 0:
