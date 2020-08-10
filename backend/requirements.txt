@@ -6,6 +6,7 @@ django-debug-toolbar
 Pillow
 psycopg2
 Fabric3
+wheel
+git+https://gitlab.com/Kononkov1998/rawg-python-wrapper#egg=rawg-python-wrapper #modified rawgpy
 howlongtobeatpy
-rawgpy
 drf-yasg
