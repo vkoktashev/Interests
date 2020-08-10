@@ -18,8 +18,8 @@ from .tokens import account_activation_token
     type=openapi.TYPE_OBJECT,
     properties={
         'username': openapi.Schema(type=openapi.TYPE_STRING),
-        'email': openapi.Schema(type=openapi.TYPE_INTEGER),
-        'password': openapi.Schema(type=openapi.TYPE_INTEGER),
+        'email': openapi.Schema(type=openapi.TYPE_STRING),
+        'password': openapi.Schema(type=openapi.TYPE_STRING),
     }
 ))
 @api_view(['POST'])
