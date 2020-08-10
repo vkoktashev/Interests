@@ -37,3 +37,7 @@ def createapp(name):
 
 def test():
     local("python manage.py test")
+
+
+def ngrok(port=8000):
+    local(f"ngrok.exe http {port} -region eu")
