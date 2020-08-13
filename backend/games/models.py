@@ -13,14 +13,16 @@ class Game(models.Model):
     hltb_id = models.IntegerField(null=True)
 
 
-# GAME_STATUS_CHOICES = (
-#     ()
-# )
-
 class UserGame(UserScore):
-    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    GAME_STATUS_CHOICES = (
+        ('playing', 'Playing'),
+        ('completed', 'Completed'),
+        ('stopped', 'Stopped playing'),
+        ('going', 'Going to play')
+    )
 
-    # status = models.CharField()
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    status = models.CharField(max_length=30, choices=GAME_STATUS_CHOICES)
 
     class Meta:
         unique_together = (("user", "game"),)
