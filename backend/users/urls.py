@@ -9,5 +9,5 @@ urlpatterns = [
     path('auth/refresh-token', TokenRefreshView.as_view()),
     # path('auth/password/change'),
     # path('auth/password/restore'),
-    path('auth/confirm-email', confirmation),
+    path('auth/confirm-email/<str:uid64>/<str:token>', confirmation),
 ]

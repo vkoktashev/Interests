@@ -32,7 +32,7 @@ def signup(request):
         confirmation_url = 'http://127.0.0.1:8000/users/auth/confirm-email'  # get_current_site(request)
         uid64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = account_activation_token.make_token(user)
-        activation_link = f"{confirmation_url}/{uid64}/{token}/"
+        activation_link = f"{confirmation_url}/{uid64}/{token}"
         message = f"Hello {user.username},\n {activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
         email.send()
@@ -48,10 +48,7 @@ token_param = openapi.Parameter('token', openapi.IN_QUERY, description="Спец
 
 @swagger_auto_schema(method='GET', manual_parameters=[uid64_param, token_param])
 @api_view(['GET'])
-def confirmation(request):
-    uid64 = request.GET.get('uid64', '')
-    token = request.GET.get('token', '')
-
+def confirmation(request, uid64, token):
     try:
         uid = force_text(urlsafe_base64_decode(uid64))
         user = User.objects.get(pk=uid)
