@@ -10,7 +10,7 @@ class Game(models.Model):
     rawg_id = models.IntegerField(unique=True)
     # howlongtobeat
     hltb_name = models.CharField(max_length=200, blank=True)
-    hltb_id = models.IntegerField(null=True, default=None)
+    hltb_id = models.IntegerField(null=True, blank=True)
 
 
 class UserGame(UserScore):
