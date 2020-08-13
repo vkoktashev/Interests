@@ -2,9 +2,10 @@ import * as types from './actionTypes';
 
 // Создаем reducer с начальным состоянием.
 const initialState = {
-    auth: { loggedIn: false, token: null, tokenTime: null, error: false },
-    user: { name:"", surname:"", email:"" },
-    openedPages: { LoginForm: false },
+    auth: { loggedIn: false, token: null, tokenTime: null },
+    user: { login:"", email:"" },
+    openedPages: { LoginForm: false, RegistrateForm: false },
+    errors: {auth: false, registrate: false}
 };
 
 export default function reducer(state = initialState, action) {
@@ -22,14 +23,23 @@ export default function reducer(state = initialState, action) {
     case types.AUTH_ERROR:
         return{
             ...state,
-            auth:  {...state.auth, error: action.error}
+            errors:  {...state.auth, auth: action.error}
+        }
+    case types.REGISTRATE_ERROR:
+        return{
+            ...state,
+            errors:  {...state.auth, registrate: action.error}
         }
     case types.SET_LOGINFORM:
         return{
             ...state,
             openedPages:  {...state.openedPages, LoginForm: action.isOpen}
         }
-    
+    case types.SET_REGISTRATEFORM:
+        return{
+            ...state,
+            openedPages:  {...state.openedPages, RegistrateForm: action.isOpen}
+        }
     default:
       return state;
   }
@@ -54,7 +64,11 @@ export function getAuth(state) {
 }
 
 export function getAuthError(state) {
-    return state.auth.error;
+    return state.errors.auth;
+}
+
+export function getRegistrateError(state) {
+    return state.errors.registrate;
 }
 
 export function getUser(state) {
@@ -63,4 +77,8 @@ export function getUser(state) {
 
 export function getLoginForm(state) {
     return state.openedPages.LoginForm;
+}
+
+export function getRegistrateForm(state) {
+    return state.openedPages.RegistrateForm;
 }

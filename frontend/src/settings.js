@@ -3,6 +3,8 @@ export const TOKEN_LIFETIME = 450000;
 /**Адрес сервера*/
 export const BACKEND_URL = "http://127.0.0.1:8000/";
 /**Адрес получения токена */
-export const GET_TOKEN_URL = BACKEND_URL + "api/token/get/"; 
+export const GET_TOKEN_URL = BACKEND_URL + "users/auth/login"; 
 /**Адрес обновления токена */
-export const REFRESH_TOKEN_URL = BACKEND_URL + "api/token/refresh/";
+export const REFRESH_TOKEN_URL = BACKEND_URL + "users/auth/refresh-token";
+/**Адрес регистрации */
+export const REGISTRATE_URL = BACKEND_URL + "users/auth/signup";

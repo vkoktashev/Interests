@@ -1,6 +1,6 @@
 import * as actionTypes from './actionTypes';
 import * as selectors from './reducers';
-import {getToken, updateToken} from "../services/jwtAuth";
+import {getToken, updateToken, registration} from "../services/jwtAuth";
 import {TOKEN_LIFETIME} from "../settings";
 import * as Requests from "../services/requests";
 import { toast } from "react-toastify";
@@ -78,7 +78,27 @@ export function resetAuthorization(){
         });
         dispatch({
             type: actionTypes.SET_USER,
-            user: null, 
+            user: { login:"", email:"" }, 
+        });
+    }
+}
+
+export function registrationRequest(username, email, password){
+    return async(dispatch) => {
+        registration(username, email, password).then((result) => {
+            console.log(result);
+            if (result != null){
+                dispatch({
+                    type: actionTypes.SET_USER,
+                    user: { login: result.username, email: result.email }, 
+                });
+            }
+            else{
+                dispatch({
+                    type: actionTypes.REGISTRATE_ERROR,
+                    error: true 
+                });
+            }
         });
     }
 }
@@ -93,6 +113,14 @@ export function openLoginForm() {
 
 export function closeLoginForm() {
     return({ type: actionTypes.SET_LOGINFORM, isOpen: false  });
+}
+
+export function openRegistrateForm() {
+    return({ type: actionTypes.SET_REGISTRATEFORM, isOpen: true  });
+}
+
+export function closeRegistrateForm() {
+    return({ type: actionTypes.SET_REGISTRATEFORM, isOpen: false  });
 }
     
 function httpGet(theUrl)

@@ -1,22 +1,35 @@
 import React from "react";
 import {
 	MDBIcon,
-	MDBNavLink
+    MDBNavLink,
+    MDBNavItem
 } from "mdbreact";
 
-function AccountButton( {loggedIn, onLoginClick, onLogoutClick} ) {
+function AccountButton( {loggedIn, onLoginClick, onLogoutClick, onRegistrationClick} ) {
     
     if (loggedIn)
         return (
-        <MDBNavLink to="#" onClick={ onLogoutClick }>
-            <MDBIcon icon="sign-in-alt"/> Выйти
-        </MDBNavLink>
+        <MDBNavItem className="font-weight-bold">
+            <MDBNavLink to="#" onClick={ onLogoutClick }>
+                <MDBIcon icon="sign-out-alt" /> Выйти
+            </MDBNavLink>
+        </MDBNavItem>
         );
     else
         return(
-            <MDBNavLink to="#" onClick={onLoginClick} >
-                <MDBIcon icon="sign-in-alt" /> Войти
-            </MDBNavLink>
+            <div>
+                <MDBNavItem className="font-weight-bold">
+                    <MDBNavLink to="#" onClick={onLoginClick} >
+                        <MDBIcon icon="sign-in-alt" /> Войти
+                    </MDBNavLink>
+                </MDBNavItem>
+                <MDBNavItem className="font-weight-bold">
+                    <MDBNavLink to="#" onClick={onRegistrationClick} >
+                        <MDBIcon icon="sign-in-alt" /> Регистрация
+                    </MDBNavLink>
+                </MDBNavItem>
+            </div>
+            
         );
 }
 

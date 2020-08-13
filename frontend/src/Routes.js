@@ -4,6 +4,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import HomePage from "./components/HomePage";
+import GamePage from "./components/GamePage";
 
 class Routes extends React.Component {
   render() {
@@ -11,6 +12,7 @@ class Routes extends React.Component {
       <div>
         <Switch>
           <Route exact path="/" component={HomePage} />
+          <Route exact path="/game" component={GamePage} />
         <Route
           render={function () {
             return <h1>Not Found</h1>;
