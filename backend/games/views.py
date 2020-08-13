@@ -1,5 +1,6 @@
 import rawgpy
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
@@ -53,6 +54,52 @@ def get_game(request, slug):
     return Response({'rawg': game.json, 'hltb': hltb})
 
 
+@swagger_auto_schema(method='PUT', request_body=openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'status': openapi.Schema(type=openapi.TYPE_STRING),
+    },
+))
+@api_view(['PUT'])
+def set_status(request, slug):
+    user = request.user
+    game_status = request.POST['status']
+
+    if game_status not in dict(UserGame.GAME_STATUS_CHOICES):
+        return Response('Wrong status', status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        game = Game.objects.get(rawg_slug=slug)
+    except Game.DoesNotExist:
+        rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
+        try:
+            rawg_game = rawg.get_game(slug)
+        except KeyError:
+            return Response('Wrong slug', status=status.HTTP_400_BAD_REQUEST)
+
+        results_list = HowLongToBeat().search(rawg_game.name)
+        hltb_game = None
+        if results_list is not None and len(results_list) > 0:
+            hltb_game = max(results_list, key=lambda element: element.similarity)
+        try:
+            if hltb_game is not None:
+                game = Game.objects.create(rawg_name=rawg_game.name, rawg_id=rawg_game.id, rawg_slug=rawg_game.slug,
+                                           hltb_name=hltb_game.game_name, hltb_id=hltb_game.game_id)
+            else:
+                game = Game.objects.create(rawg_name=rawg_game.name, rawg_id=rawg_game.id, rawg_slug=rawg_game.slug)
+        except IntegrityError:
+            return Response('Wrong slug', status=status.HTTP_400_BAD_REQUEST)
+
+    user_game, created = UserGame.objects.get_or_create(user=user, game=game)
+    user_game.status = game_status
+    user_game.save()
+
+    if created:
+        return Response(status=status.HTTP_201_CREATED)
+    else:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 @swagger_auto_schema(method='POST', request_body=openapi.Schema(
     type=openapi.TYPE_OBJECT,
     properties={
@@ -61,7 +108,7 @@ def get_game(request, slug):
     }
 ))
 @api_view(['POST'])
-def set_score(request):
+def set_score(request, slug):
     user = request.user
     try:
         rawg_id = request.data['rawg_id']
