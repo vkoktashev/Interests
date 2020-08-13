@@ -35,7 +35,8 @@ def signup(request):
         activation_link = f"{confirmation_url}/{uid64}/{token}"
         message = f"Hello {user.username},\n {activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
-        email.send()
+        # email.send()
+        print(activation_link)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -46,8 +47,8 @@ token_param = openapi.Parameter('token', openapi.IN_QUERY, description="Спец
                                 type=openapi.TYPE_STRING)
 
 
-@swagger_auto_schema(method='GET', manual_parameters=[uid64_param, token_param])
-@api_view(['GET'])
+@swagger_auto_schema(method='PATCH', manual_parameters=[uid64_param, token_param])
+@api_view(['PATCH'])
 def confirmation(request, uid64, token):
     try:
         uid = force_text(urlsafe_base64_decode(uid64))
