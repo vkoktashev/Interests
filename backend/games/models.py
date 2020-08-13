@@ -9,7 +9,7 @@ class Game(models.Model):
     rawg_slug = models.CharField(max_length=200, unique=True)
     rawg_id = models.IntegerField(unique=True)
     # howlongtobeat
-    hltb_name = models.CharField(max_length=200, null=True, default=None)
+    hltb_name = models.CharField(max_length=200, blank=True)
     hltb_id = models.IntegerField(null=True, default=None)
 
 
