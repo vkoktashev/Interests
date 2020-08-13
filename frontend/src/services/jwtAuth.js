@@ -1,6 +1,6 @@
 import axios from "axios";
 import jwt_decode from 'jwt-decode';
-import {GET_TOKEN_URL, REFRESH_TOKEN_URL} from '../settings';
+import {GET_TOKEN_URL, REFRESH_TOKEN_URL, REGISTRATE_URL} from '../settings';
 
 let axiosConfig = {
     headers: {
@@ -49,4 +49,19 @@ export async function updateToken(refreshToken){
             return null;
         }
     return null;
+}
+
+export async function registration(username, email, password) {
+    try{
+        const res = await axios.post(REGISTRATE_URL, 
+            {  username: username,
+                email: email, 
+                password: password 
+            }, axiosConfig);
+        let data = res.data;	
+        return data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
 }

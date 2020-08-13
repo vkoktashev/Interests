@@ -1,21 +1,19 @@
 import React from "react";
 
 import LoginForm from "./LoginForm";
-import RegistrateForm from "./RegistrationForm";
 import Navbar from "./Navbar";
 
 /**
  * Основная страница приложения
  */
-function HomePage () 
+function GamePage () 
 {
     return (
 			<div>
-				<Navbar />
+				<Navbar/>
 				<LoginForm/>
-				<RegistrateForm/>
 			</div>
     	);
 }
 
-export default HomePage;
+export default GamePage;
