@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from games.models import Game, UserGameScore
+from games.models import Game, UserGame
 
 query_param = openapi.Parameter('query', openapi.IN_QUERY, description="Поисковый запрос", type=openapi.TYPE_STRING)
 page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
@@ -93,7 +93,7 @@ def set_score(request):
     except ValueError as e:
         return Response(e.args[0], status=status.HTTP_400_BAD_REQUEST)
 
-    user_game_score, created = UserGameScore.objects.get_or_create(user=user, game=game)
+    user_game_score, created = UserGame.objects.get_or_create(user=user, game=game)
     try:
         user_game_score.score = score
         user_game_score.full_clean()

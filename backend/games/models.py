@@ -13,8 +13,14 @@ class Game(models.Model):
     hltb_id = models.IntegerField(null=True)
 
 
-class UserGameScore(UserScore):
+# GAME_STATUS_CHOICES = (
+#     ()
+# )
+
+class UserGame(UserScore):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
+
+    # status = models.CharField()
 
     class Meta:
         unique_together = (("user", "game"),)
