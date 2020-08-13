@@ -40,8 +40,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class UserScore(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    score = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True)
-    review = models.CharField(max_length=300, null=True)
+    score = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True, default=None)
+    review = models.CharField(max_length=300, null=True, default=None)
 
     class Meta:
         abstract = True
