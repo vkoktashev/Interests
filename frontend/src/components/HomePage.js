@@ -1,7 +1,7 @@
 import React from "react";
 
 import LoginForm from "./LoginForm";
-import RegistrateForm from "./RegistrationForm";
+import RegistrationForm from "./RegistrationForm";
 import Navbar from "./Navbar";
 
 /**
@@ -13,7 +13,7 @@ function HomePage ()
 			<div>
 				<Navbar />
 				<LoginForm/>
-				<RegistrateForm/>
+				<RegistrationForm/>
 			</div>
     	);
 }

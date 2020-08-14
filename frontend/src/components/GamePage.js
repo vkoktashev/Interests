@@ -5,6 +5,10 @@ import React, {
 import {
     useParams
 } from "react-router-dom";
+import {
+    MDBRow,
+    MDBCol
+} from "mdbreact";
 
 import '../index.css';
 
@@ -20,34 +24,42 @@ import Navbar from "./Navbar";
  */
 function GamePage ( {requestGame, game, requestError, loggedIn} ) {
     let { id } = useParams();
-    const [background, setBackground] = useState(null);
+    const [background, setBackground] = useState('https://mdbootstrap.com/img/Photos/Horizontal/Nature/full page/img(20).jpg');
+    const [gameName, setGameName] = useState('Game');
 
     useEffect(
 		() => {
 			requestGame(id);
 		},
-		[id, requestGame]
+		[]
     );
 
     useEffect(
 		() => {
             if (game != null){
-                console.log(game.rawg.background_image);
-                setBackground(game.rawg.background_image);
-                console.log(background);
+                setBackground(game.rawg.background_image_additional);
+                setGameName(game.rawg.name);
             }
 		},
 		[game]
     );
     
     return (
-			<div className="bg" backgroundImage={background}>
+			<div className="bg" style={{backgroundImage: `url(${background})`}}>
 				<Navbar/>
+                <MDBRow className="mb-4" style={{top:"300px"}}>
+                    <MDBCol md="4"> <h1>{gameName}</h1></MDBCol>
+                 </MDBRow>
 				<LoginForm/>
 			</div>
     	);
 }
-
+/*
+<MDBRow className="mb-4">
+                <MDBCol md="4">
+                    <img src={game.rawg.} className="img-fluid" alt="" />
+                </MDBCol>
+                </MDBRow>*/
 
 const mapStateToProps = state => ({
     loggedIn: selectors.getLoggedIn(state),

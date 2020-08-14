@@ -3,13 +3,14 @@ import {
 	MDBNavbar,
     MDBNavItem,
     MDBNavbarBrand,
-    MDBNavbarNav
+    MDBNavbarNav,
+    MDBNavLink,
+    MDBIcon
 } from "mdbreact";
 
 import { connect } from 'react-redux'; 
 import * as selectors from '../store/reducers';
 import * as actions from '../store/actions';
-import AccountButton from "./AccountButton";
 
 function Navbar( {loggedIn, onLoginClick, onLogoutClick, onRegistrationClick} ) {
     
@@ -23,7 +24,21 @@ function Navbar( {loggedIn, onLoginClick, onLogoutClick, onRegistrationClick} ) 
             </MDBNavbarNav>
 
             <MDBNavbarNav right>
-                <AccountButton onLoginClick={onLoginClick} onLogoutClick={onLogoutClick} onRegistrationClick={onRegistrationClick} loggedIn={loggedIn}/>
+                <MDBNavItem className="font-weight-bold" hidden={loggedIn}>
+                    <MDBNavLink to="#" onClick={onLoginClick} >
+                        <MDBIcon fab icon="mdb" /> Уже смешарик
+                    </MDBNavLink>
+                </MDBNavItem>
+                <MDBNavItem className="font-weight-bold" hidden={loggedIn}>
+                    <MDBNavLink to="#" onClick={onRegistrationClick} >
+                        <MDBIcon icon="sign-in-alt" /> Стать смешариком
+                    </MDBNavLink>
+                </MDBNavItem>
+                <MDBNavItem className="font-weight-bold" hidden={!loggedIn}>
+                    <MDBNavLink to="#" onClick={ onLogoutClick }>
+                        <MDBIcon icon="sign-out-alt" size="2x"/> Выйти
+                    </MDBNavLink>
+                </MDBNavItem>
             </MDBNavbarNav>
         </MDBNavbar>
     )
