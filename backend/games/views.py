@@ -1,5 +1,4 @@
 import rawgpy
-from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -9,6 +8,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from games.models import Game, UserGame
+from games.utils import set_parameter
 
 query_param = openapi.Parameter('query', openapi.IN_QUERY, description="Поисковый запрос", type=openapi.TYPE_STRING)
 page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
@@ -57,16 +57,19 @@ def get_game(request, slug):
 @swagger_auto_schema(method='PUT', request_body=openapi.Schema(
     type=openapi.TYPE_OBJECT,
     properties={
-        'status': openapi.Schema(type=openapi.TYPE_STRING),
+        'status': openapi.Schema(type=openapi.TYPE_STRING, enum=['playing', 'completed', 'stopped', 'going']),
     },
 ))
 @api_view(['PUT'])
 def set_status(request, slug):
-    user = request.user
-    game_status = request.POST['status']
+    try:
+        game_status = request.POST['status']
+    except KeyError as e:
+        return Response(f'Did you forget {e.args[0]} parameter?', status=status.HTTP_400_BAD_REQUEST)
 
-    if game_status not in dict(UserGame.GAME_STATUS_CHOICES):
-        return Response('Wrong status', status=status.HTTP_400_BAD_REQUEST)
+    dict_statuses = dict(UserGame.GAME_STATUS_CHOICES)
+    if game_status not in dict_statuses:
+        return Response(f'Wrong status, must be on of {dict_statuses.keys()}', status=status.HTTP_400_BAD_REQUEST)
 
     try:
         game = Game.objects.get(rawg_slug=slug)
@@ -90,7 +93,7 @@ def set_status(request, slug):
         except IntegrityError:
             return Response('Wrong slug', status=status.HTTP_400_BAD_REQUEST)
 
-    user_game, created = UserGame.objects.get_or_create(user=user, game=game)
+    user_game, created = UserGame.objects.get_or_create(user=request.user, game=game)
     user_game.status = game_status
     user_game.save()
 
@@ -100,60 +103,23 @@ def set_status(request, slug):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@swagger_auto_schema(method='POST', request_body=openapi.Schema(
+@swagger_auto_schema(method='PATCH', request_body=openapi.Schema(
     type=openapi.TYPE_OBJECT,
     properties={
-        'rawg_id': openapi.Schema(type=openapi.TYPE_INTEGER),
         'score': openapi.Schema(type=openapi.TYPE_INTEGER, description="Оценка", minimum=0, maximum=10),
     }
 ))
-@api_view(['POST'])
+@api_view(['PATCH'])
 def set_score(request, slug):
-    user = request.user
-    try:
-        rawg_id = request.data['rawg_id']
-        score = request.data['score']
-    except KeyError as e:
-        return Response(f'Something wrong with parameters. Did you forget \'{e.args[0]}\' parameter?',
-                        status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        game = Game.objects.get(rawg_id=rawg_id)
-    except Game.DoesNotExist:
-        rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
-        try:
-            rawg_game = rawg.get_game(rawg_id)
-        except KeyError:
-            return Response('Wrong rawg_id', status=status.HTTP_400_BAD_REQUEST)
-
-        results_list = HowLongToBeat().search(rawg_game.name)
-        hltb_game = None
-        if results_list is not None and len(results_list) > 0:
-            hltb_game = max(results_list, key=lambda element: element.similarity)
-
-        if hltb_game is not None:
-            game = Game.objects.create(rawg_name=rawg_game.name, rawg_id=rawg_game.id, rawg_slug=rawg_game.slug,
-                                       hltb_name=hltb_game.game_name, hltb_id=hltb_game.game_id)
-        else:
-            game = Game.objects.create(rawg_name=rawg_game.name, rawg_id=rawg_game.id, rawg_slug=rawg_game.slug,
-                                       hltb_name=None, hltb_id=None)
-    except ValueError as e:
-        return Response(e.args[0], status=status.HTTP_400_BAD_REQUEST)
-
-    user_game_score, created = UserGame.objects.get_or_create(user=user, game=game)
-    try:
-        user_game_score.score = score
-        user_game_score.full_clean()
-        user_game_score.save()
-    except ValidationError as e:
-        return Response(e.message_dict.items(), status=status.HTTP_400_BAD_REQUEST)
-
-    return Response('All fine!', status=status.HTTP_200_OK)
+    return set_parameter(request, slug, 'score')
 
 
-@api_view(['POST'])
-def set_review(request):
-    """
-    В разработке
-    """
-    pass
+@swagger_auto_schema(method='PATCH', request_body=openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'review': openapi.Schema(type=openapi.TYPE_STRING, description="Отзыв"),
+    }
+))
+@api_view(['PATCH'])
+def set_review(request, slug):
+    return set_parameter(request, slug, 'review')
