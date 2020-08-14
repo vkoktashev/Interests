@@ -1,4 +1,5 @@
 from django.core.mail import EmailMessage
+from django.forms import model_to_dict
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from drf_yasg import openapi
@@ -9,6 +10,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from config.settings import EMAIL_HOST_USER
+from games.models import GameLog
 from users.serializers import UserSerializer
 from .models import User
 from .tokens import account_activation_token
@@ -62,3 +64,25 @@ def confirmation(request, uid64, token):
         return Response(status=status.HTTP_200_OK)
     else:
         return Response('Confirmation link is invalid!', status=status.HTTP_400_BAD_REQUEST)
+
+
+page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
+                               type=openapi.TYPE_INTEGER, default=1)
+
+
+@swagger_auto_schema(method='GET', manual_parameters=[page_param])
+@api_view(['GET'])
+def get_log(request):
+    page = request.GET.get('page', 1)
+    logs = GameLog.objects.filter(user=request.user)
+    log_dicts = []
+    for log in logs:
+        log_dict = model_to_dict(log)
+        log_dict['user'] = log.user.username
+        log_dict['game'] = log.game.rawg_name
+        log_dict['user_id'] = log.user.id
+        log_dict['game_slug'] = log.game.rawg_slug
+        del log_dict['id']
+        log_dicts.append(log_dict)
+    print(log_dicts)
+    return Response(log_dicts)

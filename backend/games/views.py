@@ -1,4 +1,5 @@
 import rawgpy
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.forms import model_to_dict
 from drf_yasg import openapi
@@ -8,9 +9,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from games.logger import log_status_message
+from games.logger import status_changed, score_changed, review_changed
 from games.models import Game, UserGame
-from games.utils import set_parameter
 
 query_param = openapi.Parameter('query', openapi.IN_QUERY, description="Поисковый запрос", type=openapi.TYPE_STRING)
 page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
@@ -95,8 +95,7 @@ def set_status(request, slug):
     user_game, created = UserGame.objects.get_or_create(user=request.user, game=game)
     user_game.status = game_status
     user_game.save()
-
-    log_status_message(user=request.user, game_name=game.rawg_name, status=game_status)
+    status_changed(user=request.user, game=game, status=game_status)
 
     if created:
         return Response(status=status.HTTP_201_CREATED)
@@ -112,7 +111,32 @@ def set_status(request, slug):
 ))
 @api_view(['PATCH'])
 def set_score(request, slug):
-    return set_parameter(request, slug, 'score')
+    try:
+        score = request.POST['score']
+    except KeyError as e:
+        return Response(f'Something wrong with parameters. Did you forget \'{e.args[0]}\' parameter?',
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        game = Game.objects.get(rawg_slug=slug)
+    except Game.DoesNotExist:
+        return Response('Game not found. Check your slug', status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        user_game_score = UserGame.objects.get(user=request.user, game=game)
+    except UserGame.DoesNotExist:
+        return Response('UserGame not found. Check your slug', status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        user_game_score.score = score
+        user_game_score.full_clean()
+        user_game_score.save()
+    except ValidationError as e:
+        return Response(e.message_dict.items(), status=status.HTTP_400_BAD_REQUEST)
+
+    score_changed(user=request.user, game=game, score=score)
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @swagger_auto_schema(method='PATCH', request_body=openapi.Schema(
@@ -123,4 +147,29 @@ def set_score(request, slug):
 ))
 @api_view(['PATCH'])
 def set_review(request, slug):
-    return set_parameter(request, slug, 'review')
+    try:
+        review = request.POST['review']
+    except KeyError as e:
+        return Response(f'Something wrong with parameters. Did you forget \'{e.args[0]}\' parameter?',
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        game = Game.objects.get(rawg_slug=slug)
+    except Game.DoesNotExist:
+        return Response('Game not found. Check your slug', status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        user_game_score = UserGame.objects.get(user=request.user, game=game)
+    except UserGame.DoesNotExist:
+        return Response('UserGame not found. Check your slug', status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        user_game_score.review = review
+        user_game_score.full_clean()
+        user_game_score.save()
+    except ValidationError as e:
+        return Response(e.message_dict.items(), status=status.HTTP_400_BAD_REQUEST)
+
+    review_changed(user=request.user, game=game, review=review)
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
