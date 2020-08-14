@@ -8,6 +8,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from games.logger import log_status_message
 from games.models import Game, UserGame
 from games.utils import set_parameter
 
@@ -48,8 +49,8 @@ def get_game(request, slug):
     except (Game.DoesNotExist, UserGame.DoesNotExist):
         user_game = None
 
-    return Response({'rawg_game': rawg_game.json, 'hltb_game': hltb_game,
-                     'user_game': user_game})
+    return Response({'rawg': rawg_game.json, 'hltb': hltb_game,
+                     'user_info': user_game})
 
 
 @swagger_auto_schema(method='PUT', request_body=openapi.Schema(
@@ -94,6 +95,8 @@ def set_status(request, slug):
     user_game, created = UserGame.objects.get_or_create(user=request.user, game=game)
     user_game.status = game_status
     user_game.save()
+
+    log_status_message(user=request.user, game_name=game.rawg_name, status=game_status)
 
     if created:
         return Response(status=status.HTTP_201_CREATED)
