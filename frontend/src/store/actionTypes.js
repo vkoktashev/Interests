@@ -2,5 +2,7 @@ export const SET_USER = 'SET_USER';
 export const SET_AUTH = "SET_AUTH";
 export const SET_LOGINFORM = "SET_LOGINFORM";
 export const SET_REGISTRATEFORM = "SET_REGISTRATEFORM";
+export const SET_CONTENT_GAME = "SET_CONTENT_GAME";
 export const AUTH_ERROR = "AUTH_ERROR";
 export const REGISTRATE_ERROR = "REGISTRATE_ERROR";
+export const GAME_REQUEST_ERROR = "GAME_REQUEST_ERROR"

@@ -4,8 +4,9 @@ import * as types from './actionTypes';
 const initialState = {
     auth: { loggedIn: false, token: null, tokenTime: null },
     user: { login:"", email:"" },
+    content: { game: null },
     openedPages: { LoginForm: false, RegistrateForm: false },
-    errors: {auth: false, registrate: false}
+    errors: {auth: false, registrate: false, gameRequest: false}
 };
 
 export default function reducer(state = initialState, action) {
@@ -19,6 +20,11 @@ export default function reducer(state = initialState, action) {
         return{
             ...state,
             auth: action.auth
+        }
+    case types.SET_CONTENT_GAME:
+        return{
+            ...state,
+            content: {...state.content, game: action.game}
         }
     case types.AUTH_ERROR:
         return{
@@ -39,6 +45,11 @@ export default function reducer(state = initialState, action) {
         return{
             ...state,
             openedPages:  {...state.openedPages, RegistrateForm: action.isOpen}
+        }
+    case types.GAME_REQUEST_ERROR:
+        return{
+            ...state,
+            errors:  {...state.auth, gameRequest: action.error}
         }
     default:
       return state;
@@ -63,12 +74,20 @@ export function getAuth(state) {
     return state.auth;
 }
 
+export function getContentGame(state) {
+    return state.content.game;
+}
+
 export function getAuthError(state) {
     return state.errors.auth;
 }
 
 export function getRegistrateError(state) {
     return state.errors.registrate;
+}
+
+export function getGameRequestError(state) {
+    return state.errors.gameRequest;
 }
 
 export function getUser(state) {
