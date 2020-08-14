@@ -8,3 +8,5 @@ export const GET_TOKEN_URL = BACKEND_URL + "users/auth/login";
 export const REFRESH_TOKEN_URL = BACKEND_URL + "users/auth/refresh-token";
 /**Адрес регистрации */
 export const REGISTRATE_URL = BACKEND_URL + "users/auth/signup";
+/**Адрес запросы игры */
+export const GET_GAME_URL = BACKEND_URL + "games/game/";

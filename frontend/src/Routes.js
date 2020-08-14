@@ -12,12 +12,8 @@ class Routes extends React.Component {
       <div>
         <Switch>
           <Route exact path="/" component={HomePage} />
-          <Route exact path="/game" component={GamePage} />
-        <Route
-          render={function () {
-            return <h1>Not Found</h1>;
-          }}
-        />
+          <Route exact path="/game/:id" component={GamePage} />
+          <Route render={function () { return <h1>Not Found</h1>; }} />
       </Switch>
       <ToastContainer position="top-center" hideProgressBar newestOnTop closeOnClick/>
       </div>
