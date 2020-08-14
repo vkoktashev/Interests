@@ -38,7 +38,7 @@ def get_game(request, slug):
     except KeyError:
         return Response('Wrong slug', status=status.HTTP_400_BAD_REQUEST)
 
-    results_list = HowLongToBeat().search(rawg_game.name)
+    results_list = HowLongToBeat(1.0).search(rawg_game.name)
     hltb_game = None
     if results_list is not None and len(results_list) > 0:
         hltb_game = max(results_list, key=lambda element: element.similarity).__dict__
@@ -79,7 +79,7 @@ def set_status(request, slug):
         except KeyError:
             return Response('Wrong slug', status=status.HTTP_400_BAD_REQUEST)
 
-        results_list = HowLongToBeat().search(rawg_game.name)
+        results_list = HowLongToBeat(1.0).search(rawg_game.name)
         hltb_game = None
         if results_list is not None and len(results_list) > 0:
             hltb_game = max(results_list, key=lambda element: element.similarity)
