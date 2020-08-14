@@ -1,5 +1,6 @@
 import rawgpy
 from django.db import IntegrityError
+from django.forms import model_to_dict
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
@@ -32,26 +33,23 @@ def search(request):
 def get_game(request, slug):
     rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
     try:
-        game = rawg.get_game(slug)
+        rawg_game = rawg.get_game(slug)
     except KeyError:
         return Response('Wrong slug', status=status.HTTP_400_BAD_REQUEST)
-    results_list = HowLongToBeat().search(game.name)
-    hltb = None
-    if results_list is not None and len(results_list) > 0:
-        best_element = max(results_list, key=lambda element: element.similarity)
-        hltb = {'id': best_element.game_id, 'name': best_element.game_name,
-                'gameplay_main': best_element.gameplay_main,
-                'gameplay_main_unit': best_element.gameplay_main_unit,
-                'gameplay_main_label': best_element.gameplay_main_label,
-                'gameplay_main_extra': best_element.gameplay_main_extra,
-                'gameplay_main_extra_unit': best_element.gameplay_main_extra_unit,
-                'gameplay_main_extra_label': best_element.gameplay_main_extra_label,
-                'gameplay_completionist': best_element.gameplay_completionist,
-                'gameplay_completionist_unit': best_element.gameplay_completionist_unit,
-                'gameplay_completionist_label': best_element.gameplay_completionist_label,
-                'similarity': best_element.similarity}
 
-    return Response({'rawg': game.json, 'hltb': hltb})
+    results_list = HowLongToBeat().search(rawg_game.name)
+    hltb_game = None
+    if results_list is not None and len(results_list) > 0:
+        hltb_game = max(results_list, key=lambda element: element.similarity).__dict__
+
+    try:
+        game = Game.objects.get(rawg_slug=rawg_game.slug)
+        user_game = model_to_dict(UserGame.objects.get(user=request.user, game=game))
+    except (Game.DoesNotExist, UserGame.DoesNotExist):
+        user_game = None
+
+    return Response({'rawg_game': rawg_game.json, 'hltb_game': hltb_game,
+                     'user_game': user_game})
 
 
 @swagger_auto_schema(method='PUT', request_body=openapi.Schema(
