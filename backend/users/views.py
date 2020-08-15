@@ -74,15 +74,16 @@ page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер
 @api_view(['GET'])
 def get_log(request):
     page = request.GET.get('page', 1)
-    logs = GameLog.objects.filter(user=request.user)
+    logs = GameLog.objects.filter(user=request.user)[:1]
     log_dicts = []
+    log_dict = {}
     for log in logs:
-        log_dict = model_to_dict(log)
         log_dict['user'] = log.user.username
-        log_dict['game'] = log.game.rawg_name
         log_dict['user_id'] = log.user.id
-        log_dict['game_slug'] = log.game.rawg_slug
-        del log_dict['id']
+        log_dict['target'] = log.game.rawg_name
+        log_dict['target_id'] = log.game.rawg_slug
+        log_dict['message'] = log.message
+        log_dict['created'] = log.created
+        log_dict['type'] = 'game'
         log_dicts.append(log_dict)
-    print(log_dicts)
     return Response(log_dicts)
