@@ -52,7 +52,7 @@ export async function updateToken(refreshToken){
 }
 
 export async function registration(username, email, password) {
-    try{
+   // try{
         const res = await axios.post(REGISTRATE_URL, 
             {  username: username,
                 email: email, 
@@ -60,8 +60,8 @@ export async function registration(username, email, password) {
             }, axiosConfig);
         let data = res.data;	
         return data;
-    }catch(e){
+    /*}catch(e){
         console.log("AXIOS ERROR: ", e);
         return null;
-    }
+    }*/
 }

@@ -15,7 +15,7 @@ import * as actions from '../store/actions';
 function Navbar( {loggedIn, onLoginClick, onLogoutClick, onRegistrationClick} ) {
     
     return(
-        <MDBNavbar style={{backgroundColor: "#6C0AAB"}} dark expand="md" fixed="top">
+            <MDBNavbar style={{backgroundColor: "#6C0AAB" }} dark expand="md" fixed="top">
             <MDBNavbarBrand>
                 <strong className="white-text">Interests</strong>
             </MDBNavbarBrand>
@@ -26,17 +26,17 @@ function Navbar( {loggedIn, onLoginClick, onLogoutClick, onRegistrationClick} ) 
             <MDBNavbarNav right>
                 <MDBNavItem className="font-weight-bold" hidden={loggedIn}>
                     <MDBNavLink to="#" onClick={onLoginClick} >
-                        <MDBIcon fab icon="mdb" /> Уже смешарик
+                        <MDBIcon icon="sign-in-alt" /> Уже смешарик
                     </MDBNavLink>
                 </MDBNavItem>
                 <MDBNavItem className="font-weight-bold" hidden={loggedIn}>
                     <MDBNavLink to="#" onClick={onRegistrationClick} >
-                        <MDBIcon icon="sign-in-alt" /> Стать смешариком
+                        <MDBIcon fab icon="accessible-icon" /> Стать смешариком
                     </MDBNavLink>
                 </MDBNavItem>
                 <MDBNavItem className="font-weight-bold" hidden={!loggedIn}>
                     <MDBNavLink to="#" onClick={ onLogoutClick }>
-                        <MDBIcon icon="sign-out-alt" size="2x"/> Выйти
+                        <MDBIcon icon="sign-out-alt"/> Выйти
                     </MDBNavLink>
                 </MDBNavItem>
             </MDBNavbarNav>

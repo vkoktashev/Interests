@@ -9,12 +9,85 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.navbar {
+  margin-bottom: 30px; /* Отступ снизу */
+ }
+
 .bg {
   height: 100vh;
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
 }
+
+.gameContentPage {
+  padding: 1rem;
+  background-color: #fff;
+  color: rgb(0, 0, 0);
+  margin-top: 30px;
+  padding: 0px
+  }
+
+  .gameContentHeader{
+    background-color: rgb(29, 13, 13);
+    color: #fff;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 0px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+  }
+
+  .gameContentBody{
+    padding-left: 10px;
+    padding-right: 10px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+  }
+  
+  .gameContentStatuses{
+    background-color: rgb(29, 13, 13);
+    border: 1px solid #FFF;
+    color: white;
+    padding: 4px 8px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin-left:  0px;
+    margin-right:  0px;
+    margin-top:  15px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .gameContentStatuses:focus{
+    background-color: rgb(221, 0, 0);
+  }
+
+  .gameContentStatuses:hover{
+    background-color: rgb(108, 10, 171);
+  }
+
+  .metacritic{
+    vertical-align: middle;
+    text-align: center;
+    color: #fff!important;
+    font-family: Arial,Helvetica,sans-serif;
+    font-style: normal!important;
+    font-weight: bold!important;
+    font-size: 35px;
+    background-color: rgb(102, 204, 51);
+    height: 2em;
+    width: 2em;
+    line-height: 2em;
+    border-radius: 6px
+  }
+  .metacriticText{
+    font-family: Arial,Helvetica,sans-serif;
+    font-size: 12px;
+    text-align: center;
+    padding-left: 3px;
+  }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',

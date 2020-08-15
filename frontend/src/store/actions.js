@@ -92,6 +92,10 @@ export function registrationRequest(username, email, password){
                     type: actionTypes.SET_USER,
                     user: { login: result.username, email: result.email }, 
                 });
+                dispatch({
+                    type: actionTypes.REGISTRATE_ERROR,
+                    error: false 
+                });
             }
             else{
                 dispatch({
@@ -142,12 +146,4 @@ export function openRegistrateForm() {
 
 export function closeRegistrateForm() {
     return({ type: actionTypes.SET_REGISTRATEFORM, isOpen: false  });
-}
-    
-function httpGet(theUrl)
-{
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "GET", theUrl, false ); // false for synchronous request
-    xmlHttp.send( null );
-    return xmlHttp.responseText;
 }
