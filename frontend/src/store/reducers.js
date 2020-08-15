@@ -6,13 +6,13 @@ const initialState = {
     user: { login:"", email:"" },
     content: { 
         game: {
-            rawg_game: {
+            rawg: {
                 name: "",
                 background_image: "",
                 background_image_additional: "",
                 developers: [{}]
             },
-            hltb_game:{
+            hltb:{
                 game_image_url: ""
             }
         } 

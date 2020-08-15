@@ -34,11 +34,11 @@ function GamePage ( {requestGame, game, requestError, loggedIn} ) {
 
     useEffect(
 		() => {
-            if (game.rawg_game.genres){
+            if (game.rawg.genres){
                 let newGenres = ""
-                for (let i = 0; i < game.rawg_game.genres.length; i++){
-                    newGenres += game.rawg_game.genres[i].name;
-                    if (i != game.rawg_game.genres.length - 1)
+                for (let i = 0; i < game.rawg.genres.length; i++){
+                    newGenres += game.rawg.genres[i].name;
+                    if (i !== game.rawg.genres.length - 1)
                         newGenres += ", ";
                 }
                  setGenres(newGenres);   
@@ -48,7 +48,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn} ) {
     );
     
     return (
-			<div className="bg" style={{backgroundImage: `url(${game.rawg_game.background_image_additional?game.rawg_game.background_image_additional:game.rawg_game.background_image})`}}>
+			<div className="bg" style={{backgroundImage: `url(${game.rawg.background_image_additional?game.rawg.background_image_additional:game.rawg.background_image})`}}>
                 <MDBContainer>
                     <MDBRow>
                         <MDBCol md="0.5"></MDBCol>
@@ -56,12 +56,12 @@ function GamePage ( {requestGame, game, requestError, loggedIn} ) {
                             <MDBContainer>
                                 <MDBRow className="gameContentHeader">
                                     <MDBCol size="5">
-                                        <img src={game.rawg_game.background_image} className="img-fluid" alt=""/>
+                                        <img src={game.rawg.background_image} className="img-fluid" alt=""/>
                                     </MDBCol>
                                     <MDBCol size="6">
-                                        <h1>{game.rawg_game.name}</h1>
-                                        <p style={{marginBottom: "2px"}}>Разработчик: {game.rawg_game.developers[0].name}</p>
-                                        <p style={{marginBottom: "2px"}}>Дата релиза: {game.rawg_game.released}</p>
+                                        <h1>{game.rawg.name}</h1>
+                                        <p style={{marginBottom: "2px"}}>Разработчик: {game.rawg.developers[0].name}</p>
+                                        <p style={{marginBottom: "2px"}}>Дата релиза: {game.rawg.released}</p>
                                         <p>Жанр: {genres}</p>
                                         <Rating stop={10}
                                             emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}} />}
@@ -77,7 +77,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn} ) {
                                     </MDBCol>
                                     <MDBCol size="1">
                                         <div className="metacritic">
-                                            <p>{game.rawg_game.metacritic}</p>
+                                            <p>{game.rawg.metacritic}</p>
                                         </div>
                                         <p className="metacriticText">Metascore</p>
                                         </MDBCol>
@@ -85,7 +85,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn} ) {
                                     <MDBRow className="gameContentBody"> 
                                     <MDBCol >
                                         <h3 style={{paddingTop: "15px"}}>Описание</h3>
-                                        <div dangerouslySetInnerHTML={{__html: game.rawg_game.description}} />
+                                        <div dangerouslySetInnerHTML={{__html: game.rawg.description}} />
                                     </MDBCol>
                                 </MDBRow>
                             </MDBContainer>
