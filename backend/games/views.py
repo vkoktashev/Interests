@@ -45,7 +45,9 @@ def get_game(request, slug):
 
     try:
         game = Game.objects.get(rawg_slug=rawg_game.slug)
-        user_game = model_to_dict(UserGame.objects.get(user=request.user, game=game))
+        user_game = model_to_dict(UserGame.objects
+                                  .exclude(status=UserGame.STATUS_NOT_PLAYED)
+                                  .get(user=request.user, game=game))
     except (Game.DoesNotExist, UserGame.DoesNotExist):
         user_game = None
 
@@ -56,7 +58,7 @@ def get_game(request, slug):
 @swagger_auto_schema(method='PUT', request_body=openapi.Schema(
     type=openapi.TYPE_OBJECT,
     properties={
-        'status': openapi.Schema(type=openapi.TYPE_STRING, enum=['playing', 'completed', 'stopped', 'going']),
+        'status': openapi.Schema(type=openapi.TYPE_STRING, enum=list(dict(UserGame.STATUS_CHOICES).keys())),
     },
 ))
 @api_view(['PUT'])
@@ -123,14 +125,14 @@ def set_score(request, slug):
         return Response('Game not found. Check your slug', status=status.HTTP_404_NOT_FOUND)
 
     try:
-        user_game_score = UserGame.objects.get(user=request.user, game=game)
+        user_game = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).get(user=request.user, game=game)
     except UserGame.DoesNotExist:
         return Response('UserGame not found. Check your slug', status=status.HTTP_404_NOT_FOUND)
 
     try:
-        user_game_score.score = score
-        user_game_score.full_clean()
-        user_game_score.save()
+        user_game.score = score
+        user_game.full_clean()
+        user_game.save()
     except ValidationError as e:
         return Response(e.message_dict.items(), status=status.HTTP_400_BAD_REQUEST)
 
@@ -159,14 +161,14 @@ def set_review(request, slug):
         return Response('Game not found. Check your slug', status=status.HTTP_404_NOT_FOUND)
 
     try:
-        user_game_score = UserGame.objects.get(user=request.user, game=game)
+        user_game = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).get(user=request.user, game=game)
     except UserGame.DoesNotExist:
         return Response('UserGame not found. Check your slug', status=status.HTTP_404_NOT_FOUND)
 
     try:
-        user_game_score.review = review
-        user_game_score.full_clean()
-        user_game_score.save()
+        user_game.review = review
+        user_game.full_clean()
+        user_game.save()
     except ValidationError as e:
         return Response(e.message_dict.items(), status=status.HTTP_400_BAD_REQUEST)
 

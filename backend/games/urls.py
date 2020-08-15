@@ -1,6 +1,6 @@
 from django.urls import path
 
-from games.views import search, get_game, set_score, set_review, set_status
+from games.views import search, set_score, set_review, set_status, get_game
 
 urlpatterns = [
     path('game/<str:slug>', get_game),
