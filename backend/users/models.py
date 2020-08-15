@@ -25,7 +25,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email address'), unique=True, error_messages={
         'unique': _("A user with that email already exists."),
     }, )
-    is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
 
@@ -42,6 +41,26 @@ class UserScore(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     score = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True, blank=True)
     review = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class UserLog(models.Model):
+    ACTION_TYPE_SCORE = 'score'
+    ACTION_TYPE_REVIEW = 'review'
+    ACTION_TYPE_STATUS = 'status'
+
+    ACTION_TYPE_CHOICES = (
+        (ACTION_TYPE_SCORE, 'Score changed'),
+        (ACTION_TYPE_REVIEW, 'Review changed'),
+        (ACTION_TYPE_STATUS, 'Status changed')
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created = models.DateTimeField(default=timezone.now)
+    action_result = models.CharField(max_length=300)
+    action_type = models.CharField(max_length=30, choices=ACTION_TYPE_CHOICES)
 
     class Meta:
         abstract = True

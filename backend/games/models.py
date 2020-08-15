@@ -1,6 +1,6 @@
 from django.db import models
 
-from users.models import User, UserScore
+from users.models import UserScore, UserLog
 
 
 class Game(models.Model):
@@ -14,15 +14,26 @@ class Game(models.Model):
 
 
 class UserGame(UserScore):
-    GAME_STATUS_CHOICES = (
-        ('playing', 'Playing'),
-        ('completed', 'Completed'),
-        ('stopped', 'Stopped playing'),
-        ('going', 'Going to play')
+    STATUS_PLAYING = 'playing'
+    STATUS_COMPLETED = 'completed'
+    STATUS_STOPPED = 'stopped'
+    STATUS_GOING = 'going'
+    STATUS_NOT_PLAYED = 'not played'
+
+    STATUS_CHOICES = (
+        (STATUS_PLAYING, 'Playing'),
+        (STATUS_COMPLETED, 'Completed'),
+        (STATUS_STOPPED, 'Stopped playing'),
+        (STATUS_GOING, 'Going to play'),
+        (STATUS_NOT_PLAYED, 'Not played')
     )
 
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    status = models.CharField(max_length=30, choices=GAME_STATUS_CHOICES)
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES)
 
     class Meta:
         unique_together = (("user", "game"),)
+
+
+class GameLog(UserLog):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
