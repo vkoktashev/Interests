@@ -9,8 +9,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from games.logger import status_changed, score_changed, review_changed
-from games.models import Game, UserGame
+from games.models import Game, UserGame, GameLog
 
 query_param = openapi.Parameter('query', openapi.IN_QUERY, description="Поисковый запрос", type=openapi.TYPE_STRING)
 page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
@@ -97,7 +96,7 @@ def set_status(request, slug):
     user_game, created = UserGame.objects.get_or_create(user=request.user, game=game)
     user_game.status = game_status
     user_game.save()
-    status_changed(user=request.user, game=game, status=game_status)
+    GameLog.objects.create(request.user, game, GameLog.ACTION_TYPE_STATUS, game_status)
 
     if created:
         return Response(status=status.HTTP_201_CREATED)
@@ -136,7 +135,7 @@ def set_score(request, slug):
     except ValidationError as e:
         return Response(e.message_dict.items(), status=status.HTTP_400_BAD_REQUEST)
 
-    score_changed(user=request.user, game=game, score=score)
+    GameLog.objects.create(request.user, game, GameLog.ACTION_TYPE_SCORE, score)
 
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -172,6 +171,6 @@ def set_review(request, slug):
     except ValidationError as e:
         return Response(e.message_dict.items(), status=status.HTTP_400_BAD_REQUEST)
 
-    review_changed(user=request.user, game=game, review=review)
+    GameLog.objects.create(request.user, game, GameLog.ACTION_TYPE_REVIEW, review)
 
     return Response(status=status.HTTP_204_NO_CONTENT)
