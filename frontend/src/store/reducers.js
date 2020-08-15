@@ -4,7 +4,19 @@ import * as types from './actionTypes';
 const initialState = {
     auth: { loggedIn: false, token: null, tokenTime: null },
     user: { login:"", email:"" },
-    content: { game: null },
+    content: { 
+        game: {
+            rawg: {
+                name: "",
+                background_image: "",
+                background_image_additional: "",
+                developers: [{}]
+            },
+            hltb:{
+                game_image_url: ""
+            }
+        } 
+    },
     openedPages: { LoginForm: false, RegistrateForm: false },
     errors: {auth: false, registrate: false, gameRequest: false}
 };
