@@ -1,5 +1,5 @@
 from django.core.mail import EmailMessage
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from drf_yasg import openapi
@@ -14,6 +14,15 @@ from games.models import GameLog
 from users.serializers import UserSerializer
 from .models import User
 from .tokens import account_activation_token
+
+TYPE_GAME = 'game'
+
+uid64_param = openapi.Parameter('uid64', openapi.IN_QUERY, description="Зашифрованный первичный ключ пользователя",
+                                type=openapi.TYPE_STRING)
+token_param = openapi.Parameter('token', openapi.IN_QUERY, description="Специальный токен для подтверждения",
+                                type=openapi.TYPE_STRING)
+page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
+                               type=openapi.TYPE_INTEGER, default=1)
 
 
 @swagger_auto_schema(method='POST', request_body=openapi.Schema(
@@ -43,12 +52,6 @@ def signup(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-uid64_param = openapi.Parameter('uid64', openapi.IN_QUERY, description="Зашифрованный первичный ключ пользователя",
-                                type=openapi.TYPE_STRING)
-token_param = openapi.Parameter('token', openapi.IN_QUERY, description="Специальный токен для подтверждения",
-                                type=openapi.TYPE_STRING)
-
-
 @swagger_auto_schema(method='PATCH', manual_parameters=[uid64_param, token_param])
 @api_view(['PATCH'])
 def confirmation(request, uid64, token):
@@ -66,10 +69,6 @@ def confirmation(request, uid64, token):
         return Response('Confirmation link is invalid!', status=status.HTTP_400_BAD_REQUEST)
 
 
-page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
-                               type=openapi.TYPE_INTEGER, default=1)
-
-
 @swagger_auto_schema(method='GET', manual_parameters=[page_param])
 @api_view(['GET'])
 def get_log(request):
@@ -82,13 +81,22 @@ def get_log(request):
     paginator = Paginator(logs, page_size)
 
     log_dicts = []
+    try:
+        paginator_page = paginator.page(page)
+    except EmptyPage:
+        return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+
     for log in paginator.page(page):
         log_dict = {'user': log.user.username,
                     'user_id': log.user.id,
                     'target': log.game.rawg_name,
                     'target_id': log.game.rawg_slug,
-                    'message': log.message,
                     'created': log.created,
-                    'type': 'game'}
+                    'type': TYPE_GAME,
+                    'action_type': log.action_type,
+                    'action_result': log.action_result,
+                    }
         log_dicts.append(log_dict)
-    return Response(log_dicts)
+
+    return Response({'log': log_dicts,
+                     'has_next_page': paginator_page.has_next()})

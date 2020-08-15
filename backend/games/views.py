@@ -66,7 +66,7 @@ def set_status(request, slug):
     except KeyError as e:
         return Response(f'Did you forget {e.args[0]} parameter?', status=status.HTTP_400_BAD_REQUEST)
 
-    dict_statuses = dict(UserGame.GAME_STATUS_CHOICES)
+    dict_statuses = dict(UserGame.STATUS_CHOICES)
     if game_status not in dict_statuses:
         return Response(f'Wrong status, must be on of {dict_statuses.keys()}', status=status.HTTP_400_BAD_REQUEST)
 

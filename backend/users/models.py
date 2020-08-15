@@ -45,3 +45,23 @@ class UserScore(models.Model):
 
     class Meta:
         abstract = True
+
+
+class UserLog(models.Model):
+    ACTION_TYPE_SCORE = 'score'
+    ACTION_TYPE_REVIEW = 'review'
+    ACTION_TYPE_STATUS = 'status'
+
+    ACTION_TYPE_CHOICES = (
+        (ACTION_TYPE_SCORE, 'Score changed'),
+        (ACTION_TYPE_REVIEW, 'Review changed'),
+        (ACTION_TYPE_STATUS, 'Status changed')
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created = models.DateTimeField(default=timezone.now)
+    action_result = models.CharField(max_length=300)
+    action_type = models.CharField(max_length=30, choices=ACTION_TYPE_CHOICES)
+
+    class Meta:
+        abstract = True
