@@ -1,5 +1,5 @@
 from django.core.mail import EmailMessage
-from django.forms import model_to_dict
+from django.core.paginator import Paginator
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from drf_yasg import openapi
@@ -73,17 +73,22 @@ page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер
 @swagger_auto_schema(method='GET', manual_parameters=[page_param])
 @api_view(['GET'])
 def get_log(request):
-    page = request.GET.get('page', 1)
-    logs = GameLog.objects.filter(user=request.user)[:1]
+    try:
+        page = int(request.GET.get('page'))
+    except (ValueError, TypeError):
+        page = 1
+    page_size = 10
+    logs = GameLog.objects.filter(user=request.user).order_by('-created')
+    paginator = Paginator(logs, page_size)
+
     log_dicts = []
-    log_dict = {}
-    for log in logs:
-        log_dict['user'] = log.user.username
-        log_dict['user_id'] = log.user.id
-        log_dict['target'] = log.game.rawg_name
-        log_dict['target_id'] = log.game.rawg_slug
-        log_dict['message'] = log.message
-        log_dict['created'] = log.created
-        log_dict['type'] = 'game'
+    for log in paginator.page(page):
+        log_dict = {'user': log.user.username,
+                    'user_id': log.user.id,
+                    'target': log.game.rawg_name,
+                    'target_id': log.game.rawg_slug,
+                    'message': log.message,
+                    'created': log.created,
+                    'type': 'game'}
         log_dicts.append(log_dict)
     return Response(log_dicts)
