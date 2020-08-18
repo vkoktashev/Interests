@@ -23,7 +23,8 @@ INSTALLED_APPS = [
 
     # our apps
     'users',
-    'games'
+    'games',
+    'movies',
 ]
 
 MIDDLEWARE = [
