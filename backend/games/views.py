@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from games.models import Game, UserGame, GameLog
 
 rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
+dict_statuses = dict(UserGame.STATUS_CHOICES)
 
 query_param = openapi.Parameter('query', openapi.IN_QUERY, description="Поисковый запрос", type=openapi.TYPE_STRING)
 page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
@@ -41,13 +42,13 @@ def get_game(request, slug):
     hltb_game = None
     if results_list is not None and len(results_list) > 0:
         hltb_game = max(results_list, key=lambda element: element.similarity).__dict__
-
     try:
         game = Game.objects.get(rawg_slug=rawg_game.slug)
         user_game = model_to_dict(UserGame.objects
                                   .exclude(status=UserGame.STATUS_NOT_PLAYED)
                                   .get(user=request.user, game=game))
-    except (Game.DoesNotExist, UserGame.DoesNotExist):
+        user_game['status'] = dict_statuses[user_game['status']]
+    except (Game.DoesNotExist, UserGame.DoesNotExist, TypeError) as e:
         user_game = None
 
     return Response({'rawg': rawg_game.json, 'hltb': hltb_game,
@@ -57,17 +58,17 @@ def get_game(request, slug):
 @swagger_auto_schema(method='PUT', request_body=openapi.Schema(
     type=openapi.TYPE_OBJECT,
     properties={
-        'status': openapi.Schema(type=openapi.TYPE_STRING, enum=list(dict(UserGame.STATUS_CHOICES).keys())),
+        'status': openapi.Schema(type=openapi.TYPE_STRING, enum=list(dict_statuses.values())),
     },
 ))
 @api_view(['PUT'])
 def set_status(request, slug):
     try:
-        game_status = request.POST['status']
+        game_status = request.data['status']
+        game_status = list(dict_statuses.keys())[list(dict_statuses.values()).index(game_status)]
     except KeyError as e:
         return Response(f'Did you forget {e.args[0]} parameter?', status=status.HTTP_400_BAD_REQUEST)
 
-    dict_statuses = dict(UserGame.STATUS_CHOICES)
     if game_status not in dict_statuses:
         return Response(f'Wrong status, must be on of {dict_statuses.keys()}', status=status.HTTP_400_BAD_REQUEST)
 
@@ -95,7 +96,8 @@ def set_status(request, slug):
     user_game, created = UserGame.objects.get_or_create(user=request.user, game=game)
     user_game.status = game_status
     user_game.save()
-    GameLog.objects.create(request.user, game, GameLog.ACTION_TYPE_STATUS, game_status)
+    GameLog.objects.create(user=request.user, game=game,
+                           action_type=GameLog.ACTION_TYPE_STATUS, action_result=game_status)
 
     if created:
         return Response(status=status.HTTP_201_CREATED)
@@ -112,7 +114,7 @@ def set_status(request, slug):
 @api_view(['PATCH'])
 def set_score(request, slug):
     try:
-        score = request.POST['score']
+        score = request.data['score']
     except KeyError as e:
         return Response(f'Something wrong with parameters. Did you forget \'{e.args[0]}\' parameter?',
                         status=status.HTTP_400_BAD_REQUEST)
@@ -148,7 +150,7 @@ def set_score(request, slug):
 @api_view(['PATCH'])
 def set_review(request, slug):
     try:
-        review = request.POST['review']
+        review = request.data['review']
     except KeyError as e:
         return Response(f'Something wrong with parameters. Did you forget \'{e.args[0]}\' parameter?',
                         status=status.HTTP_400_BAD_REQUEST)

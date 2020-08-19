@@ -21,11 +21,11 @@ class UserGame(UserScore):
     STATUS_NOT_PLAYED = 'not played'
 
     STATUS_CHOICES = (
-        (STATUS_PLAYING, 'Playing'),
-        (STATUS_COMPLETED, 'Completed'),
-        (STATUS_STOPPED, 'Stopped playing'),
-        (STATUS_GOING, 'Going to play'),
-        (STATUS_NOT_PLAYED, 'Not played')
+        (STATUS_PLAYING, 'Играю'),
+        (STATUS_COMPLETED, 'Прошел'),
+        (STATUS_STOPPED, 'Дропнул'),
+        (STATUS_GOING, 'Буду играть'),
+        (STATUS_NOT_PLAYED, 'Не играл')
     )
 
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
