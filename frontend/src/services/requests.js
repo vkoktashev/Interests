@@ -25,4 +25,16 @@ export async function getGame(id) {
     }
 }
 
+/**
+ * Запрос на изменение статуса игры
+ * @param {string} token Токен доступа
+ * @param {string} status Статус игры
+ * @param {string} gameSlug Слаг игры
+ */
+export async function patchGameStatus(token, gameSlug, status){
+    var AuthStr = 'Bearer ' + token;
+    const res = await axios.put(GET_GAME_URL + gameSlug + '/set-status', 
+        { params: {status: 'playing'} }, { 'headers': { 'Authorization': AuthStr } });
+}
+
 

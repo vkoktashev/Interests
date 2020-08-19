@@ -45,7 +45,7 @@ body {
     border-bottom-right-radius: 5px;
   }
   
-  .gameContentStatuses{
+  .contentStatuses{
     background-color: rgb(29, 13, 13);
     border: 1px solid #FFF;
     color: white;
@@ -60,13 +60,13 @@ body {
     font-size: 14px;
   }
 
-  .gameContentStatuses:focus{
+  /*.gameContentStatuses:focus{
     background-color: rgb(221, 0, 0);
   }
 
   .gameContentStatuses:hover{
     background-color: rgb(108, 10, 171);
-  }
+  }*/
 
   .metacritic{
     vertical-align: middle;
