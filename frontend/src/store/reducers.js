@@ -18,7 +18,8 @@ const initialState = Map(
                     game_image_url: ""
                 },
                 user_info:{
-                    status: null
+                    status: null,
+                    score: 0
                 }
             } 
         },
@@ -35,8 +36,12 @@ export default function reducer(state = initialState, action) {
         return state.setIn(['auth'], action.auth);
     case types.SET_CONTENT_GAME:
         return state.setIn(['content', 'game'], action.game);
+    case types.SET_CONTENT_GAME_USERINFO:
+        return state.setIn(['content', 'game', 'user_info'], action.user_info);
     case types.SET_CONTENT_GAME_USERINFO_STATUS:
         return state.setIn(['content', 'game', 'user_info', 'status'], action.status)
+    case types.SET_CONTENT_GAME_USERINFO_SCORE:
+        return state.setIn(['content', 'game', 'user_info', 'score'], action.score)
     case types.SET_LOGINFORM:
         return state.setIn(['openedPages', 'LoginForm'], action.isOpen);
     case types.SET_REGISTRATEFORM:

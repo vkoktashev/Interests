@@ -39,4 +39,24 @@ export async function patchGameStatus(token, gameSlug, status){
     }
 }
 
+/**
+ * Запрос на изменение оценки игры
+ * @param {string} token Токен доступа
+ * @param {int} score Оценка игры. От 1 до 10
+ * @param {string} gameSlug Слаг игры
+ */
+export async function patchGameScore(token, gameSlug, score){
+    try{
+        var AuthStr = 'Bearer ' + token;
+        console.warn(score);
+        const res = await axios.patch(GET_GAME_URL + gameSlug + '/set-score', 
+            {score: score }, { 'headers': { 'Authorization': AuthStr } });
+        if (res.status === 204 || res.status === 201)
+            return true;
+        else return null;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
 

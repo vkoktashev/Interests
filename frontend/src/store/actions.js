@@ -145,23 +145,37 @@ export function patchGameStatus(status){
         if (await dispatch(checkAuthorization())){
             Requests.patchGameStatus(localStorage.getItem('token'), selectors.getContentGame(getState()).rawg.slug, status).then((result) => {
                 if (!result){
-                    dispatch({
-                        type: actionTypes.GAME_REQUEST_ERROR,
-                        request: { error: true}, 
-                    });
                     toast.error("Ошибка обновления рейтинга")
                 }
                 else{
-                    dispatch({
-                        type: actionTypes.GAME_REQUEST_ERROR,
-                        request: { error: false}, 
-                    });
+                    if (!selectors.getContentGame(getState()).user_info){
+                        dispatch({
+                            type: actionTypes.SET_CONTENT_GAME_USERINFO,
+                            user_info: {}
+                        });
+                    }
                     dispatch({
                         type: actionTypes.SET_CONTENT_GAME_USERINFO_STATUS,
                         status: status, 
                     });
-                    
-                    toast.success("Рейтинг обновлен");
+                }
+            });
+        }
+    }
+}
+
+export function patchGameScore(score){
+    return async(dispatch, getState) => {
+        if (await dispatch(checkAuthorization())){
+            Requests.patchGameScore(localStorage.getItem('token'), selectors.getContentGame(getState()).rawg.slug, score).then((result) => {
+                if (!result){
+                    toast.error("Ошибка обновления рейтинга")
+                }
+                else{
+                    dispatch({
+                        type: actionTypes.SET_CONTENT_GAME_USERINFO_SCORE,
+                        score: score, 
+                    });
                 }
             });
         }

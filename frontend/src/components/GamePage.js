@@ -22,7 +22,7 @@ import StatusButtonGroup from "./StatusButtonGroup";
 /**
  * Основная страница приложения
  */
-function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, patchGameStatus} ) {
+function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, patchGameStatus, patchGameScore} ) {
     let { id } = useParams();
     const [genres, setGenres] = useState("");
     const [metascoreBlock, setMetascoreBlock] = useState("");
@@ -80,7 +80,16 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                                         <Rating stop={10}
                                             emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}} />}
                                             fullSymbol={<MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} />}
-                                            />
+                                            initialRating={game.user_info?game.user_info.score:0}
+                                            readonly={!loggedIn || (!game.user_info)}
+                                            onChange={(score) => {
+                                                if (!loggedIn){
+                                                    openLoginForm();
+                                                }else{
+                                                    patchGameScore(score);
+                                                }}
+                                            }
+                                        />
                                         <StatusButtonGroup loggedIn={loggedIn} 
                                             statuses={['Не играл', 'Буду играть', 'Играю', 'Дропнул', 'Прошел']}
                                             activeColor='#6c0aab' 
@@ -128,6 +137,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         patchGameStatus: (status) => {
             dispatch(actions.patchGameStatus(status));
+        },
+        patchGameScore: (score) => {
+            dispatch(actions.patchGameScore(score));
         }
 	}
 };
