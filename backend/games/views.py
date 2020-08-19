@@ -137,7 +137,7 @@ def set_score(request, slug):
     except ValidationError as e:
         return Response(e.message_dict.items(), status=status.HTTP_400_BAD_REQUEST)
 
-    GameLog.objects.create(request.user, game, GameLog.ACTION_TYPE_SCORE, score)
+    GameLog.objects.create(user=request.user, game=game, action_type=GameLog.ACTION_TYPE_SCORE, action_result=score)
 
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -173,6 +173,6 @@ def set_review(request, slug):
     except ValidationError as e:
         return Response(e.message_dict.items(), status=status.HTTP_400_BAD_REQUEST)
 
-    GameLog.objects.create(request.user, game, GameLog.ACTION_TYPE_REVIEW, review)
+    GameLog.objects.create(user=request.user, game=game, action_type=GameLog.ACTION_TYPE_REVIEW, action_result=review)
 
     return Response(status=status.HTTP_204_NO_CONTENT)
