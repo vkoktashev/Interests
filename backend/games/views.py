@@ -11,6 +11,8 @@ from rest_framework.response import Response
 
 from games.models import Game, UserGame, GameLog
 
+rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
+
 query_param = openapi.Parameter('query', openapi.IN_QUERY, description="Поисковый запрос", type=openapi.TYPE_STRING)
 page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
                                type=openapi.TYPE_INTEGER, default=1)
@@ -19,7 +21,6 @@ page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер
 @swagger_auto_schema(method='GET', manual_parameters=[query_param, page_param])
 @api_view(['GET'])
 def search(request):
-    rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
     query = request.GET.get('query', '')
     page = request.GET.get('page', 1)
     results = rawg.search(query, num_results=10, additional_param=f"&page={page}")
@@ -31,7 +32,6 @@ def search(request):
 
 @api_view(['GET'])
 def get_game(request, slug):
-    rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
     try:
         rawg_game = rawg.get_game(slug)
     except KeyError:
@@ -74,7 +74,6 @@ def set_status(request, slug):
     try:
         game = Game.objects.get(rawg_slug=slug)
     except Game.DoesNotExist:
-        rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
         try:
             rawg_game = rawg.get_game(slug)
         except KeyError:
