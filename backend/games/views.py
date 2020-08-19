@@ -1,7 +1,6 @@
 import rawgpy
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-from django.forms import model_to_dict
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
@@ -10,6 +9,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from games.models import Game, UserGame, GameLog
+from games.serializers import UserGameSerializer
 
 rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
 dict_statuses = dict(UserGame.STATUS_CHOICES)
@@ -44,15 +44,14 @@ def get_game(request, slug):
         hltb_game = max(results_list, key=lambda element: element.similarity).__dict__
     try:
         game = Game.objects.get(rawg_slug=rawg_game.slug)
-        user_game = model_to_dict(UserGame.objects
-                                  .exclude(status=UserGame.STATUS_NOT_PLAYED)
-                                  .get(user=request.user, game=game))
-        user_game['status'] = dict_statuses[user_game['status']]
-    except (Game.DoesNotExist, UserGame.DoesNotExist, TypeError) as e:
-        user_game = None
+        user_game = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).get(user=request.user, game=game)
+        serializer = UserGameSerializer(user_game)
+        user_info = serializer.data
+    except (Game.DoesNotExist, UserGame.DoesNotExist, TypeError):
+        user_info = None
 
     return Response({'rawg': rawg_game.json, 'hltb': hltb_game,
-                     'user_info': user_game})
+                     'user_info': user_info})
 
 
 @swagger_auto_schema(method='PUT', request_body=openapi.Schema(
@@ -65,12 +64,13 @@ def get_game(request, slug):
 def set_status(request, slug):
     try:
         game_status = request.data['status']
-        game_status = list(dict_statuses.keys())[list(dict_statuses.values()).index(game_status)]
     except KeyError as e:
         return Response(f'Did you forget {e.args[0]} parameter?', status=status.HTTP_400_BAD_REQUEST)
 
-    if game_status not in dict_statuses:
-        return Response(f'Wrong status, must be on of {dict_statuses.keys()}', status=status.HTTP_400_BAD_REQUEST)
+    if game_status not in dict_statuses.values():
+        return Response(f'Wrong status, must be on of {dict_statuses.values()}', status=status.HTTP_400_BAD_REQUEST)
+
+    game_status = list(dict_statuses.keys())[list(dict_statuses.values()).index(game_status)]
 
     try:
         game = Game.objects.get(rawg_slug=slug)
@@ -95,6 +95,7 @@ def set_status(request, slug):
 
     user_game, created = UserGame.objects.get_or_create(user=request.user, game=game)
     user_game.status = game_status
+    user_game.full_clean()
     user_game.save()
     GameLog.objects.create(user=request.user, game=game,
                            action_type=GameLog.ACTION_TYPE_STATUS, action_result=game_status)
