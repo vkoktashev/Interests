@@ -9,8 +9,10 @@ import {
     MDBRow,
     MDBCol,
     MDBContainer,
-    MDBIcon
+    MDBIcon,
+    MDBInput
 } from "mdbreact";
+import LoadingOverlay from 'react-loading-overlay';
 
 import Rating from "react-rating";
 import { connect } from 'react-redux'; 
@@ -22,16 +24,18 @@ import StatusButtonGroup from "./StatusButtonGroup";
 /**
  * Основная страница приложения
  */
-function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, patchGameStatus, patchGameScore} ) {
+function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, patchGameStatus, patchGameScore,
+    patchGameReview} ) {
     let { id } = useParams();
     const [genres, setGenres] = useState("");
     const [metascoreBlock, setMetascoreBlock] = useState("");
-
+    const [review, setReview] = useState("");
+    
     useEffect(
 		() => {
-			requestGame(id);
+            requestGame(id);
 		},
-		[id, requestGame]
+		[id, requestGame, loggedIn]
     );
 
     useEffect(
@@ -45,6 +49,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                 }
                  setGenres(newGenres);   
             }
+
             if (game.rawg.metacritic){
                 setMetascoreBlock(
                     <div>
@@ -57,12 +62,21 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
             }else{
                 setMetascoreBlock("");
             }
+
+            if (game.user_info){
+                setReview(game.user_info.review) ;
+            }
 		},
 		[game]
     );
     
     return (
 			<div className="bg" style={{backgroundImage: `url(${game.rawg.background_image_additional?game.rawg.background_image_additional:game.rawg.background_image})`}}>
+                <LoadingOverlay
+                    active={false}
+                    spinner
+                    text='С прибомбасом...'
+                    >
                 <MDBContainer>
                     <MDBRow>
                         <MDBCol md="0.5"></MDBCol>
@@ -81,7 +95,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                                             emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}} />}
                                             fullSymbol={<MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} />}
                                             initialRating={game.user_info?game.user_info.score:0}
-                                            readonly={!loggedIn || (!game.user_info)}
+                                            readonly={!loggedIn | (!game.user_info)}
                                             onChange={(score) => {
                                                 if (!loggedIn){
                                                     openLoginForm();
@@ -110,6 +124,29 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                                     <MDBCol >
                                         <h3 style={{paddingTop: "15px"}}>Описание</h3>
                                         <div dangerouslySetInnerHTML={{__html: game.rawg.description}} />
+                                        <h3 style={{paddingTop: "10px"}}>Отзывы</h3>
+                                        <MDBInput 
+                                            type="textarea" 
+                                            id="reviewInput"
+                                            label="Ваш отзыв" 
+                                            value={review}
+                                            onChange={(event) =>setReview(event.target.value)}
+                                            outline 
+                                        />
+                                        <button 
+                                            className={'contentStatuses'} 
+                                            disabled={!loggedIn | (!game.user_info)}
+                                            onClick={() => {
+                                                    if (!loggedIn){
+                                                        openLoginForm();
+                                                    }else{
+                                                        patchGameReview(document.getElementById('reviewInput').value);
+                                                    }
+                                                }
+                                            }
+                                            >
+                                            Сохранить
+                                        </button>
                                     </MDBCol>
                                 </MDBRow>
                             </MDBContainer>
@@ -117,6 +154,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                         <MDBCol md="0.5"></MDBCol>
                     </MDBRow>
                  </MDBContainer>
+                 </LoadingOverlay>
 			</div>
     	);
 }
@@ -140,6 +178,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         patchGameScore: (score) => {
             dispatch(actions.patchGameScore(score));
+        },
+        patchGameReview: (review) => {
+            dispatch(actions.patchGameReview(review))
         }
 	}
 };

@@ -42,6 +42,8 @@ export default function reducer(state = initialState, action) {
         return state.setIn(['content', 'game', 'user_info', 'status'], action.status)
     case types.SET_CONTENT_GAME_USERINFO_SCORE:
         return state.setIn(['content', 'game', 'user_info', 'score'], action.score)
+    case types.SET_CONTENT_GAME_USERINFO_REVIEW:
+        return state.setIn(['content', 'game', 'user_info', 'review'], action.review)
     case types.SET_LOGINFORM:
         return state.setIn(['openedPages', 'LoginForm'], action.isOpen);
     case types.SET_REGISTRATEFORM:

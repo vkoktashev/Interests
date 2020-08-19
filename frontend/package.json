@@ -12,6 +12,7 @@
     "mdbreact": "^4.27.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
+    "react-loading-overlay": "^1.0.1",
     "react-rating": "^2.0.5",
     "react-redux": "^7.2.1",
     "react-scripts": "3.4.1",

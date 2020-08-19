@@ -15,6 +15,9 @@ export function tryAuth(login, password) {
       try {
         const res = await getToken(login, password);
         if (res !== null){
+            localStorage.setItem('refreshToken', res.refreshToken);
+            localStorage.setItem('token', res.token);
+            localStorage.setItem('tokenTime', Date.now());
             dispatch({
                 type: actionTypes.SET_AUTH,
                 auth: { loggedIn: true }, 
@@ -27,9 +30,6 @@ export function tryAuth(login, password) {
                 type: actionTypes.SET_LOGINFORM,
                 isOpen: false 
             });
-            localStorage.setItem('refreshToken', res.refreshToken);
-            localStorage.setItem('token', res.token);
-            localStorage.setItem('tokenTime', Date.now())
         }else{
             dispatch({
                 type: actionTypes.AUTH_ERROR,
@@ -61,10 +61,10 @@ export function checkAuthorization(){
                     user: res.user, 
                 });
                 localStorage.setItem('token', res.token);
-                localStorage.setItem('tokenTIme', Date.now());
+                localStorage.setItem('tokenTime', Date.now());
                 return true;
             }else{
-                toast.warn("Произошла ошибка авторизации. Зайдите ещё раз");
+                //toast.warn("Произошла ошибка авторизации. Зайдите ещё раз");
                 dispatch(resetAuthorization());
                 return false;
             } 
@@ -81,9 +81,9 @@ export function checkAuthorization(){
 
 export function resetAuthorization(){
     return async(dispatch) => {
-        localStorage.setItem('refreshToken', null);
-        localStorage.setItem('token', null);
-        localStorage.setItem('tokenTime', null);
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('token');
+        localStorage.removeItem('tokenTime');
         dispatch({
             type: actionTypes.SET_AUTH,
             auth: { loggedIn: false }, 
@@ -175,6 +175,24 @@ export function patchGameScore(score){
                     dispatch({
                         type: actionTypes.SET_CONTENT_GAME_USERINFO_SCORE,
                         score: score, 
+                    });
+                }
+            });
+        }
+    }
+}
+
+export function patchGameReview(review){
+    return async(dispatch, getState) => {
+        if (await dispatch(checkAuthorization())){
+            Requests.patchGameReview(localStorage.getItem('token'), selectors.getContentGame(getState()).rawg.slug, review).then((result) => {
+                if (!result){
+                    toast.error("Ошибка обновления отзыва")
+                }
+                else{
+                    dispatch({
+                        type: actionTypes.SET_CONTENT_GAME_USERINFO_REVIEW,
+                        review: review, 
                     });
                 }
             });
