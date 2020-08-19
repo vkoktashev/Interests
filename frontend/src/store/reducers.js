@@ -1,115 +1,89 @@
 import * as types from './actionTypes';
+import { Map } from 'immutable';
 
 // Создаем reducer с начальным состоянием.
-const initialState = {
-    auth: { loggedIn: false, token: null, tokenTime: null },
-    user: { login:"", email:"" },
-    content: { 
-        game: {
-            rawg: {
-                name: "",
-                background_image: "",
-                background_image_additional: "",
-                developers: [{}],
-            },
-            hltb:{
-                game_image_url: ""
-            }
-        } 
-    },
-    openedPages: { LoginForm: false, RegistrateForm: false },
-    errors: {auth: false, registrate: false, gameRequest: false}
-};
+const initialState = Map(
+    {
+        auth: { loggedIn: false },
+        user: { login:"", email:"" },
+        content: { 
+            game: {
+                rawg: {
+                    name: "",
+                    background_image: "",
+                    background_image_additional: "",
+                    developers: [{}],
+                },
+                hltb:{
+                    game_image_url: ""
+                },
+                user_info:{
+                    status: null
+                }
+            } 
+        },
+        openedPages: { LoginForm: false, RegistrateForm: false },
+        errors: {auth: false, registrate: false, gameRequest: false }
+    }
+);
 
 export default function reducer(state = initialState, action) {
   switch (action.type) {
     case types.SET_USER:
-        return {
-            ...state,
-            user: action.user
-        };
+        return state.setIn(['user'], action.user);
     case types.SET_AUTH:
-        return{
-            ...state,
-            auth: action.auth
-        }
+        return state.setIn(['auth'], action.auth);
     case types.SET_CONTENT_GAME:
-        return{
-            ...state,
-            content: {...state.content, game: action.game}
-        }
-    case types.AUTH_ERROR:
-        return{
-            ...state,
-            errors:  {...state.auth, auth: action.error}
-        }
-    case types.REGISTRATE_ERROR:
-        return{
-            ...state,
-            errors:  {...state.auth, registrate: action.error}
-        }
+        return state.setIn(['content', 'game'], action.game);
+    case types.SET_CONTENT_GAME_USERINFO_STATUS:
+        return state.setIn(['content', 'game', 'user_info', 'status'], action.status)
     case types.SET_LOGINFORM:
-        return{
-            ...state,
-            openedPages:  {...state.openedPages, LoginForm: action.isOpen}
-        }
+        return state.setIn(['openedPages', 'LoginForm'], action.isOpen);
     case types.SET_REGISTRATEFORM:
-        return{
-            ...state,
-            openedPages:  {...state.openedPages, RegistrateForm: action.isOpen}
-        }
+        return state.setIn(['openedPages', 'RegistrateForm'], action.isOpen);
+    case types.AUTH_ERROR:
+        return state.setIn(['errors', 'auth'], action.error);
+    case types.REGISTRATE_ERROR:
+        return state.setIn(['errors', 'registrate'], action.error);
     case types.GAME_REQUEST_ERROR:
-        return{
-            ...state,
-            errors:  {...state.auth, gameRequest: action.error}
-        }
+        return state.setIn(['errors', 'gameRequest'], action.error);
     default:
       return state;
   }
 }
 
 export function getLoggedIn(state) {
-    return state.auth.loggedIn;
-}
-
-export function getToken(state) {
-    if (state)
-        return state.auth.token;
-}
-
-export function getTokenTime(state) {
-    if (state)
-        return state.auth.tokenTime;
+    return state.get('auth').loggedIn;
 }
 
 export function getAuth(state) {
-    return state.auth;
+    return state.get('auth');
 }
 
 export function getContentGame(state) {
-    return state.content.game;
+    return state.get('content').game;
 }
 
 export function getAuthError(state) {
-    return state.errors.auth;
+    return state.get('errors').auth;
 }
 
 export function getRegistrateError(state) {
-    return state.errors.registrate;
+    return state.get('errors').registrate;
 }
 
 export function getGameRequestError(state) {
-    return state.errors.gameRequest;
+    return state.get('errors').gameRequest;
 }
 
 export function getUser(state) {
-    return state.user;
+    return state.get('user');
 }
 
 export function getLoginForm(state) {
-    return state.openedPages.LoginForm;
+    return state.get('openedPages').LoginForm;
 }
 
 export function getRegistrateForm(state) {
-    return state.openedPages.RegistrateForm;
+    return state.get('openedPages').RegistrateForm;
 }

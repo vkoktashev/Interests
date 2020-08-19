@@ -17,7 +17,7 @@ export function tryAuth(login, password) {
         if (res !== null){
             dispatch({
                 type: actionTypes.SET_AUTH,
-                auth: { loggedIn: true, token: res.token, tokenTime: Date.now()}, 
+                auth: { loggedIn: true }, 
             });
             dispatch({
                 type: actionTypes.SET_USER,
@@ -28,6 +28,8 @@ export function tryAuth(login, password) {
                 isOpen: false 
             });
             localStorage.setItem('refreshToken', res.refreshToken);
+            localStorage.setItem('token', res.token);
+            localStorage.setItem('tokenTime', Date.now())
         }else{
             dispatch({
                 type: actionTypes.AUTH_ERROR,
@@ -46,35 +48,45 @@ export function tryAuth(login, password) {
 }
 
 export function checkAuthorization(){
-    return async(dispatch, getState) => {
-        if (selectors.getToken(getState()) == null | Date.now() - selectors.getTokenTime(getState()) > TOKEN_LIFETIME){
+    return async(dispatch) => {
+        if (localStorage.getItem('token') === null | Date.now() - localStorage.getItem('tokenTime') > TOKEN_LIFETIME){
             const res = await updateToken(localStorage.getItem("refreshToken"));
             if (res !== null){
                 dispatch({
                     type: actionTypes.SET_AUTH,
-                    auth: { loggedIn: true, token: res.token, tokenTime: Date.now()}, 
+                    auth: { loggedIn: true }, 
                 });
                 dispatch({
                     type: actionTypes.SET_USER,
                     user: res.user, 
                 });
+                localStorage.setItem('token', res.token);
+                localStorage.setItem('tokenTIme', Date.now());
                 return true;
             }else{
-                //toast.warn("Произошла ошибка авторизации. Зайдите ещё раз");
+                toast.warn("Произошла ошибка авторизации. Зайдите ещё раз");
                 dispatch(resetAuthorization());
                 return false;
             } 
-        }else
+        }else{
+            dispatch({
+                type: actionTypes.SET_AUTH,
+                auth: { loggedIn: true }, 
+            });
             return true;
+        }
+            
     }
 }
 
 export function resetAuthorization(){
     return async(dispatch) => {
         localStorage.setItem('refreshToken', null);
+        localStorage.setItem('token', null);
+        localStorage.setItem('tokenTime', null);
         dispatch({
             type: actionTypes.SET_AUTH,
-            auth: { loggedIn: false, token: null, tokenTime: null}, 
+            auth: { loggedIn: false }, 
         });
         dispatch({
             type: actionTypes.SET_USER,
@@ -109,7 +121,7 @@ export function registrationRequest(username, email, password){
 
 export function requestGame(id){
     return async(dispatch) => {
-        Requests.getGame(id).then((result) => {
+        Requests.getGame(localStorage.getItem('token'), id).then((result) => {
             console.log(result);
             if (result != null){
                 dispatch({
@@ -131,7 +143,7 @@ export function requestGame(id){
 export function patchGameStatus(status){
     return async(dispatch, getState) => {
         if (await dispatch(checkAuthorization())){
-            Requests.patchGameStatus(selectors.getToken(getState()), selectors.getContentGame(getState()).rawg.slug, status).then((result) => {
+            Requests.patchGameStatus(localStorage.getItem('token'), selectors.getContentGame(getState()).rawg.slug, status).then((result) => {
                 if (!result){
                     dispatch({
                         type: actionTypes.GAME_REQUEST_ERROR,
@@ -144,6 +156,11 @@ export function patchGameStatus(status){
                         type: actionTypes.GAME_REQUEST_ERROR,
                         request: { error: false}, 
                     });
+                    dispatch({
+                        type: actionTypes.SET_CONTENT_GAME_USERINFO_STATUS,
+                        status: status, 
+                    });
+                    
                     toast.success("Рейтинг обновлен");
                 }
             });

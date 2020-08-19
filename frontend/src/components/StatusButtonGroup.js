@@ -1,13 +1,14 @@
 import React, {useState, useEffect} from "react";
 
 
-function StatusButtonGroup( {statuses, activeColor, onChangeStatus} ) {
+function StatusButtonGroup( {statuses, activeColor, onChangeStatus, userStatus} ) {
     const [activeStatus, setActiveStatus] = useState('');
 
     useEffect(() =>{
-            setActiveStatus(statuses[0]);
+
+            setActiveStatus(userStatus?userStatus:statuses[0]);
         },
-        [statuses]
+        [statuses, userStatus]
     );
 
     return(
@@ -16,8 +17,9 @@ function StatusButtonGroup( {statuses, activeColor, onChangeStatus} ) {
                                             key={status}
                                             style={{backgroundColor: (activeStatus === status?activeColor:'#1d0d0d')}}
                                             onClick={()=>{ 
-                                                setActiveStatus(status);
-                                                onChangeStatus(status);
+                                                if (onChangeStatus(status)){
+                                                    setActiveStatus(status);
+                                                }
                                             }}>
                                             {status}
                                         </button>) }

@@ -1,22 +1,15 @@
 import axios from "axios";
 import {GET_GAME_URL} from "../settings";
 
-let axiosConfig = {
-    headers: {
-        'Content-Type': 'application/json;charset=UTF-8'
-    }
-};
-
 /**
  * Запрос к бд, получающий список домов в определенном городе  
  * @param {string} city  Название города
  * @returns {Array} Массив объектов домов. Возвращает false в случае неудачного запроса 
  */
-export async function getGame(id) {
+export async function getGame(token, id) {
     try{
-        //var AuthStr = 'Bearer ' + token;
-        //const res = await axios.get(HOMES_URL, { params: { city: city } }, { 'headers': { 'Authorization': AuthStr } });
-        const res = await axios.get(GET_GAME_URL + id, axiosConfig);
+        var AuthStr = 'Bearer ' + token;
+        const res = await axios.get(GET_GAME_URL + id, { 'headers': { 'Authorization': AuthStr } });
         let data = res.data;	
         return data;
     }catch(e){
@@ -32,9 +25,18 @@ export async function getGame(id) {
  * @param {string} gameSlug Слаг игры
  */
 export async function patchGameStatus(token, gameSlug, status){
-    var AuthStr = 'Bearer ' + token;
-    const res = await axios.put(GET_GAME_URL + gameSlug + '/set-status', 
-        { params: {status: 'playing'} }, { 'headers': { 'Authorization': AuthStr } });
+    try{
+        var AuthStr = 'Bearer ' + token;
+        console.log(status);
+        const res = await axios.put(GET_GAME_URL + gameSlug + '/set-status', 
+            {status: status }, { 'headers': { 'Authorization': AuthStr } });
+        if (res.status === 204 || res.status === 201)
+            return true;
+        else return null;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
 }
 
 
