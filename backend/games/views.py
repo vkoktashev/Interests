@@ -42,6 +42,7 @@ def get_game(request, slug):
     hltb_game = None
     if results_list is not None and len(results_list) > 0:
         hltb_game = max(results_list, key=lambda element: element.similarity).__dict__
+
     try:
         game = Game.objects.get(rawg_slug=rawg_game.slug)
         user_game = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).get(user=request.user, game=game)
@@ -95,7 +96,6 @@ def set_status(request, slug):
 
     user_game, created = UserGame.objects.get_or_create(user=request.user, game=game)
     user_game.status = game_status
-    user_game.full_clean()
     user_game.save()
     GameLog.objects.create(user=request.user, game=game,
                            action_type=GameLog.ACTION_TYPE_STATUS, action_result=game_status)
@@ -174,5 +174,41 @@ def set_review(request, slug):
         return Response(e.message_dict.items(), status=status.HTTP_400_BAD_REQUEST)
 
     GameLog.objects.create(user=request.user, game=game, action_type=GameLog.ACTION_TYPE_REVIEW, action_result=review)
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@swagger_auto_schema(method='PATCH', request_body=openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'time': openapi.Schema(type=openapi.TYPE_STRING, description="Время, потраченное на игру"),
+    }
+))
+@api_view(['PATCH'])
+def set_time(request, slug):
+    try:
+        time = request.data['time']
+    except KeyError as e:
+        return Response(f'Something wrong with parameters. Did you forget \'{e.args[0]}\' parameter?',
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        game = Game.objects.get(rawg_slug=slug)
+    except Game.DoesNotExist:
+        return Response('Game not found. Check your slug', status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        user_game = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).get(user=request.user, game=game)
+    except UserGame.DoesNotExist:
+        return Response('UserGame not found. Check your slug', status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        user_game.spent_time = time
+        user_game.full_clean()
+        user_game.save()
+    except ValidationError as e:
+        return Response(e.message_dict.items(), status=status.HTTP_400_BAD_REQUEST)
+
+    GameLog.objects.create(user=request.user, game=game, action_type=GameLog.ACTION_TYPE_TIME, action_result=time)
 
     return Response(status=status.HTTP_204_NO_CONTENT)
