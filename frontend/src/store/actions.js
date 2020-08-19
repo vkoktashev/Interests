@@ -60,7 +60,7 @@ export function checkAuthorization(){
                 });
                 return true;
             }else{
-                toast.warn("Произошла ошибка авторизации. Зайдите ещё раз");
+                //toast.warn("Произошла ошибка авторизации. Зайдите ещё раз");
                 dispatch(resetAuthorization());
                 return false;
             } 
@@ -125,6 +125,29 @@ export function requestGame(id){
                 });
             }
         });
+    }
+}
+
+export function patchGameStatus(status){
+    return async(dispatch, getState) => {
+        if (await dispatch(checkAuthorization())){
+            Requests.patchGameStatus(selectors.getToken(getState()), selectors.getContentGame(getState()).rawg.slug, status).then((result) => {
+                if (!result){
+                    dispatch({
+                        type: actionTypes.GAME_REQUEST_ERROR,
+                        request: { error: true}, 
+                    });
+                    toast.error("Ошибка обновления рейтинга")
+                }
+                else{
+                    dispatch({
+                        type: actionTypes.GAME_REQUEST_ERROR,
+                        request: { error: false}, 
+                    });
+                    toast.success("Рейтинг обновлен");
+                }
+            });
+        }
     }
 }
 

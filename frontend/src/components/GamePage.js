@@ -16,20 +16,22 @@ import Rating from "react-rating";
 import { connect } from 'react-redux'; 
 import * as selectors from '../store/reducers';
 import * as actions from '../store/actions';
+import StatusButtonGroup from "./StatusButtonGroup";
 
 
 /**
  * Основная страница приложения
  */
-function GamePage ( {requestGame, game, requestError, loggedIn} ) {
+function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, patchGameStatus} ) {
     let { id } = useParams();
     const [genres, setGenres] = useState("");
+    const [metascoreBlock, setMetascoreBlock] = useState("");
 
     useEffect(
 		() => {
 			requestGame(id);
 		},
-		[]
+		[id, requestGame]
     );
 
     useEffect(
@@ -42,6 +44,18 @@ function GamePage ( {requestGame, game, requestError, loggedIn} ) {
                         newGenres += ", ";
                 }
                  setGenres(newGenres);   
+            }
+            if (game.rawg.metacritic){
+                setMetascoreBlock(
+                    <div>
+                        <div className="metacritic">
+                            <p>{game.rawg.metacritic}</p>
+                        </div>
+                        <p className="metacriticText">Metascore</p>
+                    </div>
+                );
+            }else{
+                setMetascoreBlock("");
             }
 		},
 		[game]
@@ -67,22 +81,22 @@ function GamePage ( {requestGame, game, requestError, loggedIn} ) {
                                             emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}} />}
                                             fullSymbol={<MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} />}
                                             />
-                                        <div>
-                                            <button className="gameContentStatuses" onClick={()=>{}} >Не играл</button>
-                                            <button className="gameContentStatuses">К прохождению</button>
-                                            <button className="gameContentStatuses">Играю</button>
-                                            <button className="gameContentStatuses">Дропнул</button>
-                                            <button className="gameContentStatuses">Прошел</button>
-                                        </div>
+                                        <StatusButtonGroup loggedIn={loggedIn} 
+                                            statuses={['Не играл', 'К прохождению', 'Играю', 'Дропнул', 'Прошел']}
+                                            activeColor='#6c0aab' 
+                                            onChangeStatus={(status) => {
+                                                if (!loggedIn){
+                                                    openLoginForm();
+                                                }else{
+                                                    patchGameStatus(status);
+                                                }
+                                            }}/>
                                     </MDBCol>
                                     <MDBCol size="1">
-                                        <div className="metacritic">
-                                            <p>{game.rawg.metacritic}</p>
-                                        </div>
-                                        <p className="metacriticText">Metascore</p>
-                                        </MDBCol>
-                                    </MDBRow> 
-                                    <MDBRow className="gameContentBody"> 
+                                        { metascoreBlock }
+                                    </MDBCol>
+                                </MDBRow> 
+                                <MDBRow className="gameContentBody"> 
                                     <MDBCol >
                                         <h3 style={{paddingTop: "15px"}}>Описание</h3>
                                         <div dangerouslySetInnerHTML={{__html: game.rawg.description}} />
@@ -96,12 +110,6 @@ function GamePage ( {requestGame, game, requestError, loggedIn} ) {
 			</div>
     	);
 }
-/*
-<MDBRow className="mb-4">
-                <MDBCol md="4">
-                    <img src={game.rawg.} className="img-fluid" alt="" />
-                </MDBCol>
-                </MDBRow>*/
 
 const mapStateToProps = state => ({
     loggedIn: selectors.getLoggedIn(state),
@@ -112,7 +120,13 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = (dispatch) => {
 	return {
 		requestGame: (id) => {
-			dispatch(actions.requestGame(id));
+            dispatch(actions.requestGame(id));
+        },
+        openLoginForm: () => {
+            dispatch(actions.openLoginForm());
+        },
+        patchGameStatus: (status) => {
+            dispatch(actions.patchGameStatus(status));
         }
 	}
 };

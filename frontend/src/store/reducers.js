@@ -10,7 +10,7 @@ const initialState = {
                 name: "",
                 background_image: "",
                 background_image_additional: "",
-                developers: [{}]
+                developers: [{}],
             },
             hltb:{
                 game_image_url: ""
