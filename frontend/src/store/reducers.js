@@ -2,7 +2,7 @@ import * as types from './actionTypes';
 
 // Создаем reducer с начальным состоянием.
 const initialState = {
-    auth: { loggedIn: false, token: null, tokenTime: null },
+    auth: { loggedIn: false },
     user: { login:"", email:"" },
     content: { 
         game: {
@@ -14,11 +14,14 @@ const initialState = {
             },
             hltb:{
                 game_image_url: ""
+            },
+            user_info:{
+                status: null
             }
         } 
     },
     openedPages: { LoginForm: false, RegistrateForm: false },
-    errors: {auth: false, registrate: false, gameRequest: false}
+    errors: {auth: false, registrate: false, gameRequest: false }
 };
 
 export default function reducer(state = initialState, action) {
@@ -61,7 +64,13 @@ export default function reducer(state = initialState, action) {
     case types.GAME_REQUEST_ERROR:
         return{
             ...state,
-            errors:  {...state.auth, gameRequest: action.error}
+            errors:  {...state.errors, gameRequest: action.error}
+        }
+    case types.SET_CONTENT_GAME_USERINFO_STATUS:
+        
+        return{
+            ...state,
+            content:  {...state.content, game: {...state.content.game, user_info: {...state.content.game.user_info, status: action.status}}}
         }
     default:
       return state;
@@ -70,16 +79,6 @@ export default function reducer(state = initialState, action) {
 
 export function getLoggedIn(state) {
     return state.auth.loggedIn;
-}
-
-export function getToken(state) {
-    if (state)
-        return state.auth.token;
-}
-
-export function getTokenTime(state) {
-    if (state)
-        return state.auth.tokenTime;
 }
 
 export function getAuth(state) {

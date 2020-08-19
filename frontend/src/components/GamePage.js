@@ -82,8 +82,9 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                                             fullSymbol={<MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} />}
                                             />
                                         <StatusButtonGroup loggedIn={loggedIn} 
-                                            statuses={['Не играл', 'К прохождению', 'Играю', 'Дропнул', 'Прошел']}
+                                            statuses={['Не играл', 'Буду играть', 'Играю', 'Дропнул', 'Прошел']}
                                             activeColor='#6c0aab' 
+                                            userStatus={game.user_info?game.user_info.status:'Не играл'}
                                             onChangeStatus={(status) => {
                                                 if (!loggedIn){
                                                     openLoginForm();
