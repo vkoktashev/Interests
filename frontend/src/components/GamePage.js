@@ -25,15 +25,21 @@ import StatusButtonGroup from "./StatusButtonGroup";
  * Основная страница приложения
  */
 function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, patchGameStatus, patchGameScore,
-    patchGameReview} ) {
+    patchGameReview, gameIsLoading} ) {
     let { id } = useParams();
     const [genres, setGenres] = useState("");
     const [metascoreBlock, setMetascoreBlock] = useState("");
     const [review, setReview] = useState("");
-    
+    const [costyl, setCostyl] = useState(true);
+
     useEffect(
 		() => {
-            requestGame(id);
+            if (!costyl){
+                requestGame(id);
+            }else{
+                setCostyl(false)
+            }
+            
 		},
 		[id, requestGame, loggedIn]
     );
@@ -73,7 +79,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
     return (
 			<div className="bg" style={{backgroundImage: `url(${game.rawg.background_image_additional?game.rawg.background_image_additional:game.rawg.background_image})`}}>
                 <LoadingOverlay
-                    active={false}
+                    active={gameIsLoading}
                     spinner
                     text='С прибомбасом...'
                     >
@@ -92,8 +98,8 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                                         <p style={{marginBottom: "2px"}}>Дата релиза: {game.rawg.released}</p>
                                         <p>Жанр: {genres}</p>
                                         <Rating stop={10}
-                                            emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}} />}
-                                            fullSymbol={<MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} />}
+                                            emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}} title={'опа'}/>}
+                                            fullSymbol={[1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} title={n}/>)}
                                             initialRating={game.user_info?game.user_info.score:0}
                                             readonly={!loggedIn | (!game.user_info)}
                                             onChange={(score) => {
@@ -103,7 +109,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                                                     patchGameScore(score);
                                                 }}
                                             }
-                                        />
+                                        /> <br/>
                                         <StatusButtonGroup loggedIn={loggedIn} 
                                             statuses={['Не играл', 'Буду играть', 'Играю', 'Дропнул', 'Прошел']}
                                             activeColor='#6c0aab' 
@@ -124,7 +130,11 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                                     <MDBCol >
                                         <h3 style={{paddingTop: "15px"}}>Описание</h3>
                                         <div dangerouslySetInnerHTML={{__html: game.rawg.description}} />
-                                        <h3 style={{paddingTop: "10px"}}>Отзывы</h3>
+                                    </MDBCol>
+                                </MDBRow>
+                                <MDBRow>
+                                <MDBCol size="6">
+                                    <h3 style={{paddingTop: "10px"}}>Отзывы</h3>
                                         <MDBInput 
                                             type="textarea" 
                                             id="reviewInput"
@@ -134,7 +144,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                                             outline 
                                         />
                                         <button 
-                                            className={'contentStatuses'} 
+                                            className={'savePreviewButton'} 
                                             disabled={!loggedIn | (!game.user_info)}
                                             onClick={() => {
                                                     if (!loggedIn){
@@ -162,7 +172,8 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
 const mapStateToProps = state => ({
     loggedIn: selectors.getLoggedIn(state),
     requestError: selectors.getGameRequestError(state),
-    game: selectors.getContentGame(state)
+    game: selectors.getContentGame(state),
+    gameIsLoading: selectors.getIsLoadingContentGame(state)
 });
 
 const mapDispatchToProps = (dispatch) => {

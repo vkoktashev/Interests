@@ -121,6 +121,10 @@ export function registrationRequest(username, email, password){
 
 export function requestGame(id){
     return async(dispatch) => {
+        dispatch({
+            type: actionTypes.SET_IS_LOADING_CONTENT_GAME,
+            isLoading: true
+        });
         Requests.getGame(localStorage.getItem('token'), id).then((result) => {
             console.log(result);
             if (result != null){
@@ -128,12 +132,20 @@ export function requestGame(id){
                     type: actionTypes.SET_CONTENT_GAME,
                     game: result, 
                 });
+                dispatch({
+                    type: actionTypes.SET_IS_LOADING_CONTENT_GAME,
+                    isLoading: false
+                });
             }
             else{
                 toast.error("ИГра не найдена!");
                 dispatch({
                     type: actionTypes.GAME_REQUEST_ERROR,
                     error: true 
+                });
+                dispatch({
+                    type: actionTypes.SET_IS_LOADING_CONTENT_GAME,
+                    isLoading: false
                 });
             }
         });

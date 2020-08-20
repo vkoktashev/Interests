@@ -17,7 +17,7 @@ body {
  }
 
 .bg {
-  height: 100vh;
+  height: auto;
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -29,6 +29,7 @@ body {
   background-color: #fff;
   color: rgb(0, 0, 0);
   margin-top: 30px;
+  margin-bottom: 30px;
   padding: 0px
   }
 
@@ -62,6 +63,26 @@ body {
     margin-top:  15px;
     cursor: pointer;
     font-size: 14px;
+  }
+  
+  .savePreviewButton{
+    background-color: rgb(29, 13, 13);
+    border: 1px solid #FFF;
+    color: white;
+    padding: 4px 8px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 0px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .ratingDigits{
+    padding-left: 12px;
+    padding-right: 10px;
+    font-size: 12px;
   }
 
   /*.gameContentStatuses:focus{

@@ -24,7 +24,8 @@ const initialState = Map(
             } 
         },
         openedPages: { LoginForm: false, RegistrateForm: false },
-        errors: {auth: false, registrate: false, gameRequest: false }
+        errors: {auth: false, registrate: false, gameRequest: false },
+        isLoading: {contentGame: false}
     }
 );
 
@@ -54,6 +55,8 @@ export default function reducer(state = initialState, action) {
         return state.setIn(['errors', 'registrate'], action.error);
     case types.GAME_REQUEST_ERROR:
         return state.setIn(['errors', 'gameRequest'], action.error);
+    case types.SET_IS_LOADING_CONTENT_GAME:
+        return state.setIn(['isLoading', 'contentGame'], action.isLoading);
     default:
       return state;
   }
@@ -93,4 +96,8 @@ export function getLoginForm(state) {
 
 export function getRegistrateForm(state) {
     return state.get('openedPages').RegistrateForm;
+}
+
+export function getIsLoadingContentGame(state) {
+    return state.get('isLoading').contentGame;
 }
