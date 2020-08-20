@@ -38,17 +38,20 @@ def get_game(request, slug):
     except KeyError:
         return Response('Wrong slug', status=status.HTTP_400_BAD_REQUEST)
 
-    results_list = HowLongToBeat(1.0).search(rawg_game.name)
-    hltb_game = None
-    if results_list is not None and len(results_list) > 0:
+    try:
+        results_list = HowLongToBeat(1.0).search(rawg_game.name)
         hltb_game = max(results_list, key=lambda element: element.similarity).__dict__
+    except ValueError:
+        hltb_game = None
+    except ConnectionError:
+        return Response('Hltb connection error, try again', status=status.HTTP_502_BAD_GATEWAY)
 
     try:
         game = Game.objects.get(rawg_slug=rawg_game.slug)
         user_game = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).get(user=request.user, game=game)
         serializer = UserGameSerializer(user_game)
         user_info = serializer.data
-    except (Game.DoesNotExist, UserGame.DoesNotExist, TypeError):
+    except (Game.DoesNotExist, UserGame.DoesNotExist):
         user_info = None
 
     return Response({'rawg': rawg_game.json, 'hltb': hltb_game,
@@ -69,7 +72,7 @@ def set_status(request, slug):
         return Response(f'Did you forget {e.args[0]} parameter?', status=status.HTTP_400_BAD_REQUEST)
 
     if game_status not in dict_statuses.values():
-        return Response(f'Wrong status, must be on of {dict_statuses.values()}', status=status.HTTP_400_BAD_REQUEST)
+        return Response(f'Wrong status, must be one of {dict_statuses.values()}', status=status.HTTP_400_BAD_REQUEST)
 
     game_status = list(dict_statuses.keys())[list(dict_statuses.values()).index(game_status)]
 
@@ -81,10 +84,14 @@ def set_status(request, slug):
         except KeyError:
             return Response('Wrong slug', status=status.HTTP_400_BAD_REQUEST)
 
-        results_list = HowLongToBeat(1.0).search(rawg_game.name)
-        hltb_game = None
-        if results_list is not None and len(results_list) > 0:
+        try:
+            results_list = HowLongToBeat(1.0).search(rawg_game.name)
             hltb_game = max(results_list, key=lambda element: element.similarity)
+        except ValueError:
+            hltb_game = None
+        except ConnectionError:
+            return Response('Hltb connection error, try again', status=status.HTTP_502_BAD_GATEWAY)
+
         try:
             if hltb_game is not None:
                 game = Game.objects.create(rawg_name=rawg_game.name, rawg_id=rawg_game.id, rawg_slug=rawg_game.slug,
