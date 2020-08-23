@@ -1,6 +1,9 @@
+import rawgpy
 from django.db import models
 
 from users.models import UserScore, UserLog
+
+rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
 
 
 class Game(models.Model):
@@ -33,6 +36,9 @@ class UserGame(UserScore):
 
     class Meta:
         unique_together = (("user", "game"),)
+
+    def get_rawg_game(self):
+        return (rawg.get_game(self.game.rawg_slug)).json
 
 
 class GameLog(UserLog):

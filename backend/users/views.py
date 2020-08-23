@@ -10,7 +10,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from config.settings import EMAIL_HOST_USER
-from games.models import GameLog
+from games.models import GameLog, UserGame
+from games.serializers import UserGameRawgSerializer
 from users.serializers import UserSerializer
 from .models import User
 from .tokens import account_activation_token
@@ -100,3 +101,20 @@ def get_log(request):
 
     return Response({'log': log_dicts,
                      'has_next_page': paginator_page.has_next()})
+
+
+@api_view(['GET'])
+def get_user(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response('Wrong id', status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).filter(user=user)
+        serializer = UserGameRawgSerializer(user_games, many=True)
+        games = serializer.data
+    except UserGame.DoesNotExist:
+        games = None
+
+    return Response({'username': user.username, 'games': games})

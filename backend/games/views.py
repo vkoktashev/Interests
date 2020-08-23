@@ -1,4 +1,3 @@
-import rawgpy
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from drf_yasg import openapi
@@ -8,10 +7,9 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from games.models import Game, UserGame, GameLog
+from games.models import Game, UserGame, GameLog, rawg
 from games.serializers import UserGameSerializer
 
-rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
 dict_statuses = dict(UserGame.STATUS_CHOICES)
 
 query_param = openapi.Parameter('query', openapi.IN_QUERY, description="Поисковый запрос", type=openapi.TYPE_STRING)
