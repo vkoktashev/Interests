@@ -51,7 +51,7 @@ def get_game(request, slug):
         user_game = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).get(user=request.user, game=game)
         serializer = UserGameSerializer(user_game)
         user_info = serializer.data
-    except (Game.DoesNotExist, UserGame.DoesNotExist):
+    except (Game.DoesNotExist, UserGame.DoesNotExist, TypeError):
         user_info = None
 
     return Response({'rawg': rawg_game.json, 'hltb': hltb_game,
