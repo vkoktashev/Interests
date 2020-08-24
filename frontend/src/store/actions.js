@@ -212,6 +212,30 @@ export function patchGameReview(review){
     }
 }
 
+export function searchGames(query, page){
+    return async(dispatch) => {
+        dispatch({
+            type: actionTypes.SET_IS_LOADING_SEARCH_GAMES,
+            isLoading: true
+        });
+        Requests.searchGames(query, page).then((result) => {
+            if (!result){
+                toast.error("Ошибка поиска")
+            }
+            else{
+                dispatch({
+                    type: actionTypes.SET_SEARCH_CONTENT_GAMES,
+                    games: result, 
+                });
+            }
+            dispatch({
+                type: actionTypes.SET_IS_LOADING_SEARCH_GAMES,
+                isLoading: false
+            });
+        });
+    }
+}
+
 export function setUser(user) {
     return({ type: actionTypes.SET_USER, user: user });
 }

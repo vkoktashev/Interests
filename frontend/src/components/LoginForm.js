@@ -22,21 +22,22 @@ function LoginForm( {isOpen, closeForm, logIn, authError} ) {
 	      <MDBContainer>
 	        <MDBRow>
 	          <MDBCol>
-	            <form>
+	            <form onSubmit={(event) => {event.preventDefault();
+										logIn(document.getElementById("loginInput").value,
+											document.getElementById("passwordInput").value)}}>
 	              <p className="h4 text-center mb-4">Войти</p>
 				  <p className="note note-danger" hidden={!authError} >Неверный логин или пароль!</p>
-	              <label htmlFor="defaultFormLoginEmailEx" className="grey-text">
+	              <label htmlFor="loginInput" className="grey-text">
 	                Логин
 	              </label>
-	              <input type="text" id="defaultFormLoginEmailEx" className="form-control" />
+	              <input type="text" id="loginInput" className="form-control" />
 	              <br />
-	              <label htmlFor="defaultFormLoginPasswordEx" className="grey-text">
+	              <label htmlFor="passwordInput" className="grey-text">
 	                Пароль
 	              </label>
-	              <input type="password" id="defaultFormLoginPasswordEx" className="form-control" />
+	              <input type="password" id="passwordInput" className="form-control" />
 	              <div className="text-center mt-4">
-					<MDBBtn style={{color: "white", backgroundColor: "#6C0AAB"}} type="button" onClick={() => logIn(document.getElementById("defaultFormLoginEmailEx").value,
-																													document.getElementById("defaultFormLoginPasswordEx").value)}>
+					<MDBBtn style={{color: "white", backgroundColor: "#6C0AAB"}} type="submit">
 						Войти
 					</MDBBtn>
 	              </div>

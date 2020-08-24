@@ -1,5 +1,5 @@
 import axios from "axios";
-import {GET_GAME_URL} from "../settings";
+import {GET_GAME_URL, SEARCH_GAMES_URL} from "../settings";
 
 let axiosConfig = {
     headers: {
@@ -92,3 +92,19 @@ export async function patchGameReview(token, gameSlug, review){
     }
 }
 
+/**
+ * Запрос на поиск игр
+ * @param {string} query Поисковый запрос
+ * @param {int} page Страница поиска
+ */
+export async function searchGames(query, page){
+    try{
+        const res = await axios.get(SEARCH_GAMES_URL, { params : {query: query, page: page} }, 
+            { 'headers': { 'Content-Type': 'application/json;charset=UTF-8' } });
+            console.log(res);
+        return res.data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}

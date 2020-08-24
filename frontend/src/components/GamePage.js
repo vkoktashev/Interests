@@ -34,13 +34,14 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
 
     useEffect(
 		() => {
-            if (!costyl){
+            requestGame(id);
+            /*if (!costyl){
                 requestGame(id);
             }else{
                 setCostyl(false)
-            }
-            
-		},
+            }*/
+        },
+        // eslint-disable-next-line
 		[id, requestGame, loggedIn]
     );
 
@@ -88,7 +89,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                         <MDBCol md="0.5"></MDBCol>
                         <MDBCol className="gameContentPage"> 
                             <MDBContainer>
-                                <MDBRow className="gameContentHeader">
+                                <MDBRow className="gameContentHeader rounded-top" >
                                     <MDBCol size="5">
                                         <img src={game.rawg.background_image} className="img-fluid" alt=""/>
                                     </MDBCol>
@@ -98,7 +99,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                                         <p style={{marginBottom: "2px"}}>Дата релиза: {game.rawg.released}</p>
                                         <p>Жанр: {genres}</p>
                                         <Rating stop={10}
-                                            emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}} title={'опа'}/>}
+                                            emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}}/>}
                                             fullSymbol={[1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} title={n}/>)}
                                             initialRating={game.user_info?game.user_info.score:0}
                                             readonly={!loggedIn | (!game.user_info)}
