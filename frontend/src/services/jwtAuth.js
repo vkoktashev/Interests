@@ -21,7 +21,7 @@ export async function getToken(username, password){
                 }, axiosConfig);
 
         let userData = jwt_decode(res.data.access);
-        let user = {name: userData.name, surname: userData.surname, email: userData.email}
+        let user = {username: userData.username, id: userData.user_id, email: userData.email}
 
         return {token: res.data.access, refreshToken: res.data.refresh, user: user};
     }catch(e){
@@ -41,7 +41,7 @@ export async function updateToken(refreshToken){
                     }, axiosConfig);
                     
             let userData = jwt_decode(res.data.access);
-            let user = {name: userData.name, surname: userData.surname, email: userData.email}
+            let user = {username: userData.username, id: userData.user_id, email: userData.email};
 
             return {token: res.data.access, user: user};
         }catch(e){

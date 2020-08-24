@@ -5,7 +5,7 @@ import { Map } from 'immutable';
 const initialState = Map(
     {
         auth: { loggedIn: false },
-        user: { login:"", email:"" },
+        user: { username:"", email:"", id: null },
         content: { 
             game: {
                 rawg: {

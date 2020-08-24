@@ -10,14 +10,18 @@ import {
     MDBNavbarNav,
     MDBNavLink,
     MDBIcon,
-    MDBFormInline
+    MDBFormInline,
+    MDBDropdown,
+    MDBDropdownItem,
+    MDBDropdownMenu,
+    MDBDropdownToggle
 } from "mdbreact";
 
 import { connect } from 'react-redux'; 
 import * as selectors from '../store/reducers';
 import * as actions from '../store/actions';
 
-function Navbar( {loggedIn, onLoginClick, onLogoutClick, onRegistrationClick} ) {
+function Navbar( {loggedIn, onLoginClick, onLogoutClick, onRegistrationClick, user} ) {
     let history = useHistory();
 
     return(
@@ -49,10 +53,18 @@ function Navbar( {loggedIn, onLoginClick, onLogoutClick, onRegistrationClick} ) 
                         <MDBIcon fab icon="accessible-icon" /> Стать смешариком
                     </MDBNavLink>
                 </MDBNavItem>
-                <MDBNavItem className="font-weight-bold" hidden={!loggedIn}>
-                    <MDBNavLink to="#" onClick={ onLogoutClick }>
-                        <MDBIcon icon="sign-out-alt"/> Выйти
-                    </MDBNavLink>
+                <MDBNavItem hidden={!loggedIn} className="font-weight-bold">
+                    <MDBDropdown>
+                        <MDBDropdownToggle nav caret>
+                        <span className="mr-2">{user.username}</span>
+                        </MDBDropdownToggle>
+                        <MDBDropdownMenu>
+                        <MDBDropdownItem href={"/profile/"+user.id}>Профиль</MDBDropdownItem>
+                        <MDBDropdownItem onClick={ onLogoutClick }>
+                            <MDBIcon icon="sign-out-alt"/> Выйти
+                        </MDBDropdownItem>
+                        </MDBDropdownMenu>
+                    </MDBDropdown>
                 </MDBNavItem>
             </MDBNavbarNav>
         </MDBNavbar>
@@ -60,7 +72,8 @@ function Navbar( {loggedIn, onLoginClick, onLogoutClick, onRegistrationClick} ) 
 }
 
 const mapStateToProps = state => ({
-	loggedIn: selectors.getLoggedIn(state)
+    loggedIn: selectors.getLoggedIn(state),
+    user: selectors.getUser(state)
 });
 
   const mapDispatchToProps = (dispatch) => {
