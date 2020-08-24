@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
         return super(UserSerializer, self).create(validated_data)
 
 
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer, ABC):
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
