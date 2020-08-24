@@ -8,11 +8,12 @@ from rest_framework import status
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from config.settings import EMAIL_HOST_USER
 from games.models import GameLog, UserGame
 from games.serializers import UserGameRawgSerializer
-from users.serializers import UserSerializer
+from users.serializers import UserSerializer, MyTokenObtainPairSerializer
 from .models import User
 from .tokens import account_activation_token
 
@@ -118,3 +119,7 @@ def get_user(request, user_id):
         games = None
 
     return Response({'username': user.username, 'games': games})
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
