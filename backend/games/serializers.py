@@ -8,4 +8,12 @@ class UserGameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserGame
-        fields = ('game', 'status', 'user', 'score', 'review')
+        fields = ('status', 'score', 'review', 'spent_time')
+
+
+class UserGameRawgSerializer(UserGameSerializer):
+    game = serializers.DictField(source='get_rawg_game')
+
+    class Meta:
+        model = UserGame
+        fields = ('game', 'status', 'score', 'review', 'spent_time')
