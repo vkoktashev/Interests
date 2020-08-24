@@ -5,7 +5,6 @@ function StatusButtonGroup( {statuses, activeColor, onChangeStatus, userStatus} 
     const [activeStatus, setActiveStatus] = useState('');
 
     useEffect(() =>{
-
             setActiveStatus(userStatus?userStatus:statuses[0]);
         },
         [statuses, userStatus]

@@ -5,6 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import HomePage from "./components/HomePage";
 import GamePage from "./components/GamePage";
+import SearchPage from "./components/SearchPage";
 import LoginForm from "./components/LoginForm";
 import RegistrationForm from "./components/RegistrationForm";
 import Navbar from "./components/Navbar";
@@ -18,6 +19,7 @@ class Routes extends React.Component {
         <Switch>
             <Route exact path="/" component={HomePage} />
             <Route exact path="/game/:id" component={GamePage} />
+            <Route exact path="/search/:query" component={SearchPage} />
             <Route render={function () { return <h1>Not Found</h1>; }} />
         </Switch>
       <ToastContainer position="top-center" hideProgressBar newestOnTop closeOnClick/>
