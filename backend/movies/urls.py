@@ -1,11 +1,9 @@
-from django.urls import path
+from rest_framework import routers
 
-from movies.views import search, get_movie
+from movies.viewsets import SearchMoviesViewSet, MovieViewSet
 
-urlpatterns = [
-    path('movie/<int:movie_id>', get_movie),
-    # path('game/<str:slug>/set-status', set_status),
-    # path('game/<str:slug>/set-score', set_score),
-    # path('game/<str:slug>/set-review', set_review),
-    path('search', search),
-]
+router = routers.DefaultRouter()
+router.register('search', SearchMoviesViewSet, basename='search')
+router.register('movie', MovieViewSet, basename='movie')
+
+urlpatterns = router.urls

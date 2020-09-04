@@ -1,12 +1,9 @@
-from django.urls import path
+from rest_framework import routers
 
-from games.views import search, set_score, set_review, set_status, get_game, set_time
+from games.viewsets import SearchGamesViewSet, GameViewSet
 
-urlpatterns = [
-    path('game/<str:slug>', get_game),
-    path('game/<str:slug>/set-status', set_status),
-    path('game/<str:slug>/set-score', set_score),
-    path('game/<str:slug>/set-review', set_review),
-    path('game/<str:slug>/set-time', set_time),
-    path('search', search),
-]
+router = routers.DefaultRouter()
+router.register('search', SearchGamesViewSet, basename='search')
+router.register('game', GameViewSet, basename='game')
+
+urlpatterns = router.urls

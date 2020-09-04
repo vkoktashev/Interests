@@ -51,13 +51,13 @@ class UserLog(models.Model):
     ACTION_TYPE_SCORE = 'score'
     ACTION_TYPE_REVIEW = 'review'
     ACTION_TYPE_STATUS = 'status'
-    ACTION_TYPE_TIME = 'time'
+    ACTION_TYPE_TIME = 'spent_time'
 
     ACTION_TYPE_CHOICES = (
         (ACTION_TYPE_SCORE, 'Score changed'),
         (ACTION_TYPE_REVIEW, 'Review changed'),
         (ACTION_TYPE_STATUS, 'Status changed'),
-        (ACTION_TYPE_STATUS, 'Spent time changed'),
+        (ACTION_TYPE_TIME, 'Spent time changed'),
     )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
