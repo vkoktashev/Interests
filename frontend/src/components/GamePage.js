@@ -30,6 +30,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
     const [genres, setGenres] = useState("");
     const [metascoreBlock, setMetascoreBlock] = useState("");
     const [review, setReview] = useState("");
+    const [hltbInfo, setHtlbInfo] = useState({ameplay_main_extra: -1, gameplay_main: -1, gameplay_comletionist: -1});
     const [costyl, setCostyl] = useState(true);
 
     useEffect(
@@ -70,6 +71,12 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                 setMetascoreBlock("");
             }
 
+            if (game.hltb){
+                setHtlbInfo(game.hltb);
+            }else{
+                setHtlbInfo({gameplay_main_extra: -1, gameplay_main: -1, gameplay_comletionist: -1});
+            }
+
             if (game.user_info){
                 setReview(game.user_info.review) ;
             }
@@ -97,7 +104,12 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                                         <h1>{game.rawg.name}</h1>
                                         <p style={{marginBottom: "2px"}}>Разработчик: {game.rawg.developers[0].name}</p>
                                         <p style={{marginBottom: "2px"}}>Дата релиза: {game.rawg.released}</p>
-                                        <p>Жанр: {genres}</p>
+                                        <p style={{marginBottom: "2px"}}>Жанр: {genres}</p>
+                                        <p style={{marginBottom: "4px"}} 
+                                            hidden={hltbInfo.gameplay_main < 0}>
+                                            <MDBIcon far icon="clock" /> Время прохождения: {hltbInfo.gameplay_main} {hltbInfo.gameplay_main_unit}
+                                        </p>
+                                        <br/>
                                         <Rating stop={10}
                                             emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}}/>}
                                             fullSymbol={[1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} title={n}/>)}

@@ -4,6 +4,7 @@ import {getToken, updateToken, registration} from "../services/jwtAuth";
 import {TOKEN_LIFETIME} from "../settings";
 import * as Requests from "../services/requests";
 import { toast } from "react-toastify";
+import jwt_decode from 'jwt-decode';
 
 export function tryAuth(login, password) {
     return async(dispatch) => {
@@ -69,6 +70,12 @@ export function checkAuthorization(){
                 return false;
             } 
         }else{
+            let userData = jwt_decode(localStorage.getItem('token'));
+            let user = {username: userData.username, id: userData.user_id, email: userData.email};
+            dispatch({
+                type: actionTypes.SET_USER,
+                user: user, 
+            });
             dispatch({
                 type: actionTypes.SET_AUTH,
                 auth: { loggedIn: true }, 
@@ -90,7 +97,7 @@ export function resetAuthorization(){
         });
         dispatch({
             type: actionTypes.SET_USER,
-            user: { login:"", email:"" }, 
+            user: { username:"", id: null, email:"" }, 
         });
     }
 }
