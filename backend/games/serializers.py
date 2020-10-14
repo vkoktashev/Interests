@@ -21,11 +21,11 @@ class ChoicesField(serializers.Field):
 
 
 class UserGameSerializer(serializers.ModelSerializer):
-    status = ChoicesField(choices=UserGame.STATUS_CHOICES)
+    status = ChoicesField(choices=UserGame.STATUS_CHOICES, required=False)
 
     class Meta:
         model = UserGame
-        fields = ('status', 'score', 'review', 'spent_time')
+        fields = '__all__'
 
 
 class UserGameRawgSerializer(UserGameSerializer):

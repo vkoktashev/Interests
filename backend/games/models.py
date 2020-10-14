@@ -32,7 +32,7 @@ class UserGame(UserScore):
     )
 
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES)
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=STATUS_NOT_PLAYED)
 
     class Meta:
         unique_together = (("user", "game"),)

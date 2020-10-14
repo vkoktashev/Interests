@@ -32,10 +32,11 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
 class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
     queryset = UserGame.objects.all()
     serializer_class = UserGameSerializer
+    lookup_field = 'slug'
 
     def retrieve(self, request, *args, **kwargs):
         try:
-            rawg_game = rawg.get_game(kwargs.get('pk'))
+            rawg_game = rawg.get_game(kwargs.get('slug'))
         except KeyError:
             return Response('Wrong slug', status=status.HTTP_404_NOT_FOUND)
 
@@ -60,10 +61,10 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
     @swagger_auto_schema(request_body=UserGameSerializer)
     def update(self, request, *args, **kwargs):
         try:
-            game = Game.objects.get(rawg_slug=kwargs.get('pk'))
+            game = Game.objects.get(rawg_slug=kwargs.get('slug'))
         except Game.DoesNotExist:
             try:
-                rawg_game = rawg.get_game(kwargs.get('pk'))
+                rawg_game = rawg.get_game(kwargs.get('slug'))
             except KeyError:
                 return Response('Wrong slug', status=status.HTTP_400_BAD_REQUEST)
 
