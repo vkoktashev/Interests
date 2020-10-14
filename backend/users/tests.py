@@ -14,7 +14,6 @@ class UsersManagersTests(TestCase):
         self.assertEqual(user.username, 'Jenya')
         self.assertEqual(user.email, 'normal@user.com')
         self.assertFalse(user.is_active)
-        self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)
 
         with self.assertRaises(TypeError):
@@ -32,7 +31,6 @@ class UsersManagersTests(TestCase):
         self.assertEqual(admin_user.username, 'admin')
         self.assertEqual(admin_user.email, 'super@user.com')
         self.assertTrue(admin_user.is_active)
-        self.assertTrue(admin_user.is_staff)
         self.assertTrue(admin_user.is_superuser)
 
         with self.assertRaises(ValueError):
@@ -42,7 +40,7 @@ class UsersManagersTests(TestCase):
 
 class AuthTests(TestCase):
     def test_signup(self):
-        url = '/users/auth/signup'
+        url = '/users/auth/signup/'
         c = Client()
         response = c.post(url, {'username': 'john', 'password': 'smith^', 'email': 'email'})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -56,8 +54,8 @@ class AuthTests(TestCase):
         self.assertEqual(response.json()['email'], 'email@email.com')
 
     def test_login(self):
-        login_url = '/users/auth/login'
-        refresh_token_url = '/users/auth/refresh-token'
+        login_url = '/users/auth/login/'
+        refresh_token_url = '/users/auth/refresh-token/'
         c = Client()
 
         User = get_user_model()
@@ -104,14 +102,14 @@ class AuthTests(TestCase):
         user = User.objects.create_user(username=username, email=email, password=password)
         self.assertEqual(user.is_active, False)
 
-        url = '/users/auth/confirm-email'
+        url = '/users/auth/confirmation/'
         uid64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = account_activation_token.make_token(user)
 
-        activation_link = f"{url}/{uid64}/random_string"
+        activation_link = f"{url}?uid64={uid64}&token=random_string/"
         response = c.get(activation_link)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        activation_link = f"{url}/{uid64}/{token}"
+        activation_link = f"{url}?uid64={uid64}&token={token}"
         response = c.get(activation_link)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

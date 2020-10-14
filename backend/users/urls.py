@@ -9,8 +9,8 @@ router.register('auth', AuthViewSet, basename='auth')
 router.register('user', UserViewSet, basename='user')
 
 urlpatterns = [
-    path('auth/login', MyTokenObtainPairView.as_view()),
-    path('auth/refresh-token', TokenRefreshView.as_view()),
+    path('auth/login/', MyTokenObtainPairView.as_view()),
+    path('auth/refresh-token/', TokenRefreshView.as_view()),
     # path('auth/password/change'),
     # path('auth/password/restore'),
 ]

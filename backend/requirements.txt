@@ -1,7 +1,7 @@
 wheel
 Django
 django-cors-headers
-djangorestframework
+djangorestframework==3.11.0
 djangorestframework_simplejwt
 django-debug-toolbar
 Pillow
