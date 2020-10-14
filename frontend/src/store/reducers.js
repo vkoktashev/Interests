@@ -19,7 +19,9 @@ const initialState = Map(
                 },
                 user_info:{
                     status: null,
-                    score: 0
+                    review: "",
+                    score: 0,
+                    spent_time: 0
                 }
             } 
         },

@@ -8,19 +8,20 @@ let axiosConfig = {
 };
 
 /**
- * Запрос к бд, получающий список домов в определенном городе  
- * @param {string} city  Название города
- * @returns {Array} Массив объектов домов. Возвращает false в случае неудачного запроса 
+ * Запрос к бд, получающий информацию об игре
+ * @param {string} token Токен доступа
+ * @param {string} id ID игры  
+ * @returns {object} Информация об игре
  */
 export async function getGame(token, id) {
     let data;
     try{
         if (token){
             var AuthStr = 'Bearer ' + token;
-            const res = await axios.get(GET_GAME_URL + id, { 'headers': { 'Authorization': AuthStr } });
+            const res = await axios.get(GET_GAME_URL + id + "/", { 'headers': { 'Authorization': AuthStr } });
             data = res.data;
         }else{
-            const res = await axios.get(GET_GAME_URL + id, axiosConfig);
+            const res = await axios.get(GET_GAME_URL + id + "/", axiosConfig);
             data = res.data;
         }
         return data;
@@ -36,14 +37,14 @@ export async function getGame(token, id) {
  * @param {string} status Статус игры
  * @param {string} gameSlug Слаг игры
  */
-export async function patchGameStatus(token, gameSlug, status){
+export async function setGameStatus(token, gameSlug, status){
     try{
         var AuthStr = 'Bearer ' + token;
         console.log(status);
-        const res = await axios.put(GET_GAME_URL + gameSlug + '/set-status', 
-            {status: status }, { 'headers': { 'Authorization': AuthStr } });
+        const res = await axios.put(GET_GAME_URL + gameSlug + "/", 
+            {status: status, score: 0, review: "", spent_time: 0 }, { 'headers': { 'Authorization': AuthStr } });
         if (res.status === 204 || res.status === 201)
-            return true;
+            return res.data;
         else return null;
     }catch(e){
         console.log("AXIOS ERROR: ", e);
@@ -52,18 +53,19 @@ export async function patchGameStatus(token, gameSlug, status){
 }
 
 /**
- * Запрос на изменение оценки игры
+ * Запрос на изменение статуса игры
  * @param {string} token Токен доступа
- * @param {int} score Оценка игры. От 1 до 10
+ * @param {object} user_info Объект статуса игры
  * @param {string} gameSlug Слаг игры
  */
-export async function patchGameScore(token, gameSlug, score){
+export async function patchGameStatus(token, gameSlug, user_info){
     try{
         var AuthStr = 'Bearer ' + token;
-        const res = await axios.patch(GET_GAME_URL + gameSlug + '/set-score', 
-            {score: score }, { 'headers': { 'Authorization': AuthStr } });
+        console.log(user_info);
+        const res = await axios.patch(GET_GAME_URL + gameSlug + "/", 
+        {status: user_info.status, score: user_info.score, review: user_info.review, spent_time: user_info.spent_time }, { 'headers': { 'Authorization': AuthStr } });
         if (res.status === 204 || res.status === 201)
-            return true;
+            return res.data;
         else return null;
     }catch(e){
         console.log("AXIOS ERROR: ", e);
@@ -71,26 +73,6 @@ export async function patchGameScore(token, gameSlug, score){
     }
 }
 
-/**
- * Запрос на изменение комментария пользователя по игре
- * @param {string} token Токен доступа
- * @param {int} review Комментарий пользовтеля по игре
- * @param {string} gameSlug Слаг игры
- */
-export async function patchGameReview(token, gameSlug, review){
-    try{
-        var AuthStr = 'Bearer ' + token;
-        const res = await axios.patch(GET_GAME_URL + gameSlug + '/set-review', 
-            {review: review }, { 'headers': { 'Authorization': AuthStr } });
-
-        if (res.status === 204 || res.status === 201)
-            return true;
-        else return null;
-    }catch(e){
-        console.log("AXIOS ERROR: ", e);
-        return null;
-    }
-}
 
 /**
  * Запрос на поиск игр
