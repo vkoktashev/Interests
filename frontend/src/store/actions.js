@@ -145,7 +145,7 @@ export function requestGame(id){
                 });
             }
             else{
-                toast.error("ИГра не найдена!");
+                toast.error("Игра не найдена!");
                 dispatch({
                     type: actionTypes.GAME_REQUEST_ERROR,
                     error: true 
@@ -159,23 +159,17 @@ export function requestGame(id){
     }
 }
 
-export function patchGameStatus(status){
+export function setGameStatus(status){
     return async(dispatch, getState) => {
         if (await dispatch(checkAuthorization())){
-            Requests.patchGameStatus(localStorage.getItem('token'), selectors.getContentGame(getState()).rawg.slug, status).then((result) => {
+            Requests.setGameStatus(localStorage.getItem('token'), selectors.getContentGame(getState()).rawg.slug, status).then((result) => {
                 if (!result){
-                    toast.error("Ошибка обновления рейтинга")
+                    toast.error("Ошибка обновления статуса")
                 }
                 else{
-                    if (!selectors.getContentGame(getState()).user_info){
-                        dispatch({
-                            type: actionTypes.SET_CONTENT_GAME_USERINFO,
-                            user_info: {}
-                        });
-                    }
                     dispatch({
-                        type: actionTypes.SET_CONTENT_GAME_USERINFO_STATUS,
-                        status: status, 
+                        type: actionTypes.SET_CONTENT_GAME_USERINFO,
+                        user_info: result
                     });
                 }
             });
@@ -183,35 +177,17 @@ export function patchGameStatus(status){
     }
 }
 
-export function patchGameScore(score){
+export function patchGameStatus(user_info){
     return async(dispatch, getState) => {
         if (await dispatch(checkAuthorization())){
-            Requests.patchGameScore(localStorage.getItem('token'), selectors.getContentGame(getState()).rawg.slug, score).then((result) => {
+            Requests.patchGameStatus(localStorage.getItem('token'), selectors.getContentGame(getState()).rawg.slug, user_info).then((result) => {
                 if (!result){
                     toast.error("Ошибка обновления рейтинга")
                 }
                 else{
                     dispatch({
-                        type: actionTypes.SET_CONTENT_GAME_USERINFO_SCORE,
-                        score: score, 
-                    });
-                }
-            });
-        }
-    }
-}
-
-export function patchGameReview(review){
-    return async(dispatch, getState) => {
-        if (await dispatch(checkAuthorization())){
-            Requests.patchGameReview(localStorage.getItem('token'), selectors.getContentGame(getState()).rawg.slug, review).then((result) => {
-                if (!result){
-                    toast.error("Ошибка обновления отзыва")
-                }
-                else{
-                    dispatch({
-                        type: actionTypes.SET_CONTENT_GAME_USERINFO_REVIEW,
-                        review: review, 
+                        type: actionTypes.SET_CONTENT_GAME_USERINFO,
+                        user_info: result
                     });
                 }
             });

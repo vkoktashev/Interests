@@ -24,8 +24,8 @@ import StatusButtonGroup from "./StatusButtonGroup";
 /**
  * Основная страница приложения
  */
-function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, patchGameStatus, patchGameScore,
-    patchGameReview, gameIsLoading} ) {
+function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, setGameStatus, patchGameStatus, 
+    gameIsLoading} ) {
     let { id } = useParams();
     const [genres, setGenres] = useState("");
     const [metascoreBlock, setMetascoreBlock] = useState("");
@@ -119,7 +119,10 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                    patchGameScore(score);
+                                                    patchGameStatus(patchGameStatus({
+                                                        ...game.user_info,
+                                                        score: score
+                                                    }));
                                                 }}
                                             }
                                         /> <br/>
@@ -131,7 +134,12 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                    patchGameStatus(status);
+                                                    console.log(" ВОТ");
+                                                    console.log();
+                                                    !game.user_info?setGameStatus(status):patchGameStatus({
+                                                        ...game.user_info,
+                                                        status: status
+                                                    });
                                                 }
                                             }}/>
                                     </MDBCol>
@@ -163,7 +171,10 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, p
                                                     if (!loggedIn){
                                                         openLoginForm();
                                                     }else{
-                                                        patchGameReview(document.getElementById('reviewInput').value);
+                                                        patchGameStatus({
+                                                            ...game.user_info,
+                                                            review: document.getElementById('reviewInput').value
+                                                        });
                                                     }
                                                 }
                                             }
@@ -197,14 +208,11 @@ const mapDispatchToProps = (dispatch) => {
         openLoginForm: () => {
             dispatch(actions.openLoginForm());
         },
-        patchGameStatus: (status) => {
-            dispatch(actions.patchGameStatus(status));
+        patchGameStatus: (user_info) => {
+            dispatch(actions.patchGameStatus(user_info));
         },
-        patchGameScore: (score) => {
-            dispatch(actions.patchGameScore(score));
-        },
-        patchGameReview: (review) => {
-            dispatch(actions.patchGameReview(review))
+        setGameStatus: (status) => {
+            dispatch(actions.setGameStatus(status));
         }
 	}
 };
