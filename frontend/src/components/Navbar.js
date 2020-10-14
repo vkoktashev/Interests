@@ -45,12 +45,12 @@ function Navbar( {loggedIn, onLoginClick, onLogoutClick, onRegistrationClick, us
 
                 <MDBNavItem className="font-weight-bold" hidden={loggedIn}>
                     <MDBNavLink to="#" onClick={onLoginClick} >
-                        <MDBIcon icon="sign-in-alt" /> Уже смешарик
+                        <MDBIcon icon="sign-in-alt" /> Войти
                     </MDBNavLink>
                 </MDBNavItem>
                 <MDBNavItem className="font-weight-bold" hidden={loggedIn}>
                     <MDBNavLink to="#" onClick={onRegistrationClick} >
-                        <MDBIcon fab icon="accessible-icon" /> Стать смешариком
+                        <MDBIcon fab icon="accessible-icon" /> Зарегистрироваться
                     </MDBNavLink>
                 </MDBNavItem>
                 <MDBNavItem hidden={!loggedIn} className="font-weight-bold">

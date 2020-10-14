@@ -103,4 +103,4 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
         if created:
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+            return Response(serializer.data, status=status.HTTP_200_OK)

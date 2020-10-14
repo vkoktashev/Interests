@@ -48,7 +48,7 @@ function SearchPage ( { loggedIn, openLoginForm, searchIsLoading, searchGame, ga
                 <LoadingOverlay
                     active={searchIsLoading}
                     spinner
-                    text='Ищем ваше говно...'
+                    text='Ищем...'
                     >
                 <MDBContainer>
                     <MDBRow>

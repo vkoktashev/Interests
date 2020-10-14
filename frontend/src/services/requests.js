@@ -7,6 +7,10 @@ let axiosConfig = {
     }
 };
 
+axios.defaults.headers.common = {
+    "Content-Type": "application/json"
+  }
+
 /**
  * Запрос к бд, получающий информацию об игре
  * @param {string} token Токен доступа
@@ -34,16 +38,18 @@ export async function getGame(token, id) {
 /**
  * Запрос на изменение статуса игры
  * @param {string} token Токен доступа
- * @param {string} status Статус игры
+ * @param {object} user_info Статус игры
  * @param {string} gameSlug Слаг игры
  */
-export async function setGameStatus(token, gameSlug, status){
+export async function setGameStatus(token, gameSlug, user_info){
     try{
         var AuthStr = 'Bearer ' + token;
-        console.log(status);
+        console.log(user_info);
         const res = await axios.put(GET_GAME_URL + gameSlug + "/", 
-            {status: status, score: 0, review: "", spent_time: 0 }, { 'headers': { 'Authorization': AuthStr } });
-        if (res.status === 204 || res.status === 201)
+            user_info, { headers: { 'Authorization': AuthStr } });
+        console.log(res); 
+        
+        if (res.status === 204 || res.status === 200)
             return res.data;
         else return null;
     }catch(e){
@@ -57,21 +63,21 @@ export async function setGameStatus(token, gameSlug, status){
  * @param {string} token Токен доступа
  * @param {object} user_info Объект статуса игры
  * @param {string} gameSlug Слаг игры
- */
+ 
 export async function patchGameStatus(token, gameSlug, user_info){
     try{
         var AuthStr = 'Bearer ' + token;
-        console.log(user_info);
         const res = await axios.patch(GET_GAME_URL + gameSlug + "/", 
         {status: user_info.status, score: user_info.score, review: user_info.review, spent_time: user_info.spent_time }, { 'headers': { 'Authorization': AuthStr } });
-        if (res.status === 204 || res.status === 201)
+        console.log(res.data);
+        if (res.status === 204 || res.status === 201|| res.status === 200)
             return res.data;
         else return null;
     }catch(e){
         console.log("AXIOS ERROR: ", e);
         return null;
     }
-}
+}*/
 
 
 /**

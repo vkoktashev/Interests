@@ -159,10 +159,10 @@ export function requestGame(id){
     }
 }
 
-export function setGameStatus(status){
+export function setGameStatus(user_info){
     return async(dispatch, getState) => {
         if (await dispatch(checkAuthorization())){
-            Requests.setGameStatus(localStorage.getItem('token'), selectors.getContentGame(getState()).rawg.slug, status).then((result) => {
+            Requests.setGameStatus(localStorage.getItem('token'), selectors.getContentGame(getState()).rawg.slug, user_info).then((result) => {
                 if (!result){
                     toast.error("Ошибка обновления статуса")
                 }
@@ -177,12 +177,13 @@ export function setGameStatus(status){
     }
 }
 
-export function patchGameStatus(user_info){
+/*export function patchGameStatus(user_info){
     return async(dispatch, getState) => {
         if (await dispatch(checkAuthorization())){
             Requests.patchGameStatus(localStorage.getItem('token'), selectors.getContentGame(getState()).rawg.slug, user_info).then((result) => {
+                console.log(result)
                 if (!result){
-                    toast.error("Ошибка обновления рейтинга")
+                    toast.error("Ошибка обновления статуса")
                 }
                 else{
                     dispatch({
@@ -193,7 +194,7 @@ export function patchGameStatus(user_info){
             });
         }
     }
-}
+}*/
 
 export function searchGames(query, page){
     return async(dispatch) => {

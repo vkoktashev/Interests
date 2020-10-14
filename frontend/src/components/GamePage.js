@@ -24,8 +24,8 @@ import StatusButtonGroup from "./StatusButtonGroup";
 /**
  * Основная страница приложения
  */
-function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, setGameStatus, patchGameStatus, 
-    gameIsLoading} ) {
+function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, setGameStatus, gameIsLoading
+    } ) {
     let { id } = useParams();
     const [genres, setGenres] = useState("");
     const [metascoreBlock, setMetascoreBlock] = useState("");
@@ -89,7 +89,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                 <LoadingOverlay
                     active={gameIsLoading}
                     spinner
-                    text='С прибомбасом...'
+                    text='Загрузка...'
                     >
                 <MDBContainer>
                     <MDBRow>
@@ -119,10 +119,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                    patchGameStatus(patchGameStatus({
-                                                        ...game.user_info,
-                                                        score: score
-                                                    }));
+                                                    setGameStatus({score: score });
                                                 }}
                                             }
                                         /> <br/>
@@ -136,10 +133,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                                                 }else{
                                                     console.log(" ВОТ");
                                                     console.log();
-                                                    !game.user_info?setGameStatus(status):patchGameStatus({
-                                                        ...game.user_info,
-                                                        status: status
-                                                    });
+                                                   setGameStatus({ status: status });
                                                 }
                                             }}/>
                                     </MDBCol>
@@ -171,10 +165,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                                                     if (!loggedIn){
                                                         openLoginForm();
                                                     }else{
-                                                        patchGameStatus({
-                                                            ...game.user_info,
-                                                            review: document.getElementById('reviewInput').value
-                                                        });
+                                                        setGameStatus({   review: document.getElementById('reviewInput').value  });
                                                     }
                                                 }
                                             }
@@ -208,9 +199,9 @@ const mapDispatchToProps = (dispatch) => {
         openLoginForm: () => {
             dispatch(actions.openLoginForm());
         },
-        patchGameStatus: (user_info) => {
+        /*patchGameStatus: (user_info) => {
             dispatch(actions.patchGameStatus(user_info));
-        },
+        },*/
         setGameStatus: (status) => {
             dispatch(actions.setGameStatus(status));
         }
