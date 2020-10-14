@@ -19,6 +19,7 @@ def create_log(instance, **kwargs):
     for field in fields:
         if field in game_log_dict and (not old_fields or fields[field] != old_fields[field]):
             action_type = field
-            action_result = fields[field]
+            if fields[field]:
+                action_result = fields[field]
             GameLog.objects.create(user=instance.user, game=instance.game,
                                    action_type=action_type, action_result=action_result)
