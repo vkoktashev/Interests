@@ -21,5 +21,5 @@ def create_log(instance, **kwargs):
             action_type = field
             if fields[field]:
                 action_result = fields[field]
-            GameLog.objects.create(user=instance.user, game=instance.game,
-                                   action_type=action_type, action_result=action_result)
+                GameLog.objects.create(user=instance.user, game=instance.game,
+                                       action_type=action_type, action_result=action_result)
