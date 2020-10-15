@@ -66,8 +66,8 @@ class AuthViewSet(GenericViewSet):
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @swagger_auto_schema(manual_parameters=[page_param])
-    @action(detail=False, methods=['get'])
-    def get_log(self, request):
+    @action(detail=True, methods=['get'])
+    def get_log(self, request, *args, **kwargs):
         try:
             page = int(request.GET.get('page'))
         except (ValueError, TypeError):
