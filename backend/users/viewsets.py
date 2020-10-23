@@ -19,7 +19,7 @@ from .models import User
 from .tokens import account_activation_token
 
 TYPE_GAME = 'game'
-SITE_URL = 'http://35.193.124.214:81'
+SITE_URL = '35.193.124.214:81'
 
 page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
                                type=openapi.TYPE_INTEGER, default=1)
