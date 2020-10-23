@@ -8,12 +8,11 @@ services:
       - postgres_data_interests:/var/lib/postgresql/data/
     restart: always
     environment:
-      POSTGRES_PORT: 5454
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 8080
       POSTGRES_DB: interests
     ports:
-      - "5454:5454"
+      - "5432:5454"
 
   
   back:
