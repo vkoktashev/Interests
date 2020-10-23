@@ -19,7 +19,7 @@ from .models import User
 from .tokens import account_activation_token
 
 TYPE_GAME = 'game'
-SITE_URL = 'localhost:3000'
+SITE_URL = 'http://35.193.124.214:81'
 
 page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
                                type=openapi.TYPE_INTEGER, default=1)
@@ -39,8 +39,8 @@ class AuthViewSet(GenericViewSet):
         activation_link = f"{request.scheme}://{SITE_URL}/confirm/?uid64={uid64}&token={token}"
         message = f"Привет {user.username}, вот твоя ссылка:\n {activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
-        # email.send()
-        print(activation_link)
+        email.send()
+        #print(activation_link)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(request_body=openapi.Schema(

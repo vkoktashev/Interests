@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+
+  db2:
+    image: postgres
+    volumes:
+      - postgres_data_interests:/var/lib/postgresql/data/
+    restart: always
+    environment:
+      POSTGRES_PORT: 5454
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 8080
+      POSTGRES_DB: interests
+    ports:
+      - "5454:5454"
+
+  
+  back:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    links:
+      - db2:db2
+    depends_on:
+      - db2
+    restart: always
+      
+  front:
+    build:
+      context: ./frontend
+      dockerfile: DockerFile
+    ports:
+      - "81:81"
+    links:
+      - back:back
+    depends_on:
+      - back
+    restart: always
+      
+volumes:
+  postgres_data_interests:

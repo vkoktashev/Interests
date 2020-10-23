@@ -98,8 +98,8 @@ DATABASES = {
         'NAME': 'interests',
         'USER': 'postgres',
         'PASSWORD': '8080',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'HOST': 'db2',
+        'PORT': '',
     }
 }
 

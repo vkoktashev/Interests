@@ -1,3 +1,5 @@
 .idea
 .vscode
 *.pyc
+backend/config/__pycache__/settings.cpython-38.pyc
+backend/config/__pycache__/urls.cpython-38.pyc
