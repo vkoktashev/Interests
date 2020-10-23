@@ -28,9 +28,12 @@ const initialState = Map(
         searchContent: {
             games: []
         },
+        userPageContent: {
+
+        },
         openedPages: { LoginForm: false, RegistrateForm: false },
         errors: {auth: false, registrate: false, gameRequest: false },
-        isLoading: {contentGame: false, searchGames: false}
+        isLoading: {contentGame: false, searchGames: false, userPageContent: false}
     }
 );
 
@@ -50,8 +53,8 @@ export default function reducer(state = initialState, action) {
         return state.setIn(['content', 'game', 'user_info', 'status'], action.status)
     case types.SET_CONTENT_GAME_USERINFO_SCORE:
         return state.setIn(['content', 'game', 'user_info', 'score'], action.score)
-    case types.SET_CONTENT_GAME_USERINFO_REVIEW:
-        return state.setIn(['content', 'game', 'user_info', 'review'], action.review)
+    case types.SET_USER_PAGE_CONTENT:
+        return state.setIn(['userPageContent'], action.content)
     case types.SET_LOGINFORM:
         return state.setIn(['openedPages', 'LoginForm'], action.isOpen);
     case types.SET_REGISTRATEFORM:
@@ -117,4 +120,8 @@ export function getIsLoadingContentGame(state) {
 
 export function getIsLoadingSearchGames(state) {
     return state.get('isLoading').searchGames;
+}
+
+export function getUserPageContent(state){
+    return state.get('userPageContent');
 }
