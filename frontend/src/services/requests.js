@@ -49,7 +49,7 @@ export async function setGameStatus(token, gameSlug, user_info){
             user_info, { headers: { 'Authorization': AuthStr } });
         console.log(res); 
         
-        if (res.status === 204 || res.status === 200)
+        if (res.status === 204 || res.status === 200 || res.status === 201)
             return res.data;
         else return null;
     }catch(e){

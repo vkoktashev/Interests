@@ -50,7 +50,7 @@ function Navbar( {loggedIn, onLoginClick, onLogoutClick, onRegistrationClick, us
                 </MDBNavItem>
                 <MDBNavItem className="font-weight-bold" hidden={loggedIn}>
                     <MDBNavLink to="#" onClick={onRegistrationClick} >
-                        <MDBIcon fab icon="accessible-icon" /> Зарегистрироваться
+                        <MDBIcon icon="user-plus" /> Зарегистрироваться
                     </MDBNavLink>
                 </MDBNavItem>
                 <MDBNavItem hidden={!loggedIn} className="font-weight-bold">

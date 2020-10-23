@@ -106,7 +106,7 @@ export function registrationRequest(username, email, password){
     return async(dispatch) => {
         registration(username, email, password).then((result) => {
             console.log(result);
-            if (result != null){
+            if (result.status != 400){
                 dispatch({
                     type: actionTypes.SET_USER,
                     user: { login: result.username, email: result.email }, 
@@ -117,6 +117,9 @@ export function registrationRequest(username, email, password){
                 });
             }
             else{
+                for (let error in result.data)
+                    toast.error(result.data[error][0]);
+                   
                 dispatch({
                     type: actionTypes.REGISTRATE_ERROR,
                     error: true 
