@@ -50,7 +50,7 @@ class AuthViewSet(GenericViewSet):
             'token': openapi.Schema(type=openapi.TYPE_STRING, description='Специальный токен для подтверждения'),
         }
     ))
-    @action(detail=False, methods=['patch'])
+    @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
     def confirmation(self, request, *args, **kwargs):
         try:
             uid = force_text(urlsafe_base64_decode(kwargs.get('uid64')))
