@@ -22,7 +22,7 @@ class Routes extends React.Component {
             <Route exact path="/" component={HomePage} />
             <Route exact path="/game/:id" component={GamePage} />
             <Route exact path="/search/:query" component={SearchPage} />
-            <Route exact path="/confirm/:query" component={ConfirmPage} />
+            <Route exact path="/confirm/" component={ConfirmPage} />
             <Route exact path="/user/:user_id" component={UserPage} />
             <Route render={function () { return <h1>Not Found</h1>; }} />
         </Switch>
