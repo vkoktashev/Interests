@@ -1,4 +1,3 @@
-from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator, EmptyPage
 from django.utils.encoding import force_bytes, force_text
@@ -22,10 +21,6 @@ from .tokens import account_activation_token
 TYPE_GAME = 'game'
 SITE_URL = 'localhost:3000'
 
-uid64_param = openapi.Parameter('uid64', openapi.IN_QUERY, description="Зашифрованный первичный ключ пользователя",
-                                type=openapi.TYPE_STRING)
-token_param = openapi.Parameter('token', openapi.IN_QUERY, description="Специальный токен для подтверждения",
-                                type=openapi.TYPE_STRING)
 page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
                                type=openapi.TYPE_INTEGER, default=1)
 
@@ -48,21 +43,27 @@ class AuthViewSet(GenericViewSet):
         print(activation_link)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @swagger_auto_schema(manual_parameters=[uid64_param, token_param])
-    @action(detail=False, methods=['get'])
-    def confirmation(self, request):
+    @swagger_auto_schema(request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'uid64': openapi.Schema(type=openapi.TYPE_STRING, description='Зашифрованный первичный ключ пользователя'),
+            'token': openapi.Schema(type=openapi.TYPE_STRING, description='Специальный токен для подтверждения'),
+        }
+    ))
+    @action(detail=False, methods=['patch'])
+    def confirmation(self, request, *args, **kwargs):
         try:
-            uid = force_text(urlsafe_base64_decode(request.query_params.get('uid64')))
+            uid = force_text(urlsafe_base64_decode(kwargs.get('uid64')))
             user = User.objects.get(pk=uid)
         except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist):
             user = None
 
-        if user is not None and account_activation_token.check_token(user, request.query_params.get('token')):
+        if user is not None and account_activation_token.check_token(user, kwargs.get('token')):
             user.is_active = True
             user.save()
             return Response(status=status.HTTP_200_OK)
         else:
-            return Response('Confirmation link is invalid!', status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
