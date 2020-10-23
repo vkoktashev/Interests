@@ -85,8 +85,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
     );
     
     return (
-            <div>
-			<div className="bg" style={{backgroundImage: `url(${game.rawg.background_image_additional?game.rawg.background_image_additional:game.rawg.background_image})`}}/>
+			<div className="bg" style={{backgroundImage: `url(${game.rawg.background_image_additional?game.rawg.background_image_additional:game.rawg.background_image})`}}>
                 <LoadingOverlay
                     active={gameIsLoading}
                     spinner
