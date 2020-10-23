@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'debug_toolbar',
     'drf_yasg',
+    'django_createsuperuser',
 
     # our apps
     'users',
