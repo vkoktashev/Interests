@@ -32,7 +32,7 @@ const initialState = Map(
 
         },
         openedPages: { LoginForm: false, RegistrateForm: false },
-        errors: {auth: false, registrate: false, gameRequest: false },
+        errors: {auth: false, registrate: false, gameRequest: false, userPage: false },
         isLoading: {contentGame: false, searchGames: false, userPageContent: false}
     }
 );
@@ -65,10 +65,14 @@ export default function reducer(state = initialState, action) {
         return state.setIn(['errors', 'registrate'], action.error);
     case types.GAME_REQUEST_ERROR:
         return state.setIn(['errors', 'gameRequest'], action.error);
+    case types.USER_PAGE_ERROR:
+        return state.setIn(['errors', 'userPage'], action.error);
     case types.SET_IS_LOADING_CONTENT_GAME:
         return state.setIn(['isLoading', 'contentGame'], action.isLoading);
     case types.SET_IS_LOADING_SEARCH_GAMES:
         return state.setIn(['isLoading', 'searchGames'], action.isLoading);
+    case types.SET_IS_LOADING_USER_PAGE_CONTENT:
+        return state.setIn(['isLoading', 'userPageContent'], action.isLoading);
     default:
       return state;
   }
@@ -102,6 +106,11 @@ export function getGameRequestError(state) {
     return state.get('errors').gameRequest;
 }
 
+
+export function getUserPageError(state) {
+    return state.get('errors').userPage;
+}
+
 export function getUser(state) {
     return state.get('user');
 }
@@ -120,6 +129,10 @@ export function getIsLoadingContentGame(state) {
 
 export function getIsLoadingSearchGames(state) {
     return state.get('isLoading').searchGames;
+}
+
+export function getIsLoadingUserPageContent(state) {
+    return state.get('isLoading').userPageContent;
 }
 
 export function getUserPageContent(state){

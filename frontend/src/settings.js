@@ -12,3 +12,5 @@ export const REGISTRATE_URL = BACKEND_URL + "users/auth/signup/";
 export const GET_GAME_URL = BACKEND_URL + "games/game/";
 /**Адрес поиска игр */
 export const SEARCH_GAMES_URL = BACKEND_URL + "games/search/";
+/**Адрес получения информации о пользователе */
+export const USER_INFO_URL = BACKEND_URL + "users/user/";
