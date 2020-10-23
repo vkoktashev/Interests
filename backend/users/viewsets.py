@@ -1,3 +1,4 @@
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator, EmptyPage
 from django.utils.encoding import force_bytes, force_text
@@ -37,11 +38,10 @@ class AuthViewSet(GenericViewSet):
 
         user = serializer.save()
         mail_subject = 'Activate your account.'
-        confirmation_url = 'http://127.0.0.1:8000/users/auth/confirmation/'  # get_current_site(request)
         uid64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = account_activation_token.make_token(user)
-        activation_link = f"{confirmation_url}?uid64={uid64}&token={token}"
-        message = f"Hello {user.username},\n {activation_link}"
+        activation_link = f"{request.scheme}://{request.get_host()}/confirm/?uid64={uid64}&token={token}"
+        message = f"Привет {user.username}, вот твоя ссылка:\n {activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
         # email.send()
         print(activation_link)
