@@ -70,7 +70,7 @@ export async function confirmation(uid64, token) {
     try{
         console.log(uid64);
         console.log(token);
-        const res = await axios.get(CONFIRM_URL, 
+        const res = await axios.patch(CONFIRM_URL, 
              {  
                 uid64: uid64,
                 token: token
