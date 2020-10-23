@@ -50,7 +50,7 @@ function Navbar( {loggedIn, onLoginClick, onLogoutClick, onRegistrationClick, us
                 </MDBNavItem>
                 <MDBNavItem className="font-weight-bold" hidden={loggedIn}>
                     <MDBNavLink to="#" onClick={onRegistrationClick} >
-                        <MDBIcon fab icon="accessible-icon" /> Зарегистрироваться
+                        <MDBIcon icon="user-plus" /> Зарегистрироваться
                     </MDBNavLink>
                 </MDBNavItem>
                 <MDBNavItem hidden={!loggedIn} className="font-weight-bold">
@@ -59,7 +59,7 @@ function Navbar( {loggedIn, onLoginClick, onLogoutClick, onRegistrationClick, us
                         <span className="mr-2">{user.username}</span>
                         </MDBDropdownToggle>
                         <MDBDropdownMenu>
-                        <MDBDropdownItem href={"/profile/"+user.id}>Профиль</MDBDropdownItem>
+                        <MDBDropdownItem href={"/user/"+user.id}>Профиль</MDBDropdownItem>
                         <MDBDropdownItem onClick={ onLogoutClick }>
                             <MDBIcon icon="sign-out-alt"/> Выйти
                         </MDBDropdownItem>

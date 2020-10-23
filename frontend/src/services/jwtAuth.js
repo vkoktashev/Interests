@@ -61,7 +61,7 @@ export async function registration(username, email, password) {
         let data = res.data;	
         return data;
     }catch(e){
-        console.log("AXIOS ERROR: ", e);
-        return null;
+        console.log("AXIOS ERROR: ", e.response);
+        return e.response;
     }
 }

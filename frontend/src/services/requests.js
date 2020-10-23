@@ -1,5 +1,5 @@
 import axios from "axios";
-import {GET_GAME_URL, SEARCH_GAMES_URL} from "../settings";
+import {GET_GAME_URL, SEARCH_GAMES_URL, USER_INFO_URL} from "../settings";
 
 let axiosConfig = {
     headers: {
@@ -49,7 +49,7 @@ export async function setGameStatus(token, gameSlug, user_info){
             user_info, { headers: { 'Authorization': AuthStr } });
         console.log(res); 
         
-        if (res.status === 204 || res.status === 200)
+        if (res.status === 204 || res.status === 200 || res.status === 201)
             return res.data;
         else return null;
     }catch(e){
@@ -91,6 +91,30 @@ export async function searchGames(query, page){
             { 'headers': { 'Content-Type': 'application/json;charset=UTF-8' } });
             console.log(res);
         return res.data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
+ * Запрос к бд, получающий информацию об игре
+ * @param {string} token Токен доступа
+ * @param {string} id ID игры  
+ * @returns {object} Информация об игре
+ */
+export async function getUserInfo(token, user_id) {
+    let data;
+    try{
+        if (token){
+            var AuthStr = 'Bearer ' + token;
+            const res = await axios.get(USER_INFO_URL + user_id + "/", { 'headers': { 'Authorization': AuthStr } });
+            data = res.data;
+        }else{
+            const res = await axios.get(USER_INFO_URL + user_id + "/", axiosConfig);
+            data = res.data;
+        }
+        return data;
     }catch(e){
         console.log("AXIOS ERROR: ", e);
         return null;

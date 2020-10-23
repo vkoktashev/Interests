@@ -106,7 +106,7 @@ export function registrationRequest(username, email, password){
     return async(dispatch) => {
         registration(username, email, password).then((result) => {
             console.log(result);
-            if (result != null){
+            if (result.status != 400){
                 dispatch({
                     type: actionTypes.SET_USER,
                     user: { login: result.username, email: result.email }, 
@@ -117,6 +117,9 @@ export function registrationRequest(username, email, password){
                 });
             }
             else{
+                for (let error in result.data)
+                    toast.error(result.data[error][0]);
+                   
                 dispatch({
                     type: actionTypes.REGISTRATE_ERROR,
                     error: true 
@@ -195,6 +198,39 @@ export function setGameStatus(user_info){
         }
     }
 }*/
+
+export function requestUserPageContent(user_id){
+    return async(dispatch) => {
+        dispatch({
+            type: actionTypes.SET_IS_LOADING_USER_PAGE_CONTENT,
+            isLoading: true
+        });
+        Requests.getUserInfo(localStorage.getItem('token'), user_id).then((result) => {
+            console.log(result);
+            if (result != null){
+                dispatch({
+                    type: actionTypes.SET_USER_PAGE_CONTENT,
+                    content: result, 
+                });
+                dispatch({
+                    type: actionTypes.SET_IS_LOADING_USER_PAGE_CONTENT,
+                    isLoading: false
+                });
+            }
+            else{
+                toast.error("Профиль не найден!");
+                dispatch({
+                    type: actionTypes.USER_PAGE_ERROR,
+                    error: true 
+                });
+                dispatch({
+                    type: actionTypes.SET_IS_LOADING_USER_PAGE_CONTENT,
+                    isLoading: false
+                });
+            }
+        });
+    }
+}
 
 export function searchGames(query, page){
     return async(dispatch) => {
