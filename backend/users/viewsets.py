@@ -51,19 +51,19 @@ class AuthViewSet(GenericViewSet):
         }
     ))
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
-    def confirmation(self, request, *args, **kwargs):
+    def confirmation(self, request):
         try:
-            uid = force_text(urlsafe_base64_decode(kwargs.get('uid64')))
+            uid = force_text(urlsafe_base64_decode(request.data.get('uid64')))
             user = User.objects.get(pk=uid)
         except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist):
             user = None
 
-        if user is not None and account_activation_token.check_token(user, kwargs.get('token')):
+        if user is not None and account_activation_token.check_token(user, request.data.get('token')):
             user.is_active = True
             user.save()
             return Response(status=status.HTTP_200_OK)
         else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response("Неверная ссылка!", status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
