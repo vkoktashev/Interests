@@ -1,6 +1,6 @@
 import * as actionTypes from './actionTypes';
 import * as selectors from './reducers';
-import {getToken, updateToken, registration} from "../services/jwtAuth";
+import {getToken, updateToken, registration, confirmation} from "../services/jwtAuth";
 import {TOKEN_LIFETIME} from "../settings";
 import * as Requests from "../services/requests";
 import { toast } from "react-toastify";
@@ -124,6 +124,20 @@ export function registrationRequest(username, email, password){
                     type: actionTypes.REGISTRATE_ERROR,
                     error: true 
                 });
+            }
+        });
+    }
+}
+
+export function confirmEmailRequest(uid64, token){
+    return async() => {
+        confirmation(uid64, token).then((result) => {
+            console.log(result);
+            if (result.status != 400){
+                toast.success("Почта подтверждена!");
+            }
+            else{
+                toast.error(result.data);
             }
         });
     }
