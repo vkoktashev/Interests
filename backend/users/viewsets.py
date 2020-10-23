@@ -20,6 +20,7 @@ from .models import User
 from .tokens import account_activation_token
 
 TYPE_GAME = 'game'
+SITE_URL = 'localhost:3000'
 
 uid64_param = openapi.Parameter('uid64', openapi.IN_QUERY, description="Зашифрованный первичный ключ пользователя",
                                 type=openapi.TYPE_STRING)
@@ -40,7 +41,7 @@ class AuthViewSet(GenericViewSet):
         mail_subject = 'Activate your account.'
         uid64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = account_activation_token.make_token(user)
-        activation_link = f"{request.scheme}://{request.get_host()}/confirm/?uid64={uid64}&token={token}"
+        activation_link = f"{request.scheme}://{SITE_URL}/confirm/?uid64={uid64}&token={token}"
         message = f"Привет {user.username}, вот твоя ссылка:\n {activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
         # email.send()
