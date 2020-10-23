@@ -24,7 +24,7 @@ function ConfirmPage ( {confirmEmailRequest} )
 	
     return (
 			<div>
-				<h1>Страница подтверждения ещё не готова</h1>
+				
 			</div>
     	);
 }
