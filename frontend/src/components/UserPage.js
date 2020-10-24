@@ -58,7 +58,8 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo })
 	);
 
     return (
-        <div className="bg searchBG"> 
+        <div>
+        <div className="bg searchBG"/> 
             <LoadingOverlay
                 active={userIsLoading}
                 spinner
