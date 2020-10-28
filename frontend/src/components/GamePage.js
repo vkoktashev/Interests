@@ -30,7 +30,8 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
     const [genres, setGenres] = useState("");
     const [metascoreBlock, setMetascoreBlock] = useState("");
     const [review, setReview] = useState("");
-    const [hltbInfo, setHtlbInfo] = useState({ameplay_main_extra: -1, gameplay_main: -1, gameplay_comletionist: -1});
+    const [spentTime, setSpentTime] = useState(0);
+    const [hltbInfo, setHtlbInfo] = useState({gameplay_main_extra: -1, gameplay_main: -1, gameplay_comletionist: -1});
     const [costyl, setCostyl] = useState(true);
 
     useEffect(
@@ -78,14 +79,16 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
             }
 
             if (game.user_info){
-                setReview(game.user_info.review) ;
+                setReview(game.user_info.review);
+                setSpentTime(game.user_info.spent_time);
             }
 		},
 		[game]
     );
     
     return (
-			<div className="bg" style={{backgroundImage: `url(${game.rawg.background_image_additional?game.rawg.background_image_additional:game.rawg.background_image})`}}>
+            <div>
+			<div className="bg" style={{backgroundImage: `url(${game.rawg.background_image_additional?game.rawg.background_image_additional:game.rawg.background_image})`}}/>
                 <LoadingOverlay
                     active={gameIsLoading}
                     spinner
@@ -148,15 +151,23 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                                     </MDBCol>
                                 </MDBRow>
                                 <MDBRow>
-                                <MDBCol size="6">
+                                <MDBCol size="6" style={{paddingLeft: "20px"}}>
                                     <h3 style={{paddingTop: "10px"}}>Отзывы</h3>
+                                        
                                         <MDBInput 
                                             type="textarea" 
                                             id="reviewInput"
                                             label="Ваш отзыв" 
                                             value={review}
                                             onChange={(event) =>setReview(event.target.value)}
-                                            outline 
+                                            outline
+                                        />
+                                        <MDBInput
+                                            type="number"
+                                            id="spentTimeInput"
+                                            label="Время прохождения (часы)" 
+                                            value={spentTime}
+                                            onChange={(event) =>setSpentTime(event.target.value)}
                                         />
                                         <button 
                                             className={'savePreviewButton'} 
@@ -165,7 +176,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                                                     if (!loggedIn){
                                                         openLoginForm();
                                                     }else{
-                                                        setGameStatus({   review: document.getElementById('reviewInput').value  });
+                                                        setGameStatus({   review: document.getElementById('reviewInput').value, spent_time: document.getElementById('spentTimeInput').value });
                                                     }
                                                 }
                                             }

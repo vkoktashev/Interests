@@ -44,7 +44,8 @@ function SearchPage ( { loggedIn, openLoginForm, searchIsLoading, searchGame, ga
     );
     
     return (
-			<div className="bg searchBG"> 
+            <div>
+			<div className="bg searchBG"/> 
                 <LoadingOverlay
                     active={searchIsLoading}
                     spinner
