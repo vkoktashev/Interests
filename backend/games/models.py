@@ -37,9 +37,6 @@ class UserGame(UserScore):
     class Meta:
         unique_together = (("user", "game"),)
 
-    def get_rawg_game(self):
-        return (rawg.get_game(self.game.rawg_slug)).json
-
 
 class GameLog(UserLog):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)

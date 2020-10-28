@@ -13,7 +13,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from config.settings import EMAIL_HOST_USER
 from games.models import GameLog, UserGame
-from games.serializers import UserGameRawgSerializer
+from games.serializers import ExtendedUserGameSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer
 from .models import User
 from .tokens import account_activation_token
@@ -67,6 +67,8 @@ class AuthViewSet(GenericViewSet):
 
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
+    lookup_field = 'username'
+
     @swagger_auto_schema(manual_parameters=[page_param])
     @action(detail=True, methods=['get'])
     def get_log(self, request, *args, **kwargs):
@@ -101,13 +103,13 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
     def retrieve(self, request, *args, **kwargs):
         try:
-            user = User.objects.get(id=kwargs.get('pk'))
+            user = User.objects.get(username=kwargs.get('username'))
         except User.DoesNotExist:
-            return Response('Wrong id', status=status.HTTP_400_BAD_REQUEST)
+            return Response('Wrong username', status=status.HTTP_400_BAD_REQUEST)
 
         try:
             user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).filter(user=user)
-            serializer = UserGameRawgSerializer(user_games, many=True)
+            serializer = ExtendedUserGameSerializer(user_games, many=True)
             games = serializer.data
         except UserGame.DoesNotExist:
             games = None
