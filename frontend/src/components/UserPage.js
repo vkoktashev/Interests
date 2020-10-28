@@ -42,8 +42,8 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo })
 		() => {
 			if (userInfo && userInfo.games)
                 setGameTableData(userInfo.games.map((game) => {
-					return <tr key={game.game.id}>
-								<td onClick={() => history.push('/game/' + game.game.slug)} style={{cursor: "pointer"}}>{game.game.name}</td>
+					return <tr key={game.game.rawg_id}>
+								<td onClick={() => history.push('/game/' + game.game.rawg_slug)} style={{cursor: "pointer"}}>{game.game.rawg_name}</td>
 								<td>{game.status}</td>
 								<td>{game.score}</td>
 								<td>{game.review}</td>
