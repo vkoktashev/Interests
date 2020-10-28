@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from games.models import UserGame
+from games.models import UserGame, Game
 
 
 class ChoicesField(serializers.Field):
@@ -20,17 +20,27 @@ class ChoicesField(serializers.Field):
         raise serializers.ValidationError(f'Choice should be one of {self._choices}')
 
 
+class GameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Game
+        exclude = ('id',)
+
+
 class UserGameSerializer(serializers.ModelSerializer):
     status = ChoicesField(choices=UserGame.STATUS_CHOICES, required=False)
 
     class Meta:
         model = UserGame
-        fields = '__all__'
+        exclude = ('id',)
+        extra_kwargs = {
+            'user': {'write_only': True},
+            'game': {'write_only': True}
+        }
 
 
-class UserGameRawgSerializer(UserGameSerializer):
-    game = serializers.DictField(source='get_rawg_game')
+class ExtendedUserGameSerializer(UserGameSerializer):
+    game = GameSerializer()
 
     class Meta:
         model = UserGame
-        fields = ('game', 'status', 'score', 'review', 'spent_time')
+        exclude = ('id', 'user')

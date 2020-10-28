@@ -1,4 +1,5 @@
-from django.db import IntegrityError
+from json import JSONDecodeError
+
 from django.db import IntegrityError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -22,7 +23,10 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
     def list(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
         page = request.GET.get('page', 1)
-        results = rawg.search(query, num_results=10, additional_param=f"&page={page}")
+        try:
+            results = rawg.search(query, num_results=10, additional_param=f"&page={page}")
+        except JSONDecodeError:
+            return Response('Rawg unavailable', status=status.HTTP_503_SERVICE_UNAVAILABLE)
         games_json = []
         for game in results:
             games_json.append(game.json)
@@ -39,6 +43,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
             rawg_game = rawg.get_game(kwargs.get('slug'))
         except KeyError:
             return Response('Wrong slug', status=status.HTTP_404_NOT_FOUND)
+        except JSONDecodeError:
+            return Response('Rawg unavailable', status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
             results_list = HowLongToBeat(1.0).search(rawg_game.name)
@@ -67,6 +73,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
                 rawg_game = rawg.get_game(kwargs.get('slug'))
             except KeyError:
                 return Response('Wrong slug', status=status.HTTP_400_BAD_REQUEST)
+            except JSONDecodeError:
+                return Response('Rawg unavailable', status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             try:
                 results_list = HowLongToBeat(1.0).search(rawg_game.name)
