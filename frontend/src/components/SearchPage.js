@@ -15,6 +15,7 @@ import {
 } from "mdbreact";
 import LoadingOverlay from 'react-loading-overlay';
 import SearchCardGame from './SearchCardGame';
+import SearchCardMovie from './SearchCardMovie';
 
 import { connect } from 'react-redux'; 
 import * as selectors from '../store/reducers';
@@ -24,14 +25,16 @@ import * as actions from '../store/actions';
 /**
  * Основная страница приложения
  */
-function SearchPage ( { loggedIn, openLoginForm, searchIsLoading, searchGame, games } ) {
+function SearchPage ( { loggedIn, openLoginForm, searchIsLoading, searchGame, games, searchMovie, movies } ) {
     let history = useHistory();
     let { query } = useParams();
     const [gamesCards, setGamesCards] = useState("");
+    const [moviesCards, setMoviesCards] = useState("");
 
     useEffect(
 		() => {
             searchGame(query, 1);
+            searchMovie(query, 1);
 		},
 		[query]
     );
@@ -41,6 +44,13 @@ function SearchPage ( { loggedIn, openLoginForm, searchIsLoading, searchGame, ga
             setGamesCards(<div className="searchCardsGroup">{games.map(game => <SearchCardGame game={game} key={game.id}/>)}</div>);
 		},
 		[games]
+    );
+
+    useEffect(
+		() => {
+            setMoviesCards(<div className="searchCardsGroup">{movies.map(movie => <SearchCardMovie movie={movie} key={movie.id}/>)}</div>);
+		},
+		[movies]
     );
     
     return (
@@ -69,7 +79,7 @@ function SearchPage ( { loggedIn, openLoginForm, searchIsLoading, searchGame, ga
 
                                 <h3>Фильмы</h3>
                                 <hr style={{ color: '#6C0AAB', backgroundColor: '#6C0AAB', height: 2.5,  borderColor : '#6C0AAB' }}/>
-                                {gamesCards}
+                                {moviesCards}
 
                                 <h3>Сериалы</h3>
                                 <hr style={{ color: '#6C0AAB', backgroundColor: '#6C0AAB', height: 2.5,  borderColor : '#6C0AAB' }}/>
@@ -86,7 +96,8 @@ function SearchPage ( { loggedIn, openLoginForm, searchIsLoading, searchGame, ga
 const mapStateToProps = state => ({
     loggedIn: selectors.getLoggedIn(state),
     searchIsLoading: selectors.getIsLoadingSearchGames(state),
-    games: selectors.getSearchContentGames(state)
+    games: selectors.getSearchContentGames(state),
+    movies: selectors.getSearchContentMovies(state),
 });
 
 const mapDispatchToProps = (dispatch) => {
@@ -96,6 +107,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         searchGame: (query, page) => {
             dispatch(actions.searchGames(query, page));
+        },
+        searchMovie: (query, page) => {
+            dispatch(actions.searchMovies(query, page));
         }
 	}
 };

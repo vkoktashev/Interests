@@ -14,5 +14,9 @@ export const CONFIRM_URL = BACKEND_URL + "users/auth/confirmation/";
 export const GET_GAME_URL = BACKEND_URL + "games/game/";
 /**Адрес поиска игр */
 export const SEARCH_GAMES_URL = BACKEND_URL + "games/search/";
+/**Адрес запроса фильма */
+export const GET_MOVIE_URL = BACKEND_URL + "movies/movie/";
+/**Адрес поиска фильмов */
+export const SEARCH_MOVIES_URL = BACKEND_URL + "movies/search/";
 /**Адрес получения информации о пользователе */
 export const USER_INFO_URL = BACKEND_URL + "users/user/";

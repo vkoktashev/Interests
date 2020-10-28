@@ -23,17 +23,31 @@ const initialState = Map(
                     score: 0,
                     spent_time: 0
                 }
+            },
+            movie: {
+                tmdb: {
+                    title: "",
+                    poster_path: "",
+                    developers: [{}],
+                },
+                user_info:{
+                    status: null,
+                    review: "",
+                    score: 0,
+                    spent_time: 0
+                }
             } 
         },
         searchContent: {
-            games: []
+            games: [],
+            movies: []
         },
         userPageContent: {
 
         },
         openedPages: { LoginForm: false, RegistrateForm: false },
-        errors: {auth: false, registrate: false, gameRequest: false, userPage: false },
-        isLoading: {contentGame: false, searchGames: false, userPageContent: false}
+        errors: {auth: false, registrate: false, gameRequest: false, movieRequest: false, userPage: false },
+        isLoading: {contentGame: false, contentMovie: false, searchGames: false, searchMovies: false, userPageContent: false}
     }
 );
 
@@ -43,34 +57,51 @@ export default function reducer(state = initialState, action) {
         return state.setIn(['user'], action.user);
     case types.SET_AUTH:
         return state.setIn(['auth'], action.auth);
+
     case types.SET_CONTENT_GAME:
         return state.setIn(['content', 'game'], action.game);
+    case types.SET_CONTENT_MOVIE:
+        return state.setIn(['content', 'movie'], action.movie);
+
     case types.SET_SEARCH_CONTENT_GAMES:
         return state.setIn(['searchContent', 'games'], action.games);
+    case types.SET_SEARCH_CONTENT_MOVIES:
+        return state.setIn(['searchContent', 'movies'], action.movies);
+
     case types.SET_CONTENT_GAME_USERINFO:
         return state.setIn(['content', 'game', 'user_info'], action.user_info);
     case types.SET_CONTENT_GAME_USERINFO_STATUS:
         return state.setIn(['content', 'game', 'user_info', 'status'], action.status)
     case types.SET_CONTENT_GAME_USERINFO_SCORE:
         return state.setIn(['content', 'game', 'user_info', 'score'], action.score)
+
     case types.SET_USER_PAGE_CONTENT:
         return state.setIn(['userPageContent'], action.content)
+
     case types.SET_LOGINFORM:
         return state.setIn(['openedPages', 'LoginForm'], action.isOpen);
     case types.SET_REGISTRATEFORM:
         return state.setIn(['openedPages', 'RegistrateForm'], action.isOpen);
+
     case types.AUTH_ERROR:
         return state.setIn(['errors', 'auth'], action.error);
     case types.REGISTRATE_ERROR:
         return state.setIn(['errors', 'registrate'], action.error);
     case types.GAME_REQUEST_ERROR:
         return state.setIn(['errors', 'gameRequest'], action.error);
+    case types.MOVIE_REQUEST_ERROR:
+        return state.setIn(['errors', 'movieRequest'], action.error);
     case types.USER_PAGE_ERROR:
         return state.setIn(['errors', 'userPage'], action.error);
+
     case types.SET_IS_LOADING_CONTENT_GAME:
         return state.setIn(['isLoading', 'contentGame'], action.isLoading);
+    case types.SET_IS_LOADING_CONTENT_MOVIE:
+        return state.setIn(['isLoading', 'contentMovie'], action.isLoading);
     case types.SET_IS_LOADING_SEARCH_GAMES:
         return state.setIn(['isLoading', 'searchGames'], action.isLoading);
+    case types.SET_IS_LOADING_SEARCH_MOVIES:
+        return state.setIn(['isLoading', 'searchMovies'], action.isLoading);
     case types.SET_IS_LOADING_USER_PAGE_CONTENT:
         return state.setIn(['isLoading', 'userPageContent'], action.isLoading);
     default:
@@ -90,8 +121,16 @@ export function getContentGame(state) {
     return state.get('content').game;
 }
 
+export function getContentMovie(state) {
+    return state.get('content').movie;
+}
+
 export function getSearchContentGames(state) {
     return state.get('searchContent').games;
+}
+
+export function getSearchContentMovies(state) {
+    return state.get('searchContent').movies;
 }
 
 export function getAuthError(state) {
@@ -106,6 +145,9 @@ export function getGameRequestError(state) {
     return state.get('errors').gameRequest;
 }
 
+export function getMovieRequestError(state) {
+    return state.get('errors').movieRequest;
+}
 
 export function getUserPageError(state) {
     return state.get('errors').userPage;
@@ -127,8 +169,16 @@ export function getIsLoadingContentGame(state) {
     return state.get('isLoading').contentGame;
 }
 
+export function getIsLoadingContentMovie(state) {
+    return state.get('isLoading').contentMovie;
+}
+
 export function getIsLoadingSearchGames(state) {
     return state.get('isLoading').searchGames;
+}
+
+export function getIsLoadingSearchMovies(state) {
+    return state.get('isLoading').searchMovies;
 }
 
 export function getIsLoadingUserPageContent(state) {

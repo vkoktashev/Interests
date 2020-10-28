@@ -150,7 +150,6 @@ export function requestGame(id){
             isLoading: true
         });
         Requests.getGame(localStorage.getItem('token'), id).then((result) => {
-            console.log(result);
             if (result != null){
                 dispatch({
                     type: actionTypes.SET_CONTENT_GAME,
@@ -169,6 +168,39 @@ export function requestGame(id){
                 });
                 dispatch({
                     type: actionTypes.SET_IS_LOADING_CONTENT_GAME,
+                    isLoading: false
+                });
+            }
+        });
+    }
+}
+
+export function requestMovie(id){
+    return async(dispatch) => {
+        dispatch({
+            type: actionTypes.SET_IS_LOADING_CONTENT_MOVIE,
+            isLoading: true
+        });
+        Requests.getMovie(localStorage.getItem('token'), id).then((result) => {
+            console.log(result);
+            if (result != null){
+                dispatch({
+                    type: actionTypes.SET_CONTENT_MOVIE,
+                    movie: result, 
+                });
+                dispatch({
+                    type: actionTypes.SET_IS_LOADING_CONTENT_MOVIE,
+                    isLoading: false
+                });
+            }
+            else{
+                toast.error("Фильм не найден!");
+                dispatch({
+                    type: actionTypes.MOVIE_REQUEST_ERROR,
+                    error: true 
+                });
+                dispatch({
+                    type: actionTypes.SET_IS_LOADING_CONTENT_MOVIE,
                     isLoading: false
                 });
             }
@@ -264,6 +296,30 @@ export function searchGames(query, page){
             }
             dispatch({
                 type: actionTypes.SET_IS_LOADING_SEARCH_GAMES,
+                isLoading: false
+            });
+        });
+    }
+}
+
+export function searchMovies(query, page){
+    return async(dispatch) => {
+        dispatch({
+            type: actionTypes.SET_IS_LOADING_SEARCH_MOVIES,
+            isLoading: true
+        });
+        Requests.searchMovies(query, page).then((result) => {
+            if (!result){
+                toast.error("Ошибка поиска")
+            }
+            else{
+                dispatch({
+                    type: actionTypes.SET_SEARCH_CONTENT_MOVIES,
+                    movies: result.results, 
+                });
+            }
+            dispatch({
+                type: actionTypes.SET_IS_LOADING_SEARCH_MOVIES,
                 isLoading: false
             });
         });
