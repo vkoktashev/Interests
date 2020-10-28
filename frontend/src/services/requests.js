@@ -103,15 +103,15 @@ export async function searchGames(query, page){
  * @param {string} id ID игры  
  * @returns {object} Информация об игре
  */
-export async function getUserInfo(token, user_id) {
+export async function getUserInfo(token, username) {
     let data;
     try{
         if (token){
             var AuthStr = 'Bearer ' + token;
-            const res = await axios.get(USER_INFO_URL + user_id + "/", { 'headers': { 'Authorization': AuthStr } });
+            const res = await axios.get(USER_INFO_URL + username + "/", { 'headers': { 'Authorization': AuthStr } });
             data = res.data;
         }else{
-            const res = await axios.get(USER_INFO_URL + user_id + "/", axiosConfig);
+            const res = await axios.get(USER_INFO_URL + username + "/", axiosConfig);
             data = res.data;
         }
         return data;

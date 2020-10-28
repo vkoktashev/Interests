@@ -28,14 +28,14 @@ import LoadingOverlay from 'react-loading-overlay';
 function UserPage ( { userIsLoading, getUserInfo, userInfo }) 
 { 
     let history = useHistory();
-    let { user_id } = useParams();
+    let { username } = useParams();
     const [ gameTableData, setGameTableData] = useState();
 
     useEffect(
 		() => {
-            getUserInfo(user_id);
+            getUserInfo(username);
 		},
-		[user_id]
+		[username]
     );
 
     useEffect(
