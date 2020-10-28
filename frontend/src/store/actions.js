@@ -213,13 +213,13 @@ export function setGameStatus(user_info){
     }
 }*/
 
-export function requestUserPageContent(user_id){
+export function requestUserPageContent(username){
     return async(dispatch) => {
         dispatch({
             type: actionTypes.SET_IS_LOADING_USER_PAGE_CONTENT,
             isLoading: true
         });
-        Requests.getUserInfo(localStorage.getItem('token'), user_id).then((result) => {
+        Requests.getUserInfo(localStorage.getItem('token'), username).then((result) => {
             console.log(result);
             if (result != null){
                 dispatch({
