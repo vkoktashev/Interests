@@ -80,7 +80,7 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo })
                     rows: userInfo.games.map((game) => {
                         return {
                                 name: <a name={game.game.rawg_name} 
-                                        href={window.location.host + '/game/' + game.game.rawg_slug}
+                                        href={'/game/' + game.game.rawg_slug}
                                         onClick={ () =>  history.push('/game/' + game.game.rawg_slug)  }
                                 >
                                     {game.game.rawg_name}
