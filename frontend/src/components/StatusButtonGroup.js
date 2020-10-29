@@ -14,7 +14,7 @@ function StatusButtonGroup( {statuses, activeColor, onChangeStatus, userStatus} 
         <div>
             {statuses.map((status) => <button className={'contentStatuses'} 
                                             key={status}
-                                            style={{backgroundColor: (activeStatus === status?activeColor:'#1d0d0d')}}
+                                            style={{backgroundColor: (activeStatus === status?activeColor:'#000000')}}
                                             onClick={()=>{ 
                                                 if (onChangeStatus(status)){
                                                     setActiveStatus(status);

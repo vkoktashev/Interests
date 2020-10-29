@@ -252,7 +252,6 @@ export function requestUserPageContent(username){
             isLoading: true
         });
         Requests.getUserInfo(localStorage.getItem('token'), username).then((result) => {
-            console.log(result);
             if (result != null){
                 dispatch({
                     type: actionTypes.SET_USER_PAGE_CONTENT,

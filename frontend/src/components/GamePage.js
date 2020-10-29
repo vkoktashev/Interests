@@ -128,14 +128,12 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                                         /> <br/>
                                         <StatusButtonGroup loggedIn={loggedIn} 
                                             statuses={['Не играл', 'Буду играть', 'Играю', 'Дропнул', 'Прошел']}
-                                            activeColor='#6c0aab' 
+                                            activeColor='#4527a0' 
                                             userStatus={game.user_info?game.user_info.status:'Не играл'}
                                             onChangeStatus={(status) => {
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                    console.log(" ВОТ");
-                                                    console.log();
                                                    setGameStatus({ status: status });
                                                 }
                                             }}/>
