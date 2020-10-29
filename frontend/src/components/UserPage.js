@@ -12,7 +12,8 @@ import {
     MDBContainer,
     MDBTable,
     MDBTableHead,
-    MDBTableBody
+    MDBTableBody,
+    MDBDataTable
 } from "mdbreact";
 
 import { connect } from 'react-redux'; 
@@ -29,7 +30,40 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo })
 { 
     let history = useHistory();
     let { username } = useParams();
-    const [ gameTableData, setGameTableData] = useState();
+
+    const gameColumns = [
+        {
+          label: 'Название',
+          field: 'name',
+          sort: 'asc'
+        },
+        {
+          label: 'Статус',
+          field: 'status',
+          sort: 'asc'
+        },
+        {
+          label: 'Оценка',
+          field: 'score',
+          sort: 'asc'
+        },
+        {
+          label: 'Отзыв',
+          field: 'review',
+          sort: 'asc'
+        },
+        {
+          label: 'Время прохождения',
+          field: 'spent_time',
+          sort: 'asc'
+        }
+      ];
+
+    const [gameTableData, setGameTableData] = useState({
+        columns: gameColumns,
+        rows: [
+        ]
+    });
 
     useEffect(
 		() => {
@@ -40,18 +74,30 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo })
 
     useEffect(
 		() => {
-			if (userInfo && userInfo.games)
-                setGameTableData(userInfo.games.map((game) => {
-					return <tr key={game.game.rawg_id}>
-								<td onClick={() => history.push('/game/' + game.game.rawg_slug)} style={{cursor: "pointer"}}>{game.game.rawg_name}</td>
-								<td>{game.status}</td>
-								<td>{game.score}</td>
-								<td>{game.review}</td>
-								<td>{game.spent_time}</td>
-							</tr>;
-				}));
+			if (userInfo && userInfo.games){
+                setGameTableData({
+                    columns: gameColumns,
+                    rows: userInfo.games.map((game) => {
+                        return {
+                                name: game.game.rawg_name,
+                                status: game.status,
+                                score: game.score,
+                                review: game.review,
+                                spent_time: game.spent_time,
+                                clickEvent: (e) => {
+                                    //window.open('/game/' + game.game.rawg_slug);
+                                    history.push('/game/' + game.game.rawg_slug)
+                                }
+                            }      
+                    })
+                });
+            } 
 			else
-                setGameTableData(null);
+                setGameTableData({
+                    columns: gameColumns,
+                    rows: [
+                    ]
+                });
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[userInfo]
@@ -69,23 +115,23 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo })
                 <MDBRow>
                     <MDBCol md="0.5"></MDBCol>
                     <MDBCol className="searchPage"> 
-                    <h1>Информация о пользователе {userInfo.username}</h1>
-                    <h3>Игры</h3>
-                    <hr style={{ color: '#6C0AAB', backgroundColor: '#6C0AAB', height: 2.5,  borderColor : '#6C0AAB' }}/>
-                    <MDBTable>
-                        <MDBTableHead>
-                            <tr>
-                                <th>Название</th>
-                                <th>Статус</th>
-                                <th>Оценка</th>
-                                <th>Отзыв</th>
-                                <th>Время прохождения</th>
-                            </tr>
-                        </MDBTableHead>
-                        <MDBTableBody>
-                            {gameTableData}
-                        </MDBTableBody>
-                    </MDBTable>
+                        <h1>Информация о пользователе {userInfo.username}</h1>
+                        <h3>Игры</h3>
+                            <p>Игр сыграно: {userInfo.stats.games_count}, часов наиграно: {userInfo.stats.games_total_spent_time}</p>  
+                        <hr style={{ color: '#6C0AAB', backgroundColor: '#4527a0', height: 2.5,  borderColor : '#6C0AAB' }}/>
+                        <MDBDataTable
+                            striped
+                            bordered
+                            small
+                            data={gameTableData}
+                            info={false}
+                            barReverse={true}
+                            noBottomColumns={true}
+                            noRecordsFoundLabel="Ничего не найдено!"
+                            paginationLabel={["Предыдущая", "Следующая"]}
+                            entriesLabel="Показывать игр на странице"
+                            searchLabel='Поиск'
+                            />
                     </MDBCol>
                     <MDBCol md="0.5"></MDBCol>
                 </MDBRow>

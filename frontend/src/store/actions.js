@@ -106,7 +106,7 @@ export function registrationRequest(username, email, password){
     return async(dispatch) => {
         registration(username, email, password).then((result) => {
             console.log(result);
-            if (result.status != 400){
+            if (result.status !== 400){
                 dispatch({
                     type: actionTypes.SET_USER,
                     user: { login: result.username, email: result.email }, 
@@ -133,7 +133,7 @@ export function confirmEmailRequest(uid64, token){
     return async() => {
         confirmation(uid64, token).then((result) => {
             console.log(result);
-            if (result.status != 400){
+            if (result.status !== 400){
                 toast.success("Почта подтверждена!");
             }
             else{
@@ -252,7 +252,6 @@ export function requestUserPageContent(username){
             isLoading: true
         });
         Requests.getUserInfo(localStorage.getItem('token'), username).then((result) => {
-            console.log(result);
             if (result != null){
                 dispatch({
                     type: actionTypes.SET_USER_PAGE_CONTENT,
