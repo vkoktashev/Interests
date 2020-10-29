@@ -37,6 +37,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
     queryset = UserGame.objects.all()
     serializer_class = UserGameSerializer
     lookup_field = 'slug'
+    lookup_field = 'slug'
 
     def retrieve(self, request, *args, **kwargs):
         try:
@@ -52,7 +53,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
         except ValueError:
             hltb_game = None
         except ConnectionError:
-            return Response('Hltb connection error, try again', status=status.HTTP_502_BAD_GATEWAY)
+            return Response('Hltb connection error, try again', status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
             game = Game.objects.get(rawg_slug=rawg_game.slug)
@@ -82,7 +83,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
             except ValueError:
                 hltb_game = None
             except ConnectionError:
-                return Response('Hltb connection error, try again', status=status.HTTP_502_BAD_GATEWAY)
+                return Response('Hltb connection error, try again', status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             try:
                 if hltb_game is not None:
