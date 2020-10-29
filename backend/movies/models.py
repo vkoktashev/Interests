@@ -4,29 +4,30 @@ from users.models import UserLog, UserScore
 
 
 class Movie(models.Model):
-    imdb_id = models.IntegerField(unique=True)
+    imdb_id = models.CharField(unique=True, max_length=20)
     tmdb_id = models.IntegerField(unique=True)
     tmdb_original_name = models.CharField(max_length=200)
     tmdb_name = models.CharField(max_length=200)
+    tmdb_runtime = models.IntegerField()
 
 
 class UserMovie(UserScore):
-    STATUS_PLAYING = 'watching'
+    STATUS_WATCHING = 'watching'
     STATUS_WATCHED = 'watched'
     STATUS_STOPPED = 'stopped'
     STATUS_GOING = 'going'
     STATUS_NOT_WATCHED = 'not watched'
 
     STATUS_CHOICES = (
-        (STATUS_PLAYING, 'Watching'),
-        (STATUS_WATCHED, 'Watched'),
-        (STATUS_STOPPED, 'Stopped watching'),
-        (STATUS_GOING, 'Going to watch'),
-        (STATUS_NOT_WATCHED, 'Not watched')
+        (STATUS_WATCHING, 'Смотрю'),
+        (STATUS_WATCHED, 'Посмотрел'),
+        (STATUS_STOPPED, 'Дропнул'),
+        (STATUS_GOING, 'Буду смотреть'),
+        (STATUS_NOT_WATCHED, 'Не смотрел')
     )
 
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES)
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=STATUS_NOT_WATCHED)
 
     class Meta:
         unique_together = (("user", "movie"),)

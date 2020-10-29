@@ -14,12 +14,15 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from config.settings import EMAIL_HOST_USER
 from games.models import GameLog, UserGame
 from games.serializers import ExtendedUserGameSerializer
+from movies.models import UserMovie
+from movies.serializers import ExtendedUserMovieSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer
 from .models import User
 from .tokens import account_activation_token
 
 TYPE_GAME = 'game'
 SITE_URL = 'localhost:3000'
+MINUTES_IN_HOUR = 60
 
 page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
                                type=openapi.TYPE_INTEGER, default=1)
@@ -107,17 +110,28 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except User.DoesNotExist:
             return Response('Wrong username', status=status.HTTP_400_BAD_REQUEST)
 
+        stats = {}
+
         try:
             user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).filter(user=user)
             serializer = ExtendedUserGameSerializer(user_games, many=True)
             games = serializer.data
-            stats = {'games_count': len(games),
-                     'games_total_spent_time': sum(el['spent_time'] for el in games)}
+            stats.update({'games_count': len(user_games),
+                          'games_total_spent_time': sum(el.spent_time for el in user_games)})
         except UserGame.DoesNotExist:
             games = None
-            stats = None
 
-        return Response({'username': user.username, 'games': games, 'stats': stats})
+        try:
+            user_movies = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED).filter(user=user)
+            serializer = ExtendedUserMovieSerializer(user_movies, many=True)
+            movies = serializer.data
+            stats.update({'movies_count': len(user_movies),
+                          'movies_total_spent_time':
+                              round(sum(el.movie.tmdb_runtime for el in user_movies) / MINUTES_IN_HOUR, 1)})
+        except UserGame.DoesNotExist:
+            movies = None
+
+        return Response({'username': user.username, 'games': games, 'movies': movies, 'stats': stats})
 
 
 class MyTokenObtainPairView(TokenObtainPairView):

@@ -37,7 +37,6 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
     queryset = UserGame.objects.all()
     serializer_class = UserGameSerializer
     lookup_field = 'slug'
-    lookup_field = 'slug'
 
     def retrieve(self, request, *args, **kwargs):
         try:
@@ -95,8 +94,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
                 return Response('Wrong slug', status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
-        data.update({'user': request.user.pk})
-        data.update({'game': game.pk})
+        data.update({'user': request.user.pk,
+                     'game': game.pk})
 
         try:
             user_game = UserGame.objects.get(user=request.user, game=game)
