@@ -111,10 +111,13 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).filter(user=user)
             serializer = ExtendedUserGameSerializer(user_games, many=True)
             games = serializer.data
+            stats = {'games_count': len(games),
+                     'games_total_spent_time': sum(el['spent_time'] for el in games)}
         except UserGame.DoesNotExist:
             games = None
+            stats = None
 
-        return Response({'username': user.username, 'games': games})
+        return Response({'username': user.username, 'games': games, 'stats': stats})
 
 
 class MyTokenObtainPairView(TokenObtainPairView):

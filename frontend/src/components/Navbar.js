@@ -25,7 +25,7 @@ function Navbar( {loggedIn, onLoginClick, onLogoutClick, onRegistrationClick, us
     let history = useHistory();
 
     return(
-            <MDBNavbar style={{ backgroundColor: "#6C0AAB" }} dark expand="md" fixed="top">
+            <MDBNavbar style={{ backgroundColor: "#4527a0" }} dark expand="md" fixed="top">
             <MDBNavbarBrand>
                 <strong className="white-text">Interests</strong>
             </MDBNavbarBrand>
