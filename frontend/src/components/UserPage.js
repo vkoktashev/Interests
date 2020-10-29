@@ -79,17 +79,15 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo })
                     columns: gameColumns,
                     rows: userInfo.games.map((game) => {
                         return {
-                                name: <a name={game.game.rawg_name} 
-                                        href={'/game/' + game.game.rawg_slug}
-                                        onClick={ () =>  history.push('/game/' + game.game.rawg_slug)  }
-                                >
-                                    {game.game.rawg_name}
-                                </a>,
+                                name: game.game.rawg_name,
                                 status: game.status,
                                 score: game.score,
                                 review: game.review,
                                 spent_time: game.spent_time,
-                                spc: game.game.rawg_name
+                                clickEvent: (e) => {
+                                    //window.open('/game/' + game.game.rawg_slug);
+                                    history.push('/game/' + game.game.rawg_slug)
+                                }
                             }      
                     })
                 });
@@ -119,6 +117,7 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo })
                     <MDBCol className="searchPage"> 
                         <h1>Информация о пользователе {userInfo.username}</h1>
                         <h3>Игры</h3>
+                            <p>Игр сыграно: {userInfo.stats.games_count}, часов наиграно: {userInfo.stats.games_total_spent_time}</p>  
                         <hr style={{ color: '#6C0AAB', backgroundColor: '#4527a0', height: 2.5,  borderColor : '#6C0AAB' }}/>
                         <MDBDataTable
                             striped
@@ -127,6 +126,7 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo })
                             data={gameTableData}
                             info={false}
                             barReverse={true}
+                            noBottomColumns={true}
                             noRecordsFoundLabel="Ничего не найдено!"
                             paginationLabel={["Предыдущая", "Следующая"]}
                             entriesLabel="Показывать игр на странице"

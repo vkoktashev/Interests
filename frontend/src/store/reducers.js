@@ -43,7 +43,7 @@ const initialState = Map(
             movies: []
         },
         userPageContent: {
-
+            stats: {}
         },
         openedPages: { LoginForm: false, RegistrateForm: false },
         errors: {auth: false, registrate: false, gameRequest: false, movieRequest: false, userPage: false },
