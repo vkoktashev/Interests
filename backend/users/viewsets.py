@@ -16,8 +16,8 @@ from games.models import GameLog, UserGame
 from games.serializers import ExtendedUserGameSerializer
 from movies.models import UserMovie
 from movies.serializers import ExtendedUserMovieSerializer
-from users.serializers import UserSerializer, MyTokenObtainPairSerializer
-from .models import User
+from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer
+from .models import User, UserFollow
 from .tokens import account_activation_token
 
 TYPE_GAME = 'game'
@@ -112,26 +112,58 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         stats = {}
 
+        # games
+        user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).filter(user=user)
+        serializer = ExtendedUserGameSerializer(user_games, many=True)
+        games = serializer.data
+        stats.update({'games_count': len(user_games),
+                      'games_total_spent_time': sum(el.spent_time for el in user_games)})
+
+        # movies
+        user_movies = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED).filter(user=user)
+        serializer = ExtendedUserMovieSerializer(user_movies, many=True)
+        movies = serializer.data
+        stats.update({'movies_count': len(user_movies),
+                      'movies_total_spent_time':
+                          round(sum(el.movie.tmdb_runtime for el in user_movies) / MINUTES_IN_HOUR, 1)})
+
+        # followed_users
+        followed_users = list(el.followed_user for el
+                              in UserFollow.objects.exclude(is_following=False).filter(user=user))
+        serializer = UserSerializer(followed_users, many=True)
+        followed_users = serializer.data
+
+        return Response({'username': user.username, 'followed_users': followed_users,
+                         'games': games, 'movies': movies, 'stats': stats})
+
+    @action(detail=True, methods=['put'])
+    @swagger_auto_schema(request_body=UserFollowSerializer)
+    def follow(self, request, *args, **kwargs):
         try:
-            user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).filter(user=user)
-            serializer = ExtendedUserGameSerializer(user_games, many=True)
-            games = serializer.data
-            stats.update({'games_count': len(user_games),
-                          'games_total_spent_time': sum(el.spent_time for el in user_games)})
-        except UserGame.DoesNotExist:
-            games = None
+            followed_user = User.objects.get(username=kwargs.get('username'))
+        except User.DoesNotExist:
+            return Response('Wrong username', status=status.HTTP_400_BAD_REQUEST)
+
+        if followed_user is request.user:
+            return Response('You can\'t follow yourself', status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            user_movies = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED).filter(user=user)
-            serializer = ExtendedUserMovieSerializer(user_movies, many=True)
-            movies = serializer.data
-            stats.update({'movies_count': len(user_movies),
-                          'movies_total_spent_time':
-                              round(sum(el.movie.tmdb_runtime for el in user_movies) / MINUTES_IN_HOUR, 1)})
-        except UserGame.DoesNotExist:
-            movies = None
+            user_follow = UserFollow.objects.get(user=request.user, followed_user=followed_user)
+            serializer = UserFollowSerializer(user_follow, data=request.data)
+            created = False
+        except UserFollow.DoesNotExist:
+            data = request.data.copy()
+            data.update({'user': request.user, 'followed_user': followed_user})
+            serializer = UserFollowSerializer(data=data)
+            created = True
 
-        return Response({'username': user.username, 'games': games, 'movies': movies, 'stats': stats})
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user, followed_user=followed_user)
+
+        if created:
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class MyTokenObtainPairView(TokenObtainPairView):

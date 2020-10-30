@@ -67,3 +67,12 @@ class UserLog(models.Model):
 
     class Meta:
         abstract = True
+
+
+class UserFollow(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user')
+    followed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_user')
+    is_following = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = (("user", "followed_user"),)
