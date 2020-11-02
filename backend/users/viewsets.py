@@ -23,6 +23,7 @@ TYPE_GAME = 'game'
 SITE_URL = 'localhost:3000'
 MINUTES_IN_HOUR = 60
 
+query_param = openapi.Parameter('query', openapi.IN_QUERY, description="Поисковый запрос", type=openapi.TYPE_STRING)
 page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
                                type=openapi.TYPE_INTEGER, default=1)
 
@@ -164,6 +165,15 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):
+    @swagger_auto_schema(manual_parameters=[query_param])
+    def list(self, request, *args, **kwargs):
+        query = request.GET.get('query', '')
+        results = User.objects.filter(username__contains=query)
+        serializer = UserSerializer(results, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
