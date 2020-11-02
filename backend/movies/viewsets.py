@@ -37,7 +37,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except HTTPError as e:
             error_code = int(e.args[0].split(' ', 1)[0])
             if error_code == 404:
-                return Response({"Movie not found, check your id"}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"Movie not found"}, status=status.HTTP_404_NOT_FOUND)
             return Response({"Something went wrong"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:

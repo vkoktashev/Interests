@@ -82,7 +82,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
             except ValueError:
                 hltb_game = None
             except ConnectionError:
-                return Response('Hltb connection error, try again', status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                return Response('Hltb connection error', status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             try:
                 if hltb_game is not None:

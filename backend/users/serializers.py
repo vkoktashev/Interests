@@ -19,11 +19,19 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserFollowSerializer(serializers.ModelSerializer):
+    def validate_followed_user(self, value):
+        if value.pk is self.initial_data['user']:
+            raise serializers.ValidationError('You can\'t follow yourself')
+
+        return value
+
     class Meta:
         model = UserFollow
-        exclude = ('id', 'user')
-        read_only_fields = ('followed_user',)
-        extra_kwargs = {'is_following': {'required': True}}
+        exclude = ('id',)
+        extra_kwargs = {
+            'is_following': {'required': True},
+            'user': {'write_only': True}
+        }
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
