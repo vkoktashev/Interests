@@ -75,6 +75,9 @@ export default function reducer(state = initialState, action) {
     case types.SET_CONTENT_GAME_USERINFO_SCORE:
         return state.setIn(['content', 'game', 'user_info', 'score'], action.score)
 
+    case types.SET_CONTENT_MOVIE_USERINFO:
+        return state.setIn(['content', 'movie', 'user_info'], action.user_info);
+
     case types.SET_USER_PAGE_CONTENT:
         return state.setIn(['userPageContent'], action.content)
 

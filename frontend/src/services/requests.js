@@ -84,6 +84,29 @@ export async function setGameStatus(token, gameSlug, user_info){
 }
 
 /**
+ * Запрос на изменение статуса фильма
+ * @param {string} token Токен доступа
+ * @param {object} user_info Статус фильма
+ * @param {string} movieID ID фильма
+ */
+export async function setMovieStatus(token, id, user_info){
+    try{
+        var AuthStr = 'Bearer ' + token;
+        console.log(user_info);
+        const res = await axios.put(GET_MOVIE_URL + id + "/", 
+            user_info, { headers: { 'Authorization': AuthStr } });
+        console.log(res); 
+        
+        if (res.status === 204 || res.status === 200 || res.status === 201)
+            return res.data;
+        else return null;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
  * Запрос на изменение статуса игры
  * @param {string} token Токен доступа
  * @param {object} user_info Объект статуса игры
@@ -144,15 +167,15 @@ export async function searchMovies(query, page){
  * @param {string} id ID игры  
  * @returns {object} Информация об игре
  */
-export async function getUserInfo(token, username) {
+export async function getUserInfo(token, userID) {
     let data;
     try{
         if (token){
             var AuthStr = 'Bearer ' + token;
-            const res = await axios.get(USER_INFO_URL + username + "/", { 'headers': { 'Authorization': AuthStr } });
+            const res = await axios.get(USER_INFO_URL + userID + "/", { 'headers': { 'Authorization': AuthStr } });
             data = res.data;
         }else{
-            const res = await axios.get(USER_INFO_URL + username + "/", axiosConfig);
+            const res = await axios.get(USER_INFO_URL + userID + "/", axiosConfig);
             data = res.data;
         }
         return data;
