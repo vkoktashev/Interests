@@ -6,16 +6,26 @@ from users.models import User, UserFollow
 
 
 class UserSerializer(serializers.ModelSerializer):
+    def validate_email(self, value):
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError('A user with that email already exists.')
+        return value
+
+    def validate_username(self, value):
+        if User.objects.filter(username__iexact=value).exists():
+            raise serializers.ValidationError('A user with that username already exists.')
+        return value
+
+    def create(self, validated_data):
+        validated_data['password'] = make_password(validated_data.get('password'))
+        return super(UserSerializer, self).create(validated_data)
+
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'password')
         extra_kwargs = {
             'password': {'write_only': True},
         }
-
-    def create(self, validated_data):
-        validated_data['password'] = make_password(validated_data.get('password'))
-        return super(UserSerializer, self).create(validated_data)
 
 
 class UserFollowSerializer(serializers.ModelSerializer):
