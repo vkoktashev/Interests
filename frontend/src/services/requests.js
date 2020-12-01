@@ -162,6 +162,22 @@ export async function searchMovies(query, page){
 }
 
 /**
+ * Запрос на поиск пользователей
+ * @param {string} query Поисковый запрос
+ */
+export async function searchUsers(query){
+    try{
+        const res = await axios.get(SEARCH_USERS_URL, { params : {query: query} }, 
+            { 'headers': { 'Content-Type': 'application/json;charset=UTF-8' } });
+            console.log(res);
+        return res.data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
  * Запрос к бд, получающий информацию об игре
  * @param {string} token Токен доступа
  * @param {string} id ID игры  

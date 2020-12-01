@@ -25,7 +25,7 @@ import * as actions from '../store/actions';
 /**
  * Основная страница приложения
  */
-function SearchPage ( { loggedIn, openLoginForm, searchIsLoading, searchGame, games, searchMovie, movies } ) {
+function SearchPage ( { loggedIn, openLoginForm, searchIsLoading, searchGame, games, searchMovie, movies, searchUsers, users } ) {
     let history = useHistory();
     let { query } = useParams();
     const [gamesCards, setGamesCards] = useState("");
@@ -98,6 +98,7 @@ const mapStateToProps = state => ({
     searchIsLoading: selectors.getIsLoadingSearchGames(state),
     games: selectors.getSearchContentGames(state),
     movies: selectors.getSearchContentMovies(state),
+    users: selectors.getSearchContentUsers(state)
 });
 
 const mapDispatchToProps = (dispatch) => {
@@ -110,6 +111,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         searchMovie: (query, page) => {
             dispatch(actions.searchMovies(query, page));
+        },
+        searchUsers: (query) => {
+            dispatch(actions.searchUsers(query));
         }
 	}
 };

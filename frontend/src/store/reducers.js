@@ -40,14 +40,15 @@ const initialState = Map(
         },
         searchContent: {
             games: [],
-            movies: []
+            movies: [],
+            users: []
         },
         userPageContent: {
             stats: {}
         },
         openedPages: { LoginForm: false, RegistrateForm: false },
         errors: {auth: false, registrate: false, gameRequest: false, movieRequest: false, userPage: false },
-        isLoading: {contentGame: false, contentMovie: false, searchGames: false, searchMovies: false, userPageContent: false}
+        isLoading: {contentGame: false, contentMovie: false, searchGames: false, searchMovies: false, userPageContent: false, searchUsers: false}
     }
 );
 
@@ -67,6 +68,8 @@ export default function reducer(state = initialState, action) {
         return state.setIn(['searchContent', 'games'], action.games);
     case types.SET_SEARCH_CONTENT_MOVIES:
         return state.setIn(['searchContent', 'movies'], action.movies);
+    case types.SET_SEARCH_CONTENT_USERS:
+        return state.setIn(['searchContent', 'users'], action.users);
 
     case types.SET_CONTENT_GAME_USERINFO:
         return state.setIn(['content', 'game', 'user_info'], action.user_info);
@@ -106,9 +109,11 @@ export default function reducer(state = initialState, action) {
     case types.SET_IS_LOADING_SEARCH_MOVIES:
         return state.setIn(['isLoading', 'searchMovies'], action.isLoading);
     case types.SET_IS_LOADING_USER_PAGE_CONTENT:
-        return state.setIn(['isLoading', 'userPageContent'], action.isLoading);
+        return state.setIn(['isLoading', 'userPageContent'], action.isLoading); 
+    case types.SET_IS_LOADING_SEARCH_USERS:
+        return state.setIn(['isLoading', 'searchUsers'], action.isLoading);
     default:
-      return state;
+        return state;
   }
 }
 
@@ -134,6 +139,10 @@ export function getSearchContentGames(state) {
 
 export function getSearchContentMovies(state) {
     return state.get('searchContent').movies;
+}
+
+export function getSearchContentUsers(state) {
+    return state.get('searchContent').users;
 }
 
 export function getAuthError(state) {
@@ -182,6 +191,10 @@ export function getIsLoadingSearchGames(state) {
 
 export function getIsLoadingSearchMovies(state) {
     return state.get('isLoading').searchMovies;
+}
+
+export function getIsLoadingSearchUsers(state) {
+    return state.get('isLoading').searchUsers;
 }
 
 export function getIsLoadingUserPageContent(state) {
