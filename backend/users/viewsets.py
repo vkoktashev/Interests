@@ -181,7 +181,10 @@ class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):
         for user in User.objects.all():
             similarity = similar(lower(query), lower(user.username))  # similarity is 0.0-1.0
             if similarity > 0.4:
+                user.similarity = similarity
                 results.append(user)
+                print(user.username, similarity)
+        results.sort(key=lambda u: u.similarity, reverse=True)
         serializer = UserSerializer(results, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
