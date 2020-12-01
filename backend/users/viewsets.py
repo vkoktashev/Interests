@@ -127,8 +127,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                       'games_total_spent_time': sum(el.spent_time for el in user_games)})
 
         # movies
-        user_movies = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED) \
-            .filter(user=user) \
+        user_movies = UserMovie.objects \
+            .filter(user=user, status=UserMovie.STATUS_WATCHED) \
             .order_by('updated_at')
         serializer = ExtendedUserMovieSerializer(user_movies, many=True)
         movies = serializer.data
