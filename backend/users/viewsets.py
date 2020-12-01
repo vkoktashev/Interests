@@ -118,14 +118,18 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         stats = {}
 
         # games
-        user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).filter(user=user)
+        user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED) \
+            .filter(user=user) \
+            .order_by('updated_at')
         serializer = ExtendedUserGameSerializer(user_games, many=True)
         games = serializer.data
         stats.update({'games_count': len(user_games),
                       'games_total_spent_time': sum(el.spent_time for el in user_games)})
 
         # movies
-        user_movies = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED).filter(user=user)
+        user_movies = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED) \
+            .filter(user=user) \
+            .order_by('updated_at')
         serializer = ExtendedUserMovieSerializer(user_movies, many=True)
         movies = serializer.data
         stats.update({'movies_count': len(user_movies),

@@ -1,5 +1,6 @@
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 from games.models import UserGame, GameLog
 from games.serializers import UserGameSerializer
@@ -23,3 +24,14 @@ def create_log(instance, **kwargs):
                 action_result = fields[field]
                 GameLog.objects.create(user=instance.user, game=instance.game,
                                        action_type=action_type, action_result=action_result)
+
+
+@receiver(pre_save, sender=UserGame)
+def update_datetime_if_needed(instance, **kwargs):
+    try:
+        old_status = UserGame.objects.get(user=instance.user, game=instance.game).status
+    except UserGame.DoesNotExist:
+        old_status = None
+
+    if instance.status != old_status and old_status == UserGame.STATUS_NOT_PLAYED:
+        instance.updated_at = timezone.now()
