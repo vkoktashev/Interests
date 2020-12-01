@@ -7,7 +7,7 @@ import {
     MDBDataTable
 } from "mdbreact";
 
-function UserPageGameBlock ( {games, stats} ) {
+function GameBlock ( {games, stats} ) {
     let history = useHistory();
 
     const gameColumns = [
@@ -70,7 +70,6 @@ function UserPageGameBlock ( {games, stats} ) {
 
     return(
         <div>
-            <hr style={{ color: '#6C0AAB', backgroundColor: '#4527a0', height: 2.5,  borderColor : '#6C0AAB' }}/>
             <p>Игр сыграно: {stats.games_count}, часов наиграно: {stats.games_total_spent_time}</p>  
             <MDBDataTable
                 striped
@@ -89,4 +88,4 @@ function UserPageGameBlock ( {games, stats} ) {
     )
 }
 
-export default UserPageGameBlock;
+export default GameBlock;

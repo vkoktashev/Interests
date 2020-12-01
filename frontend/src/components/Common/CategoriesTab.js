@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from "react";
 
 
-function UserPageCategories( {categories, activeColor, onChangeCategory} ) {
+function CategoriesTab( {categories, activeColor, onChangeCategory} ) {
     const [activeCategory, setActiveCategory] = useState(categories[0]);
 
     return(
@@ -15,8 +15,10 @@ function UserPageCategories( {categories, activeColor, onChangeCategory} ) {
                                             }}>
                                             {category}
                                         </button>) }
+            <br/>
+`           <hr style={{ color: activeColor, backgroundColor: '#6C0AAB', height: 2.5,  borderColor : '#6C0AAB', marginTop: "-16px", marginBottom: "-10px" }}/>`
         </div>  
     )
 }
 
-export default UserPageCategories;
+export default CategoriesTab;

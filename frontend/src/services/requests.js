@@ -1,5 +1,5 @@
 import axios from "axios";
-import {GET_GAME_URL, SEARCH_GAMES_URL, USER_INFO_URL, SEARCH_MOVIES_URL, GET_MOVIE_URL} from "../settings";
+import {GET_GAME_URL, SEARCH_GAMES_URL, USER_INFO_URL, SEARCH_MOVIES_URL, GET_MOVIE_URL, SEARCH_USERS_URL} from "../settings";
 
 let axiosConfig = {
     headers: {
@@ -152,6 +152,22 @@ export async function searchGames(query, page){
 export async function searchMovies(query, page){
     try{
         const res = await axios.get(SEARCH_MOVIES_URL, { params : {query: query, page: page} }, 
+            { 'headers': { 'Content-Type': 'application/json;charset=UTF-8' } });
+            console.log(res);
+        return res.data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
+ * Запрос на поиск пользователей
+ * @param {string} query Поисковый запрос
+ */
+export async function searchUsers(query){
+    try{
+        const res = await axios.get(SEARCH_USERS_URL, { params : {query: query} }, 
             { 'headers': { 'Content-Type': 'application/json;charset=UTF-8' } });
             console.log(res);
         return res.data;

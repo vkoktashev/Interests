@@ -343,6 +343,30 @@ export function setMovieStatus(user_info){
     }
 }
 
+export function searchUsers(query){
+    return async(dispatch) => {
+        dispatch({
+            type: actionTypes.SET_IS_LOADING_SEARCH_USERS,
+            isLoading: true
+        });
+        Requests.searchUsers(query).then((result) => {
+            if (!result){
+                toast.error("Ошибка поиска")
+            }
+            else{
+                dispatch({
+                    type: actionTypes.SET_SEARCH_CONTENT_USERS,
+                    users: result, 
+                });
+            }
+            dispatch({
+                type: actionTypes.SET_IS_LOADING_SEARCH_USERS,
+                isLoading: false
+            });
+        });
+    }
+}
+
 export function setUser(user) {
     return({ type: actionTypes.SET_USER, user: user });
 }
