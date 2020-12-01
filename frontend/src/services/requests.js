@@ -1,5 +1,5 @@
 import axios from "axios";
-import {GET_GAME_URL, SEARCH_GAMES_URL, USER_INFO_URL, SEARCH_MOVIES_URL, GET_MOVIE_URL} from "../settings";
+import {GET_GAME_URL, SEARCH_GAMES_URL, USER_INFO_URL, SEARCH_MOVIES_URL, GET_MOVIE_URL, SEARCH_USERS_URL} from "../settings";
 
 let axiosConfig = {
     headers: {
@@ -84,6 +84,29 @@ export async function setGameStatus(token, gameSlug, user_info){
 }
 
 /**
+ * Запрос на изменение статуса фильма
+ * @param {string} token Токен доступа
+ * @param {object} user_info Статус фильма
+ * @param {string} movieID ID фильма
+ */
+export async function setMovieStatus(token, id, user_info){
+    try{
+        var AuthStr = 'Bearer ' + token;
+        console.log(user_info);
+        const res = await axios.put(GET_MOVIE_URL + id + "/", 
+            user_info, { headers: { 'Authorization': AuthStr } });
+        console.log(res); 
+        
+        if (res.status === 204 || res.status === 200 || res.status === 201)
+            return res.data;
+        else return null;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
  * Запрос на изменение статуса игры
  * @param {string} token Токен доступа
  * @param {object} user_info Объект статуса игры
@@ -139,20 +162,36 @@ export async function searchMovies(query, page){
 }
 
 /**
+ * Запрос на поиск пользователей
+ * @param {string} query Поисковый запрос
+ */
+export async function searchUsers(query){
+    try{
+        const res = await axios.get(SEARCH_USERS_URL, { params : {query: query} }, 
+            { 'headers': { 'Content-Type': 'application/json;charset=UTF-8' } });
+            console.log(res);
+        return res.data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
  * Запрос к бд, получающий информацию об игре
  * @param {string} token Токен доступа
  * @param {string} id ID игры  
  * @returns {object} Информация об игре
  */
-export async function getUserInfo(token, username) {
+export async function getUserInfo(token, userID) {
     let data;
     try{
         if (token){
             var AuthStr = 'Bearer ' + token;
-            const res = await axios.get(USER_INFO_URL + username + "/", { 'headers': { 'Authorization': AuthStr } });
+            const res = await axios.get(USER_INFO_URL + userID + "/", { 'headers': { 'Authorization': AuthStr } });
             data = res.data;
         }else{
-            const res = await axios.get(USER_INFO_URL + username + "/", axiosConfig);
+            const res = await axios.get(USER_INFO_URL + userID + "/", axiosConfig);
             data = res.data;
         }
         return data;

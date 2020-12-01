@@ -325,6 +325,48 @@ export function searchMovies(query, page){
     }
 }
 
+export function setMovieStatus(user_info){
+    return async(dispatch, getState) => {
+        if (await dispatch(checkAuthorization())){
+            Requests.setMovieStatus(localStorage.getItem('token'), selectors.getContentMovie(getState()).tmdb.id, user_info).then((result) => {
+                if (!result){
+                    toast.error("Ошибка обновления статуса")
+                }
+                else{
+                    dispatch({
+                        type: actionTypes.SET_CONTENT_MOVIE_USERINFO,
+                        user_info: result
+                    });
+                }
+            });
+        }
+    }
+}
+
+export function searchUsers(query){
+    return async(dispatch) => {
+        dispatch({
+            type: actionTypes.SET_IS_LOADING_SEARCH_USERS,
+            isLoading: true
+        });
+        Requests.searchUsers(query).then((result) => {
+            if (!result){
+                toast.error("Ошибка поиска")
+            }
+            else{
+                dispatch({
+                    type: actionTypes.SET_SEARCH_CONTENT_USERS,
+                    users: result, 
+                });
+            }
+            dispatch({
+                type: actionTypes.SET_IS_LOADING_SEARCH_USERS,
+                isLoading: false
+            });
+        });
+    }
+}
+
 export function setUser(user) {
     return({ type: actionTypes.SET_USER, user: user });
 }
