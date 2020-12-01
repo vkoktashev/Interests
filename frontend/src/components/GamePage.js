@@ -31,17 +31,12 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
     const [metascoreBlock, setMetascoreBlock] = useState("");
     const [review, setReview] = useState("");
     const [spentTime, setSpentTime] = useState(0);
+    const [developers, setDevelopers] = useState("");
     const [hltbInfo, setHtlbInfo] = useState({gameplay_main_extra: -1, gameplay_main: -1, gameplay_comletionist: -1});
-    const [costyl, setCostyl] = useState(true);
 
     useEffect(
 		() => {
             requestGame(id);
-            /*if (!costyl){
-                requestGame(id);
-            }else{
-                setCostyl(false)
-            }*/
         },
         // eslint-disable-next-line
 		[id, requestGame, loggedIn]
@@ -82,6 +77,16 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                 setReview(game.user_info.review);
                 setSpentTime(game.user_info.spent_time);
             }
+
+            if (game.rawg.developers){
+                let newDevelopers = ""
+                for (let i = 0; i < game.rawg.developers.length; i++){
+                    newDevelopers += game.rawg.developers[i].name;
+                    if (i !== game.rawg.developers.length - 1)
+                    newDevelopers += ", ";
+                }
+                setDevelopers(newDevelopers);   
+            }
 		},
 		[game]
     );
@@ -105,7 +110,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                                     </MDBCol>
                                     <MDBCol size="6">
                                         <h1>{game.rawg.name}</h1>
-                                        <p style={{marginBottom: "2px"}}>Разработчик: {game.rawg.developers[0].name}</p>
+                                        <p style={{marginBottom: "2px"}}>Разработчики: {developers}</p>
                                         <p style={{marginBottom: "2px"}}>Дата релиза: {game.rawg.released}</p>
                                         <p style={{marginBottom: "2px"}}>Жанр: {genres}</p>
                                         <p style={{marginBottom: "4px"}} 
@@ -126,7 +131,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                                                 }}
                                             }
                                         /> <br/>
-                                        <StatusButtonGroup loggedIn={loggedIn} 
+                                        <StatusButtonGroup
                                             statuses={['Не играл', 'Буду играть', 'Играю', 'Дропнул', 'Прошел']}
                                             activeColor='#4527a0' 
                                             userStatus={game.user_info?game.user_info.status:'Не играл'}

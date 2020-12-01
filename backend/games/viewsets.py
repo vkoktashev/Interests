@@ -52,7 +52,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
         except ValueError:
             hltb_game = None
         except ConnectionError:
-            return Response('Hltb connection error, try again', status=status.HTTP_502_BAD_GATEWAY)
+            return Response('Hltb connection error, try again', status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
             game = Game.objects.get(rawg_slug=rawg_game.slug)
@@ -82,7 +82,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
             except ValueError:
                 hltb_game = None
             except ConnectionError:
-                return Response('Hltb connection error, try again', status=status.HTTP_502_BAD_GATEWAY)
+                return Response('Hltb connection error', status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             try:
                 if hltb_game is not None:
@@ -94,8 +94,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
                 return Response('Wrong slug', status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
-        data.update({'user': request.user.pk})
-        data.update({'game': game.pk})
+        data.update({'user': request.user.pk,
+                     'game': game.pk})
 
         try:
             user_game = UserGame.objects.get(user=request.user, game=game)

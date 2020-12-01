@@ -1,5 +1,4 @@
 from django.core.mail import EmailMessage
-from django.core.paginator import Paginator, EmptyPage
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from drf_yasg import openapi
@@ -12,15 +11,19 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from config.settings import EMAIL_HOST_USER
-from games.models import GameLog, UserGame
+from games.models import UserGame
 from games.serializers import ExtendedUserGameSerializer
-from users.serializers import UserSerializer, MyTokenObtainPairSerializer
-from .models import User
+from movies.models import UserMovie
+from movies.serializers import ExtendedUserMovieSerializer
+from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer
+from .models import User, UserFollow
 from .tokens import account_activation_token
 
 TYPE_GAME = 'game'
 SITE_URL = '35.193.124.214:81'
+MINUTES_IN_HOUR = 60
 
+query_param = openapi.Parameter('query', openapi.IN_QUERY, description="Поисковый запрос", type=openapi.TYPE_STRING)
 page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
                                type=openapi.TYPE_INTEGER, default=1)
 
@@ -67,57 +70,110 @@ class AuthViewSet(GenericViewSet):
 
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
-    lookup_field = 'username'
-
-    @swagger_auto_schema(manual_parameters=[page_param])
-    @action(detail=True, methods=['get'])
-    def get_log(self, request, *args, **kwargs):
-        try:
-            page = int(request.GET.get('page'))
-        except (ValueError, TypeError):
-            page = 1
-        page_size = 10
-        logs = GameLog.objects.filter(user=request.user).order_by('-created')
-        paginator = Paginator(logs, page_size)
-
-        log_dicts = []
-        try:
-            paginator_page = paginator.page(page)
-        except EmptyPage:
-            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
-
-        for log in paginator.page(page):
-            log_dict = {'user': log.user.username,
-                        'user_id': log.user.id,
-                        'target': log.game.rawg_name,
-                        'target_id': log.game.rawg_slug,
-                        'created': log.created,
-                        'type': TYPE_GAME,
-                        'action_type': log.action_type,
-                        'action_result': log.action_result,
-                        }
-            log_dicts.append(log_dict)
-
-        return Response({'log': log_dicts,
-                         'has_next_page': paginator_page.has_next()})
+    # @swagger_auto_schema(manual_parameters=[page_param])
+    # @action(detail=True, methods=['get'])
+    # def get_log(self, request, *args, **kwargs):
+    #     try:
+    #         page = int(request.GET.get('page'))
+    #     except (ValueError, TypeError):
+    #         page = 1
+    #     page_size = 10
+    #     logs = GameLog.objects.filter(user=request.user).order_by('-created')
+    #     paginator = Paginator(logs, page_size)
+    #
+    #     log_dicts = []
+    #     try:
+    #         paginator_page = paginator.page(page)
+    #     except EmptyPage:
+    #         return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+    #
+    #     for log in paginator.page(page):
+    #         log_dict = {'user': log.user.username,
+    #                     'user_id': log.user.id,
+    #                     'target': log.game.rawg_name,
+    #                     'target_id': log.game.rawg_slug,
+    #                     'created': log.created,
+    #                     'type': TYPE_GAME,
+    #                     'action_type': log.action_type,
+    #                     'action_result': log.action_result,
+    #                     }
+    #         log_dicts.append(log_dict)
+    #
+    #     return Response({'log': log_dicts,
+    #                      'has_next_page': paginator_page.has_next()})
 
     def retrieve(self, request, *args, **kwargs):
         try:
-            user = User.objects.get(username=kwargs.get('username'))
-        except User.DoesNotExist:
-            return Response('Wrong username', status=status.HTTP_400_BAD_REQUEST)
+            user_id = int(kwargs.get('pk'))
+        except ValueError:
+            return Response('Wrong id, must be integer', status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).filter(user=user)
-            serializer = ExtendedUserGameSerializer(user_games, many=True)
-            games = serializer.data
-            stats = {'games_count': len(games),
-                     'games_total_spent_time': sum(el['spent_time'] for el in games)}
-        except UserGame.DoesNotExist:
-            games = None
-            stats = None
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response('User does not exist', status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'username': user.username, 'games': games, 'stats': stats})
+        stats = {}
+
+        # games
+        user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).filter(user=user)
+        serializer = ExtendedUserGameSerializer(user_games, many=True)
+        games = serializer.data
+        stats.update({'games_count': len(user_games),
+                      'games_total_spent_time': sum(el.spent_time for el in user_games)})
+
+        # movies
+        user_movies = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED).filter(user=user)
+        serializer = ExtendedUserMovieSerializer(user_movies, many=True)
+        movies = serializer.data
+        stats.update({'movies_count': len(user_movies),
+                      'movies_total_spent_time':
+                          round(sum(el.movie.tmdb_runtime for el in user_movies) / MINUTES_IN_HOUR, 1)})
+
+        # followed_users
+        followed_users = list(el.followed_user for el
+                              in UserFollow.objects.exclude(is_following=False).filter(user=user))
+        serializer = UserSerializer(followed_users, many=True)
+        followed_users = serializer.data
+
+        return Response({'username': user.username, 'followed_users': followed_users,
+                         'games': games, 'movies': movies, 'stats': stats})
+
+    @action(detail=True, methods=['put'])
+    @swagger_auto_schema(request_body=UserFollowSerializer)
+    def follow(self, request, *args, **kwargs):
+        try:
+            user_id = int(kwargs.get('pk'))
+        except ValueError:
+            return Response('Wrong id, must be integer', status=status.HTTP_400_BAD_REQUEST)
+
+        data = request.data.copy()
+        data.update({'user': request.user.pk, 'followed_user': user_id})
+
+        try:
+            user_follow = UserFollow.objects.get(user=request.user, followed_user=user_id)
+            serializer = UserFollowSerializer(user_follow, data=data)
+            created = False
+        except UserFollow.DoesNotExist:
+            serializer = UserFollowSerializer(data=data)
+            created = True
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        if created:
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):
+    @swagger_auto_schema(manual_parameters=[query_param])
+    def list(self, request, *args, **kwargs):
+        query = request.GET.get('query', '')
+        results = User.objects.filter(username__contains=query)
+        serializer = UserSerializer(results, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class MyTokenObtainPairView(TokenObtainPairView):

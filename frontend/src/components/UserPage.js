@@ -10,9 +10,6 @@ import {
     MDBRow,
     MDBCol,
     MDBContainer,
-    MDBTable,
-    MDBTableHead,
-    MDBTableBody,
     MDBDataTable
 } from "mdbreact";
 
@@ -21,7 +18,9 @@ import * as selectors from '../store/reducers';
 import * as actions from '../store/actions';
 
 import LoadingOverlay from 'react-loading-overlay';
-
+import UserPageGameBlock from './UserPageGameBlock';
+import UserPageMovieBlock from './UserPageMovieBlock';
+import UserPageCategories from './UserPageCategories';
 
 /**
  * Основная страница приложения
@@ -30,40 +29,7 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo })
 { 
     let history = useHistory();
     let { username } = useParams();
-
-    const gameColumns = [
-        {
-          label: 'Название',
-          field: 'name',
-          sort: 'asc'
-        },
-        {
-          label: 'Статус',
-          field: 'status',
-          sort: 'asc'
-        },
-        {
-          label: 'Оценка',
-          field: 'score',
-          sort: 'asc'
-        },
-        {
-          label: 'Отзыв',
-          field: 'review',
-          sort: 'asc'
-        },
-        {
-          label: 'Время прохождения',
-          field: 'spent_time',
-          sort: 'asc'
-        }
-      ];
-
-    const [gameTableData, setGameTableData] = useState({
-        columns: gameColumns,
-        rows: [
-        ]
-    });
+    const [activeCategory, setActiveCategory] = useState("");
 
     useEffect(
 		() => {
@@ -74,38 +40,14 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo })
 
     useEffect(
 		() => {
-			if (userInfo && userInfo.games){
-                setGameTableData({
-                    columns: gameColumns,
-                    rows: userInfo.games.map((game) => {
-                        return {
-                                name: game.game.rawg_name,
-                                status: game.status,
-                                score: game.score,
-                                review: game.review,
-                                spent_time: game.spent_time,
-                                clickEvent: (e) => {
-                                    //window.open('/game/' + game.game.rawg_slug);
-                                    history.push('/game/' + game.game.rawg_slug)
-                                }
-                            }      
-                    })
-                });
-            } 
-			else
-                setGameTableData({
-                    columns: gameColumns,
-                    rows: [
-                    ]
-                });
+            setActiveCategory(<UserPageGameBlock games={userInfo.games} stats={userInfo.stats} />);
 		},
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[userInfo]
-	);
+    );
 
     return (
         <div>
-        <div className="bg searchBG"/> 
+            <div className="bg searchBG"/> 
             <LoadingOverlay
                 active={userIsLoading}
                 spinner
@@ -116,22 +58,16 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo })
                     <MDBCol md="0.5"></MDBCol>
                     <MDBCol className="searchPage"> 
                         <h1>Информация о пользователе {userInfo.username}</h1>
-                        <h3>Игры</h3>
-                            <p>Игр сыграно: {userInfo.stats.games_count}, часов наиграно: {userInfo.stats.games_total_spent_time}</p>  
-                        <hr style={{ color: '#6C0AAB', backgroundColor: '#4527a0', height: 2.5,  borderColor : '#6C0AAB' }}/>
-                        <MDBDataTable
-                            striped
-                            bordered
-                            small
-                            data={gameTableData}
-                            info={false}
-                            barReverse={true}
-                            noBottomColumns={true}
-                            noRecordsFoundLabel="Ничего не найдено!"
-                            paginationLabel={["Предыдущая", "Следующая"]}
-                            entriesLabel="Показывать игр на странице"
-                            searchLabel='Поиск'
-                            />
+                        <UserPageCategories
+                            categories={['Игры', 'Фильмы']}
+                            activeColor='#4527a0' 
+                            onChangeCategory={(category) => {
+                                if (category === 'Игры')
+                                    setActiveCategory(<UserPageGameBlock games={userInfo.games} stats={userInfo.stats} />);
+                                if (category === 'Фильмы')
+                                    setActiveCategory(<UserPageMovieBlock movies={userInfo.movies} stats={userInfo.stats} />);
+                            }}/>
+                        {activeCategory}
                     </MDBCol>
                     <MDBCol md="0.5"></MDBCol>
                 </MDBRow>

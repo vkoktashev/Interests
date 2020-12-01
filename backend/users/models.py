@@ -27,7 +27,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     }, )
     is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
-    is_staff = models.BooleanField(_('staff status'),default=False)
+    is_staff = models.BooleanField(_('staff status'), default=False)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
@@ -42,7 +42,6 @@ class UserScore(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     score = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True, blank=True)
     review = models.CharField(max_length=300, blank=True)
-    spent_time = models.IntegerField(validators=[MinValueValidator(0)], default=0)
 
     class Meta:
         abstract = True
@@ -68,3 +67,12 @@ class UserLog(models.Model):
 
     class Meta:
         abstract = True
+
+
+class UserFollow(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user')
+    followed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_user')
+    is_following = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = (("user", "followed_user"),)
