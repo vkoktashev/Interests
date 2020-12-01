@@ -1,4 +1,5 @@
 from django.core.mail import EmailMessage
+from django.template.defaultfilters import lower
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from drf_yasg import openapi
@@ -16,6 +17,7 @@ from games.serializers import ExtendedUserGameSerializer
 from movies.models import UserMovie
 from movies.serializers import ExtendedUserMovieSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer
+from utils.functions import similar
 from .models import User, UserFollow
 from .tokens import account_activation_token
 
@@ -171,7 +173,11 @@ class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):
     @swagger_auto_schema(manual_parameters=[query_param])
     def list(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
-        results = User.objects.filter(username__contains=query)
+        results = []
+        for user in User.objects.all():
+            similarity = similar(lower(query), lower(user.username))  # similarity is 0.0-1.0
+            if similarity > 0.4:
+                results.append(user)
         serializer = UserSerializer(results, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

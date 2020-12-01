@@ -34,6 +34,9 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     def retrieve(self, request, *args, **kwargs):
         try:
             tmdb_movie = tmdb.Movies(kwargs.get('tmdb_id')).info(language=LANGUAGE)
+            tmdb_cast_crew = tmdb.Movies(kwargs.get('tmdb_id')).credits(language=LANGUAGE)
+            tmdb_movie['cast'] = tmdb_cast_crew.get('cast')
+            tmdb_movie['crew'] = tmdb_cast_crew.get('crew')
         except HTTPError as e:
             error_code = int(e.args[0].split(' ', 1)[0])
             if error_code == 404:
