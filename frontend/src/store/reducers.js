@@ -109,7 +109,7 @@ export default function reducer(state = initialState, action) {
     case types.SET_IS_LOADING_SEARCH_MOVIES:
         return state.setIn(['isLoading', 'searchMovies'], action.isLoading);
     case types.SET_IS_LOADING_USER_PAGE_CONTENT:
-        return state.setIn(['isLoading', 'userPageContent'], action.isLoading); 
+        return state.setIn(['isLoading', 'userPageContent'], action.isLoading);
     case types.SET_IS_LOADING_SEARCH_USERS:
         return state.setIn(['isLoading', 'searchUsers'], action.isLoading);
     default:
@@ -195,6 +195,10 @@ export function getIsLoadingSearchMovies(state) {
 
 export function getIsLoadingSearchUsers(state) {
     return state.get('isLoading').searchUsers;
+}
+
+export function getIsLoadingSearchAll(state) {
+    return (state.get('isLoading').searchUsers || state.get('isLoading').searchMovies || state.get('isLoading').searchGames);
 }
 
 export function getIsLoadingUserPageContent(state) {

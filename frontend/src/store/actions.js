@@ -356,7 +356,7 @@ export function searchUsers(query){
             else{
                 dispatch({
                     type: actionTypes.SET_SEARCH_CONTENT_USERS,
-                    users: result.results, 
+                    users: result, 
                 });
             }
             dispatch({

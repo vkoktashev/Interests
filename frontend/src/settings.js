@@ -21,4 +21,4 @@ export const SEARCH_MOVIES_URL = BACKEND_URL + "movies/search/";
 /**Адрес получения информации о пользователе */
 export const USER_INFO_URL = BACKEND_URL + "users/user/";
 /**Адрес поиска пользователей */
-export const SEARCH_USERS_URL = BACKEND_URL + "users/search/";
+export const SEARCH_USERS_URL = BACKEND_URL + "users/search/"; 

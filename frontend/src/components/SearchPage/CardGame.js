@@ -3,7 +3,7 @@ import {
     useHistory
   } from "react-router-dom";
 
-function SearchCardGame( {game} ) {
+function CardGame( {game} ) {
     let history = useHistory();
 
     useEffect(() =>{
@@ -17,8 +17,8 @@ function SearchCardGame( {game} ) {
             style={{backgroundImage: `url(${game.background_image})`}}
             onClick={() => history.push('/game/' + game.slug)}>
             <h3 className="searchCardGame" >{game.name}</h3>
-        </div>  
+        </div> 
     )
 }
 
-export default SearchCardGame;
+export default CardGame;

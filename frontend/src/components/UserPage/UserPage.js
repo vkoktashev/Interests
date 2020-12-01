@@ -9,18 +9,17 @@ import {
 import {
     MDBRow,
     MDBCol,
-    MDBContainer,
-    MDBDataTable
+    MDBContainer
 } from "mdbreact";
 
 import { connect } from 'react-redux'; 
-import * as selectors from '../store/reducers';
-import * as actions from '../store/actions';
+import * as selectors from '../../store/reducers';
+import * as actions from '../../store/actions';
 
 import LoadingOverlay from 'react-loading-overlay';
-import UserPageGameBlock from './UserPageGameBlock';
-import UserPageMovieBlock from './UserPageMovieBlock';
-import UserPageCategories from './UserPageCategories';
+import GameBlock from './GameBlock';
+import MovieBlock from './MovieBlock';
+import CategoriesTab from '../Common/CategoriesTab';
 
 /**
  * Основная страница приложения
@@ -40,7 +39,7 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo })
 
     useEffect(
 		() => {
-            setActiveCategory(<UserPageGameBlock games={userInfo.games} stats={userInfo.stats} />);
+            setActiveCategory(<GameBlock games={userInfo.games} stats={userInfo.stats} />);
 		},
 		[userInfo]
     );
@@ -58,14 +57,14 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo })
                     <MDBCol md="0.5"></MDBCol>
                     <MDBCol className="searchPage"> 
                         <h1>Информация о пользователе {userInfo.username}</h1>
-                        <UserPageCategories
+                        <CategoriesTab
                             categories={['Игры', 'Фильмы']}
                             activeColor='#4527a0' 
                             onChangeCategory={(category) => {
                                 if (category === 'Игры')
-                                    setActiveCategory(<UserPageGameBlock games={userInfo.games} stats={userInfo.stats} />);
+                                    setActiveCategory(<GameBlock games={userInfo.games} stats={userInfo.stats} />);
                                 if (category === 'Фильмы')
-                                    setActiveCategory(<UserPageMovieBlock movies={userInfo.movies} stats={userInfo.stats} />);
+                                    setActiveCategory(<MovieBlock movies={userInfo.movies} stats={userInfo.stats} />);
                             }}/>
                         {activeCategory}
                     </MDBCol>

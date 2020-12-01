@@ -6,11 +6,11 @@ import 'react-toastify/dist/ReactToastify.css';
 import HomePage from "./components/HomePage";
 import GamePage from "./components/GamePage";
 import MoviePage from "./components/MoviePage";
-import SearchPage from "./components/SearchPage";
+import SearchPage from "./components/SearchPage/SearchPage";
 import LoginForm from "./components/LoginForm";
 import RegistrationForm from "./components/RegistrationForm";
 import ConfirmPage from "./components/ConfirmPage";
-import UserPage from "./components/UserPage";
+import UserPage from "./components/UserPage/UserPage";
 import Navbar from "./components/Navbar";
 
 class Routes extends React.Component {

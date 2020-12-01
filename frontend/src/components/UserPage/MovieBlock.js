@@ -7,7 +7,7 @@ import {
     MDBDataTable
 } from "mdbreact";
 
-function UserPageMovieBlock ( {movies, stats} ) {
+function MovieBlock ( {movies, stats} ) {
     let history = useHistory();
 
     const movieColumns = [
@@ -64,7 +64,6 @@ function UserPageMovieBlock ( {movies, stats} ) {
 
     return(
         <div>
-            <hr style={{ color: '#6C0AAB', backgroundColor: '#4527a0', height: 2.5,  borderColor : '#6C0AAB' }}/>
             <p>Фильмов посмотрено: {stats.movies_count}, часов просмотра: {stats.movies_total_spent_time}</p>  
             <MDBDataTable
                 striped
@@ -83,4 +82,4 @@ function UserPageMovieBlock ( {movies, stats} ) {
     )
 }
 
-export default UserPageMovieBlock;
+export default MovieBlock;
