@@ -10,6 +10,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from games.models import Game, UserGame, rawg
 from games.serializers import UserGameSerializer
+from utils.functions import int_to_hours, translate_hltb_time
 
 dict_statuses = dict(UserGame.STATUS_CHOICES)
 
@@ -60,6 +61,11 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
             user_info = self.get_serializer(user_game).data
         except (Game.DoesNotExist, UserGame.DoesNotExist, TypeError):
             user_info = None
+
+        rawg_game.json.update({'playtime': f'{rawg_game.playtime} {int_to_hours(rawg_game.playtime)}'})
+        translate_hltb_time(hltb_game, 'gameplay_main', 'gameplay_main_unit')
+        translate_hltb_time(hltb_game, 'gameplay_main_extra', 'gameplay_main_extra_unit')
+        translate_hltb_time(hltb_game, 'gameplay_completionist', 'gameplay_completionist_unit')
 
         return Response({'rawg': rawg_game.json, 'hltb': hltb_game,
                          'user_info': user_info})
