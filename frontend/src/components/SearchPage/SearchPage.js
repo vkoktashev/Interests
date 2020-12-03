@@ -13,6 +13,8 @@ import {
     MDBIcon,
     MDBFormInline
 } from "mdbreact";
+import './style.css';
+
 import LoadingOverlay from 'react-loading-overlay';
 
 import CardGame from './CardGame';
@@ -44,6 +46,7 @@ function SearchPage ( { loggedIn, openLoginForm, gamesIsLoading, moviesIsLoading
             searchMovie(query, 1);
             searchUsers(query);
             setQueryText(query);
+            document.title = 'Поиск';
 		},
 		[query]
     );

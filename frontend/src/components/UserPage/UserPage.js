@@ -40,6 +40,7 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo })
     useEffect(
 		() => {
             setActiveCategory(<GameBlock games={userInfo.games} stats={userInfo.stats} />);
+            document.title = 'Профиль ' + userInfo.username;
 		},
 		[userInfo]
     );
