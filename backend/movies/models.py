@@ -12,14 +12,12 @@ class Movie(models.Model):
 
 
 class UserMovie(UserScore):
-    STATUS_WATCHING = 'watching'
     STATUS_WATCHED = 'watched'
     STATUS_STOPPED = 'stopped'
     STATUS_GOING = 'going'
     STATUS_NOT_WATCHED = 'not watched'
 
     STATUS_CHOICES = (
-        (STATUS_WATCHING, 'Смотрю'),
         (STATUS_WATCHED, 'Посмотрел'),
         (STATUS_STOPPED, 'Дропнул'),
         (STATUS_GOING, 'Буду смотреть'),

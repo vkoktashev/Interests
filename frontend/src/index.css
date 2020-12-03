@@ -65,6 +65,10 @@ body {
   background-size: cover;
 }
 
+.searchCardGame:hover{
+/*  cursor: pointer;*/
+}
+
 .gameContentPage {
   padding: 1rem;
   background-color: #fff;
@@ -205,4 +209,7 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+.hs {
+  margin-left: .2em;
 }

@@ -22,7 +22,10 @@ class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
     def list(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
         page = request.GET.get('page', 1)
-        results = tmdb.Search().movie(query=query, page=page, language=LANGUAGE)
+        try:
+            results = tmdb.Search().movie(query=query, page=page, language=LANGUAGE)
+        except HTTPError:
+            results = None
         return Response(results)
 
 

@@ -42,6 +42,7 @@ class UserScore(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     score = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True, blank=True)
     review = models.CharField(max_length=300, blank=True)
+    updated_at = models.DateTimeField(null=False, default=timezone.now)
 
     class Meta:
         abstract = True

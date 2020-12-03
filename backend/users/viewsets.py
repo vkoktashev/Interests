@@ -118,14 +118,18 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         stats = {}
 
         # games
-        user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).filter(user=user)
+        user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED) \
+            .filter(user=user) \
+            .order_by('updated_at')
         serializer = ExtendedUserGameSerializer(user_games, many=True)
         games = serializer.data
         stats.update({'games_count': len(user_games),
                       'games_total_spent_time': sum(el.spent_time for el in user_games)})
 
         # movies
-        user_movies = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED).filter(user=user)
+        user_movies = UserMovie.objects \
+            .filter(user=user, status=UserMovie.STATUS_WATCHED) \
+            .order_by('updated_at')
         serializer = ExtendedUserMovieSerializer(user_movies, many=True)
         movies = serializer.data
         stats.update({'movies_count': len(user_movies),
@@ -177,7 +181,10 @@ class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):
         for user in User.objects.all():
             similarity = similar(lower(query), lower(user.username))  # similarity is 0.0-1.0
             if similarity > 0.4:
+                user.similarity = similarity
                 results.append(user)
+                print(user.username, similarity)
+        results.sort(key=lambda u: u.similarity, reverse=True)
         serializer = UserSerializer(results, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

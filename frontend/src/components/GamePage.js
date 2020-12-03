@@ -69,8 +69,10 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
 
             if (game.hltb){
                 setHtlbInfo(game.hltb);
+            }else if (game.rawg.playtime){
+                setHtlbInfo({gameplay_main_extra: game.rawg.playtime, gameplay_main: -1, gameplay_completionist: -1});
             }else{
-                setHtlbInfo({gameplay_main_extra: -1, gameplay_main: -1, gameplay_comletionist: -1});
+                setHtlbInfo({gameplay_main_extra: -1, gameplay_main: -1, gameplay_completionist: -1});
             }
 
             if (game.user_info){
@@ -87,6 +89,8 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                 }
                 setDevelopers(newDevelopers);   
             }
+
+            document.title = game.rawg.name;
 		},
 		[game]
     );
@@ -113,10 +117,16 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                                         <p style={{marginBottom: "2px"}}>Разработчики: {developers}</p>
                                         <p style={{marginBottom: "2px"}}>Дата релиза: {game.rawg.released}</p>
                                         <p style={{marginBottom: "2px"}}>Жанр: {genres}</p>
-                                        <p style={{marginBottom: "4px"}} 
-                                            hidden={hltbInfo.gameplay_main < 0}>
-                                            <MDBIcon far icon="clock" /> Время прохождения: {hltbInfo.gameplay_main} {hltbInfo.gameplay_main_unit}
-                                        </p>
+                                        <p style={{marginBottom: "4px", display: "inline"}} >Время прохождения: </p>
+                                            <div hidden={hltbInfo.gameplay_main < 0} style={{display: "inline"}}>
+                                                <MDBIcon far icon="clock" className="light-green-text" title={"Главный сюжет"}/><span className="hs"/>{hltbInfo.gameplay_main} {hltbInfo.gameplay_main_unit}<span className="hs"/>
+                                            </div> <p style={{display: "inline"}} > </p>
+                                            <div hidden={hltbInfo.gameplay_main_extra < 0} style={{display: "inline"}}>
+                                                <MDBIcon far icon="clock" className="yellow-text" title={"Главный сюжет + побочные задания"}/><span className="hs"/>{hltbInfo.gameplay_main_extra} {hltbInfo.gameplay_main_extra_unit}<span className="hs"/> 
+                                            </div> <p style={{display: "inline"}} > </p>
+                                            <div hidden={hltbInfo.gameplay_completionist < 0} style={{display: "inline"}}>
+                                                <MDBIcon far icon="clock" className="red-text" title={"Полное прохождение"}/><span className="hs"/>{hltbInfo.gameplay_completionist} {hltbInfo.gameplay_completionist_unit}
+                                            </div>
                                         <br/>
                                         <Rating stop={10}
                                             emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}}/>}
@@ -130,6 +140,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                                                     setGameStatus({score: score });
                                                 }}
                                             }
+                                            style={{marginTop: "20px", marginBottom: "10px"}}
                                         /> <br/>
                                         <StatusButtonGroup
                                             statuses={['Не играл', 'Буду играть', 'Играю', 'Дропнул', 'Прошел']}
@@ -141,7 +152,8 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                                                 }else{
                                                    setGameStatus({ status: status });
                                                 }
-                                            }}/>
+                                            }}
+                                            />
                                     </MDBCol>
                                     <MDBCol size="1">
                                         { metascoreBlock }
