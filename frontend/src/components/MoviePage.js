@@ -30,6 +30,8 @@ function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieSta
     const [metascoreBlock, setMetascoreBlock] = useState("");
     const [genres, setGenres] = useState("");
     const [companies, setCompanies] = useState("");
+    const [cast, setCast] = useState("");
+    const [director, setDirector] = useState("");
     const [review, setReview] = useState("");
 
     useEffect(
@@ -75,9 +77,33 @@ function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieSta
                 setCompanies(newCompanies);   
             }
 
+            if (movie.tmdb.cast){
+                let newCast = "";
+                let length = movie.tmdb.cast.length>5?5:movie.tmdb.cast.length;
+                for (let i = 0; i < length; i++){
+                    newCast += movie.tmdb.cast[i].name;
+                    if (i !== length - 1)
+                        newCast += ", ";
+                }
+                setCast(newCast);   
+            }
+
+            if (movie.tmdb.crew){
+                let newDirector = ""
+                for (let i = 0; i < movie.tmdb.crew.length; i++){
+                    if (movie.tmdb.crew[i].job === "Director"){
+                        newDirector = movie.tmdb.crew[i].name;
+                        break;
+                    }
+                }
+                setDirector(newDirector);   
+            }
+
             if (movie.user_info){
                 setReview(movie.user_info.review);
             }
+
+            document.title = movie.tmdb.title;
 		},
 		[movie]
     );
@@ -106,6 +132,8 @@ function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieSta
                                         <p style={{marginBottom: "2px"}}>Жанр: {genres}</p>
                                         <p style={{marginBottom: "2px"}}>Компания: {companies}</p>
                                         <p style={{marginBottom: "2px"}}>Слоган: {movie.tmdb.tagline}</p>
+                                        <p style={{marginBottom: "2px"}}>В ролях: {cast}</p>
+                                        <p style={{marginBottom: "2px"}}>Режиссер: {director}</p>
                                         <br/>
                                         <Rating stop={10}
                                             emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}}/>}

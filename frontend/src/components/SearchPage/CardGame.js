@@ -12,13 +12,24 @@ function CardGame( {game} ) {
         [game]
     );
 
+    /*const mouseDownHandler = ( event ) => {
+        if( event.button === 1 ) {
+            console.log(window.location.origin + '/game/' + game.slug );
+
+        }
+      }*/
+
     return(
-        <div className="searchCardGame" 
-            style={{backgroundImage: `url(${game.background_image})`}}
-            onClick={() => history.push('/game/' + game.slug)}>
-            <h3 className="searchCardGame" >{game.name}</h3>
-        </div> 
+        <a href={window.location.origin + '/game/' + game.slug} 
+            onClick={(e) => { history.push('/game/' + game.slug); e.preventDefault();}}> 
+            <div className="searchCardGame" 
+                style={{backgroundImage: `url(${game.background_image})`}}
+                >
+                <h3 className="searchCardGame" >{game.name}</h3>
+            </div>
+        </a>
     )
 }
+//onMouseDown={mouseDownHandler} 
 
 export default CardGame;
