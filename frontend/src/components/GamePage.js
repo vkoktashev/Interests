@@ -32,6 +32,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
     const [review, setReview] = useState("");
     const [spentTime, setSpentTime] = useState(0);
     const [developers, setDevelopers] = useState("");
+    const [date, setDate] = useState("");
     const [hltbInfo, setHtlbInfo] = useState({gameplay_main_extra: -1, gameplay_main: -1, gameplay_comletionist: -1});
 
     useEffect(
@@ -90,6 +91,13 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                 setDevelopers(newDevelopers);   
             }
 
+            if (game.rawg.released){
+                let mas = game.rawg.released.split("-");
+                let newDate = mas[2] + "." + mas[1] + "." + mas[0];
+                setDate(newDate);
+            }else
+                setDate("");
+
             document.title = game.rawg.name;
 		},
 		[game]
@@ -115,7 +123,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                                     <MDBCol size="6">
                                         <h1>{game.rawg.name}</h1>
                                         <p style={{marginBottom: "2px"}}>Разработчики: {developers}</p>
-                                        <p style={{marginBottom: "2px"}}>Дата релиза: {game.rawg.released}</p>
+                                        <p style={{marginBottom: "2px"}}>Дата релиза: {date}</p>
                                         <p style={{marginBottom: "2px"}}>Жанр: {genres}</p>
                                         <p style={{marginBottom: "4px", display: "inline"}} >Время прохождения: </p>
                                             <div hidden={hltbInfo.gameplay_main < 0} style={{display: "inline"}}>

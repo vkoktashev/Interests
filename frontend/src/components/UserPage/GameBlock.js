@@ -14,7 +14,7 @@ function GameBlock ( {games, stats} ) {
         {
           label: 'Название',
           field: 'name',
-          sort: 'asc'
+          sort: 'disabled'
         },
         {
           label: 'Статус',
@@ -57,10 +57,10 @@ function GameBlock ( {games, stats} ) {
                                 score: game.score,
                                 review: game.review,
                                 spent_time: game.spent_time,
-                                clickEvent: (e) => {
+                                /*clickEvent: (e) => {
                                     //window.open('/game/' + game.game.rawg_slug);
                                     history.push('/game/' + game.game.rawg_slug);
-                                }
+                                }*/
                             }      
                     })
                 });
