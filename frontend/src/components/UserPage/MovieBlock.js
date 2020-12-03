@@ -14,7 +14,7 @@ function MovieBlock ( {movies, stats} ) {
       {
         label: 'Название',
         field: 'name',
-        sort: 'asc'
+        sort: 'disabled'
       },
       {
         label: 'Статус',
@@ -46,14 +46,15 @@ function MovieBlock ( {movies, stats} ) {
                 columns: movieColumns,
                 rows: movies.map((movie) => {
                     return {
-                            name: movie.movie.tmdb_name,
+                            name: <a href={window.location.origin + '/movie/' + movie.movie.tmdb_id}>{movie.movie.tmdb_name}</a>,
+                            name2: movie.movie.tmdb_name,
                             status: movie.status,
                             score: movie.score,
                             review: movie.review,
-                            clickEvent: (e) => {
+                            /*clickEvent: (e) => {
                                 //window.open('/game/' + game.game.rawg_slug);
                                 history.push('/movie/' + movie.movie.tmdb_id)
-                            }
+                            }*/
                         }      
                   })
               });

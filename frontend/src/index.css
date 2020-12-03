@@ -26,48 +26,6 @@ body {
   background-size: cover;
 }
 
-.searchBG{
-  background-size: auto;
-  background-repeat: repeat;
-  background-image: url('https://365psd.ru/images/backgrounds/bg-dark-4782.jpg');
-  height: 100vh;
-}
-
-.searchPage{
-  background-color: #fff;
-  color: rgb(0, 0, 0);
-  margin-top: 30px;
-  margin-bottom: 30px;
-  padding-left: 10px;
-  padding-top: 10px;
-  /*overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;*/
-}
-
-.searchCardsGroup{
-  text-align: center;
-}
-
-.searchCardGame{
-  width: 260px;
-  height: 150px;
-  margin-right: 5px;
-  margin-left: 5px;
-  margin-bottom: 5px;
-  display: inline-block;
-  vertical-align: bottom;
-  text-align: center;
-  color: #fff;
-  font-weight: normal;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-}
-
-.searchCardGame:hover{
-/*  cursor: pointer;*/
-}
 
 .gameContentPage {
   padding: 1rem;
