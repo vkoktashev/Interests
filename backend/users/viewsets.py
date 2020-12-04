@@ -147,7 +147,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         serializer = UserSerializer(followed_users, many=True)
         followed_users = serializer.data
 
-        return Response({'username': user.username, 'is_followed': user_is_followed,
+        return Response({'id': user.id, 'username': user.username, 'is_followed': user_is_followed,
                          'followed_users': followed_users,
                          'games': games, 'movies': movies, 'stats': stats})
 
