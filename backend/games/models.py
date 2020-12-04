@@ -2,7 +2,7 @@ import rawgpy
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from users.models import UserScore, UserLog
+from users.models import UserScore, UserLog, UserLogAbstract
 
 rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
 
@@ -40,5 +40,5 @@ class UserGame(UserScore):
         unique_together = (("user", "game"),)
 
 
-class GameLog(UserLog):
+class GameLog(UserLogAbstract):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)

@@ -1,4 +1,5 @@
 from django.core.mail import EmailMessage
+from django.core.paginator import Paginator, EmptyPage
 from django.template.defaultfilters import lower
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -12,16 +13,18 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from config.settings import EMAIL_HOST_USER
-from games.models import UserGame
+from games.models import UserGame, GameLog
 from games.serializers import ExtendedUserGameSerializer
-from movies.models import UserMovie
+from movies.models import UserMovie, MovieLog
 from movies.serializers import ExtendedUserMovieSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer
 from utils.functions import similar
-from .models import User, UserFollow
+from .models import User, UserFollow, UserLog
 from .tokens import account_activation_token
 
 TYPE_GAME = 'game'
+TYPE_MOVIE = 'movie'
+TYPE_USER = 'user'
 SITE_URL = 'localhost:3000'
 MINUTES_IN_HOUR = 60
 
@@ -72,37 +75,29 @@ class AuthViewSet(GenericViewSet):
 
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
-    # @swagger_auto_schema(manual_parameters=[page_param])
-    # @action(detail=True, methods=['get'])
-    # def get_log(self, request, *args, **kwargs):
-    #     try:
-    #         page = int(request.GET.get('page'))
-    #     except (ValueError, TypeError):
-    #         page = 1
-    #     page_size = 10
-    #     logs = GameLog.objects.filter(user=request.user).order_by('-created')
-    #     paginator = Paginator(logs, page_size)
-    #
-    #     log_dicts = []
-    #     try:
-    #         paginator_page = paginator.page(page)
-    #     except EmptyPage:
-    #         return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
-    #
-    #     for log in paginator.page(page):
-    #         log_dict = {'user': log.user.username,
-    #                     'user_id': log.user.id,
-    #                     'target': log.game.rawg_name,
-    #                     'target_id': log.game.rawg_slug,
-    #                     'created': log.created,
-    #                     'type': TYPE_GAME,
-    #                     'action_type': log.action_type,
-    #                     'action_result': log.action_result,
-    #                     }
-    #         log_dicts.append(log_dict)
-    #
-    #     return Response({'log': log_dicts,
-    #                      'has_next_page': paginator_page.has_next()})
+    @swagger_auto_schema(manual_parameters=[page_param])
+    @action(detail=True, methods=['get'])
+    def get_log(self, request, *args, **kwargs):
+        try:
+            page = int(request.GET.get('page'))
+        except (ValueError, TypeError):
+            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+
+        page_size = 10
+        game_logs = GameLog.objects.filter(user=request.user)
+        movie_logs = MovieLog.objects.filter(user=request.user)
+        user_logs = UserLog.objects.filter(user=request.user)
+
+        log_dicts = get_log_dicts(game_logs, movie_logs, user_logs)
+
+        paginator = Paginator(log_dicts, page_size)
+        try:
+            paginator_page = paginator.page(page)
+        except EmptyPage:
+            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'log': log_dicts,
+                         'has_next_page': paginator_page.has_next()})
 
     def retrieve(self, request, *args, **kwargs):
         try:
@@ -177,6 +172,49 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+def get_log_dicts(game_logs, movie_logs, user_logs):
+    log_dicts = []
+
+    for log in game_logs:
+        log_dict = {'user': log.user.username,
+                    'user_id': log.user.id,
+                    'target': log.game.rawg_name,
+                    'target_id': log.game.rawg_slug,
+                    'created': log.created,
+                    'type': TYPE_GAME,
+                    'action_type': log.action_type,
+                    'action_result': log.action_result,
+                    }
+        log_dicts.append(log_dict)
+
+    for log in movie_logs:
+        log_dict = {'user': log.user.username,
+                    'user_id': log.user.id,
+                    'target': log.movie.tmdb_name,
+                    'target_id': log.movie.tmdb_id,
+                    'created': log.created,
+                    'type': TYPE_MOVIE,
+                    'action_type': log.action_type,
+                    'action_result': log.action_result,
+                    }
+        log_dicts.append(log_dict)
+
+    for log in user_logs:
+        log_dict = {'user': log.user.username,
+                    'user_id': log.user.id,
+                    'target': log.followed_user.username,
+                    'target_id': log.followed_user.id,
+                    'created': log.created,
+                    'type': TYPE_USER,
+                    'action_type': log.action_type,
+                    'action_result': log.action_result,
+                    }
+        log_dicts.append(log_dict)
+
+    log_dicts.sort(key=lambda x: x.get('created'), reverse=True)
+    return log_dicts
 
 
 class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):

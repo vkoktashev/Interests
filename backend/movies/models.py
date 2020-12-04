@@ -1,10 +1,10 @@
 from django.db import models
 
-from users.models import UserLog, UserScore
+from users.models import UserLog, UserScore, UserLogAbstract
 
 
 class Movie(models.Model):
-    imdb_id = models.CharField(unique=True, max_length=20)
+    imdb_id = models.CharField(unique=True, max_length=20, null=True)
     tmdb_id = models.IntegerField(unique=True)
     tmdb_original_name = models.CharField(max_length=200)
     tmdb_name = models.CharField(max_length=200)
@@ -31,5 +31,5 @@ class UserMovie(UserScore):
         unique_together = (("user", "movie"),)
 
 
-class MovieLog(UserLog):
+class MovieLog(UserLogAbstract):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
