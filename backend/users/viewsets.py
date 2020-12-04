@@ -79,16 +79,66 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=True, methods=['get'])
     def get_log(self, request, *args, **kwargs):
         try:
+            user_id = int(kwargs.get('pk'))
+        except ValueError:
+            return Response('Wrong id, must be integer', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response('User does not exist', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
             page = int(request.GET.get('page'))
         except (ValueError, TypeError):
             return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
 
         page_size = 10
-        game_logs = GameLog.objects.filter(user=request.user)
-        movie_logs = MovieLog.objects.filter(user=request.user)
-        user_logs = UserLog.objects.filter(user=request.user)
+        game_logs = GameLog.objects.filter(user=user)
+        movie_logs = MovieLog.objects.filter(user=user)
+        user_logs = UserLog.objects.filter(user=user)
 
         log_dicts = get_log_dicts(game_logs, movie_logs, user_logs)
+        log_dicts.sort(key=lambda x: x.get('created'), reverse=True)
+
+        paginator = Paginator(log_dicts, page_size)
+        try:
+            paginator_page = paginator.page(page)
+        except EmptyPage:
+            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'log': log_dicts,
+                         'has_next_page': paginator_page.has_next()})
+
+    @swagger_auto_schema(manual_parameters=[page_param])
+    @action(detail=True, methods=['get'])
+    def get_friends_log(self, request, *args, **kwargs):
+        try:
+            user_id = int(kwargs.get('pk'))
+        except ValueError:
+            return Response('Wrong id, must be integer', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response('User does not exist', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            page = int(request.GET.get('page'))
+        except (ValueError, TypeError):
+            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+
+        page_size = 10
+        user_follow_query = UserFollow.objects.filter(user=user)
+        log_dicts = []
+        for user_follow in user_follow_query:
+            game_logs = GameLog.objects.filter(user=user_follow.followed_user)
+            movie_logs = MovieLog.objects.filter(user=user_follow.followed_user)
+            user_logs = UserLog.objects.filter(user=user_follow.followed_user)
+
+            log_dicts += get_log_dicts(game_logs, movie_logs, user_logs)
+
+        log_dicts.sort(key=lambda x: x.get('created'), reverse=True)
 
         paginator = Paginator(log_dicts, page_size)
         try:
@@ -213,7 +263,6 @@ def get_log_dicts(game_logs, movie_logs, user_logs):
                     }
         log_dicts.append(log_dict)
 
-    log_dicts.sort(key=lambda x: x.get('created'), reverse=True)
     return log_dicts
 
 
