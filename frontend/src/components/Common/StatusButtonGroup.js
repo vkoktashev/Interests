@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from "react";
-
+import './style.css';
 
 function StatusButtonGroup( {statuses, activeColor, onChangeStatus, userStatus} ) {
     const [activeStatus, setActiveStatus] = useState('');

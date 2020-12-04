@@ -81,40 +81,6 @@ body {
       padding-bottom: 15px;
     }
   
-  .contentStatuses{
-    background-color: rgb(0, 0, 0);
-    border: 1px solid #FFF;
-    color: white;
-    padding: 4px 8px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    margin-left:  0px;
-    margin-right:  0px;
-    margin-top:  15px;
-    cursor: pointer;
-    font-size: 14px;
-  }
-
-  .userPageCategoriesTab{
-    background-color: rgb(255, 255, 255);
-    color: black;
-    border: none;
-    padding: 0px 20px 0px 0px;
-    text-align: left;
-    font-weight: bolder;
-    margin-left:  0px;
-    margin-right:  0px;
-    margin-top:  15px;
-    cursor: pointer;
-    font-size: 32px;
-    outline:none;
-  }
-
-  .userPageCategoriesTab:focus {
-    outline: 0 !important;
-  }
-  
   .savePreviewButton{
     background-color: rgb(0, 0, 0);
     border: 1px solid #FFF;

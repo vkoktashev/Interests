@@ -367,6 +367,24 @@ export function searchUsers(query){
     }
 }
 
+export function setUserStatus(is_following, userID){
+    return async(dispatch) => {
+        if (await dispatch(checkAuthorization())){
+            Requests.setUserStatus(localStorage.getItem('token'), is_following, userID).then((result) => {
+                if (!result){
+                    toast.error("Ошибка обновления статуса")
+                }
+                else{
+                    dispatch({
+                        type: actionTypes.SET_USER_PAGE_FOLLOWING,
+                        is_following: result.is_following
+                    });
+                }
+            });
+        }
+    }
+}
+
 export function setUser(user) {
     return({ type: actionTypes.SET_USER, user: user });
 }

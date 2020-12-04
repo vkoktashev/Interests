@@ -25,7 +25,7 @@ class Routes extends React.Component {
             <Route exact path="/movie/:id" component={MoviePage} />
             <Route exact path="/search/:query" component={SearchPage} />
             <Route exact path="/confirm/" component={ConfirmPage} />
-            <Route exact path="/user/:username" component={UserPage} />
+            <Route exact path="/user/:userID" component={UserPage} />
             <Route render={function () { return <h1>Not Found</h1>; }} />
         </Switch>
       <ToastContainer position="top-center" hideProgressBar newestOnTop closeOnClick/>

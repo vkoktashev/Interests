@@ -1,14 +1,10 @@
 import React, { useEffect, useState} from "react";
-import {
-    useHistory
-  } from "react-router-dom";
 
 import {
     MDBDataTable
 } from "mdbreact";
 
 function MovieBlock ( {movies, stats} ) {
-    let history = useHistory();
 
     const movieColumns = [
       {
@@ -60,6 +56,7 @@ function MovieBlock ( {movies, stats} ) {
               });
             }
         },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [movies]
     );
 

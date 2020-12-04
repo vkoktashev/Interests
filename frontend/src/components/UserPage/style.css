@@ -1,0 +1,59 @@
+.addFriendButton{
+    background-color: rgb(0, 0, 0);
+    border: 1px solid #FFF;
+    color: white;
+    padding: 4px 8px;
+    text-align: center;
+    text-decoration: none;
+    margin-top: 10px;
+    font-size: 16px;
+  }
+
+.addFriendButton:hover{
+    color: rgb(167, 126, 221);
+}
+
+.addFriendButton:active {
+color: white;
+}
+
+.friendCard{
+
+}
+
+.friendCard{
+  width: 500px;
+  height: 150px;
+  margin-right: 5px;
+  margin-left: 5px;
+  margin-bottom: 10px;
+  display: inline-block;
+}
+
+.friendCardImage{
+  height: 150px;
+  width: 250px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-color: gray;
+  display: inline-block;
+  margin: 0;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+.friendCardText{
+  padding: 10px;
+  text-align: center;
+  vertical-align: top;
+  color: #fff;
+  font-weight: 200;
+  background-color: black;
+  width: 250px;
+  height: 150px;
+  display: inline-block;
+  margin: 0;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}

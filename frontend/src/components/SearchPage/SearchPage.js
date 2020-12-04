@@ -19,7 +19,7 @@ import LoadingOverlay from 'react-loading-overlay';
 
 import CardGame from './CardGame';
 import CardMovie from './CardMovie';
-import CardUser from './CardUser';
+import CardUser from '../Common/CardUser';
 import CategoriesTab from '../Common/CategoriesTab';
 
 import { connect } from 'react-redux'; 
@@ -48,7 +48,7 @@ function SearchPage ( { loggedIn, openLoginForm, gamesIsLoading, moviesIsLoading
             setQueryText(query);
             document.title = 'Поиск';
 		},
-		[query]
+		[query, searchGame, searchMovie, searchUsers]
     );
 
     useEffect(

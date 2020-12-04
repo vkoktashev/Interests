@@ -18,43 +18,6 @@ color: white;
   text-align: center;
 }
 
-.searchCardUser{
-  width: 500px;
-  height: 150px;
-  margin-right: 5px;
-  margin-left: 5px;
-  margin-bottom: 10px;
-  display: inline-block;
-}
-
-.searchCardUserImage{
-  height: 150px;
-  width: 250px;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-color: gray;
-  display: inline-block;
-  margin: 0;
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
-}
-
-.searchCardUserText{
-  padding: 10px;
-  text-align: center;
-  vertical-align: top;
-  color: #fff;
-  font-weight: 200;
-  background-color: black;
-  width: 250px;
-  height: 150px;
-  display: inline-block;
-  margin: 0;
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
-}
-
 .searchCardMovie{
   width: 500px;
   height: 150px;
