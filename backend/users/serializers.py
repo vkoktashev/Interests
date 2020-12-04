@@ -44,6 +44,13 @@ class UserFollowSerializer(serializers.ModelSerializer):
         }
 
 
+class FollowedUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username')
+        read_only_fields = ('id', 'username')
+
+
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):

@@ -14,7 +14,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from config.settings import EMAIL_HOST_USER
 from games.models import UserGame, GameLog
-from games.serializers import ExtendedUserGameSerializer
+from games.serializers import GameStatsSerializer
 from movies.models import UserMovie, MovieLog
 from movies.serializers import ExtendedUserMovieSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer
@@ -77,7 +77,7 @@ class AuthViewSet(GenericViewSet):
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @swagger_auto_schema(manual_parameters=[page_param])
     @action(detail=True, methods=['get'])
-    def get_log(self, request, *args, **kwargs):
+    def log(self, request, *args, **kwargs):
         try:
             user_id = int(kwargs.get('pk'))
         except ValueError:
@@ -112,7 +112,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
     @swagger_auto_schema(manual_parameters=[page_param])
     @action(detail=True, methods=['get'])
-    def get_friends_log(self, request, *args, **kwargs):
+    def friends_log(self, request, *args, **kwargs):
         try:
             user_id = int(kwargs.get('pk'))
         except ValueError:
@@ -171,7 +171,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED) \
             .filter(user=user) \
             .order_by('-updated_at')
-        serializer = ExtendedUserGameSerializer(user_games, many=True)
+        serializer = GameStatsSerializer(user_games, many=True)
         games = serializer.data
         stats.update({'games_count': len(user_games),
                       'games_total_spent_time': sum(el.spent_time for el in user_games)})

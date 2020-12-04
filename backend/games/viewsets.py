@@ -1,15 +1,18 @@
 from json import JSONDecodeError
 
+from django.core.paginator import Paginator, EmptyPage
 from django.db import IntegrityError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
 from rest_framework import status, mixins
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from games.models import Game, UserGame, rawg
-from games.serializers import UserGameSerializer
+from games.serializers import UserGameSerializer, FollowedUserGameSerializer
+from users.models import UserFollow
 from utils.functions import int_to_hours, translate_hltb_time
 
 dict_statuses = dict(UserGame.STATUS_CHOICES)
@@ -69,6 +72,39 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
 
         return Response({'rawg': rawg_game.json, 'hltb': hltb_game,
                          'user_info': user_info})
+
+    @swagger_auto_schema(manual_parameters=[page_param])
+    @action(detail=True, methods=['get'])
+    def friends_info(self, request, *args, **kwargs):
+        try:
+            page = int(request.GET.get('page'))
+        except (ValueError, TypeError):
+            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+
+        friends_info = []
+
+        try:
+            game = Game.objects.get(rawg_slug=kwargs.get('slug'))
+            user_follow_query = UserFollow.objects.filter(user=request.user)
+
+            for user_follow in user_follow_query:
+                followed_user_game = UserGame.objects.filter(user=user_follow.followed_user, game=game).first()
+                if followed_user_game:
+                    serializer = FollowedUserGameSerializer(followed_user_game)
+                    friends_info.append(serializer.data)
+
+        except (Game.DoesNotExist, UserGame.DoesNotExist, UserFollow.DoesNotExist):
+            friends_info = None
+
+        page_size = 10
+        paginator = Paginator(friends_info, page_size)
+        try:
+            paginator_page = paginator.page(page)
+        except EmptyPage:
+            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'friends_info': friends_info,
+                         'has_next_page': paginator_page.has_next()})
 
     @swagger_auto_schema(request_body=UserGameSerializer)
     def update(self, request, *args, **kwargs):
