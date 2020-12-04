@@ -91,3 +91,9 @@ class UserFollow(models.Model):
 
     class Meta:
         unique_together = (("user", "followed_user"),)
+
+
+class UserPasswordToken(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    reset_token = models.CharField(max_length=500, unique=True)
+    is_active = models.BooleanField(default=True)

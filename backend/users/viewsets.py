@@ -1,3 +1,5 @@
+import secrets
+
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator, EmptyPage
 from django.template.defaultfilters import lower
@@ -19,7 +21,7 @@ from movies.models import UserMovie, MovieLog
 from movies.serializers import ExtendedUserMovieSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer
 from utils.functions import similar
-from .models import User, UserFollow, UserLog
+from .models import User, UserFollow, UserLog, UserPasswordToken
 from .tokens import account_activation_token
 
 TYPE_GAME = 'game'
@@ -44,7 +46,7 @@ class AuthViewSet(GenericViewSet):
         mail_subject = 'Активация аккаунта.'
         uid64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = account_activation_token.make_token(user)
-        activation_link = f"{request.scheme}://{SITE_URL}/confirm/?uid64={uid64}&token={token}"
+        activation_link = f"{request.scheme}://{SITE_URL}/confirm_email/?uid64={uid64}&token={token}"
         message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
         # email.send()
@@ -59,7 +61,7 @@ class AuthViewSet(GenericViewSet):
         }
     ))
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
-    def confirmation(self, request):
+    def confirm_email(self, request):
         try:
             uid = force_text(urlsafe_base64_decode(request.data.get('uid64')))
             user = User.objects.get(pk=uid)
@@ -223,6 +225,72 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['put'], permission_classes=[AllowAny])
+    def password_reset(self, request, *args, **kwargs):
+        try:
+            email = request.data.get('email')
+        except ValueError:
+            return Response('Wrong email, must be integer', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response('Wrong user, must be integer', status=status.HTTP_400_BAD_REQUEST)
+
+        reset_token = secrets.token_urlsafe()
+
+        try:
+            user_password_token = UserPasswordToken.objects.get(user=user)
+            user_password_token.reset_token = reset_token
+            user_password_token.is_active = True
+            created = False
+        except UserPasswordToken.DoesNotExist:
+            user_password_token = UserPasswordToken.objects.create(user=user, reset_token=reset_token)
+            created = True
+
+        user_password_token.save()
+
+        mail_subject = 'Сброс пароля.'
+        # activation_link = f"{request.scheme}://{SITE_URL}/confirm_password_reset/?token={reset_token}"
+        activation_link = f"{request.scheme}://localhost:8000/" \
+                          f"confirm_password_reset/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
+        message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
+        email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
+        # email.send()
+        print(activation_link)
+
+        if created:
+            return Response(status=status.HTTP_201_CREATED)
+        else:
+            return Response(status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'reset_token': openapi.Schema(type=openapi.TYPE_STRING,
+                                          description='Специальный токен для восстановления'),
+        }
+    ))
+    @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
+    def confirm_password_reset(self, request, *args, **kwargs):
+        try:
+            reset_token = force_text(urlsafe_base64_decode(request.GET.get('reset_token')))
+            password = request.data.get('password')
+            user_password_token = UserPasswordToken.objects.get(reset_token=reset_token)
+            user = User.objects.get(id=user_password_token.user.id)
+        except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist, UserPasswordToken.DoesNotExist):
+            return Response("Неверная ссылка!", status=status.HTTP_400_BAD_REQUEST)
+
+        if user_password_token.is_active:
+            serializer = UserSerializer(instance=user, data={'password': password}, partial=True)
+            serializer.is_valid(raise_exception=True)
+            user_password_token.is_active = False
+            user_password_token.save()
+            serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response("Неверная ссылка!", status=status.HTTP_400_BAD_REQUEST)
 
 
 def get_log_dicts(game_logs, movie_logs, user_logs):
