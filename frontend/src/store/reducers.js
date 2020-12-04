@@ -82,7 +82,9 @@ export default function reducer(state = initialState, action) {
         return state.setIn(['content', 'movie', 'user_info'], action.user_info);
 
     case types.SET_USER_PAGE_CONTENT:
-        return state.setIn(['userPageContent'], action.content)
+        return state.setIn(['userPageContent'], action.content);
+    case types.SET_USER_PAGE_FOLLOWING:
+        return state.setIn(['userPageContent', 'is_followed'], action.is_following);
 
     case types.SET_LOGINFORM:
         return state.setIn(['openedPages', 'LoginForm'], action.isOpen);

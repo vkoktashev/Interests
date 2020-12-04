@@ -115,12 +115,17 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except User.DoesNotExist:
             return Response('User does not exist', status=status.HTTP_400_BAD_REQUEST)
 
+        try:
+            user_is_followed = UserFollow.objects.get(user=request.user, followed_user=user).is_following
+        except UserFollow.DoesNotExist:
+            user_is_followed = False
+
         stats = {}
 
         # games
         user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED) \
             .filter(user=user) \
-            .order_by('updated_at')
+            .order_by('-updated_at')
         serializer = ExtendedUserGameSerializer(user_games, many=True)
         games = serializer.data
         stats.update({'games_count': len(user_games),
@@ -129,7 +134,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         # movies
         user_movies = UserMovie.objects \
             .filter(user=user, status=UserMovie.STATUS_WATCHED) \
-            .order_by('updated_at')
+            .order_by('-updated_at')
         serializer = ExtendedUserMovieSerializer(user_movies, many=True)
         movies = serializer.data
         stats.update({'movies_count': len(user_movies),
@@ -142,7 +147,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         serializer = UserSerializer(followed_users, many=True)
         followed_users = serializer.data
 
-        return Response({'username': user.username, 'followed_users': followed_users,
+        return Response({'id': user.id, 'username': user.username, 'is_followed': user_is_followed,
+                         'followed_users': followed_users,
                          'games': games, 'movies': movies, 'stats': stats})
 
     @action(detail=True, methods=['put'])
@@ -183,7 +189,6 @@ class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):
             if similarity > 0.4:
                 user.similarity = similarity
                 results.append(user)
-                print(user.username, similarity)
         results.sort(key=lambda u: u.similarity, reverse=True)
         serializer = UserSerializer(results, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
