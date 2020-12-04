@@ -117,7 +117,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         try:
             user_is_followed = UserFollow.objects.get(user=request.user, followed_user=user).is_following
-        except User.DoesNotExist:
+        except UserFollow.DoesNotExist:
             user_is_followed = False
 
         stats = {}
