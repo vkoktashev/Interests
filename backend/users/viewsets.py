@@ -177,14 +177,15 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                       'games_total_spent_time': sum(el.spent_time for el in user_games)})
 
         # movies
-        user_movies = UserMovie.objects \
-            .filter(user=user, status=UserMovie.STATUS_WATCHED) \
+        user_movies = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED) \
+            .filter(user=user) \
             .order_by('-updated_at')
         serializer = ExtendedUserMovieSerializer(user_movies, many=True)
         movies = serializer.data
-        stats.update({'movies_count': len(user_movies),
+        watched_movies = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_WATCHED)
+        stats.update({'movies_count': len(watched_movies),
                       'movies_total_spent_time':
-                          round(sum(el.movie.tmdb_runtime for el in user_movies) / MINUTES_IN_HOUR, 1)})
+                          round(sum(el.movie.tmdb_runtime for el in watched_movies) / MINUTES_IN_HOUR, 1)})
 
         # followed_users
         followed_users = list(el.followed_user for el
