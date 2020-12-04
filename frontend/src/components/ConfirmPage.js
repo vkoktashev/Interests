@@ -19,7 +19,7 @@ function ConfirmPage ( {confirmEmailRequest} )
 		() => {
 			confirmEmailRequest(uid64, token);
 		},
-		[]
+		[confirmEmailRequest, token, uid64]
 	);
 	
     return (

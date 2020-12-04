@@ -200,3 +200,25 @@ export async function getUserInfo(token, userID) {
         return null;
     }
 }
+
+/**
+ * Запрос на изменение статуса пользовтеля (добавить в друзья и тд)
+ * @param {string} token Токен доступа
+ * @param {boolean} is_following Статус фильма
+ * @param {string} userID ID пользовтеля
+ */
+export async function setUserStatus(token, is_following, userID){
+    try{
+        var AuthStr = 'Bearer ' + token;
+        const res = await axios.put(USER_INFO_URL + userID + "/follow/", 
+            is_following, { headers: { 'Authorization': AuthStr } });
+        console.log(res); 
+        
+        if (res.status === 204 || res.status === 200 || res.status === 201)
+            return res.data;
+        else return null;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}

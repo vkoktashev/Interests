@@ -1,14 +1,10 @@
 import React, { useEffect, useState} from "react";
-import {
-    useHistory
-  } from "react-router-dom";
 
 import {
     MDBDataTable
 } from "mdbreact";
 
 function GameBlock ( {games, stats} ) {
-    let history = useHistory();
 
     const gameColumns = [
         {
@@ -66,6 +62,7 @@ function GameBlock ( {games, stats} ) {
                 });
             }
         },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [games]
     );
 
