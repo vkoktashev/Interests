@@ -115,7 +115,10 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except User.DoesNotExist:
             return Response('User does not exist', status=status.HTTP_400_BAD_REQUEST)
 
-        user_is_followed = UserFollow.objects.filter(user=request.user, followed_user=user).first().is_following
+        try:
+            user_is_followed = UserFollow.objects.get(user=request.user, followed_user=user).is_following
+        except User.DoesNotExist:
+            user_is_followed = False
 
         stats = {}
 
