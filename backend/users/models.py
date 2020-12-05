@@ -48,7 +48,7 @@ class UserScore(models.Model):
         abstract = True
 
 
-class UserLog(models.Model):
+class UserLogAbstract(models.Model):
     ACTION_TYPE_SCORE = 'score'
     ACTION_TYPE_REVIEW = 'review'
     ACTION_TYPE_STATUS = 'status'
@@ -70,10 +70,30 @@ class UserLog(models.Model):
         abstract = True
 
 
+class UserLog(models.Model):
+    ACTION_TYPE_FOLLOW = 'is_following'
+
+    ACTION_TYPE_CHOICES = (
+        (ACTION_TYPE_FOLLOW, 'Follow status changed'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created = models.DateTimeField(default=timezone.now)
+    action_result = models.CharField(max_length=300)
+    action_type = models.CharField(max_length=30, choices=ACTION_TYPE_CHOICES)
+    followed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_user')
+
+
 class UserFollow(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user')
-    followed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_user')
+    followed_user = models.ForeignKey(User, on_delete=models.CASCADE)
     is_following = models.BooleanField(default=True)
 
     class Meta:
         unique_together = (("user", "followed_user"),)
+
+
+class UserPasswordToken(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    reset_token = models.CharField(max_length=500, unique=True)
+    is_active = models.BooleanField(default=True)

@@ -52,7 +52,7 @@ def translate_hltb_time(hltb_game, time, time_unit):
 
 
 def int_to_hours(number):
-    if 1 <= number % 10 <= 4 and number <= 14:
+    if 11 <= number <= 14:
         return 'часов'
     elif number % 10 == 1:
         return 'час'

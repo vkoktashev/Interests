@@ -12,8 +12,7 @@ router.register('search', SearchUsersViewSet, basename='search')
 urlpatterns = [
     path('auth/login/', MyTokenObtainPairView.as_view()),
     path('auth/refresh-token/', TokenRefreshView.as_view()),
-    # path('auth/password/change'),
-    # path('auth/password/restore'),
+    # path('auth/password/change')
 ]
 
 urlpatterns += router.urls

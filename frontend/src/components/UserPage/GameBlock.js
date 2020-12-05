@@ -47,7 +47,7 @@ function GameBlock ( {games, stats} ) {
                     columns: gameColumns,
                     rows: games.map((game) => {
                         return {
-                                name: <a href={window.location.origin + '/game/' + game.game.rawg_slug}>{game.game.rawg_name}</a>,
+                                name: <a className="logRow" href={window.location.origin + '/game/' + game.game.rawg_slug}>{game.game.rawg_name}</a>,
                                 name2: game.game.rawg_name,
                                 status: game.status,
                                 score: game.score,

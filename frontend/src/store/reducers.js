@@ -44,11 +44,15 @@ const initialState = Map(
             users: []
         },
         userPageContent: {
-            stats: {}
+            user: {
+                stats: {}
+            },
+            userLogs: {log: []},
+            userFriendsLogs: {log: []},
         },
         openedPages: { LoginForm: false, RegistrateForm: false },
         errors: {auth: false, registrate: false, gameRequest: false, movieRequest: false, userPage: false },
-        isLoading: {contentGame: false, contentMovie: false, searchGames: false, searchMovies: false, userPageContent: false, searchUsers: false}
+        isLoading: {contentGame: false, contentMovie: false, searchGames: false, searchMovies: false, userPageContent: false, searchUsers: false, userPageLogs: false, userPageFriendsLogs: false}
     }
 );
 
@@ -82,9 +86,13 @@ export default function reducer(state = initialState, action) {
         return state.setIn(['content', 'movie', 'user_info'], action.user_info);
 
     case types.SET_USER_PAGE_CONTENT:
-        return state.setIn(['userPageContent'], action.content);
+        return state.setIn(['userPageContent', 'user'], action.content);
     case types.SET_USER_PAGE_FOLLOWING:
-        return state.setIn(['userPageContent', 'is_followed'], action.is_following);
+        return state.setIn(['userPageContent', 'user', 'is_followed'], action.is_following);
+    case types.SET_USER_PAGE_LOGs:
+        return state.setIn(['userPageContent', 'userLogs'], action.logs);
+    case types.SET_USER_PAGE_FRIENDS_LOGS:
+        return state.setIn(['userPageContent', 'userFriendsLogs'], action.logs);
 
     case types.SET_LOGINFORM:
         return state.setIn(['openedPages', 'LoginForm'], action.isOpen);
@@ -112,6 +120,10 @@ export default function reducer(state = initialState, action) {
         return state.setIn(['isLoading', 'searchMovies'], action.isLoading);
     case types.SET_IS_LOADING_USER_PAGE_CONTENT:
         return state.setIn(['isLoading', 'userPageContent'], action.isLoading);
+    case types.SET_IS_LOADING_USER_PAGE_LOGS:
+        return state.setIn(['isLoading', 'userPageLogs'], action.isLoading);
+    case types.SET_IS_LOADING_USER_PAGE_FRIENDS_LOGS:
+        return state.setIn(['isLoading', 'userPageFriendsLogs'], action.isLoading);
     case types.SET_IS_LOADING_SEARCH_USERS:
         return state.setIn(['isLoading', 'searchUsers'], action.isLoading);
     default:
@@ -207,6 +219,22 @@ export function getIsLoadingUserPageContent(state) {
     return state.get('isLoading').userPageContent;
 }
 
+export function getIsLoadingUserPageLogs(state) {
+    return state.get('isLoading').userPageLogs;
+}
+
+export function getIsLoadingUserPageFriendsLogs(state) {
+    return state.get('isLoading').userPageFriendsLogs;
+}
+
 export function getUserPageContent(state){
-    return state.get('userPageContent');
+    return state.get('userPageContent').user;
+}
+
+export function getUserPageLogs(state){
+    return state.get('userPageContent').userLogs;
+}
+
+export function getUserPageFriendsLogs(state){
+    return state.get('userPageContent').userFriendsLogs;
 }

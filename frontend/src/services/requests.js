@@ -222,3 +222,51 @@ export async function setUserStatus(token, is_following, userID){
         return null;
     }
 }
+
+/**
+ * Запрос к бд, получающий лог пользователя
+ * @param {string} userID ID пользователя
+ * @param {string} page страница 
+ * @param {int} resultsOnPage количество результатов на странице 
+ */
+export async function getUserLog(token, userID, page, resultsOnPage) {
+    let data;
+    try{
+        if (token){
+            var AuthStr = 'Bearer ' + token;
+            const res = await axios.get(USER_INFO_URL + userID + "/log/", { params : { page: page, page_size: resultsOnPage } }, { 'headers': { 'Authorization': AuthStr } });
+            data = res.data;
+        }else{
+            const res = await axios.get(USER_INFO_URL + userID + "/log/", { params : { page: page, page_size: resultsOnPage } }, axiosConfig);
+            data = res.data;
+        }
+        return data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
+ * Запрос к бд, получающий лог друзей пользователя
+ * @param {string} userID ID пользователя
+ * @param {int} page страница
+ * @param {int} resultsOnPage количество результатов на странице 
+ */
+export async function getUserFriendsLog(token, userID, page, resultsOnPage) {
+    let data;
+    try{
+        if (token){
+            var AuthStr = 'Bearer ' + token;
+            const res = await axios.get(USER_INFO_URL + userID + "/friends_log/", { params : { page: page, page_size: resultsOnPage } }, { 'headers': { 'Authorization': AuthStr } });
+            data = res.data;
+        }else{
+            const res = await axios.get(USER_INFO_URL + userID + "/friends_log/", { params : { page: page, page_size: resultsOnPage } }, axiosConfig);
+            data = res.data;
+        }
+        return data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}

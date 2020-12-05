@@ -1,4 +1,7 @@
+import secrets
+
 from django.core.mail import EmailMessage
+from django.core.paginator import Paginator, EmptyPage
 from django.template.defaultfilters import lower
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -12,22 +15,21 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from config.settings import EMAIL_HOST_USER
-from games.models import UserGame
-from games.serializers import ExtendedUserGameSerializer
-from movies.models import UserMovie
+from games.models import UserGame, GameLog
+from games.serializers import GameStatsSerializer
+from movies.models import UserMovie, MovieLog
 from movies.serializers import ExtendedUserMovieSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer
 from utils.functions import similar
-from .models import User, UserFollow
+from utils.openapi_params import DEFAULT_PAGE_SIZE, DEFAULT_PAGE_NUMBER, page_param, page_size_param, query_param
+from .models import User, UserFollow, UserLog, UserPasswordToken
 from .tokens import account_activation_token
 
 TYPE_GAME = 'game'
+TYPE_MOVIE = 'movie'
+TYPE_USER = 'user'
 SITE_URL = '35.193.124.214:81'
 MINUTES_IN_HOUR = 60
-
-query_param = openapi.Parameter('query', openapi.IN_QUERY, description="Поисковый запрос", type=openapi.TYPE_STRING)
-page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
-                               type=openapi.TYPE_INTEGER, default=1)
 
 
 class AuthViewSet(GenericViewSet):
@@ -41,7 +43,7 @@ class AuthViewSet(GenericViewSet):
         mail_subject = 'Активация аккаунта.'
         uid64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = account_activation_token.make_token(user)
-        activation_link = f"{request.scheme}://{SITE_URL}/confirm/?uid64={uid64}&token={token}"
+        activation_link = f"{request.scheme}://{SITE_URL}/confirm_email/?uid64={uid64}&token={token}"
         message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
         email.send()
@@ -56,7 +58,7 @@ class AuthViewSet(GenericViewSet):
         }
     ))
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
-    def confirmation(self, request):
+    def confirm_email(self, request):
         try:
             uid = force_text(urlsafe_base64_decode(request.data.get('uid64')))
             user = User.objects.get(pk=uid)
@@ -72,37 +74,87 @@ class AuthViewSet(GenericViewSet):
 
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
-    # @swagger_auto_schema(manual_parameters=[page_param])
-    # @action(detail=True, methods=['get'])
-    # def get_log(self, request, *args, **kwargs):
-    #     try:
-    #         page = int(request.GET.get('page'))
-    #     except (ValueError, TypeError):
-    #         page = 1
-    #     page_size = 10
-    #     logs = GameLog.objects.filter(user=request.user).order_by('-created')
-    #     paginator = Paginator(logs, page_size)
-    #
-    #     log_dicts = []
-    #     try:
-    #         paginator_page = paginator.page(page)
-    #     except EmptyPage:
-    #         return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
-    #
-    #     for log in paginator.page(page):
-    #         log_dict = {'user': log.user.username,
-    #                     'user_id': log.user.id,
-    #                     'target': log.game.rawg_name,
-    #                     'target_id': log.game.rawg_slug,
-    #                     'created': log.created,
-    #                     'type': TYPE_GAME,
-    #                     'action_type': log.action_type,
-    #                     'action_result': log.action_result,
-    #                     }
-    #         log_dicts.append(log_dict)
-    #
-    #     return Response({'log': log_dicts,
-    #                      'has_next_page': paginator_page.has_next()})
+    @swagger_auto_schema(manual_parameters=[page_param, page_size_param])
+    @action(detail=True, methods=['get'])
+    def log(self, request, *args, **kwargs):
+        try:
+            user_id = int(kwargs.get('pk'))
+        except ValueError:
+            return Response('Wrong id, must be integer', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response('User does not exist', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            page_size = int(request.GET.get('page_size'))
+        except (ValueError, TypeError):
+            page_size = DEFAULT_PAGE_SIZE
+
+        try:
+            page = int(request.GET.get('page'))
+        except (ValueError, TypeError):
+            page = DEFAULT_PAGE_NUMBER
+
+        game_logs = GameLog.objects.filter(user=user)
+        movie_logs = MovieLog.objects.filter(user=user)
+        user_logs = UserLog.objects.filter(user=user)
+
+        log_dicts = get_logs(game_logs, movie_logs, user_logs)
+        log_dicts.sort(key=lambda x: x.get('created'), reverse=True)
+
+        paginator = Paginator(log_dicts, page_size)
+        try:
+            paginator_page = paginator.page(page)
+        except EmptyPage:
+            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'log': paginator_page.object_list,
+                         'has_next_page': paginator_page.has_next()})
+
+    @swagger_auto_schema(manual_parameters=[page_param])
+    @action(detail=True, methods=['get'])
+    def friends_log(self, request, *args, **kwargs):
+        try:
+            user_id = int(kwargs.get('pk'))
+        except ValueError:
+            return Response('Wrong id, must be integer', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response('User does not exist', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            page_size = int(request.GET.get('page_size'))
+        except (ValueError, TypeError):
+            page_size = DEFAULT_PAGE_SIZE
+
+        try:
+            page = int(request.GET.get('page'))
+        except (ValueError, TypeError):
+            page = DEFAULT_PAGE_NUMBER
+
+        user_follow_query = UserFollow.objects.filter(user=user)
+        log_dicts = []
+        for user_follow in user_follow_query:
+            game_logs = GameLog.objects.filter(user=user_follow.followed_user)
+            movie_logs = MovieLog.objects.filter(user=user_follow.followed_user)
+            user_logs = UserLog.objects.filter(user=user_follow.followed_user)
+
+            log_dicts += get_logs(game_logs, movie_logs, user_logs)
+
+        log_dicts.sort(key=lambda x: x.get('created'), reverse=True)
+
+        paginator = Paginator(log_dicts, page_size)
+        try:
+            paginator_page = paginator.page(page)
+        except EmptyPage:
+            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'log': paginator_page.object_list,
+                         'has_next_page': paginator_page.has_next()})
 
     def retrieve(self, request, *args, **kwargs):
         try:
@@ -126,20 +178,21 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED) \
             .filter(user=user) \
             .order_by('-updated_at')
-        serializer = ExtendedUserGameSerializer(user_games, many=True)
+        serializer = GameStatsSerializer(user_games, many=True)
         games = serializer.data
         stats.update({'games_count': len(user_games),
                       'games_total_spent_time': sum(el.spent_time for el in user_games)})
 
         # movies
-        user_movies = UserMovie.objects \
-            .filter(user=user, status=UserMovie.STATUS_WATCHED) \
+        user_movies = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED) \
+            .filter(user=user) \
             .order_by('-updated_at')
         serializer = ExtendedUserMovieSerializer(user_movies, many=True)
         movies = serializer.data
-        stats.update({'movies_count': len(user_movies),
+        watched_movies = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_WATCHED)
+        stats.update({'movies_count': len(watched_movies),
                       'movies_total_spent_time':
-                          round(sum(el.movie.tmdb_runtime for el in user_movies) / MINUTES_IN_HOUR, 1)})
+                          round(sum(el.movie.tmdb_runtime for el in watched_movies) / MINUTES_IN_HOUR, 1)})
 
         # followed_users
         followed_users = list(el.followed_user for el
@@ -177,6 +230,127 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['put'], permission_classes=[AllowAny])
+    def password_reset(self, request, *args, **kwargs):
+        try:
+            email = request.data.get('email')
+        except ValueError:
+            return Response('Wrong email, must be integer', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response('Wrong user, must be integer', status=status.HTTP_400_BAD_REQUEST)
+
+        reset_token = secrets.token_urlsafe()
+
+        try:
+            user_password_token = UserPasswordToken.objects.get(user=user)
+            user_password_token.reset_token = reset_token
+            user_password_token.is_active = True
+            created = False
+        except UserPasswordToken.DoesNotExist:
+            user_password_token = UserPasswordToken.objects.create(user=user, reset_token=reset_token)
+            created = True
+
+        user_password_token.save()
+
+        mail_subject = 'Сброс пароля.'
+        # activation_link = f"{request.scheme}://{SITE_URL}/confirm_password_reset/?token={reset_token}"
+        activation_link = f"{request.scheme}://localhost:8000/" \
+                          f"confirm_password_reset/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
+        message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
+        email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
+        # email.send()
+        print(activation_link)
+
+        if created:
+            return Response(status=status.HTTP_201_CREATED)
+        else:
+            return Response(status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'reset_token': openapi.Schema(type=openapi.TYPE_STRING,
+                                          description='Специальный токен для восстановления'),
+        }
+    ))
+    @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
+    def confirm_password_reset(self, request, *args, **kwargs):
+        try:
+            reset_token = force_text(urlsafe_base64_decode(request.GET.get('reset_token')))
+            password = request.data.get('password')
+            user_password_token = UserPasswordToken.objects.get(reset_token=reset_token)
+            user = User.objects.get(id=user_password_token.user.id)
+        except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist, UserPasswordToken.DoesNotExist):
+            return Response("Неверная ссылка!", status=status.HTTP_400_BAD_REQUEST)
+
+        if user_password_token.is_active:
+            serializer = UserSerializer(instance=user, data={'password': password}, partial=True)
+            serializer.is_valid(raise_exception=True)
+            user_password_token.is_active = False
+            user_password_token.save()
+            serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response("Неверная ссылка!", status=status.HTTP_400_BAD_REQUEST)
+
+
+def get_logs(game_logs, movie_logs, user_logs):
+    logs = get_game_log_dict(game_logs) + get_movie_log_dict(movie_logs) + get_user_log_dict(user_logs)
+    return logs
+
+
+def get_default_log_dict(log):
+    log_dict = {'id': log.id,
+                'user': log.user.username,
+                'user_id': log.user.id,
+                'created': log.created,
+                'action_type': log.action_type,
+                'action_result': log.action_result,
+                }
+
+    return log_dict
+
+
+def get_game_log_dict(game_logs):
+    game_log_dicts = []
+    for log in game_logs:
+        log_dict = get_default_log_dict(log)
+        log_dict.update({
+            'target': log.game.rawg_name,
+            'target_id': log.game.rawg_slug,
+            'type': TYPE_GAME
+        })
+        game_log_dicts.append(log_dict)
+    return game_log_dicts
+
+
+def get_movie_log_dict(movie_logs):
+    movie_log_dicts = []
+    for log in movie_logs:
+        log_dict = get_default_log_dict(log)
+        log_dict.update({
+            'target': log.movie.tmdb_name,
+            'target_id': log.movie.tmdb_id,
+            'type': TYPE_MOVIE})
+        movie_log_dicts.append(log_dict)
+    return movie_log_dicts
+
+
+def get_user_log_dict(user_logs):
+    user_log_dicts = []
+    for log in user_logs:
+        log_dict = get_default_log_dict(log)
+        log_dict.update({
+            'target': log.followed_user.username,
+            'target_id': log.followed_user.id,
+            'type': TYPE_USER
+        })
+        user_log_dicts.append(log_dict)
+    return user_log_dicts
 
 
 class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):

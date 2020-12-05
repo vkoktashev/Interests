@@ -1,31 +1,31 @@
 from json import JSONDecodeError
 
+from django.core.paginator import Paginator, EmptyPage
 from django.db import IntegrityError
-from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
 from rest_framework import status, mixins
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from games.models import Game, UserGame, rawg
-from games.serializers import UserGameSerializer
+from games.serializers import UserGameSerializer, FollowedUserGameSerializer
+from users.models import UserFollow
 from utils.functions import int_to_hours, translate_hltb_time
+from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE
 
 dict_statuses = dict(UserGame.STATUS_CHOICES)
-
-query_param = openapi.Parameter('query', openapi.IN_QUERY, description="Поисковый запрос", type=openapi.TYPE_STRING)
-page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
-                               type=openapi.TYPE_INTEGER, default=1)
 
 
 class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
     @swagger_auto_schema(manual_parameters=[query_param, page_param])
     def list(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
-        page = request.GET.get('page', 1)
+        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
+        page_size = request.GET.get('page_size', DEFAULT_PAGE_SIZE)
         try:
-            results = rawg.search(query, num_results=10, additional_param=f"&page={page}")
+            results = rawg.search(query, num_results=page_size, additional_param=f"&page={page}")
         except JSONDecodeError:
             return Response('Rawg unavailable', status=status.HTTP_503_SERVICE_UNAVAILABLE)
         games_json = []
@@ -69,6 +69,43 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
 
         return Response({'rawg': rawg_game.json, 'hltb': hltb_game,
                          'user_info': user_info})
+
+    @swagger_auto_schema(manual_parameters=[page_param])
+    @action(detail=True, methods=['get'])
+    def friends_info(self, request, *args, **kwargs):
+        try:
+            page = int(request.GET.get('page'))
+        except (ValueError, TypeError):
+            page = DEFAULT_PAGE_NUMBER
+
+        try:
+            page_size = int(request.GET.get('page_size'))
+        except (ValueError, TypeError):
+            page_size = DEFAULT_PAGE_SIZE
+
+        friends_info = []
+
+        try:
+            game = Game.objects.get(rawg_slug=kwargs.get('slug'))
+            user_follow_query = UserFollow.objects.filter(user=request.user)
+
+            for user_follow in user_follow_query:
+                followed_user_game = UserGame.objects.filter(user=user_follow.followed_user, game=game).first()
+                if followed_user_game:
+                    serializer = FollowedUserGameSerializer(followed_user_game)
+                    friends_info.append(serializer.data)
+
+        except (Game.DoesNotExist, UserGame.DoesNotExist, UserFollow.DoesNotExist):
+            friends_info = None
+
+        paginator = Paginator(friends_info, page_size)
+        try:
+            paginator_page = paginator.page(page)
+        except EmptyPage:
+            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'friends_info': paginator_page.object_list,
+                         'has_next_page': paginator_page.has_next()})
 
     @swagger_auto_schema(request_body=UserGameSerializer)
     def update(self, request, *args, **kwargs):

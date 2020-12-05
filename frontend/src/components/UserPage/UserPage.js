@@ -20,26 +20,30 @@ import LoadingOverlay from 'react-loading-overlay';
 import GameBlock from './GameBlock';
 import FriendBlock from './FriendBlock';
 import MovieBlock from './MovieBlock';
+import UserLogBlock from './UserLogBlock';
 import CategoriesTab from '../Common/CategoriesTab';
+
+const LOG_ROWS_COUNT = 15; 
 
 /**
  * Основная страница приложения
  */
-function UserPage ( { userIsLoading, getUserInfo, userInfo, currentUserInfo, setUserStatus }) 
+function UserPage ( { userIsLoading, getUserInfo, userInfo, currentUserInfo, setUserStatus, getUserLogs, userLogs, getUserFriendsLogs, userFriendsLogs}) 
 { 
     let { userID } = useParams();
-    const [activeCategory, setActiveCategory] = useState("");
+    const [activeCategory, setActiveCategory] = useState("Профиль");
 
     useEffect(
 		() => {
             getUserInfo(userID);
+            getUserLogs(userID, 1, LOG_ROWS_COUNT);
+            getUserFriendsLogs(userID, 1, LOG_ROWS_COUNT);
 		},
-		[userID, getUserInfo]
+		[userID, getUserInfo, getUserLogs, getUserFriendsLogs]
     );
 
     useEffect(
 		() => {
-            setActiveCategory(<GameBlock games={userInfo.games} stats={userInfo.stats} />);
             document.title = 'Профиль ' + userInfo.username;
 		},
 		[userInfo]
@@ -67,17 +71,25 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo, currentUserInfo, set
                             {userInfo.is_followed?'Отписаться':'Подписаться'}
                         </button>
                         <CategoriesTab
-                            categories={['Игры', 'Фильмы', 'Друзья']}
+                            categories={['Профиль', 'Игры', 'Фильмы', 'Друзья']}
                             activeColor='#4527a0' 
-                            onChangeCategory={(category) => {
-                                if (category === 'Игры')
-                                    setActiveCategory(<GameBlock games={userInfo.games} stats={userInfo.stats} />);
-                                if (category === 'Фильмы')
-                                    setActiveCategory(<MovieBlock movies={userInfo.movies} stats={userInfo.stats} />);
-                                if (category === 'Друзья')
-                                    setActiveCategory(<FriendBlock users={userInfo.followed_users} />);
-                            }}/>
-                        {activeCategory}
+                            onChangeCategory={(category) => { setActiveCategory(category) }}/>
+
+                            <div hidden={activeCategory!=='Профиль'}>
+                                <h4>Моя активность: </h4>
+                                <UserLogBlock logs={userLogs} onChangePage={(pageNumber) => getUserLogs(userID, pageNumber, LOG_ROWS_COUNT)}/>
+                            </div>
+                            <div hidden={activeCategory!=='Игры'}>
+                                <GameBlock games={userInfo.games} stats={userInfo.stats} />
+                            </div>
+                            <div hidden={activeCategory!=='Фильмы'}>
+                                <MovieBlock movies={userInfo.movies} stats={userInfo.stats} />
+                            </div>
+                            <div hidden={activeCategory!=='Друзья'}>
+                                <FriendBlock users={userInfo.followed_users?userInfo.followed_users:[]} />
+                                <h4>Активность друзей: </h4>
+                                <UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => getUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true}/>
+                            </div>
                     </MDBCol>
                     <MDBCol md="0.5"></MDBCol>
                 </MDBRow>
@@ -91,6 +103,8 @@ const mapStateToProps = state => ({
     loggedIn: selectors.getLoggedIn(state),
     userIsLoading: selectors.getIsLoadingUserPageContent(state),
     userInfo: selectors.getUserPageContent(state),
+    userLogs: selectors.getUserPageLogs(state),
+    userFriendsLogs: selectors.getUserPageFriendsLogs(state),
     currentUserInfo: selectors.getUser(state)
 });
 
@@ -104,7 +118,13 @@ const mapDispatchToProps = (dispatch) => {
         },
         setUserStatus: (is_following, userID) => {
             dispatch(actions.setUserStatus(is_following, userID));
-        }
+        },
+        getUserLogs: (userID, page, resultsOnPage) => {
+            dispatch(actions.requestUserPageLogs(userID, page, resultsOnPage));
+        },
+        getUserFriendsLogs: (userID, page, resultsOnPage) => {
+            dispatch(actions.requestUserPageFriendsLogs(userID, page, resultsOnPage));
+        },
 	}
 };
 
