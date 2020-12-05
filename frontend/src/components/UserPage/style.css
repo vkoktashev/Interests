@@ -106,3 +106,8 @@ a.logLink:active {
   width: 100px;
   background-color: white;
 }
+
+.friendsBlock{
+  margin-top: 15px;
+  margin-bottom: 15px;
+}

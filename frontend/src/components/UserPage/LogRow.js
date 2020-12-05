@@ -8,7 +8,7 @@ import {
     MDBIcon
 } from "mdbreact";
 
-function LogRow ( {log} ) {
+function LogRow ( {log, showUsername} ) {
     let history = useHistory();
 
     useEffect(() =>{
@@ -17,7 +17,7 @@ function LogRow ( {log} ) {
         [log]
     );
 
-    function translateActionType(action){
+    function translateActionType(action, actionResult){
         switch (action) {
             case 'score':
                 return 'оценил(а)';
@@ -27,6 +27,11 @@ function LogRow ( {log} ) {
                 return 'оставил(а) отзыв на';
             case 'spent_time':
                 return 'изменил(а) время прохождения';
+            case 'is_following':
+                if (actionResult)
+                    return 'подписан(а) на';
+                else
+                    return 'отписан(а) от';
             default:
                 return action;
         }
@@ -44,6 +49,8 @@ function LogRow ( {log} ) {
                     return 'фильм';
                 else
                     return 'фильма';
+            case 'user':
+                return 'пользователя';
             default:
                 return type;
         }
@@ -63,9 +70,23 @@ function LogRow ( {log} ) {
                             onClick={(e) => { history.push('/movie/' + id); e.preventDefault();}}>
                                 {name}
                         </a>;
+            case 'user':
+                return  <a href={window.location.origin + '/user/' + id} 
+                            className="logLink"
+                            onClick={(e) => { history.push('/user/' + id); e.preventDefault();}}>
+                                {name}
+                        </a>;
             default:
                 return name;
         }
+    }
+
+    function userToLink(username, userID){
+            return  <a href={window.location.origin + '/user/' + userID} 
+                        className="logLink"
+                        onClick={(e) => { history.push('/user/' + userID); e.preventDefault();}}>
+                            {username}
+                    </a>;
     }
 
     function actionResultToStr(actionType, actionResult){
@@ -83,6 +104,8 @@ function LogRow ( {log} ) {
                 return '"' + actionResult + '"';
             case 'spent_time':
                 return actionResult + ' ' + intToHours(actionResult);
+            case 'is_following':
+                return '';
             default:
                 return actionResult;
         }
@@ -94,7 +117,7 @@ function LogRow ( {log} ) {
     }
 
     return(
-            <p className="logRow">{parseDate(log.created)} {translateActionType(log.action_type)} {translateType(log.type, log.action_type)} {nameToLink(log.target, log.type, log.target_id)}: {actionResultToStr(log.action_type, log.action_result)}</p>
+            <p className="logRow">{parseDate(log.created)} {showUsername?userToLink(log.user, log.user_id):''} {translateActionType(log.action_type, log.action_result)} {translateType(log.type, log.action_type)} {nameToLink(log.target, log.type, log.target_id)}{log.type==='user'?'':':'} {actionResultToStr(log.action_type, log.action_result)}</p>
     )
 }
 
