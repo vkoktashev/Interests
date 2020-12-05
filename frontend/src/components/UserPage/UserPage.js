@@ -20,12 +20,13 @@ import LoadingOverlay from 'react-loading-overlay';
 import GameBlock from './GameBlock';
 import FriendBlock from './FriendBlock';
 import MovieBlock from './MovieBlock';
+import UserLogBlock from './UserLogBlock';
 import CategoriesTab from '../Common/CategoriesTab';
 
 /**
  * Основная страница приложения
  */
-function UserPage ( { userIsLoading, getUserInfo, userInfo, currentUserInfo, setUserStatus }) 
+function UserPage ( { userIsLoading, getUserInfo, userInfo, currentUserInfo, setUserStatus, getUserLogs, userLogs}) 
 { 
     let { userID } = useParams();
     const [activeCategory, setActiveCategory] = useState("");
@@ -33,8 +34,9 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo, currentUserInfo, set
     useEffect(
 		() => {
             getUserInfo(userID);
+            getUserLogs(userID, 1, 10);
 		},
-		[userID, getUserInfo]
+		[userID, getUserInfo, getUserLogs]
     );
 
     useEffect(
@@ -78,6 +80,8 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo, currentUserInfo, set
                                     setActiveCategory(<FriendBlock users={userInfo.followed_users} />);
                             }}/>
                         {activeCategory}
+                        <h4>Последние действия: </h4>
+                        <UserLogBlock logs={userLogs} onChangePage={(pageNumber) => getUserLogs(userID, pageNumber, 10)}/>
                     </MDBCol>
                     <MDBCol md="0.5"></MDBCol>
                 </MDBRow>
@@ -91,6 +95,7 @@ const mapStateToProps = state => ({
     loggedIn: selectors.getLoggedIn(state),
     userIsLoading: selectors.getIsLoadingUserPageContent(state),
     userInfo: selectors.getUserPageContent(state),
+    userLogs: selectors.getUserPageLogs(state),
     currentUserInfo: selectors.getUser(state)
 });
 
@@ -104,6 +109,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         setUserStatus: (is_following, userID) => {
             dispatch(actions.setUserStatus(is_following, userID));
+        },
+        getUserLogs: (userID, page, resultsOnPage) => {
+            dispatch(actions.requestUserPageLogs(userID, page, resultsOnPage));
         }
 	}
 };

@@ -222,3 +222,26 @@ export async function setUserStatus(token, is_following, userID){
         return null;
     }
 }
+
+/**
+ * Запрос к бд, получающий лог пользователя
+ * @param {string} userID ID пользователя
+ * @param {string} page страница 
+ */
+export async function getUserLog(token, userID, page, resultsOnPage) {
+    let data;
+    try{
+        if (token){
+            var AuthStr = 'Bearer ' + token;
+            const res = await axios.get(USER_INFO_URL + userID + "/log/", { params : { page: page, page_size: resultsOnPage } }, { 'headers': { 'Authorization': AuthStr } });
+            data = res.data;
+        }else{
+            const res = await axios.get(USER_INFO_URL + userID + "/get_log/", { params : { page: page } }, axiosConfig);
+            data = res.data;
+        }
+        return data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
