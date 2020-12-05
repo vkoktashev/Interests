@@ -257,7 +257,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         user_password_token.save()
 
         mail_subject = 'Сброс пароля.'
-        # activation_link = f"{request.scheme}://{SITE_URL}/confirm_password_reset/?token={reset_token}"
+        # activation_link = f"{request.scheme}://{SITE_URL}/confirm_password_reset/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
         activation_link = f"{request.scheme}://localhost:8000/" \
                           f"confirm_password_reset/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
         message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
