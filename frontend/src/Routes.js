@@ -27,6 +27,7 @@ class Routes extends React.Component {
             <Route exact path="/confirm/" component={ConfirmPage} />
             <Route exact path="/user/:userID" component={UserPage} />
             <Route render={function () { return <h1>Not Found</h1>; }} />
+            
         </Switch>
       <ToastContainer position="top-center" hideProgressBar newestOnTop closeOnClick/>
       <LoginForm/>
@@ -35,5 +36,5 @@ class Routes extends React.Component {
     );
   }
 }
-
+//confirm_password_reset
 export default Routes;
