@@ -5,4 +5,4 @@ class MoviesAppConfig(AppConfig):
     name = 'movies'
 
     def ready(self):
-        import games.signals
+        import movies.signals
