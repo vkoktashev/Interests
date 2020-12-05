@@ -5,7 +5,7 @@ import {
 import './style.css';
 import LogRow from './LogRow';
 
-function UserLogBlock ( {logs, onChangePage} ) {
+function UserLogBlock ( {logs, showUsername, onChangePage} ) {
     const [logsByDay, setLogsByDay] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -47,7 +47,7 @@ function UserLogBlock ( {logs, onChangePage} ) {
                             {dayLog.date.toLocaleDateString("ru-RU")}
                         </h5>
                         <div className='logRows'>
-                            { dayLog.logs.map((log) => <LogRow log={log} key={log.id}/>) }
+                            { dayLog.logs.map((log) => <LogRow log={log} showUsername={showUsername} key={log.id}/>) }
                         </div>
                     </div>
                 )  
