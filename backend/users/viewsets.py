@@ -115,7 +115,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except EmptyPage:
             return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'log': paginator_page,
+        return Response({'log': paginator_page.object_list,
                          'has_next_page': paginator_page.has_next()})
 
     @swagger_auto_schema(manual_parameters=[page_param])
@@ -158,7 +158,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except EmptyPage:
             return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'log': paginator_page,
+        return Response({'log': paginator_page.object_list,
                          'has_next_page': paginator_page.has_next()})
 
     def retrieve(self, request, *args, **kwargs):
