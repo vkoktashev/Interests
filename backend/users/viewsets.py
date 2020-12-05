@@ -21,6 +21,7 @@ from movies.models import UserMovie, MovieLog
 from movies.serializers import ExtendedUserMovieSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer
 from utils.functions import similar
+from utils.openapi_params import DEFAULT_PAGE_SIZE, DEFAULT_PAGE_NUMBER, page_param, page_size_param, query_param
 from .models import User, UserFollow, UserLog, UserPasswordToken
 from .tokens import account_activation_token
 
@@ -29,12 +30,6 @@ TYPE_MOVIE = 'movie'
 TYPE_USER = 'user'
 SITE_URL = 'localhost:3000'
 MINUTES_IN_HOUR = 60
-
-query_param = openapi.Parameter('query', openapi.IN_QUERY, description="Поисковый запрос", type=openapi.TYPE_STRING)
-page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
-                               type=openapi.TYPE_INTEGER, default=1)
-page_size_param = openapi.Parameter('page_size', openapi.IN_QUERY, description="Размер страницы",
-                                    type=openapi.TYPE_INTEGER, default=1)
 
 
 class AuthViewSet(GenericViewSet):
@@ -95,18 +90,18 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         try:
             page_size = int(request.GET.get('page_size'))
         except (ValueError, TypeError):
-            return Response('Wrong page size', status=status.HTTP_400_BAD_REQUEST)
+            page_size = DEFAULT_PAGE_SIZE
 
         try:
             page = int(request.GET.get('page'))
         except (ValueError, TypeError):
-            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+            page = DEFAULT_PAGE_NUMBER
 
         game_logs = GameLog.objects.filter(user=user)
         movie_logs = MovieLog.objects.filter(user=user)
         user_logs = UserLog.objects.filter(user=user)
 
-        log_dicts = get_log_dicts(game_logs, movie_logs, user_logs)
+        log_dicts = get_logs(game_logs, movie_logs, user_logs)
         log_dicts.sort(key=lambda x: x.get('created'), reverse=True)
 
         paginator = Paginator(log_dicts, page_size)
@@ -134,12 +129,12 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         try:
             page_size = int(request.GET.get('page_size'))
         except (ValueError, TypeError):
-            return Response('Wrong page size', status=status.HTTP_400_BAD_REQUEST)
+            page_size = DEFAULT_PAGE_SIZE
 
         try:
             page = int(request.GET.get('page'))
         except (ValueError, TypeError):
-            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+            page = DEFAULT_PAGE_NUMBER
 
         user_follow_query = UserFollow.objects.filter(user=user)
         log_dicts = []
@@ -148,7 +143,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             movie_logs = MovieLog.objects.filter(user=user_follow.followed_user)
             user_logs = UserLog.objects.filter(user=user_follow.followed_user)
 
-            log_dicts += get_log_dicts(game_logs, movie_logs, user_logs)
+            log_dicts += get_logs(game_logs, movie_logs, user_logs)
 
         log_dicts.sort(key=lambda x: x.get('created'), reverse=True)
 
@@ -303,49 +298,59 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response("Неверная ссылка!", status=status.HTTP_400_BAD_REQUEST)
 
 
-def get_log_dicts(game_logs, movie_logs, user_logs):
-    log_dicts = []
+def get_logs(game_logs, movie_logs, user_logs):
+    logs = get_game_log_dict(game_logs) + get_movie_log_dict(movie_logs) + get_user_log_dict(user_logs)
+    return logs
 
+
+def get_default_log_dict(log):
+    log_dict = {'id': log.id,
+                'user': log.user.username,
+                'user_id': log.user.id,
+                'created': log.created,
+                'action_type': log.action_type,
+                'action_result': log.action_result,
+                }
+
+    return log_dict
+
+
+def get_game_log_dict(game_logs):
+    game_log_dicts = []
     for log in game_logs:
-        log_dict = {'id': log.id,
-                    'user': log.user.username,
-                    'user_id': log.user.id,
-                    'target': log.game.rawg_name,
-                    'target_id': log.game.rawg_slug,
-                    'created': log.created,
-                    'type': TYPE_GAME,
-                    'action_type': log.action_type,
-                    'action_result': log.action_result,
-                    }
-        log_dicts.append(log_dict)
+        log_dict = get_default_log_dict(log)
+        log_dict.update({
+            'target': log.game.rawg_name,
+            'target_id': log.game.rawg_slug,
+            'type': TYPE_GAME
+        })
+        game_log_dicts.append(log_dict)
+    return game_log_dicts
 
+
+def get_movie_log_dict(movie_logs):
+    movie_log_dicts = []
     for log in movie_logs:
-        log_dict = {'id': log.id,
-                    'user': log.user.username,
-                    'user_id': log.user.id,
-                    'target': log.movie.tmdb_name,
-                    'target_id': log.movie.tmdb_id,
-                    'created': log.created,
-                    'type': TYPE_MOVIE,
-                    'action_type': log.action_type,
-                    'action_result': log.action_result,
-                    }
-        log_dicts.append(log_dict)
+        log_dict = get_default_log_dict(log)
+        log_dict.update({
+            'target': log.movie.tmdb_name,
+            'target_id': log.movie.tmdb_id,
+            'type': TYPE_MOVIE})
+        movie_log_dicts.append(log_dict)
+    return movie_log_dicts
 
+
+def get_user_log_dict(user_logs):
+    user_log_dicts = []
     for log in user_logs:
-        log_dict = {'id': log.id,
-                    'user': log.user.username,
-                    'user_id': log.user.id,
-                    'target': log.followed_user.username,
-                    'target_id': log.followed_user.id,
-                    'created': log.created,
-                    'type': TYPE_USER,
-                    'action_type': log.action_type,
-                    'action_result': log.action_result,
-                    }
-        log_dicts.append(log_dict)
-
-    return log_dicts
+        log_dict = get_default_log_dict(log)
+        log_dict.update({
+            'target': log.followed_user.username,
+            'target_id': log.followed_user.id,
+            'type': TYPE_USER
+        })
+        user_log_dicts.append(log_dict)
+    return user_log_dicts
 
 
 class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):

@@ -1,5 +1,4 @@
 import tmdbsimple as tmdb
-from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
 from rest_framework import mixins, status
@@ -8,20 +7,17 @@ from rest_framework.viewsets import GenericViewSet
 
 from movies.models import Movie, UserMovie
 from movies.serializers import UserMovieSerializer
+from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER
 
 tmdb.API_KEY = 'ebf9e8e8a2be6bba6aacfa5c4c76f698'
 LANGUAGE = 'ru'
-
-query_param = openapi.Parameter('query', openapi.IN_QUERY, description="Поисковый запрос", type=openapi.TYPE_STRING)
-page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
-                               type=openapi.TYPE_INTEGER, default=1)
 
 
 class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
     @swagger_auto_schema(manual_parameters=[query_param, page_param])
     def list(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
-        page = request.GET.get('page', 1)
+        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
         try:
             results = tmdb.Search().movie(query=query, page=page, language=LANGUAGE)
         except HTTPError:
@@ -45,7 +41,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             if error_code == 404:
                 return Response({"Movie not found"}, status=status.HTTP_404_NOT_FOUND)
             return Response({"HTTP error"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-        except ConnectionError as e:
+        except ConnectionError:
             return Response({"Connection error"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:

@@ -1,7 +1,7 @@
 wheel
 Django
 django-cors-headers
-djangorestframework==3.11.0
+djangorestframework
 djangorestframework_simplejwt
 django-debug-toolbar
 Pillow
@@ -11,3 +11,4 @@ Fabric3
 howlongtobeatpy
 drf-yasg
 tmdbsimple
+requests
