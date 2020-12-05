@@ -1,6 +1,5 @@
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
-from django.utils import timezone
 
 from movies.models import UserLog
 from users.models import UserFollow
@@ -21,7 +20,7 @@ def create_log(instance, **kwargs):
     for field in fields:
         if field in user_log_dict and (not old_fields or fields[field] != old_fields[field]):
             action_type = field
-            if fields[field]:
+            if fields[field] is not None:
                 action_result = fields[field]
                 UserLog.objects.create(user=instance.user, followed_user=instance.followed_user,
                                        action_type=action_type, action_result=action_result)

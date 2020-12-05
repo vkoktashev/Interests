@@ -28,7 +28,7 @@ const LOG_ROWS_COUNT = 15;
 /**
  * Основная страница приложения
  */
-function UserPage ( { userIsLoading, getUserInfo, userInfo, currentUserInfo, setUserStatus, getUserLogs, userLogs, getUserFriendsLogs, userFriendsLogs}) 
+function UserPage ( { userIsLoading, getUserInfo, userInfo, currentUserInfo, setUserStatus, getUserLogs, userLogs, userLogsIsLoading,getUserFriendsLogs, userFriendsLogs, userFriendsLogsIsLoading}) 
 { 
     let { userID } = useParams();
     const [activeCategory, setActiveCategory] = useState("Профиль");
@@ -77,7 +77,13 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo, currentUserInfo, set
 
                             <div hidden={activeCategory!=='Профиль'}>
                                 <h4>Моя активность: </h4>
-                                <UserLogBlock logs={userLogs} onChangePage={(pageNumber) => getUserLogs(userID, pageNumber, LOG_ROWS_COUNT)}/>
+                                <LoadingOverlay
+                                    active={userLogsIsLoading}
+                                    spinner
+                                    text='Загрузка активности...'
+                                    >
+                                    <UserLogBlock logs={userLogs} onChangePage={(pageNumber) => getUserLogs(userID, pageNumber, LOG_ROWS_COUNT)}/>
+                                </LoadingOverlay>
                             </div>
                             <div hidden={activeCategory!=='Игры'}>
                                 <GameBlock games={userInfo.games} stats={userInfo.stats} />
@@ -88,7 +94,14 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo, currentUserInfo, set
                             <div hidden={activeCategory!=='Друзья'}>
                                 <FriendBlock users={userInfo.followed_users?userInfo.followed_users:[]} />
                                 <h4>Активность друзей: </h4>
-                                <UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => getUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true}/>
+                                <LoadingOverlay
+                                    active={userFriendsLogsIsLoading}
+                                    spinner
+                                    text='Загрузка активности...'
+                                    >
+                                    <UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => getUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true}/>
+                                </LoadingOverlay>
+                                
                             </div>
                     </MDBCol>
                     <MDBCol md="0.5"></MDBCol>
@@ -104,7 +117,9 @@ const mapStateToProps = state => ({
     userIsLoading: selectors.getIsLoadingUserPageContent(state),
     userInfo: selectors.getUserPageContent(state),
     userLogs: selectors.getUserPageLogs(state),
+    userLogsIsLoading: selectors.getIsLoadingUserPageLogs(state),
     userFriendsLogs: selectors.getUserPageFriendsLogs(state),
+    userFriendsLogsIsLoading: selectors.getIsLoadingUserPageFriendsLogs(state),
     currentUserInfo: selectors.getUser(state)
 });
 
