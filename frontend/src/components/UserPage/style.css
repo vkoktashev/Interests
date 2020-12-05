@@ -18,10 +18,6 @@ color: white;
 }
 
 .friendCard{
-
-}
-
-.friendCard{
   width: 500px;
   height: 150px;
   margin-right: 5px;
@@ -56,4 +52,57 @@ color: white;
   margin: 0;
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
+}
+
+a.logLink:link {
+  color: black;
+  font-weight: 500;
+}
+
+a.logLink:visited {
+  color: black;
+  font-weight: 500;
+}
+
+a.logLink:hover {
+  color: hotpink;
+  font-weight: 500;
+}
+
+a.logLink:active {
+  color: black;
+  font-weight: 500;
+}
+
+
+.logDay{
+  margin-bottom: 0px;
+  margin-top: 10px;
+}
+
+.logDate{
+  display: inline-block;
+  margin-left: 0px;
+  margin-right: 13px;
+  vertical-align: top;
+  font-weight: 400;
+}
+
+.logRows{
+  display: inline-block;
+  margin-bottom: 0px;
+  margin-top: 0px;
+}
+
+.logRow{
+  margin-bottom: 8px;
+  margin-top: 0px;
+}
+
+.logPaginationButton{
+  margin-top: 10px;
+  margin-bottom: 20px;
+  margin-left: 10px;
+  width: 100px;
+  background-color: white;
 }

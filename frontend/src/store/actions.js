@@ -277,6 +277,34 @@ export function requestUserPageContent(username){
     }
 }
 
+export function requestUserPageLogs(userID, page, resultsOnPage){
+    return async(dispatch) => {
+        dispatch({
+            type: actionTypes.SET_IS_LOADING_USER_PAGE_LOGS,
+            isLoading: true
+        });
+        Requests.getUserLog(localStorage.getItem('token'), userID, page, resultsOnPage).then((result) => {
+            if (result != null){
+                dispatch({
+                    type: actionTypes.SET_USER_PAGE_LOGs,
+                    logs: result, 
+                });
+                dispatch({
+                    type: actionTypes.SET_IS_LOADING_USER_PAGE_LOGS,
+                    isLoading: false
+                });
+            }
+            else{
+                toast.error("Ошибка загрузки логов!");
+                dispatch({
+                    type: actionTypes.SET_IS_LOADING_USER_PAGE_LOGS,
+                    isLoading: false
+                });
+            }
+        });
+    }
+}
+
 export function searchGames(query, page){
     return async(dispatch) => {
         dispatch({
