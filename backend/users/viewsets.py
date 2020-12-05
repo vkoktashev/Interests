@@ -33,6 +33,8 @@ MINUTES_IN_HOUR = 60
 query_param = openapi.Parameter('query', openapi.IN_QUERY, description="Поисковый запрос", type=openapi.TYPE_STRING)
 page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",
                                type=openapi.TYPE_INTEGER, default=1)
+page_size_param = openapi.Parameter('page_size', openapi.IN_QUERY, description="Размер страницы",
+                                    type=openapi.TYPE_INTEGER, default=1)
 
 
 class AuthViewSet(GenericViewSet):
@@ -77,7 +79,7 @@ class AuthViewSet(GenericViewSet):
 
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
-    @swagger_auto_schema(manual_parameters=[page_param])
+    @swagger_auto_schema(manual_parameters=[page_param, page_size_param])
     @action(detail=True, methods=['get'])
     def log(self, request, *args, **kwargs):
         try:
@@ -91,11 +93,15 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response('User does not exist', status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            page_size = int(request.GET.get('page_size'))
+        except (ValueError, TypeError):
+            return Response('Wrong page size', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
             page = int(request.GET.get('page'))
         except (ValueError, TypeError):
             return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
 
-        page_size = 10
         game_logs = GameLog.objects.filter(user=user)
         movie_logs = MovieLog.objects.filter(user=user)
         user_logs = UserLog.objects.filter(user=user)
@@ -109,7 +115,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except EmptyPage:
             return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'log': log_dicts,
+        return Response({'log': paginator_page,
                          'has_next_page': paginator_page.has_next()})
 
     @swagger_auto_schema(manual_parameters=[page_param])
@@ -126,11 +132,15 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response('User does not exist', status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            page_size = int(request.GET.get('page_size'))
+        except (ValueError, TypeError):
+            return Response('Wrong page size', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
             page = int(request.GET.get('page'))
         except (ValueError, TypeError):
             return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
 
-        page_size = 10
         user_follow_query = UserFollow.objects.filter(user=user)
         log_dicts = []
         for user_follow in user_follow_query:
@@ -148,7 +158,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except EmptyPage:
             return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'log': log_dicts,
+        return Response({'log': paginator_page,
                          'has_next_page': paginator_page.has_next()})
 
     def retrieve(self, request, *args, **kwargs):
@@ -297,7 +307,8 @@ def get_log_dicts(game_logs, movie_logs, user_logs):
     log_dicts = []
 
     for log in game_logs:
-        log_dict = {'user': log.user.username,
+        log_dict = {'id': log.id,
+                    'user': log.user.username,
                     'user_id': log.user.id,
                     'target': log.game.rawg_name,
                     'target_id': log.game.rawg_slug,
@@ -309,7 +320,8 @@ def get_log_dicts(game_logs, movie_logs, user_logs):
         log_dicts.append(log_dict)
 
     for log in movie_logs:
-        log_dict = {'user': log.user.username,
+        log_dict = {'id': log.id,
+                    'user': log.user.username,
                     'user_id': log.user.id,
                     'target': log.movie.tmdb_name,
                     'target_id': log.movie.tmdb_id,
@@ -321,7 +333,8 @@ def get_log_dicts(game_logs, movie_logs, user_logs):
         log_dicts.append(log_dict)
 
     for log in user_logs:
-        log_dict = {'user': log.user.username,
+        log_dict = {'id': log.id,
+                    'user': log.user.username,
                     'user_id': log.user.id,
                     'target': log.followed_user.username,
                     'target_id': log.followed_user.id,
