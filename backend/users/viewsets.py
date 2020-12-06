@@ -9,7 +9,7 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, mixins
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -89,6 +89,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         try:
             page_size = int(request.GET.get('page_size'))
+            if page_size < DEFAULT_PAGE_SIZE:
+                raise ValueError(f'Page size must be more than {DEFAULT_PAGE_SIZE}')
         except (ValueError, TypeError):
             page_size = DEFAULT_PAGE_SIZE
 
@@ -114,7 +116,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                          'has_next_page': paginator_page.has_next()})
 
     @swagger_auto_schema(manual_parameters=[page_param])
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_log(self, request, *args, **kwargs):
         try:
             user_id = int(kwargs.get('pk'))
@@ -128,6 +130,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         try:
             page_size = int(request.GET.get('page_size'))
+            if page_size < DEFAULT_PAGE_SIZE:
+                raise ValueError(f'Page size must be more than {DEFAULT_PAGE_SIZE}')
         except (ValueError, TypeError):
             page_size = DEFAULT_PAGE_SIZE
 

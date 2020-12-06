@@ -81,6 +81,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
 
         try:
             page_size = int(request.GET.get('page_size'))
+            if page_size < DEFAULT_PAGE_SIZE:
+                raise ValueError(f'Page size must be more than {DEFAULT_PAGE_SIZE}')
         except (ValueError, TypeError):
             page_size = DEFAULT_PAGE_SIZE
 
