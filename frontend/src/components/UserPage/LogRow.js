@@ -28,7 +28,7 @@ function LogRow ( {log, showUsername} ) {
             case 'spent_time':
                 return 'изменил(а) время прохождения';
             case 'is_following':
-                if (actionResult)
+                if (actionResult === 'True')
                     return 'подписан(а) на';
                 else
                     return 'отписан(а) от';
