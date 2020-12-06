@@ -6,6 +6,7 @@ from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
 from rest_framework import status, mixins
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
@@ -71,7 +72,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
                          'user_info': user_info})
 
     @swagger_auto_schema(manual_parameters=[page_param])
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_info(self, request, *args, **kwargs):
         try:
             page = int(request.GET.get('page'))
