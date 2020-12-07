@@ -8,10 +8,8 @@ import jwt_decode from 'jwt-decode';
 
 export function tryAuth(login, password) {
     return async(dispatch) => {
-        dispatch({
-            type: actionTypes.AUTH_ERROR,
-            error: false 
-        });
+        
+        setError(dispatch, actionTypes.AUTH_ERROR, false);
 
       try {
         const res = await getToken(login, password);
@@ -32,18 +30,12 @@ export function tryAuth(login, password) {
                 isOpen: false 
             });
         }else{
-            dispatch({
-                type: actionTypes.AUTH_ERROR,
-                error: true 
-            });
+            setError(dispatch, actionTypes.AUTH_ERROR, true);
         }
             
       }catch (error) {
         console.error(error);
-        dispatch({
-            type: actionTypes.AUTH_ERROR,
-            error: true 
-        });
+        setError(dispatch, actionTypes.AUTH_ERROR, true);
       }
     };
 }
@@ -104,6 +96,7 @@ export function resetAuthorization(){
 
 export function registrationRequest(username, email, password){
     return async(dispatch) => {
+        setError(dispatch, actionTypes.REGISTRATE_ERROR, false);
         registration(username, email, password).then((result) => {
             console.log(result);
             if (result.status !== 400){
@@ -111,19 +104,12 @@ export function registrationRequest(username, email, password){
                     type: actionTypes.SET_USER,
                     user: { login: result.username, email: result.email }, 
                 });
-                dispatch({
-                    type: actionTypes.REGISTRATE_ERROR,
-                    error: false 
-                });
             }
             else{
                 for (let error in result.data)
                     toast.error(result.data[error][0]);
-                   
-                dispatch({
-                    type: actionTypes.REGISTRATE_ERROR,
-                    error: true 
-                });
+                
+                setError(dispatch, actionTypes.REGISTRATE_ERROR, true);
             }
         });
     }
@@ -145,42 +131,47 @@ export function confirmEmailRequest(uid64, token){
 
 export function requestGame(id){
     return async(dispatch) => {
-        dispatch({
-            type: actionTypes.SET_IS_LOADING_CONTENT_GAME,
-            isLoading: true
-        });
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_GAME, true);
+        setError(dispatch, actionTypes.GAME_REQUEST_ERROR, false);
         Requests.getGame(localStorage.getItem('token'), id).then((result) => {
             if (result != null){
                 dispatch({
                     type: actionTypes.SET_CONTENT_GAME,
                     game: result, 
                 });
-                dispatch({
-                    type: actionTypes.SET_IS_LOADING_CONTENT_GAME,
-                    isLoading: false
-                });
             }
             else{
                 toast.error("Игра не найдена!");
+                setError(dispatch, actionTypes.GAME_REQUEST_ERROR, true);
+            }
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_GAME, false);
+        });
+    }
+}
+
+
+export function requestGameFriends(slug, page){
+    return async(dispatch) => {
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_GAME_FRIENDS, true);
+        Requests.getGameFriends(localStorage.getItem('token'), slug, page).then((result) => {
+            if (result != null){
                 dispatch({
-                    type: actionTypes.GAME_REQUEST_ERROR,
-                    error: true 
-                });
-                dispatch({
-                    type: actionTypes.SET_IS_LOADING_CONTENT_GAME,
-                    isLoading: false
+                    type: actionTypes.SET_CONTENT_GAME_FRIENDS,
+                    info: result, 
                 });
             }
+            else{
+                toast.error("Ошибка загрузки логов!");
+            }
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_GAME_FRIENDS, false);
         });
     }
 }
 
 export function requestMovie(id){
     return async(dispatch) => {
-        dispatch({
-            type: actionTypes.SET_IS_LOADING_CONTENT_MOVIE,
-            isLoading: true
-        });
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_MOVIE, true);
+        setError(dispatch, actionTypes.MOVIE_REQUEST_ERROR, false);
         Requests.getMovie(localStorage.getItem('token'), id).then((result) => {
             console.log(result);
             if (result != null){
@@ -188,22 +179,12 @@ export function requestMovie(id){
                     type: actionTypes.SET_CONTENT_MOVIE,
                     movie: result, 
                 });
-                dispatch({
-                    type: actionTypes.SET_IS_LOADING_CONTENT_MOVIE,
-                    isLoading: false
-                });
             }
             else{
                 toast.error("Фильм не найден!");
-                dispatch({
-                    type: actionTypes.MOVIE_REQUEST_ERROR,
-                    error: true 
-                });
-                dispatch({
-                    type: actionTypes.SET_IS_LOADING_CONTENT_MOVIE,
-                    isLoading: false
-                });
+                setError(dispatch, actionTypes.MOVIE_REQUEST_ERROR, true);
             }
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_MOVIE, false);
         });
     }
 }
@@ -226,119 +207,66 @@ export function setGameStatus(user_info){
     }
 }
 
-/*export function patchGameStatus(user_info){
-    return async(dispatch, getState) => {
-        if (await dispatch(checkAuthorization())){
-            Requests.patchGameStatus(localStorage.getItem('token'), selectors.getContentGame(getState()).rawg.slug, user_info).then((result) => {
-                console.log(result)
-                if (!result){
-                    toast.error("Ошибка обновления статуса")
-                }
-                else{
-                    dispatch({
-                        type: actionTypes.SET_CONTENT_GAME_USERINFO,
-                        user_info: result
-                    });
-                }
-            });
-        }
-    }
-}*/
-
 export function requestUserPageContent(username){
     return async(dispatch) => {
-        dispatch({
-            type: actionTypes.SET_IS_LOADING_USER_PAGE_CONTENT,
-            isLoading: true
-        });
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_CONTENT, true);
+        setError(dispatch, actionTypes.USER_PAGE_ERROR, false);
         Requests.getUserInfo(localStorage.getItem('token'), username).then((result) => {
             if (result != null){
                 dispatch({
                     type: actionTypes.SET_USER_PAGE_CONTENT,
                     content: result, 
                 });
-                dispatch({
-                    type: actionTypes.SET_IS_LOADING_USER_PAGE_CONTENT,
-                    isLoading: false
-                });
             }
             else{
                 toast.error("Профиль не найден!");
-                dispatch({
-                    type: actionTypes.USER_PAGE_ERROR,
-                    error: true 
-                });
-                dispatch({
-                    type: actionTypes.SET_IS_LOADING_USER_PAGE_CONTENT,
-                    isLoading: false
-                });
+                setError(dispatch, actionTypes.USER_PAGE_ERROR, true);
             }
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_CONTENT, false);
         });
     }
 }
 
 export function requestUserPageLogs(userID, page, resultsOnPage){
     return async(dispatch) => {
-        dispatch({
-            type: actionTypes.SET_IS_LOADING_USER_PAGE_LOGS,
-            isLoading: true
-        });
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_LOGS, true);
         Requests.getUserLog(localStorage.getItem('token'), userID, page, resultsOnPage).then((result) => {
             if (result != null){
                 dispatch({
                     type: actionTypes.SET_USER_PAGE_LOGs,
                     logs: result, 
                 });
-                dispatch({
-                    type: actionTypes.SET_IS_LOADING_USER_PAGE_LOGS,
-                    isLoading: false
-                });
             }
             else{
                 toast.error("Ошибка загрузки логов!");
-                dispatch({
-                    type: actionTypes.SET_IS_LOADING_USER_PAGE_LOGS,
-                    isLoading: false
-                });
+                
             }
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_LOGS, false);
         });
     }
 }
 
 export function requestUserPageFriendsLogs(userID, page, resultsOnPage){
     return async(dispatch) => {
-        dispatch({
-            type: actionTypes.SET_IS_LOADING_USER_PAGE_FRIENDS_LOGS,
-            isLoading: true
-        });
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_FRIENDS_LOGS, true);
         Requests.getUserFriendsLog(localStorage.getItem('token'), userID, page, resultsOnPage).then((result) => {
             if (result != null){
                 dispatch({
                     type: actionTypes.SET_USER_PAGE_FRIENDS_LOGS,
                     logs: result, 
                 });
-                dispatch({
-                    type: actionTypes.SET_IS_LOADING_USER_PAGE_FRIENDS_LOGS,
-                    isLoading: false
-                });
             }
             else{
                 toast.error("Ошибка загрузки логов!");
-                dispatch({
-                    type: actionTypes.SET_IS_LOADING_USER_PAGE_FRIENDS_LOGS,
-                    isLoading: false
-                });
             }
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_FRIENDS_LOGS, false);
         });
     }
 }
 
 export function searchGames(query, page){
     return async(dispatch) => {
-        dispatch({
-            type: actionTypes.SET_IS_LOADING_SEARCH_GAMES,
-            isLoading: true
-        });
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_GAMES, true);
         Requests.searchGames(query, page).then((result) => {
             if (!result){
                 toast.error("Ошибка поиска")
@@ -349,23 +277,17 @@ export function searchGames(query, page){
                     games: result, 
                 });
             }
-            dispatch({
-                type: actionTypes.SET_IS_LOADING_SEARCH_GAMES,
-                isLoading: false
-            });
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_GAMES, false);
         });
     }
 }
 
 export function searchMovies(query, page){
     return async(dispatch) => {
-        dispatch({
-            type: actionTypes.SET_IS_LOADING_SEARCH_MOVIES,
-            isLoading: true
-        });
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_MOVIES, true);
         Requests.searchMovies(query, page).then((result) => {
             if (!result){
-                toast.error("Ошибка поиска")
+                toast.error("Ошибка поиска фильмов")
             }
             else{
                 dispatch({
@@ -373,10 +295,7 @@ export function searchMovies(query, page){
                     movies: result.results, 
                 });
             }
-            dispatch({
-                type: actionTypes.SET_IS_LOADING_SEARCH_MOVIES,
-                isLoading: false
-            });
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_MOVIES, false);
         });
     }
 }
@@ -401,10 +320,7 @@ export function setMovieStatus(user_info){
 
 export function searchUsers(query){
     return async(dispatch) => {
-        dispatch({
-            type: actionTypes.SET_IS_LOADING_SEARCH_USERS,
-            isLoading: true
-        });
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_USERS, true);
         Requests.searchUsers(query).then((result) => {
             if (!result){
                 toast.error("Ошибка поиска")
@@ -415,10 +331,7 @@ export function searchUsers(query){
                     users: result, 
                 });
             }
-            dispatch({
-                type: actionTypes.SET_IS_LOADING_SEARCH_USERS,
-                isLoading: false
-            });
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_USERS, false);
         });
     }
 }
@@ -459,4 +372,18 @@ export function openRegistrateForm() {
 
 export function closeRegistrateForm() {
     return({ type: actionTypes.SET_REGISTRATEFORM, isOpen: false  });
+}
+
+function setLoading(dispatch, type, isLoading){
+    dispatch({
+        type: type,
+        isLoading: isLoading
+    });
+}
+
+function setError(dispatch, type, isError){
+    dispatch({
+        type: type,
+        error: isError
+    });
 }

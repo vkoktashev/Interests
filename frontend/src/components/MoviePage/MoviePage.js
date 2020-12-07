@@ -13,12 +13,13 @@ import {
     MDBInput
 } from "mdbreact";
 import LoadingOverlay from 'react-loading-overlay';
+import './style.css';
 
 import Rating from "react-rating";
 import { connect } from 'react-redux'; 
-import * as selectors from '../store/reducers';
-import * as actions from '../store/actions';
-import StatusButtonGroup from "./Common/StatusButtonGroup";
+import * as selectors from '../../store/reducers';
+import * as actions from '../../store/actions';
+import StatusButtonGroup from "../Common/StatusButtonGroup";
 
 
 /**

@@ -12,19 +12,21 @@ import {
     MDBIcon,
     MDBInput
 } from "mdbreact";
+import './style.css';
 import LoadingOverlay from 'react-loading-overlay';
 
 import Rating from "react-rating";
 import { connect } from 'react-redux'; 
-import * as selectors from '../store/reducers';
-import * as actions from '../store/actions';
-import StatusButtonGroup from "./Common/StatusButtonGroup";
+import * as selectors from '../../store/reducers';
+import * as actions from '../../store/actions';
+import StatusButtonGroup from "../Common/StatusButtonGroup";
+import FriendsActivity from "./FriendsActivity";
 
 
 /**
  * Основная страница приложения
  */
-function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, setGameStatus, gameIsLoading
+function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, gameIsLoading, requestGameFriends, gameFriends, gameFriendsIsLoading
     } ) {
     let { id } = useParams();
     const [genres, setGenres] = useState("");
@@ -38,6 +40,7 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
     useEffect(
 		() => {
             requestGame(id);
+            requestGameFriends(id, 1);
         },
         // eslint-disable-next-line
 		[id, requestGame, loggedIn]
@@ -209,6 +212,10 @@ function GamePage ( {requestGame, game, requestError, loggedIn, openLoginForm, s
                                     </MDBCol>
                                 </MDBRow>
                             </MDBContainer>
+                            <div className="gameFriendsBlock">
+                                <h4>Отзывы друзей</h4>
+                                <FriendsActivity info={gameFriends}/>
+                            </div>
                         </MDBCol>
                         <MDBCol md="0.5"></MDBCol>
                     </MDBRow>
@@ -222,7 +229,9 @@ const mapStateToProps = state => ({
     loggedIn: selectors.getLoggedIn(state),
     requestError: selectors.getGameRequestError(state),
     game: selectors.getContentGame(state),
-    gameIsLoading: selectors.getIsLoadingContentGame(state)
+    gameIsLoading: selectors.getIsLoadingContentGame(state),
+    gameFriends: selectors.getContentGameFriends(state),
+    gameFriendsIsLoading: selectors.getIsLoadingContentGameFriends(state)
 });
 
 const mapDispatchToProps = (dispatch) => {
@@ -230,12 +239,12 @@ const mapDispatchToProps = (dispatch) => {
 		requestGame: (id) => {
             dispatch(actions.requestGame(id));
         },
+        requestGameFriends: (slug, page) => {
+            dispatch(actions.requestGameFriends(slug, page));
+        },
         openLoginForm: () => {
             dispatch(actions.openLoginForm());
         },
-        /*patchGameStatus: (user_info) => {
-            dispatch(actions.patchGameStatus(user_info));
-        },*/
         setGameStatus: (status) => {
             dispatch(actions.setGameStatus(status));
         }

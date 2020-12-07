@@ -1,20 +1,20 @@
 .addFriendButton{
-    background-color: rgb(0, 0, 0);
-    border: 1px solid #FFF;
-    color: white;
-    padding: 4px 8px;
-    text-align: center;
-    text-decoration: none;
-    margin-top: 10px;
-    font-size: 16px;
-  }
+  background-color: rgb(0, 0, 0);
+  border: 1px solid #FFF;
+  color: white;
+  padding: 4px 8px;
+  text-align: center;
+  text-decoration: none;
+  margin-top: 10px;
+  font-size: 16px;
+}
 
 .addFriendButton:hover{
-    color: rgb(167, 126, 221);
+  color: rgb(167, 126, 221);
 }
 
 .addFriendButton:active {
-color: white;
+  color: white;
 }
 
 .friendCard{
