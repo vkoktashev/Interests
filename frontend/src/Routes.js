@@ -4,8 +4,8 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import HomePage from "./components/HomePage";
-import GamePage from "./components/GamePage";
-import MoviePage from "./components/MoviePage";
+import GamePage from "./components/GamePage/GamePage";
+import MoviePage from "./components/MoviePage/MoviePage";
 import SearchPage from "./components/SearchPage/SearchPage";
 import LoginForm from "./components/LoginForm";
 import RegistrationForm from "./components/RegistrationForm";

@@ -4,6 +4,7 @@ from django.utils import timezone
 
 from movies.models import UserMovie, MovieLog
 from movies.serializers import UserMovieSerializer
+from utils.functions import field_is_changed
 
 
 @receiver(pre_save, sender=UserMovie)
@@ -18,12 +19,11 @@ def create_log(instance, **kwargs):
     movie_log_dict = dict(MovieLog.ACTION_TYPE_CHOICES)
 
     for field in fields:
-        if field in movie_log_dict and (not old_fields or fields[field] != old_fields[field]):
+        if field_is_changed(movie_log_dict, field, fields, old_fields):
             action_type = field
-            if fields[field]:
-                action_result = fields[field]
-                MovieLog.objects.create(user=instance.user, movie=instance.movie,
-                                        action_type=action_type, action_result=action_result)
+            action_result = fields[field]
+            MovieLog.objects.create(user=instance.user, movie=instance.movie,
+                                    action_type=action_type, action_result=action_result)
 
 
 @receiver(pre_save, sender=UserMovie)

@@ -34,7 +34,7 @@ class UserGame(UserScore):
 
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=STATUS_NOT_PLAYED)
-    spent_time = models.IntegerField(validators=[MinValueValidator(0)], default=0)
+    spent_time = models.DecimalField(validators=[MinValueValidator(0.0)], default=0.0, max_digits=7, decimal_places=1)
 
     class Meta:
         unique_together = (("user", "game"),)

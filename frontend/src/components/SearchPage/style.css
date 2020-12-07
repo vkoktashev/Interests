@@ -1,17 +1,17 @@
 a:link {
-    color: white;
+  color: white;
 }
 
 a:visited {
-color: white;
+  color: white;
 }
 
 a:hover {
-color: hotpink;
+  color: hotpink;
 }
 
 a:active {
-color: white;
+  color: white;
 }
 
 .searchCardsGroup{

@@ -6,6 +6,7 @@ from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
 from rest_framework import status, mixins
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
@@ -71,7 +72,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
                          'user_info': user_info})
 
     @swagger_auto_schema(manual_parameters=[page_param])
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_info(self, request, *args, **kwargs):
         try:
             page = int(request.GET.get('page'))
@@ -80,6 +81,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
 
         try:
             page_size = int(request.GET.get('page_size'))
+            if page_size < DEFAULT_PAGE_SIZE:
+                raise ValueError(f'Page size must be more than {DEFAULT_PAGE_SIZE}')
         except (ValueError, TypeError):
             page_size = DEFAULT_PAGE_SIZE
 

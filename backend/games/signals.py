@@ -4,6 +4,7 @@ from django.utils import timezone
 
 from games.models import UserGame, GameLog
 from games.serializers import UserGameSerializer
+from utils.functions import field_is_changed
 
 
 @receiver(pre_save, sender=UserGame)
@@ -18,12 +19,11 @@ def create_log(instance, **kwargs):
     game_log_dict = dict(GameLog.ACTION_TYPE_CHOICES)
 
     for field in fields:
-        if field in game_log_dict and (not old_fields or fields[field] != old_fields[field]):
+        if field_is_changed(game_log_dict, field, fields, old_fields):
             action_type = field
-            if fields[field]:
-                action_result = fields[field]
-                GameLog.objects.create(user=instance.user, game=instance.game,
-                                       action_type=action_type, action_result=action_result)
+            action_result = fields[field]
+            GameLog.objects.create(user=instance.user, game=instance.game,
+                                   action_type=action_type, action_result=action_result)
 
 
 @receiver(pre_save, sender=UserGame)

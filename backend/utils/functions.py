@@ -71,3 +71,19 @@ def int_to_minutes(number):
         return 'минуты'
     else:
         return 'минут'
+
+
+def field_is_changed(choices_dict, field, fields, old_fields):
+    if field in choices_dict:
+        if old_fields is None:
+            if fields[field] is None:
+                return False
+            if type(fields[field]) is str and fields[field] == '':
+                return False
+            if type(fields[field]) is int and fields[field] == 0:
+                return False
+            return True
+        elif fields[field] != old_fields[field]:
+            return True
+        else:
+            return False
