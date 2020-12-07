@@ -2,6 +2,7 @@ from json import JSONDecodeError
 
 from django.core.paginator import Paginator, EmptyPage
 from django.db import IntegrityError
+from django.template.defaultfilters import lower
 from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
 from rest_framework import status, mixins
@@ -49,8 +50,12 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
             return Response('Rawg unavailable', status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
-            results_list = HowLongToBeat(1.0).search(rawg_game.name)
-            hltb_game = max(results_list, key=lambda element: element.similarity).__dict__
+            results_list = HowLongToBeat(0.9).search(rawg_game.name.replace('’', '\''))
+            hltb_game = max(results_list, key=lambda element: element.similarity)
+            if lower(hltb_game.game_name) == lower(rawg_game.name.replace('’', '\'')):
+                hltb_game = hltb_game.__dict__
+            else:
+                hltb_game = None
         except ValueError:
             hltb_game = None
         except ConnectionError:
