@@ -2,7 +2,7 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from users.models import User, UserFollow
+from users.models import User, UserFollow, UserLog
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -53,6 +53,12 @@ class FollowedUserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username')
         read_only_fields = ('id', 'username')
+
+
+class UserLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserLog
+        fields = '__all__'
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):

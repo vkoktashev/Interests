@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from movies.models import UserMovie, Movie
+from movies.models import UserMovie, Movie, MovieLog
 from utils.serializers import ChoicesField
 
 
@@ -28,3 +28,9 @@ class ExtendedUserMovieSerializer(UserMovieSerializer):
     class Meta:
         model = UserMovie
         exclude = ('id', 'user')
+
+
+class MovieLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MovieLog
+        fields = '__all__'

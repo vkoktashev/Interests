@@ -16,10 +16,10 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from config.settings import EMAIL_HOST_USER
 from games.models import UserGame, GameLog
-from games.serializers import GameStatsSerializer
+from games.serializers import GameStatsSerializer, GameLogSerializer
 from movies.models import UserMovie, MovieLog
-from movies.serializers import ExtendedUserMovieSerializer
-from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer
+from movies.serializers import ExtendedUserMovieSerializer, MovieLogSerializer
+from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer
 from utils.functions import similar
 from utils.openapi_params import DEFAULT_PAGE_SIZE, DEFAULT_PAGE_NUMBER, page_param, page_size_param, query_param
 from .models import User, UserFollow, UserLog, UserPasswordToken
@@ -103,16 +103,17 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         movie_logs = MovieLog.objects.filter(user=user)
         user_logs = UserLog.objects.filter(user=user)
 
-        log_dicts = get_logs(game_logs, movie_logs, user_logs)
-        log_dicts.sort(key=lambda x: x.get('created'), reverse=True)
+        union_logs = game_logs.union(movie_logs).union(user_logs).order_by('-created')
 
-        paginator = Paginator(log_dicts, page_size)
+        paginator = Paginator(union_logs, page_size)
         try:
             paginator_page = paginator.page(page)
-        except EmptyPage:
+        except (EmptyPage, TypeError):
             return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'log': paginator_page.object_list,
+        results = serialize_logs(paginator_page.object_list)
+
+        return Response({'log': results,
                          'has_next_page': paginator_page.has_next()})
 
     @swagger_auto_schema(manual_parameters=[page_param])
@@ -140,24 +141,21 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except (ValueError, TypeError):
             page = DEFAULT_PAGE_NUMBER
 
-        user_follow_query = UserFollow.objects.filter(user=user)
-        log_dicts = []
-        for user_follow in user_follow_query:
-            game_logs = GameLog.objects.filter(user=user_follow.followed_user)
-            movie_logs = MovieLog.objects.filter(user=user_follow.followed_user)
-            user_logs = UserLog.objects.filter(user=user_follow.followed_user)
+        user_follow_query = UserFollow.objects.filter(user=user).values('followed_user')
+        game_logs = GameLog.objects.filter(user__in=user_follow_query)
+        movie_logs = MovieLog.objects.filter(user__in=user_follow_query)
+        user_logs = UserLog.objects.filter(user__in=user_follow_query)
+        union_logs = game_logs.union(movie_logs).union(user_logs).order_by('-created')
 
-            log_dicts += get_logs(game_logs, movie_logs, user_logs)
-
-        log_dicts.sort(key=lambda x: x.get('created'), reverse=True)
-
-        paginator = Paginator(log_dicts, page_size)
+        paginator = Paginator(union_logs, page_size)
         try:
             paginator_page = paginator.page(page)
         except EmptyPage:
             return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'log': paginator_page.object_list,
+        results = serialize_logs(paginator_page.object_list)
+
+        return Response({'log': results,
                          'has_next_page': paginator_page.has_next()})
 
     def retrieve(self, request, *args, **kwargs):
@@ -302,59 +300,17 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response("Неверная ссылка!", status=status.HTTP_400_BAD_REQUEST)
 
 
-def get_logs(game_logs, movie_logs, user_logs):
-    logs = get_game_log_dict(game_logs) + get_movie_log_dict(movie_logs) + get_user_log_dict(user_logs)
-    return logs
-
-
-def get_default_log_dict(log):
-    log_dict = {'id': log.id,
-                'user': log.user.username,
-                'user_id': log.user.id,
-                'created': log.created,
-                'action_type': log.action_type,
-                'action_result': log.action_result,
-                }
-
-    return log_dict
-
-
-def get_game_log_dict(game_logs):
-    game_log_dicts = []
-    for log in game_logs:
-        log_dict = get_default_log_dict(log)
-        log_dict.update({
-            'target': log.game.rawg_name,
-            'target_id': log.game.rawg_slug,
-            'type': TYPE_GAME
-        })
-        game_log_dicts.append(log_dict)
-    return game_log_dicts
-
-
-def get_movie_log_dict(movie_logs):
-    movie_log_dicts = []
-    for log in movie_logs:
-        log_dict = get_default_log_dict(log)
-        log_dict.update({
-            'target': log.movie.tmdb_name,
-            'target_id': log.movie.tmdb_id,
-            'type': TYPE_MOVIE})
-        movie_log_dicts.append(log_dict)
-    return movie_log_dicts
-
-
-def get_user_log_dict(user_logs):
-    user_log_dicts = []
-    for log in user_logs:
-        log_dict = get_default_log_dict(log)
-        log_dict.update({
-            'target': log.followed_user.username,
-            'target_id': log.followed_user.id,
-            'type': TYPE_USER
-        })
-        user_log_dicts.append(log_dict)
-    return user_log_dicts
+def serialize_logs(logs):
+    results = []
+    for entry in logs:
+        if isinstance(entry, GameLog):
+            serializer = GameLogSerializer(entry)
+        elif isinstance(entry, MovieLog):
+            serializer = MovieLogSerializer(entry)
+        else:
+            serializer = UserLogSerializer(entry)
+        results.append(serializer.data)
+    return results
 
 
 class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):
