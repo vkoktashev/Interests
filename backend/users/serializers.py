@@ -4,6 +4,8 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from users.models import User, UserFollow, UserLog
 
+TYPE_USER = 'user'
+
 
 class UserSerializer(serializers.ModelSerializer):
     def validate_email(self, value):
@@ -29,6 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'email', 'password')
         extra_kwargs = {
             'password': {'write_only': True},
+            'email': {'write_only': True},
         }
 
 
@@ -56,9 +59,30 @@ class FollowedUserSerializer(serializers.ModelSerializer):
 
 
 class UserLogSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField('get_username')
+    user_id = serializers.SerializerMethodField('get_user_id')
+    type = serializers.SerializerMethodField('get_type')
+    target = serializers.SerializerMethodField('get_target')
+    target_id = serializers.SerializerMethodField('get_target_id')
+
+    def get_username(self, user_log):
+        return user_log.user.username
+
+    def get_user_id(self, user_log):
+        return user_log.user.id
+
+    def get_type(self, user_log):
+        return TYPE_USER
+
+    def get_target(self, user_log):
+        return user_log.followed_user.username
+
+    def get_target_id(self, user_log):
+        return user_log.followed_user.id
+
     class Meta:
         model = UserLog
-        fields = '__all__'
+        exclude = ('followed_user',)
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):

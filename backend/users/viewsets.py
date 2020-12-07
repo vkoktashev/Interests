@@ -1,4 +1,5 @@
 import secrets
+from itertools import chain
 
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator, EmptyPage
@@ -25,9 +26,6 @@ from utils.openapi_params import DEFAULT_PAGE_SIZE, DEFAULT_PAGE_NUMBER, page_pa
 from .models import User, UserFollow, UserLog, UserPasswordToken
 from .tokens import account_activation_token
 
-TYPE_GAME = 'game'
-TYPE_MOVIE = 'movie'
-TYPE_USER = 'user'
 SITE_URL = 'localhost:3000'
 MINUTES_IN_HOUR = 60
 
@@ -99,11 +97,12 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except (ValueError, TypeError):
             page = DEFAULT_PAGE_NUMBER
 
-        game_logs = GameLog.objects.filter(user=user)
-        movie_logs = MovieLog.objects.filter(user=user)
-        user_logs = UserLog.objects.filter(user=user)
+        game_logs = GameLog.objects.filter(user=user).defer('game')
+        movie_logs = MovieLog.objects.filter(user=user).defer('movie')
+        user_logs = UserLog.objects.filter(user=user).defer('followed_user')
 
-        union_logs = game_logs.union(movie_logs).union(user_logs).order_by('-created')
+        union_logs = sorted(chain(game_logs, movie_logs, user_logs),
+                            key=lambda obj: obj.created, reverse=True)
 
         paginator = Paginator(union_logs, page_size)
         try:
@@ -145,7 +144,9 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         game_logs = GameLog.objects.filter(user__in=user_follow_query)
         movie_logs = MovieLog.objects.filter(user__in=user_follow_query)
         user_logs = UserLog.objects.filter(user__in=user_follow_query)
-        union_logs = game_logs.union(movie_logs).union(user_logs).order_by('-created')
+
+        union_logs = sorted(chain(game_logs, movie_logs, user_logs),
+                            key=lambda obj: obj.created, reverse=True)
 
         paginator = Paginator(union_logs, page_size)
         try:
