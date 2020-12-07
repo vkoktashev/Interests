@@ -69,10 +69,9 @@ export async function getMovie(token, id) {
 export async function setGameStatus(token, gameSlug, user_info){
     try{
         var AuthStr = 'Bearer ' + token;
-        console.log(user_info);
+
         const res = await axios.put(GET_GAME_URL + gameSlug + "/", 
             user_info, { headers: { 'Authorization': AuthStr } });
-        console.log(res); 
         
         if (res.status === 204 || res.status === 200 || res.status === 201)
             return res.data;
@@ -105,28 +104,6 @@ export async function setMovieStatus(token, id, user_info){
         return null;
     }
 }
-
-/**
- * Запрос на изменение статуса игры
- * @param {string} token Токен доступа
- * @param {object} user_info Объект статуса игры
- * @param {string} gameSlug Слаг игры
- 
-export async function patchGameStatus(token, gameSlug, user_info){
-    try{
-        var AuthStr = 'Bearer ' + token;
-        const res = await axios.patch(GET_GAME_URL + gameSlug + "/", 
-        {status: user_info.status, score: user_info.score, review: user_info.review, spent_time: user_info.spent_time }, { 'headers': { 'Authorization': AuthStr } });
-        console.log(res.data);
-        if (res.status === 204 || res.status === 201|| res.status === 200)
-            return res.data;
-        else return null;
-    }catch(e){
-        console.log("AXIOS ERROR: ", e);
-        return null;
-    }
-}*/
-
 
 /**
  * Запрос на поиск игр
@@ -258,10 +235,34 @@ export async function getUserFriendsLog(token, userID, page, resultsOnPage) {
     try{
         if (token){
             var AuthStr = 'Bearer ' + token;
-            const res = await axios.get(USER_INFO_URL + userID + "/friends_log/", { params : { page: page, page_size: resultsOnPage } }, { 'headers': { 'Authorization': AuthStr } });
+            const res = await axios.get(USER_INFO_URL + userID + "/friends_log/", { params : { page: page, page_size: resultsOnPage }, 'headers': { 'Authorization': AuthStr } });
             data = res.data;
         }else{
             const res = await axios.get(USER_INFO_URL + userID + "/friends_log/", { params : { page: page, page_size: resultsOnPage } }, axiosConfig);
+            data = res.data;
+        }
+        return data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
+ * Запрос к бд, получающий информацию об оценках друзей для игры
+ * @param {string} slug slug игры
+ * @param {int} page страница
+ */
+export async function getGameFriends(token, slug, page) {
+    let data;
+    try{
+        if (token){
+            var AuthStr = 'Bearer ' + token;
+            const res = await axios.get(GET_GAME_URL + slug + "/friends_info/", { params : { page: page } , 'headers': { 'Authorization': AuthStr } });
+            console.log(res);
+            data = res.data;
+        }else{
+            const res = await axios.get(GET_GAME_URL + slug + "/friends_info/", { params : { page: page } }, axiosConfig);
             data = res.data;
         }
         return data;
