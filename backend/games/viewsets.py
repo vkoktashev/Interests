@@ -103,8 +103,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
                     serializer = FollowedUserGameSerializer(followed_user_game)
                     friends_info.append(serializer.data)
 
-        except (Game.DoesNotExist, UserGame.DoesNotExist, UserFollow.DoesNotExist):
-            friends_info = None
+        except Game.DoesNotExist:
+            friends_info = []
 
         paginator = Paginator(friends_info, page_size)
         try:
