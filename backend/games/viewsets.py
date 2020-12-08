@@ -51,11 +51,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
 
         try:
             results_list = HowLongToBeat(0.9).search(rawg_game.name.replace('’', '\''))
-            hltb_game = max(results_list, key=lambda element: element.similarity)
-            if lower(hltb_game.game_name) == lower(rawg_game.name.replace('’', '\'')):
-                hltb_game = hltb_game.__dict__
-            else:
-                hltb_game = None
+            hltb_game = max(results_list, key=lambda element: element.similarity).__dict__
         except ValueError:
             hltb_game = None
         except ConnectionError:
