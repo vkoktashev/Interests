@@ -1,17 +1,14 @@
 a:link {
-  color: white;
+  color: rgb(238, 238, 238);
 }
-
 a:visited {
-  color: white;
+  color: rgb(238, 238, 238);
 }
-
 a:hover {
   color: hotpink;
 }
-
 a:active {
-  color: white;
+  color: rgb(238, 238, 238);
 }
 
 .searchCardsGroup{
@@ -44,9 +41,9 @@ a:active {
   padding: 10px;
   text-align: center;
   vertical-align: top;
-  color: #fff;
+  color: rgb(238, 238, 238);
   font-weight: 200;
-  background-color: black;
+  background-color: rgb(43, 43, 43);
   width: 250px;
   height: 150px;
   display: inline-block;
@@ -81,9 +78,9 @@ a:active {
   padding: 10px;
   text-align: center;
   vertical-align: top;
-  color: #fff;
+  color: rgb(238, 238, 238);
   font-weight: 200;
-  background-color: black;
+  background-color: rgb(43, 43, 43);
   width: 250px;
   height: 150px;
   display: inline-block;
@@ -100,10 +97,15 @@ a:active {
 }
 
 .searchPage{
-  background-color: #fff;
-  color: rgb(0, 0, 0);
+  background-color: rgb(30, 30, 30);
+  color: rgb(207, 207, 207);
   margin-top: 30px;
   margin-bottom: 30px;
   padding-left: 10px;
   padding-top: 10px;
+}
+
+#searchInput2{
+  color: rgb(207, 207, 207);
+  background-color: rgb(30, 30, 30);
 }

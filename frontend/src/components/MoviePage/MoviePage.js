@@ -20,12 +20,12 @@ import { connect } from 'react-redux';
 import * as selectors from '../../store/reducers';
 import * as actions from '../../store/actions';
 import StatusButtonGroup from "../Common/StatusButtonGroup";
-
+import FriendsActivity from "../Common/FriendsActivity";
 
 /**
  * Основная страница приложения
  */
-function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieStatus, openLoginForm
+function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieStatus, openLoginForm, requestMovieFriends, movieFriends, movieFriendsIsLoading
     } ) {
     let { id } = useParams();
     const [metascoreBlock, setMetascoreBlock] = useState("");
@@ -38,9 +38,10 @@ function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieSta
     useEffect(
 		() => {
             requestMovie(id);
+            requestMovieFriends(id);
         },
         // eslint-disable-next-line
-		[id, requestMovie, loggedIn]
+		[id, requestMovie]
     );
 
     useEffect(
@@ -171,7 +172,7 @@ function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieSta
                                         <div dangerouslySetInnerHTML={{__html: movie.tmdb.overview}} />
                                     </MDBCol>
                                 </MDBRow>
-                                <MDBCol size="6" style={{paddingLeft: "20px"}}>
+                                <MDBCol size="6" style={{paddingLeft: "10px"}}>
                                     <h3 style={{paddingTop: "10px"}}>Отзывы</h3>
                                         
                                         <MDBInput 
@@ -198,6 +199,10 @@ function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieSta
                                         </button>
                                     </MDBCol>
                             </MDBContainer>
+                            <div className="movieFriendsBlock" hidden={movieFriends.friends_info.length < 1}>
+                                <h4>Отзывы друзей</h4>
+                                <FriendsActivity info={movieFriends}/>
+                            </div>
                         </MDBCol>
                         <MDBCol md="0.5"></MDBCol>
                     </MDBRow>
@@ -211,7 +216,9 @@ const mapStateToProps = state => ({
     loggedIn: selectors.getLoggedIn(state),
     requestError: selectors.getGameRequestError(state),
     movie: selectors.getContentMovie(state),
-    movieIsLoading: selectors.getIsLoadingContentMovie(state)
+    movieIsLoading: selectors.getIsLoadingContentMovie(state),
+    movieFriends: selectors.getContentMovieFriends(state),
+    movieFriendsIsLoading: selectors.getIsLoadingContentMovieFriends(state)
 });
 
 const mapDispatchToProps = (dispatch) => {
@@ -224,6 +231,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         setMovieStatus: (status) => {
             dispatch(actions.setMovieStatus(status));
+        },
+        requestMovieFriends: (id, page) => {
+            dispatch(actions.requestMovieFriends(id, page));
         }
 	}
 };

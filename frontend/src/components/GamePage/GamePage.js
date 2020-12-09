@@ -20,7 +20,7 @@ import { connect } from 'react-redux';
 import * as selectors from '../../store/reducers';
 import * as actions from '../../store/actions';
 import StatusButtonGroup from "../Common/StatusButtonGroup";
-import FriendsActivity from "./FriendsActivity";
+import FriendsActivity from "../Common/FriendsActivity";
 
 
 /**
@@ -43,7 +43,7 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
             requestGameFriends(id, 1);
         },
         // eslint-disable-next-line
-		[id, requestGame, loggedIn]
+		[id, requestGame]
     );
 
     useEffect(
@@ -212,7 +212,7 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
                                     </MDBCol>
                                 </MDBRow>
                             </MDBContainer>
-                            <div className="gameFriendsBlock">
+                            <div className="gameFriendsBlock" hidden={gameFriends.friends_info.length < 1}>
                                 <h4>Отзывы друзей</h4>
                                 <FriendsActivity info={gameFriends}/>
                             </div>

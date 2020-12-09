@@ -30,7 +30,7 @@ import * as actions from '../../store/actions';
 /**
  * Основная страница приложения
  */
-function SearchPage ( { loggedIn, openLoginForm, gamesIsLoading, moviesIsLoading, usersIsLoading, searchGame, games, searchMovie, movies, searchUsers, users } ) {
+function SearchPage ( { loggedIn, gamesIsLoading, moviesIsLoading, usersIsLoading, searchGame, games, searchMovie, movies, searchUsers, users } ) {
     let history = useHistory();
     let { query } = useParams();
     const [queryText, setQueryText] = useState("");
@@ -97,7 +97,7 @@ function SearchPage ( { loggedIn, openLoginForm, gamesIsLoading, moviesIsLoading
                             <h1>Результаты поиска</h1>
                                 <CategoriesTab
                                     categories={['Всё', 'Игры', 'Фильмы', 'Пользователи']}
-                                    activeColor='#4527a0' 
+                                    activeColor='#7654de' 
                                     onChangeCategory={(category) => {
                                         setActiveCategory(category);
                                     }}/>
@@ -155,9 +155,6 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = (dispatch) => {
 	return {
-        openLoginForm: () => {
-            dispatch(actions.openLoginForm());
-        },
         searchGame: (query, page) => {
             dispatch(actions.searchGames(query, page));
         },
