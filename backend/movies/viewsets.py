@@ -1,13 +1,17 @@
 import tmdbsimple as tmdb
+from django.core.paginator import Paginator, EmptyPage
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
 from rest_framework import mixins, status
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from movies.models import Movie, UserMovie
-from movies.serializers import UserMovieSerializer
-from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER
+from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer
+from users.models import UserFollow
+from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE
 
 tmdb.API_KEY = 'ebf9e8e8a2be6bba6aacfa5c4c76f698'
 LANGUAGE = 'ru'
@@ -53,6 +57,45 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             user_info = None
 
         return Response({'tmdb': tmdb_movie, 'user_info': user_info})
+
+    @swagger_auto_schema(manual_parameters=[page_param])
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    def friends_info(self, request, *args, **kwargs):
+        try:
+            page = int(request.GET.get('page'))
+        except (ValueError, TypeError):
+            page = DEFAULT_PAGE_NUMBER
+
+        try:
+            page_size = int(request.GET.get('page_size'))
+            if page_size < DEFAULT_PAGE_SIZE:
+                raise ValueError(f'Page size must be more than {DEFAULT_PAGE_SIZE}')
+        except (ValueError, TypeError):
+            page_size = DEFAULT_PAGE_SIZE
+
+        friends_info = []
+
+        try:
+            movie = Movie.objects.get(tmdb_id=kwargs.get('tmdb_id'))
+            user_follow_query = UserFollow.objects.filter(user=request.user)
+
+            for user_follow in user_follow_query:
+                followed_user_movie = UserMovie.objects.filter(user=user_follow.followed_user, movie=movie).first()
+                if followed_user_movie:
+                    serializer = FollowedUserMovieSerializer(followed_user_movie)
+                    friends_info.append(serializer.data)
+
+        except Movie.DoesNotExist:
+            friends_info = []
+
+        paginator = Paginator(friends_info, page_size)
+        try:
+            paginator_page = paginator.page(page)
+        except EmptyPage:
+            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'friends_info': paginator_page.object_list,
+                         'has_next_page': paginator_page.has_next()})
 
     @swagger_auto_schema(request_body=UserMovieSerializer)
     def update(self, request, *args, **kwargs):

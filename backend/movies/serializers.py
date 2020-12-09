@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from movies.models import UserMovie, Movie, MovieLog
+from users.serializers import FollowedUserSerializer
 from utils.serializers import ChoicesField
 
 TYPE_MOVIE = 'movie'
@@ -30,6 +31,15 @@ class ExtendedUserMovieSerializer(UserMovieSerializer):
     class Meta:
         model = UserMovie
         exclude = ('id', 'user')
+
+
+class FollowedUserMovieSerializer(UserMovieSerializer):
+    user = FollowedUserSerializer()
+
+    class Meta:
+        model = UserMovie
+        exclude = ('id', 'movie')
+        depth = 1
 
 
 class MovieLogSerializer(serializers.ModelSerializer):
