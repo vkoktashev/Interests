@@ -1,5 +1,10 @@
+import decimal
 import re
 from difflib import SequenceMatcher
+
+from django.db.models import DecimalField, IntegerField, CharField
+
+from games.models import UserGame
 
 
 def similar(a, b):
@@ -78,10 +83,15 @@ def field_is_changed(choices_dict, field, fields, old_fields, default_int):
         if old_fields is None:
             if fields[field] is None:
                 return False
-            if type(fields[field]) is str and fields[field] == '':
-                return False
-            if type(fields[field]) is int and fields[field] == default_int:
-                return False
+            if isinstance(UserGame._meta.get_field(field), DecimalField):
+                if decimal.Decimal(fields[field]) == 0:
+                    return False
+            elif isinstance(UserGame._meta.get_field(field), IntegerField):
+                if int(fields[field]) == default_int:
+                    return False
+            elif isinstance(UserGame._meta.get_field(field), CharField):
+                if str(fields[field]) == '':
+                    return False
             return True
         elif fields[field] != old_fields[field]:
             return True
