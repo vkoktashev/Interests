@@ -1,16 +1,10 @@
 from rest_framework import serializers
 
-from movies.models import UserMovie, Movie, MovieLog
+from movies.models import UserMovie, MovieLog
 from users.serializers import FollowedUserSerializer
 from utils.serializers import ChoicesField
 
 TYPE_MOVIE = 'movie'
-
-
-class MovieSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Movie
-        exclude = ('id',)
 
 
 class UserMovieSerializer(serializers.ModelSerializer):
@@ -18,19 +12,18 @@ class UserMovieSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserMovie
-        exclude = ('id',)
+        exclude = ('id', 'updated_at')
         extra_kwargs = {
             'user': {'write_only': True},
             'movie': {'write_only': True}
         }
 
 
-class ExtendedUserMovieSerializer(UserMovieSerializer):
-    movie = MovieSerializer()
-
+class MovieStatsSerializer(UserMovieSerializer):
     class Meta:
         model = UserMovie
-        exclude = ('id', 'user')
+        exclude = ('id', 'user', 'updated_at')
+        depth = 1
 
 
 class FollowedUserMovieSerializer(UserMovieSerializer):
@@ -38,7 +31,7 @@ class FollowedUserMovieSerializer(UserMovieSerializer):
 
     class Meta:
         model = UserMovie
-        exclude = ('id', 'movie')
+        exclude = ('id', 'movie', 'updated_at')
         depth = 1
 
 

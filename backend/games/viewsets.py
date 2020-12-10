@@ -2,7 +2,7 @@ from json import JSONDecodeError
 
 from django.core.paginator import Paginator, EmptyPage
 from django.db import IntegrityError
-from django.template.defaultfilters import lower
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
 from rest_framework import status, mixins
@@ -11,17 +11,25 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from games.models import Game, UserGame, rawg
+from games.models import Game, UserGame
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer
 from users.models import UserFollow
-from utils.functions import int_to_hours, translate_hltb_time
-from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE
-
-dict_statuses = dict(UserGame.STATUS_CHOICES)
+from utils.constants import RAWG_UNAVAILABLE, ERROR, WRONG_SLUG, HLTB_UNAVAILABLE, FRIENDS_INFO_RESPONSE_EXAMPLE, \
+    SEARCH_GAMES_RESPONSE_EXAMPLE, RETRIEVE_GAME_RESPONSE_EXAMPLE, rawg
+from utils.functions import int_to_hours, translate_hltb_time, get_page, get_page_size
+from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, page_size_param
 
 
 class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
-    @swagger_auto_schema(manual_parameters=[query_param, page_param])
+    @swagger_auto_schema(manual_parameters=[query_param, page_param, page_size_param],
+                         responses={
+                             status.HTTP_200_OK: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": SEARCH_GAMES_RESPONSE_EXAMPLE
+                                 }
+                             )
+                         })
     def list(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
@@ -29,25 +37,49 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
         try:
             results = rawg.search(query, num_results=page_size, additional_param=f"&page={page}")
         except JSONDecodeError:
-            return Response('Rawg unavailable', status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response(RAWG_UNAVAILABLE, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         games_json = []
         for game in results:
             games_json.append(game.json)
         return Response(games_json)
 
 
-class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
+class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     queryset = UserGame.objects.all()
     serializer_class = UserGameSerializer
     lookup_field = 'slug'
 
+    @swagger_auto_schema(responses={
+        status.HTTP_200_OK: openapi.Response(
+            description=status.HTTP_200_OK,
+            examples={
+                "application/json": RETRIEVE_GAME_RESPONSE_EXAMPLE
+            }
+        ),
+        status.HTTP_404_NOT_FOUND: openapi.Response(
+            description=status.HTTP_404_NOT_FOUND,
+            examples={
+                "application/json": {
+                    ERROR: WRONG_SLUG
+                }
+            }
+        ),
+        status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
+            description=status.HTTP_503_SERVICE_UNAVAILABLE,
+            examples={
+                "application/json": {
+                    ERROR: RAWG_UNAVAILABLE
+                },
+            }
+        )
+    })
     def retrieve(self, request, *args, **kwargs):
         try:
             rawg_game = rawg.get_game(kwargs.get('slug'))
         except KeyError:
-            return Response('Wrong slug', status=status.HTTP_404_NOT_FOUND)
+            return Response({ERROR: WRONG_SLUG}, status=status.HTTP_404_NOT_FOUND)
         except JSONDecodeError:
-            return Response('Rawg unavailable', status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
             results_list = HowLongToBeat(0.9).search(rawg_game.name.replace('’', '\''))
@@ -55,7 +87,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
         except ValueError:
             hltb_game = None
         except ConnectionError:
-            return Response('Hltb connection error, try again', status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response({ERROR: HLTB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
             game = Game.objects.get(rawg_slug=rawg_game.slug)
@@ -72,27 +104,17 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
         return Response({'rawg': rawg_game.json, 'hltb': hltb_game,
                          'user_info': user_info})
 
-    @swagger_auto_schema(manual_parameters=[page_param])
+    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
+                         responses=FRIENDS_INFO_RESPONSE_EXAMPLE)
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_info(self, request, *args, **kwargs):
-        try:
-            page = int(request.GET.get('page'))
-        except (ValueError, TypeError):
-            page = DEFAULT_PAGE_NUMBER
-
-        try:
-            page_size = int(request.GET.get('page_size'))
-            if page_size < DEFAULT_PAGE_SIZE:
-                raise ValueError(f'Page size must be more than {DEFAULT_PAGE_SIZE}')
-        except (ValueError, TypeError):
-            page_size = DEFAULT_PAGE_SIZE
-
-        friends_info = []
+        page = get_page(request.GET.get('page', DEFAULT_PAGE_NUMBER))
+        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
 
         try:
             game = Game.objects.get(rawg_slug=kwargs.get('slug'))
             user_follow_query = UserFollow.objects.filter(user=request.user)
-
+            friends_info = []
             for user_follow in user_follow_query:
                 followed_user_game = UserGame.objects.filter(user=user_follow.followed_user, game=game).first()
                 if followed_user_game:
@@ -106,12 +128,54 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
         try:
             paginator_page = paginator.page(page)
         except EmptyPage:
-            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+            paginator_page = paginator.page(paginator.num_pages)
 
         return Response({'friends_info': paginator_page.object_list,
                          'has_next_page': paginator_page.has_next()})
 
-    @swagger_auto_schema(request_body=UserGameSerializer)
+    @swagger_auto_schema(request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            "status": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                enum=list(dict(UserGame.STATUS_CHOICES).keys()) + list(dict(UserGame.STATUS_CHOICES).values())
+            ),
+            "score": openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                minimum=UserGame._meta.get_field('score').validators[0].limit_value,
+                maximum=UserGame._meta.get_field('score').validators[1].limit_value
+            ),
+            "review": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                maxLength=UserGame._meta.get_field('review').max_length
+
+            ),
+            'spent_time': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                format=openapi.FORMAT_DECIMAL,
+                pattern=r'^\d{0,6}\.\d{1}$'
+            )
+        }
+    ),
+        responses={
+            status.HTTP_404_NOT_FOUND: openapi.Response(
+                description=status.HTTP_404_NOT_FOUND,
+                examples={
+                    "application/json": {
+                        ERROR: WRONG_SLUG
+                    }
+                }
+            ),
+            status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
+                description=status.HTTP_503_SERVICE_UNAVAILABLE,
+                examples={
+                    "application/json": {
+                        ERROR: RAWG_UNAVAILABLE
+                    },
+                }
+            )
+        }
+    )
     def update(self, request, *args, **kwargs):
         try:
             game = Game.objects.get(rawg_slug=kwargs.get('slug'))
@@ -119,9 +183,9 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
             try:
                 rawg_game = rawg.get_game(kwargs.get('slug'))
             except KeyError:
-                return Response('Wrong slug', status=status.HTTP_400_BAD_REQUEST)
+                return Response(WRONG_SLUG, status=status.HTTP_400_BAD_REQUEST)
             except JSONDecodeError:
-                return Response('Rawg unavailable', status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                return Response(RAWG_UNAVAILABLE, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             try:
                 results_list = HowLongToBeat(1.0).search(rawg_game.name)
@@ -129,7 +193,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
             except ValueError:
                 hltb_game = None
             except ConnectionError:
-                return Response('Hltb connection error', status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                return Response(HLTB_UNAVAILABLE, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             try:
                 if hltb_game is not None:
@@ -138,7 +202,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
                 else:
                     game = Game.objects.create(rawg_name=rawg_game.name, rawg_id=rawg_game.id, rawg_slug=rawg_game.slug)
             except IntegrityError:
-                return Response('Wrong slug', status=status.HTTP_400_BAD_REQUEST)
+                return Response(WRONG_SLUG, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
         data.update({'user': request.user.pk,
@@ -147,15 +211,10 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelM
         try:
             user_game = UserGame.objects.get(user=request.user, game=game)
             serializer = self.get_serializer(user_game, data=data)
-            created = False
         except UserGame.DoesNotExist:
             serializer = self.get_serializer(data=data)
-            created = True
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        if created:
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)

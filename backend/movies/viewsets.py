@@ -1,5 +1,6 @@
 import tmdbsimple as tmdb
 from django.core.paginator import Paginator, EmptyPage
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
 from rest_framework import mixins, status
@@ -11,14 +12,23 @@ from rest_framework.viewsets import GenericViewSet
 from movies.models import Movie, UserMovie
 from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer
 from users.models import UserFollow
-from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE
-
-tmdb.API_KEY = 'ebf9e8e8a2be6bba6aacfa5c4c76f698'
-LANGUAGE = 'ru'
+from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, SEARCH_MOVIES_RESPONSE_EXAMPLE, \
+    FRIENDS_INFO_RESPONSE_EXAMPLE, RETRIEVE_MOVIE_RESPONSE_EXAMPLE
+from utils.functions import get_page, get_page_size
+from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, page_size_param
 
 
 class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
-    @swagger_auto_schema(manual_parameters=[query_param, page_param])
+    @swagger_auto_schema(manual_parameters=[query_param, page_param],
+                         responses={
+                             status.HTTP_200_OK: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": SEARCH_MOVIES_RESPONSE_EXAMPLE
+                                 }
+
+                             )
+                         })
     def list(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
@@ -26,7 +36,7 @@ class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
             results = tmdb.Search().movie(query=query, page=page, language=LANGUAGE)
         except HTTPError:
             results = None
-        return Response(results)
+        return Response(results, status=status.HTTP_200_OK)
 
 
 class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -34,6 +44,30 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     serializer_class = UserMovieSerializer
     lookup_field = 'tmdb_id'
 
+    @swagger_auto_schema(responses={
+        status.HTTP_200_OK: openapi.Response(
+            description=status.HTTP_200_OK,
+            examples={
+                "application/json": RETRIEVE_MOVIE_RESPONSE_EXAMPLE
+            }
+        ),
+        status.HTTP_404_NOT_FOUND: openapi.Response(
+            description=status.HTTP_404_NOT_FOUND,
+            examples={
+                "application/json": {
+                    ERROR: MOVIE_NOT_FOUND
+                }
+            }
+        ),
+        status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
+            description=status.HTTP_503_SERVICE_UNAVAILABLE,
+            examples={
+                "application/json": {
+                    ERROR: TMDB_UNAVAILABLE
+                },
+            }
+        )
+    })
     def retrieve(self, request, *args, **kwargs):
         try:
             tmdb_movie = tmdb.Movies(kwargs.get('tmdb_id')).info(language=LANGUAGE)
@@ -43,10 +77,10 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except HTTPError as e:
             error_code = int(e.args[0].split(' ', 1)[0])
             if error_code == 404:
-                return Response({"Movie not found"}, status=status.HTTP_404_NOT_FOUND)
-            return Response({"HTTP error"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                return Response({ERROR: MOVIE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except ConnectionError:
-            return Response({"Connection error"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
             movie = Movie.objects.get(tmdb_id=tmdb_movie['id'])
@@ -58,27 +92,17 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response({'tmdb': tmdb_movie, 'user_info': user_info})
 
-    @swagger_auto_schema(manual_parameters=[page_param])
+    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
+                         responses=FRIENDS_INFO_RESPONSE_EXAMPLE)
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_info(self, request, *args, **kwargs):
-        try:
-            page = int(request.GET.get('page'))
-        except (ValueError, TypeError):
-            page = DEFAULT_PAGE_NUMBER
-
-        try:
-            page_size = int(request.GET.get('page_size'))
-            if page_size < DEFAULT_PAGE_SIZE:
-                raise ValueError(f'Page size must be more than {DEFAULT_PAGE_SIZE}')
-        except (ValueError, TypeError):
-            page_size = DEFAULT_PAGE_SIZE
-
-        friends_info = []
+        page = get_page(request.GET.get('page', DEFAULT_PAGE_NUMBER))
+        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
 
         try:
             movie = Movie.objects.get(tmdb_id=kwargs.get('tmdb_id'))
             user_follow_query = UserFollow.objects.filter(user=request.user)
-
+            friends_info = []
             for user_follow in user_follow_query:
                 followed_user_movie = UserMovie.objects.filter(user=user_follow.followed_user, movie=movie).first()
                 if followed_user_movie:
@@ -97,7 +121,43 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response({'friends_info': paginator_page.object_list,
                          'has_next_page': paginator_page.has_next()})
 
-    @swagger_auto_schema(request_body=UserMovieSerializer)
+    @swagger_auto_schema(request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            "status": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                enum=list(dict(UserMovie.STATUS_CHOICES).keys()) + list(dict(UserMovie.STATUS_CHOICES).values())
+            ),
+            "score": openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                minimum=UserMovie._meta.get_field('score').validators[0].limit_value,
+                maximum=UserMovie._meta.get_field('score').validators[1].limit_value
+            ),
+            "review": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                maxLength=UserMovie._meta.get_field('review').max_length
+            )
+        }
+    ),
+        responses={
+            status.HTTP_404_NOT_FOUND: openapi.Response(
+                description=status.HTTP_404_NOT_FOUND,
+                examples={
+                    "application/json": {
+                        ERROR: MOVIE_NOT_FOUND
+                    }
+                }
+            ),
+            status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
+                description=status.HTTP_503_SERVICE_UNAVAILABLE,
+                examples={
+                    "application/json": {
+                        ERROR: TMDB_UNAVAILABLE
+                    },
+                }
+            )
+        }
+    )
     def update(self, request, *args, **kwargs):
         try:
             movie = Movie.objects.get(tmdb_id=kwargs.get('tmdb_id'))
@@ -107,8 +167,8 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             except HTTPError as e:
                 error_code = int(e.args[0].split(' ', 1)[0])
                 if error_code == 404:
-                    return Response({"Movie not found, check your id"}, status=status.HTTP_404_NOT_FOUND)
-                return Response({"Something went wrong"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                    return Response({ERROR: MOVIE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             movie = Movie.objects.create(imdb_id=tmdb_movie.get('imdb_id'), tmdb_id=tmdb_movie.get('id'),
                                          tmdb_original_name=tmdb_movie.get('original_title'),
@@ -121,15 +181,10 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         try:
             user_movie = UserMovie.objects.get(user=request.user, movie=movie)
             serializer = self.get_serializer(user_movie, data=data)
-            created = False
         except UserMovie.DoesNotExist:
             serializer = self.get_serializer(data=data)
-            created = True
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        if created:
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
