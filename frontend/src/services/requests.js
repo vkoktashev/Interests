@@ -110,7 +110,7 @@ export async function setMovieStatus(token, id, user_info){
  * @param {string} query Поисковый запрос
  * @param {int} page Страница поиска
  */
-export async function searchGames(query, page){
+export async function searchGames(query, page, gamesCount){
     try{
         const res = await axios.get(SEARCH_GAMES_URL, { params : {query: query, page: page} }, 
             { 'headers': { 'Content-Type': 'application/json;charset=UTF-8' } });
@@ -263,6 +263,31 @@ export async function getGameFriends(token, slug, page) {
             data = res.data;
         }else{
             const res = await axios.get(GET_GAME_URL + slug + "/friends_info/", { params : { page: page } }, axiosConfig);
+            data = res.data;
+        }
+        return data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+
+/**
+ * Запрос к бд, получающий информацию об оценках друзей для фильма
+ * @param {string} id id фильма
+ * @param {int} page страница
+ */
+export async function getMovieFriends(token, id, page) {
+    let data;
+    try{
+        if (token){
+            var AuthStr = 'Bearer ' + token;
+            const res = await axios.get(GET_MOVIE_URL + id + "/friends_info/", { params : { page: page } , 'headers': { 'Authorization': AuthStr } });
+            console.log(res);
+            data = res.data;
+        }else{
+            const res = await axios.get(GET_MOVIE_URL + id + "/friends_info/", { params : { page: page } }, axiosConfig);
             data = res.data;
         }
         return data;

@@ -1,7 +1,7 @@
 .movieContentPage {
     padding: 1rem;
-    background-color: #fff;
-    color: rgb(0, 0, 0);
+    background-color: rgb(30, 30, 30);
+    color: rgb(207, 207, 207);
     margin-top: 30px;
     margin-bottom: 30px;
     padding: 0px
@@ -45,4 +45,9 @@
     font-size: 12px;
     text-align: center;
     padding-left: 3px;
+}
+
+.movieFriendsBlock{
+    margin-left: 25px;
+    margin-bottom: 20px;
 }

@@ -60,7 +60,7 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo, currentUserInfo, set
             <MDBContainer>
                 <MDBRow>
                     <MDBCol md="0.5"></MDBCol>
-                    <MDBCol className="searchPage"> 
+                    <MDBCol className="userPage"> 
                         <h1>Информация о пользователе {userInfo.username}</h1>
                         <button 
                             hidden={currentUserInfo.username === userInfo.username}
@@ -72,7 +72,7 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo, currentUserInfo, set
                         </button>
                         <CategoriesTab
                             categories={['Профиль', 'Игры', 'Фильмы', 'Друзья']}
-                            activeColor='#4527a0' 
+                            activeColor='#7654de' 
                             onChangeCategory={(category) => { setActiveCategory(category) }}/>
 
                             <div hidden={activeCategory!=='Профиль'}>

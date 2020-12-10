@@ -5,7 +5,7 @@ function FriendsActivity ( {info} ) {
 
     return(
         <div className="friendsBlock">
-            { info.friends_info.map((friendInfo) => <FriendsActivityRow info={friendInfo}/>) }
+            { info.friends_info.map((friendInfo) => <FriendsActivityRow info={friendInfo} key={friendInfo.updated_at}/>) }
         </div>  
     )
 }

@@ -189,6 +189,24 @@ export function requestMovie(id){
     }
 }
 
+export function requestMovieFriends(id, page){
+    return async(dispatch) => {
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_MOVIE_FRIENDS, true);
+        Requests.getMovieFriends(localStorage.getItem('token'), id, page).then((result) => {
+            if (result != null){
+                dispatch({
+                    type: actionTypes.SET_CONTENT_MOVIE_FRIENDS,
+                    info: result, 
+                });
+            }
+            else{
+                toast.error("Ошибка загрузки логов!");
+            }
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_MOVIE_FRIENDS, false);
+        });
+    }
+}
+
 export function setGameStatus(user_info){
     return async(dispatch, getState) => {
         if (await dispatch(checkAuthorization())){
