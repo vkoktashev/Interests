@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'users',
     'games',
     'movies',
+    'shows'
 ]
 
 MIDDLEWARE = [
@@ -53,7 +54,8 @@ SWAGGER_SETTINGS = {
             'name': 'Authorization',
             'in': 'header',
         }
-    }
+    },
+    'DEFAULT_MODEL_RENDERING': 'example'
 }
 
 SITE_ID = 1

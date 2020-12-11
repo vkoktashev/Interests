@@ -8,7 +8,7 @@ function CategoriesTab( {categories, activeColor, onChangeCategory} ) {
         <div>
             {categories.map((category) => <button className={'categoriesTab'} 
                                             key={category}
-                                            style={{color: (activeCategory === category?activeColor:'#000000')}}
+                                            style={{color: (activeCategory === category?activeColor:'rgb(207, 207, 207)')}}
                                             onClick={()=>{ 
                                                 setActiveCategory(category);
                                                 onChangeCategory(category);
@@ -16,7 +16,7 @@ function CategoriesTab( {categories, activeColor, onChangeCategory} ) {
                                             {category}
                                         </button>) }
             <br/>
-`           <hr style={{ color: activeColor, backgroundColor: '#6C0AAB', height: 2.5,  borderColor : '#6C0AAB', marginTop: "-16px", marginBottom: "-10px" }}/>`
+`           <hr style={{  backgroundColor: activeColor, height: 2.5, marginTop: "-16px", marginBottom: "-10px" }}/>`
         </div>  
     )
 }

@@ -47,7 +47,7 @@ function GameBlock ( {games, stats} ) {
                     columns: gameColumns,
                     rows: games.map((game) => {
                         return {
-                                name: <a className="logRow" href={window.location.origin + '/game/' + game.game.rawg_slug}>{game.game.rawg_name}</a>,
+                                name: <a className="dataTable" href={window.location.origin + '/game/' + game.game.rawg_slug}>{game.game.rawg_name}</a>,
                                 name2: game.game.rawg_name,
                                 status: game.status,
                                 score: game.score,
@@ -81,6 +81,7 @@ function GameBlock ( {games, stats} ) {
                 paginationLabel={["Предыдущая", "Следующая"]}
                 entriesLabel="Показывать игр на странице"
                 searchLabel='Поиск'
+                className='dataTable'
                 />
         </div>  
     )

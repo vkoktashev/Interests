@@ -19,7 +19,7 @@ def create_log(instance, **kwargs):
     game_log_dict = dict(GameLog.ACTION_TYPE_CHOICES)
 
     for field in fields:
-        if field_is_changed(game_log_dict, field, fields, old_fields):
+        if field_is_changed(game_log_dict, field, fields, old_fields, UserGame._meta.get_field('score').get_default()):
             action_type = field
             action_result = fields[field]
             GameLog.objects.create(user=instance.user, game=instance.game,

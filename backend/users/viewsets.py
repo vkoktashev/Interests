@@ -19,7 +19,7 @@ from config.settings import EMAIL_HOST_USER
 from games.models import UserGame, GameLog
 from games.serializers import GameStatsSerializer, GameLogSerializer
 from movies.models import UserMovie, MovieLog
-from movies.serializers import ExtendedUserMovieSerializer, MovieLogSerializer
+from movies.serializers import MovieLogSerializer, MovieStatsSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer
 from utils.functions import similar
 from utils.openapi_params import DEFAULT_PAGE_SIZE, DEFAULT_PAGE_NUMBER, page_param, page_size_param, query_param
@@ -193,7 +193,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         user_movies = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED) \
             .filter(user=user) \
             .order_by('-updated_at')
-        serializer = ExtendedUserMovieSerializer(user_movies, many=True)
+        serializer = MovieStatsSerializer(user_movies, many=True)
         movies = serializer.data
         watched_movies = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_WATCHED)
         stats.update({'movies_count': len(watched_movies),

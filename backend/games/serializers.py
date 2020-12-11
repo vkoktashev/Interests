@@ -1,16 +1,10 @@
 from rest_framework import serializers
 
-from games.models import UserGame, Game, GameLog
+from games.models import UserGame, GameLog
 from users.serializers import FollowedUserSerializer
 from utils.serializers import ChoicesField
 
 TYPE_GAME = 'game'
-
-
-class GameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Game
-        exclude = ('id',)
 
 
 class UserGameSerializer(serializers.ModelSerializer):
@@ -18,7 +12,7 @@ class UserGameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserGame
-        exclude = ('id',)
+        exclude = ('id', 'updated_at')
         extra_kwargs = {
             'user': {'write_only': True},
             'game': {'write_only': True}
@@ -28,7 +22,7 @@ class UserGameSerializer(serializers.ModelSerializer):
 class GameStatsSerializer(UserGameSerializer):
     class Meta:
         model = UserGame
-        exclude = ('id', 'user')
+        exclude = ('id', 'user', 'updated_at')
         depth = 1
 
 
@@ -37,7 +31,7 @@ class FollowedUserGameSerializer(UserGameSerializer):
 
     class Meta:
         model = UserGame
-        exclude = ('id', 'game')
+        exclude = ('id', 'game', 'updated_at')
         depth = 1
 
 

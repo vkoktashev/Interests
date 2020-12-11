@@ -1,6 +1,6 @@
 .categoriesTab{
-  background-color: rgb(255, 255, 255);
-  color: black;
+  background-color: rgb(30, 30, 30);
+  color:rgb(207, 207, 207);
   border: none;
   padding: 0px 20px 0px 0px;
   text-align: left;
@@ -58,7 +58,7 @@
   padding: 10px;
   text-align: center;
   vertical-align: top;
-  color: #fff;
+  color:rgb(207, 207, 207);
   font-weight: 200;
   background-color: #333333;
   width: 175px;
@@ -67,4 +67,58 @@
   margin: 0;
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
+}
+
+.friendsBlock{
+  display: flex;
+  flex-direction: row;
+}
+
+.fActivityBlock{
+  display: inline-flex;
+  margin-bottom: 0px;
+  margin-top: 10px;
+  margin-right: 10px;
+  background-color: rgb(43, 43, 43);
+  color: rgb(199, 199, 199);
+  vertical-align: top;
+  width: 550px;
+  border-radius: 5px;
+  padding-bottom: 10px;
+}
+
+.fActivityUser{
+  display: inline-block;
+  padding-top: 10px;
+  padding-left: 10px;
+  margin-left: 0px;
+  margin-right: 13px;
+  vertical-align: top;
+  font-weight: 400;
+}
+
+.fActivityInfo{
+  display: inline-block;
+  margin-bottom: 0px;
+  margin-top: 0px;
+  padding-top: 12px;
+}
+
+.fActivityInfoText{
+    margin-bottom: 5px;
+}
+
+#reviewInput{
+  color: rgb(207, 207, 207);
+  background-color: rgb(30, 30, 30);
+}
+
+#spentTimeInput{
+  color: rgb(207, 207, 207);
+  background-color: rgb(30, 30, 30);
+}
+
+.md-form label.active {
+  color: rgb(207, 207, 207) !important;
+  background-color: rgb(30, 30, 30) !important;
 }

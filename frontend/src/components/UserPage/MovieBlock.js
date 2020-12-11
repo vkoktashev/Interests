@@ -42,7 +42,7 @@ function MovieBlock ( {movies, stats} ) {
                 columns: movieColumns,
                 rows: movies.map((movie) => {
                     return {
-                            name: <a className="logRow" href={window.location.origin + '/movie/' + movie.movie.tmdb_id}>{movie.movie.tmdb_name}</a>,
+                            name: <a className="dataTable" href={window.location.origin + '/movie/' + movie.movie.tmdb_id}>{movie.movie.tmdb_name}</a>,
                             name2: movie.movie.tmdb_name,
                             status: movie.status,
                             score: movie.score,
