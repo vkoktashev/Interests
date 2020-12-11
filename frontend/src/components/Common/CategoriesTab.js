@@ -16,7 +16,7 @@ function CategoriesTab( {categories, activeColor, onChangeCategory} ) {
                                             {category}
                                         </button>) }
             <br/>
-`           <hr style={{  backgroundColor: activeColor, height: 2.5, marginTop: "-16px", marginBottom: "-10px" }}/>`
+           <hr style={{  backgroundColor: activeColor, height: 2.5, marginTop: "-16px", marginBottom: "-10px" }}/>`
         </div>  
     )
 }
