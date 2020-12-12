@@ -17,9 +17,11 @@ function ConfirmPage ( {confirmEmailRequest} )
 
 	useEffect(
 		() => {
+			alert('вызвал')
 			confirmEmailRequest(uid64, token);
 		},
-		[confirmEmailRequest, token, uid64]
+		// eslint-disable-next-line
+		[]
 	);
 	
     return (
