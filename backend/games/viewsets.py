@@ -82,7 +82,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
-            results_list = HowLongToBeat(0.9).search(rawg_game.name.replace('’', '\''))
+            results_list = HowLongToBeat(0.9).search(rawg_game.name.replace('’', '\''), similarity_case_sensitive=False)
             hltb_game = max(results_list, key=lambda element: element.similarity).__dict__
         except ValueError:
             hltb_game = None
@@ -189,7 +189,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             try:
-                results_list = HowLongToBeat(1.0).search(rawg_game.name)
+                results_list = HowLongToBeat(0.9).search(rawg_game.name.replace('’', '\''),
+                                                         similarity_case_sensitive=False)
                 hltb_game = max(results_list, key=lambda element: element.similarity)
             except ValueError:
                 hltb_game = None
