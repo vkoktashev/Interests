@@ -116,7 +116,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         try:
             paginator_page = paginator.page(page)
         except EmptyPage:
-            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+            paginator_page = paginator.page(paginator.num_pages)
 
         return Response({'friends_info': paginator_page.object_list,
                          'has_next_page': paginator_page.has_next()})
