@@ -21,9 +21,11 @@ from games.serializers import GameStatsSerializer, GameLogSerializer
 from movies.models import UserMovie, MovieLog
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer
-from utils.constants import DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE
+from utils.constants import DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, USER_SIGNUP_400_EXAMPLE, \
+    USER_SIGNUP_200_EXAMPLE, ERROR, WRONG_URL, USER_LOG_200_EXAMPLE, ID_VALUE_ERROR, USER_DOES_NOT_EXIST, \
+    USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE
 from utils.functions import similar
-from utils.openapi_params import page_param, page_size_param, query_param
+from utils.openapi_params import page_param, page_size_param, query_param, uid64_param, token_param, reset_token_param
 from .models import User, UserFollow, UserLog, UserPasswordToken
 from .tokens import account_activation_token
 
@@ -32,7 +34,21 @@ MINUTES_IN_HOUR = 60
 
 
 class AuthViewSet(GenericViewSet):
-    @swagger_auto_schema(request_body=UserSerializer)
+    @swagger_auto_schema(request_body=UserSerializer,
+                         responses={
+                             status.HTTP_200_OK: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": USER_SIGNUP_200_EXAMPLE
+                                 }
+                             ),
+                             status.HTTP_400_BAD_REQUEST: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": USER_SIGNUP_400_EXAMPLE
+                                 }
+                             )
+                         })
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def signup(self, request):
         serializer = UserSerializer(data=request.data)
@@ -49,17 +65,20 @@ class AuthViewSet(GenericViewSet):
         print(activation_link)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @swagger_auto_schema(request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            'uid64': openapi.Schema(type=openapi.TYPE_STRING, description='Зашифрованный первичный ключ пользователя'),
-            'token': openapi.Schema(type=openapi.TYPE_STRING, description='Специальный токен для подтверждения'),
-        }
-    ))
+    @swagger_auto_schema(manual_parameters=[uid64_param, token_param],
+                         responses={
+                             status.HTTP_200_OK: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": None
+                                 }
+                             )
+                         }
+                         )
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
-    def confirm_email(self, request):
+    def confirm_email(self, request, *args, **kwargs):
         try:
-            uid = force_text(urlsafe_base64_decode(request.data.get('uid64')))
+            uid = force_text(urlsafe_base64_decode(kwargs.get('uid64')))
             user = User.objects.get(pk=uid)
         except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist):
             user = None
@@ -69,27 +88,39 @@ class AuthViewSet(GenericViewSet):
             user.save()
             return Response(status=status.HTTP_200_OK)
         else:
-            return Response("Неверная ссылка!", status=status.HTTP_400_BAD_REQUEST)
+            return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
-    @swagger_auto_schema(manual_parameters=[page_param, page_size_param])
+    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
+                         responses={
+                             status.HTTP_200_OK: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": USER_LOG_200_EXAMPLE
+                                 }
+                             ),
+                             status.HTTP_400_BAD_REQUEST: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": {ERROR: ID_VALUE_ERROR}
+                                 }
+                             )
+                         })
     @action(detail=True, methods=['get'])
     def log(self, request, *args, **kwargs):
         try:
             user_id = int(kwargs.get('pk'))
         except ValueError:
-            return Response('Wrong id, must be integer', status=status.HTTP_400_BAD_REQUEST)
+            return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             user = User.objects.get(pk=user_id)
         except User.DoesNotExist:
-            return Response('User does not exist', status=status.HTTP_400_BAD_REQUEST)
+            return Response({ERROR: USER_DOES_NOT_EXIST}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             page_size = int(request.GET.get('page_size'))
-            if page_size < DEFAULT_PAGE_SIZE:
-                raise ValueError(f'Page size must be more than {DEFAULT_PAGE_SIZE}')
         except (ValueError, TypeError):
             page_size = DEFAULT_PAGE_SIZE
 
@@ -116,23 +147,35 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response({'log': results,
                          'has_next_page': paginator_page.has_next()})
 
-    @swagger_auto_schema(manual_parameters=[page_param])
+    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
+                         responses={
+                             status.HTTP_200_OK: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": USER_LOG_200_EXAMPLE
+                                 }
+                             ),
+                             status.HTTP_400_BAD_REQUEST: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": {ERROR: ID_VALUE_ERROR}
+                                 }
+                             )
+                         })
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_log(self, request, *args, **kwargs):
         try:
             user_id = int(kwargs.get('pk'))
         except ValueError:
-            return Response('Wrong id, must be integer', status=status.HTTP_400_BAD_REQUEST)
+            return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             user = User.objects.get(pk=user_id)
         except User.DoesNotExist:
-            return Response('User does not exist', status=status.HTTP_400_BAD_REQUEST)
+            return Response({ERROR: USER_DOES_NOT_EXIST}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             page_size = int(request.GET.get('page_size'))
-            if page_size < DEFAULT_PAGE_SIZE:
-                raise ValueError(f'Page size must be more than {DEFAULT_PAGE_SIZE}')
         except (ValueError, TypeError):
             page_size = DEFAULT_PAGE_SIZE
 
@@ -160,16 +203,31 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response({'log': results,
                          'has_next_page': paginator_page.has_next()})
 
+    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
+                         responses={
+                             status.HTTP_200_OK: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": USER_RETRIEVE_200_EXAMPLE
+                                 }
+                             ),
+                             status.HTTP_400_BAD_REQUEST: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": {ERROR: ID_VALUE_ERROR}
+                                 }
+                             )
+                         })
     def retrieve(self, request, *args, **kwargs):
         try:
             user_id = int(kwargs.get('pk'))
         except ValueError:
-            return Response('Wrong id, must be integer', status=status.HTTP_400_BAD_REQUEST)
+            return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             user = User.objects.get(pk=user_id)
         except User.DoesNotExist:
-            return Response('User does not exist', status=status.HTTP_400_BAD_REQUEST)
+            return Response({ERROR: USER_DOES_NOT_EXIST}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             user_is_followed = UserFollow.objects.get(user=request.user, followed_user=user).is_following
@@ -208,13 +266,38 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                          'followed_users': followed_users,
                          'games': games, 'movies': movies, 'stats': stats})
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "is_following": openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN
+                )
+            }
+        ),
+        responses={
+            status.HTTP_200_OK: openapi.Response(
+                description=status.HTTP_200_OK,
+                examples={
+                    "application/json": {
+                        "is_following": True,
+                        "followed_user": 0
+                    }
+                }
+            ),
+            status.HTTP_400_BAD_REQUEST: openapi.Response(
+                description=status.HTTP_200_OK,
+                examples={
+                    "application/json": {ERROR: ID_VALUE_ERROR}
+                }
+            )
+        })
     @action(detail=True, methods=['put'])
-    @swagger_auto_schema(request_body=UserFollowSerializer)
     def follow(self, request, *args, **kwargs):
         try:
             user_id = int(kwargs.get('pk'))
         except ValueError:
-            return Response('Wrong id, must be integer', status=status.HTTP_400_BAD_REQUEST)
+            return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
         data.update({'user': request.user.pk, 'followed_user': user_id})
@@ -235,17 +318,38 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         else:
             return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "email": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    format=openapi.FORMAT_EMAIL
+                )
+            }
+        ),
+        responses={
+            status.HTTP_200_OK: openapi.Response(
+                description=status.HTTP_200_OK,
+                examples={
+                    "application/json": None
+                }
+            ),
+            status.HTTP_400_BAD_REQUEST: openapi.Response(
+                description=status.HTTP_200_OK,
+                examples={
+                    "application/json": {ERROR: USER_DOES_NOT_EXIST}
+                }
+            )
+        })
     @action(detail=False, methods=['put'], permission_classes=[AllowAny])
     def password_reset(self, request, *args, **kwargs):
-        try:
-            email = request.data.get('email')
-        except ValueError:
-            return Response('Wrong email, must be integer', status=status.HTTP_400_BAD_REQUEST)
+        email = request.data.get('email')
 
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            return Response('Wrong user, must be integer', status=status.HTTP_400_BAD_REQUEST)
+            return Response({ERROR: USER_DOES_NOT_EXIST}, status=status.HTTP_400_BAD_REQUEST)
 
         reset_token = secrets.token_urlsafe()
 
@@ -253,10 +357,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             user_password_token = UserPasswordToken.objects.get(user=user)
             user_password_token.reset_token = reset_token
             user_password_token.is_active = True
-            created = False
         except UserPasswordToken.DoesNotExist:
             user_password_token = UserPasswordToken.objects.create(user=user, reset_token=reset_token)
-            created = True
 
         user_password_token.save()
 
@@ -269,27 +371,24 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         # email.send()
         print(activation_link)
 
-        if created:
-            return Response(status=status.HTTP_201_CREATED)
-        else:
-            return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            'reset_token': openapi.Schema(type=openapi.TYPE_STRING,
-                                          description='Специальный токен для восстановления'),
-        }
-    ))
+    @swagger_auto_schema(manual_parameters=[reset_token_param],
+                         request_body=openapi.Schema(
+                             type=openapi.TYPE_OBJECT,
+                             properties={
+                                 'password': openapi.Schema(type=openapi.TYPE_STRING),
+                             }
+                         ))
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
     def confirm_password_reset(self, request, *args, **kwargs):
         try:
-            reset_token = force_text(urlsafe_base64_decode(request.GET.get('reset_token')))
+            reset_token = force_text(urlsafe_base64_decode(kwargs.get('reset_token')))
             password = request.data.get('password')
             user_password_token = UserPasswordToken.objects.get(reset_token=reset_token)
             user = User.objects.get(id=user_password_token.user.id)
         except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist, UserPasswordToken.DoesNotExist):
-            return Response("Неверная ссылка!", status=status.HTTP_400_BAD_REQUEST)
+            return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
 
         if user_password_token.is_active:
             serializer = UserSerializer(instance=user, data={'password': password}, partial=True)
@@ -299,7 +398,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             serializer.save()
             return Response(data=serializer.data, status=status.HTTP_200_OK)
         else:
-            return Response("Неверная ссылка!", status=status.HTTP_400_BAD_REQUEST)
+            return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def serialize_logs(logs):
@@ -316,7 +415,15 @@ def serialize_logs(logs):
 
 
 class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):
-    @swagger_auto_schema(manual_parameters=[query_param])
+    @swagger_auto_schema(manual_parameters=[query_param],
+                         responses={
+                             status.HTTP_200_OK: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": USER_SEARCH_200_EXAMPLE
+                                 }
+                             )
+                         })
     def list(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
         results = []

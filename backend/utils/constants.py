@@ -12,16 +12,20 @@ DEFAULT_PAGE_SIZE = 5
 
 # errors
 ERROR = 'error'
-RAWG_UNAVAILABLE = 'Rawg unavailable'
-WRONG_SLUG = 'Wrong slug'
-HLTB_UNAVAILABLE = 'Hltb unavailable'
-MOVIE_NOT_FOUND = "Movie not found"
-TMDB_UNAVAILABLE = "Tmdb unavailable"
-USER_EMAIL_EXISTS = 'A user with that email already exists'
+RAWG_UNAVAILABLE = 'Rawg unavailable.'
+WRONG_SLUG = 'Wrong slug.'
+HLTB_UNAVAILABLE = 'Hltb unavailable.'
+MOVIE_NOT_FOUND = "Movie not found."
+TMDB_UNAVAILABLE = "Tmdb unavailable."
+USER_EMAIL_EXISTS = 'A user with that email already exists.'
 USER_USERNAME_EXISTS = 'A user with that username already exists.'
+USERNAME_CONTAINS_ILLEGAL_CHARACTERS = 'Username contains illegal characters.'
+WRONG_URL = 'Wrong URL.'
+ID_VALUE_ERROR = 'Wrong id, must be integer.'
+USER_DOES_NOT_EXIST = 'User does not exist.'
 
 # response examples
-SEARCH_GAMES_RESPONSE_EXAMPLE = [
+GAMES_SEARCH_200_EXAMPLE = [
     {
         "id": 0,
         "slug": "string",
@@ -61,7 +65,7 @@ SEARCH_GAMES_RESPONSE_EXAMPLE = [
         ]
     }
 ]
-FRIENDS_INFO_RESPONSE_EXAMPLE = {
+FRIENDS_INFO_200_EXAMPLE = {
     status.HTTP_200_OK: openapi.Response(
         description=status.HTTP_200_OK,
         examples={
@@ -83,7 +87,7 @@ FRIENDS_INFO_RESPONSE_EXAMPLE = {
         }
     )
 }
-SEARCH_MOVIES_RESPONSE_EXAMPLE = {
+MOVIES_SEARCH_200_EXAMPLE = {
     "page": 1,
     "results": [
         {
@@ -110,7 +114,7 @@ SEARCH_MOVIES_RESPONSE_EXAMPLE = {
     "total_results": 1,
     "total_pages": 1
 }
-RETRIEVE_GAME_RESPONSE_EXAMPLE = {
+GAME_RETRIEVE_200_EXAMPLE = {
     "rawg": {
         "id": 0,
         "slug": "string",
@@ -202,7 +206,7 @@ RETRIEVE_GAME_RESPONSE_EXAMPLE = {
         "spent_time": "0.0"
     }
 }
-RETRIEVE_MOVIE_RESPONSE_EXAMPLE = {
+MOVIE_RETRIEVE_200_EXAMPLE = {
     "tmdb": {
         "adult": False,
         "backdrop_path": "/fCayJrkfRaCRCTh8GqN30f8oyQF.jpg",
@@ -325,3 +329,85 @@ RETRIEVE_MOVIE_RESPONSE_EXAMPLE = {
         "review": "string",
     }
 }
+USER_SIGNUP_200_EXAMPLE = {
+    "id": 0,
+    "username": "string"
+}
+USER_SIGNUP_400_EXAMPLE = {
+    "username": [
+        USER_USERNAME_EXISTS
+    ],
+    "email": [
+        USER_EMAIL_EXISTS
+    ]
+}
+USER_LOG_200_EXAMPLE = {
+    "log": [
+        {
+            "id": 0,
+            "user": "string",
+            "user_id": 0,
+            "type": "string",
+            "target": "string",
+            "target_id": "string",
+            "created": "2020-12-14T17:31:40.370669Z",
+            "action_result": "0",
+            "action_type": "string"
+        }
+    ],
+    "has_next_page": True
+}
+USER_RETRIEVE_200_EXAMPLE = {
+    "id": 0,
+    "username": "string",
+    "is_followed": False,
+    "followed_users": [
+        {
+            "id": 0,
+            "username": "string"
+        }
+    ],
+    "games": [
+        {
+            "status": "string",
+            "score": 0,
+            "review": "string",
+            "spent_time": "0.0",
+            "game": {
+                "id": 0,
+                "rawg_name": "string",
+                "rawg_slug": "string",
+                "rawg_id": 0,
+                "hltb_name": "string",
+                "hltb_id": 0
+            }
+        },
+    ],
+    "movies": [
+        {
+            "status": "string",
+            "score": 0,
+            "review": "string",
+            "movie": {
+                "id": 0,
+                "imdb_id": "string",
+                "tmdb_id": 0,
+                "tmdb_original_name": "string",
+                "tmdb_name": "string",
+                "tmdb_runtime": 0
+            }
+        },
+    ],
+    "stats": {
+        "games_count": 0,
+        "games_total_spent_time": 0.0,
+        "movies_count": 0,
+        "movies_total_spent_time": 0.0
+    }
+}
+USER_SEARCH_200_EXAMPLE = [
+    {
+        "id": 0,
+        "username": "string"
+    }
+]

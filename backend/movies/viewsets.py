@@ -12,8 +12,8 @@ from rest_framework.viewsets import GenericViewSet
 from movies.models import Movie, UserMovie
 from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer
 from users.models import UserFollow
-from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, SEARCH_MOVIES_RESPONSE_EXAMPLE, \
-    FRIENDS_INFO_RESPONSE_EXAMPLE, RETRIEVE_MOVIE_RESPONSE_EXAMPLE
+from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, MOVIES_SEARCH_200_EXAMPLE, \
+    FRIENDS_INFO_200_EXAMPLE, MOVIE_RETRIEVE_200_EXAMPLE
 from utils.functions import get_page, get_page_size
 from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, page_size_param
 
@@ -24,7 +24,7 @@ class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
                              status.HTTP_200_OK: openapi.Response(
                                  description=status.HTTP_200_OK,
                                  examples={
-                                     "application/json": SEARCH_MOVIES_RESPONSE_EXAMPLE
+                                     "application/json": MOVIES_SEARCH_200_EXAMPLE
                                  }
 
                              )
@@ -48,7 +48,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         status.HTTP_200_OK: openapi.Response(
             description=status.HTTP_200_OK,
             examples={
-                "application/json": RETRIEVE_MOVIE_RESPONSE_EXAMPLE
+                "application/json": MOVIE_RETRIEVE_200_EXAMPLE
             }
         ),
         status.HTTP_404_NOT_FOUND: openapi.Response(
@@ -93,7 +93,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response({'tmdb': tmdb_movie, 'user_info': user_info})
 
     @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
-                         responses=FRIENDS_INFO_RESPONSE_EXAMPLE)
+                         responses=FRIENDS_INFO_200_EXAMPLE)
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_info(self, request, *args, **kwargs):
         page = get_page(request.GET.get('page', DEFAULT_PAGE_NUMBER))

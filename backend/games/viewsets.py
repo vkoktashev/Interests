@@ -14,8 +14,8 @@ from rest_framework.viewsets import GenericViewSet
 from games.models import Game, UserGame
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer
 from users.models import UserFollow
-from utils.constants import RAWG_UNAVAILABLE, ERROR, WRONG_SLUG, HLTB_UNAVAILABLE, FRIENDS_INFO_RESPONSE_EXAMPLE, \
-    SEARCH_GAMES_RESPONSE_EXAMPLE, RETRIEVE_GAME_RESPONSE_EXAMPLE, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE
+from utils.constants import RAWG_UNAVAILABLE, ERROR, WRONG_SLUG, HLTB_UNAVAILABLE, FRIENDS_INFO_200_EXAMPLE, \
+    GAMES_SEARCH_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE
 from utils.functions import int_to_hours, translate_hltb_time, get_page, get_page_size
 from utils.openapi_params import query_param, page_param, page_size_param
 
@@ -26,7 +26,7 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
                              status.HTTP_200_OK: openapi.Response(
                                  description=status.HTTP_200_OK,
                                  examples={
-                                     "application/json": SEARCH_GAMES_RESPONSE_EXAMPLE
+                                     "application/json": GAMES_SEARCH_200_EXAMPLE
                                  }
                              )
                          })
@@ -53,7 +53,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         status.HTTP_200_OK: openapi.Response(
             description=status.HTTP_200_OK,
             examples={
-                "application/json": RETRIEVE_GAME_RESPONSE_EXAMPLE
+                "application/json": GAME_RETRIEVE_200_EXAMPLE
             }
         ),
         status.HTTP_404_NOT_FOUND: openapi.Response(
@@ -105,7 +105,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                          'user_info': user_info})
 
     @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
-                         responses=FRIENDS_INFO_RESPONSE_EXAMPLE)
+                         responses=FRIENDS_INFO_200_EXAMPLE)
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_info(self, request, *args, **kwargs):
         page = get_page(request.GET.get('page', DEFAULT_PAGE_NUMBER))
@@ -133,30 +133,31 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response({'friends_info': paginator_page.object_list,
                          'has_next_page': paginator_page.has_next()})
 
-    @swagger_auto_schema(request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            "status": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                enum=list(dict(UserGame.STATUS_CHOICES).keys()) + list(dict(UserGame.STATUS_CHOICES).values())
-            ),
-            "score": openapi.Schema(
-                type=openapi.TYPE_INTEGER,
-                minimum=UserGame._meta.get_field('score').validators[0].limit_value,
-                maximum=UserGame._meta.get_field('score').validators[1].limit_value
-            ),
-            "review": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                maxLength=UserGame._meta.get_field('review').max_length
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "status": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    enum=list(dict(UserGame.STATUS_CHOICES).keys()) + list(dict(UserGame.STATUS_CHOICES).values())
+                ),
+                "score": openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    minimum=UserGame._meta.get_field('score').validators[0].limit_value,
+                    maximum=UserGame._meta.get_field('score').validators[1].limit_value
+                ),
+                "review": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    maxLength=UserGame._meta.get_field('review').max_length
 
-            ),
-            'spent_time': openapi.Schema(
-                type=openapi.TYPE_STRING,
-                format=openapi.FORMAT_DECIMAL,
-                pattern=r'^\d{0,6}\.\d{1}$'
-            )
-        }
-    ),
+                ),
+                'spent_time': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    format=openapi.FORMAT_DECIMAL,
+                    pattern=r'^\d{0,6}\.\d{1}$'
+                )
+            }
+        ),
         responses={
             status.HTTP_404_NOT_FOUND: openapi.Response(
                 description=status.HTTP_404_NOT_FOUND,
