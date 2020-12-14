@@ -183,9 +183,9 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             try:
                 rawg_game = rawg.get_game(kwargs.get('slug'))
             except KeyError:
-                return Response(WRONG_SLUG, status=status.HTTP_400_BAD_REQUEST)
+                return Response({ERROR: WRONG_SLUG}, status=status.HTTP_400_BAD_REQUEST)
             except JSONDecodeError:
-                return Response(RAWG_UNAVAILABLE, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             try:
                 results_list = HowLongToBeat(1.0).search(rawg_game.name)
@@ -193,7 +193,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             except ValueError:
                 hltb_game = None
             except ConnectionError:
-                return Response(HLTB_UNAVAILABLE, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                return Response({ERROR: HLTB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             try:
                 if hltb_game is not None:
@@ -202,7 +202,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 else:
                     game = Game.objects.create(rawg_name=rawg_game.name, rawg_id=rawg_game.id, rawg_slug=rawg_game.slug)
             except IntegrityError:
-                return Response(WRONG_SLUG, status=status.HTTP_400_BAD_REQUEST)
+                return Response({ERROR: WRONG_SLUG}, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
         data.update({'user': request.user.pk,
