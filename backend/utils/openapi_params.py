@@ -1,7 +1,6 @@
 from drf_yasg import openapi
 
-DEFAULT_PAGE_NUMBER = 1
-DEFAULT_PAGE_SIZE = 5
+from utils.constants import DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE
 
 query_param = openapi.Parameter('query', openapi.IN_QUERY, description="Поисковый запрос", type=openapi.TYPE_STRING)
 page_param = openapi.Parameter('page', openapi.IN_QUERY, description="Номер страницы",

@@ -7,6 +7,9 @@ rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
 tmdb.API_KEY = 'ebf9e8e8a2be6bba6aacfa5c4c76f698'
 LANGUAGE = 'ru'
 
+DEFAULT_PAGE_NUMBER = 1
+DEFAULT_PAGE_SIZE = 5
+
 # errors
 ERROR = 'error'
 RAWG_UNAVAILABLE = 'Rawg unavailable'
@@ -14,6 +17,8 @@ WRONG_SLUG = 'Wrong slug'
 HLTB_UNAVAILABLE = 'Hltb unavailable'
 MOVIE_NOT_FOUND = "Movie not found"
 TMDB_UNAVAILABLE = "Tmdb unavailable"
+USER_EMAIL_EXISTS = 'A user with that email already exists'
+USER_USERNAME_EXISTS = 'A user with that username already exists.'
 
 # response examples
 SEARCH_GAMES_RESPONSE_EXAMPLE = [

@@ -21,8 +21,9 @@ from games.serializers import GameStatsSerializer, GameLogSerializer
 from movies.models import UserMovie, MovieLog
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer
+from utils.constants import DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE
 from utils.functions import similar
-from utils.openapi_params import DEFAULT_PAGE_SIZE, DEFAULT_PAGE_NUMBER, page_param, page_size_param, query_param
+from utils.openapi_params import page_param, page_size_param, query_param
 from .models import User, UserFollow, UserLog, UserPasswordToken
 from .tokens import account_activation_token
 

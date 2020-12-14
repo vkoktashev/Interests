@@ -15,9 +15,9 @@ from games.models import Game, UserGame
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer
 from users.models import UserFollow
 from utils.constants import RAWG_UNAVAILABLE, ERROR, WRONG_SLUG, HLTB_UNAVAILABLE, FRIENDS_INFO_RESPONSE_EXAMPLE, \
-    SEARCH_GAMES_RESPONSE_EXAMPLE, RETRIEVE_GAME_RESPONSE_EXAMPLE, rawg
+    SEARCH_GAMES_RESPONSE_EXAMPLE, RETRIEVE_GAME_RESPONSE_EXAMPLE, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE
 from utils.functions import int_to_hours, translate_hltb_time, get_page, get_page_size
-from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, page_size_param
+from utils.openapi_params import query_param, page_param, page_size_param
 
 
 class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):

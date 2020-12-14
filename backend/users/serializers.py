@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from users.models import User, UserFollow, UserLog
+from utils.constants import USER_USERNAME_EXISTS, USER_EMAIL_EXISTS
 
 TYPE_USER = 'user'
 
@@ -10,12 +11,12 @@ TYPE_USER = 'user'
 class UserSerializer(serializers.ModelSerializer):
     def validate_email(self, value):
         if User.objects.filter(email__iexact=value).exists():
-            raise serializers.ValidationError('A user with that email already exists.')
+            raise serializers.ValidationError(USER_EMAIL_EXISTS)
         return value
 
     def validate_username(self, value):
         if User.objects.filter(username__iexact=value).exists():
-            raise serializers.ValidationError('A user with that username already exists.')
+            raise serializers.ValidationError(USER_USERNAME_EXISTS)
         return value
 
     def create(self, validated_data):
