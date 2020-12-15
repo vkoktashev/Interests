@@ -1,9 +1,10 @@
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from users.models import User, UserFollow, UserLog
-from utils.constants import USER_USERNAME_EXISTS, USER_EMAIL_EXISTS
+from utils.constants import USER_USERNAME_EXISTS, USER_EMAIL_EXISTS, USERNAME_CONTAINS_ILLEGAL_CHARACTERS
 
 TYPE_USER = 'user'
 
@@ -17,6 +18,12 @@ class UserSerializer(serializers.ModelSerializer):
     def validate_username(self, value):
         if User.objects.filter(username__iexact=value).exists():
             raise serializers.ValidationError(USER_USERNAME_EXISTS)
+        if '@' in value:
+            raise serializers.ValidationError(USERNAME_CONTAINS_ILLEGAL_CHARACTERS)
+        return value
+
+    def validate_password(self, value):
+        validate_password(value)
         return value
 
     def create(self, validated_data):
