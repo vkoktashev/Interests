@@ -78,12 +78,12 @@ class AuthViewSet(GenericViewSet):
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
     def confirm_email(self, request, *args, **kwargs):
         try:
-            uid = force_text(urlsafe_base64_decode(kwargs.get('uid64')))
+            uid = force_text(urlsafe_base64_decode(request.GET.get('uid64')))
             user = User.objects.get(pk=uid)
         except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist):
             user = None
 
-        if user is not None and account_activation_token.check_token(user, request.data.get('token')):
+        if user is not None and account_activation_token.check_token(user, request.GET.get('token')):
             user.is_active = True
             user.save()
             return Response(status=status.HTTP_200_OK)
@@ -383,7 +383,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
     def confirm_password_reset(self, request, *args, **kwargs):
         try:
-            reset_token = force_text(urlsafe_base64_decode(kwargs.get('reset_token')))
+            reset_token = force_text(urlsafe_base64_decode(request.GET.get('reset_token')))
             password = request.data.get('password')
             user_password_token = UserPasswordToken.objects.get(reset_token=reset_token)
             user = User.objects.get(id=user_password_token.user.id)
