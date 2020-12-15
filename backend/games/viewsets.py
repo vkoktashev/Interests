@@ -33,7 +33,7 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
     def list(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
-        page_size = request.GET.get('page_size', DEFAULT_PAGE_SIZE)
+        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
         try:
             results = rawg.search(query, num_results=page_size, additional_param=f"&page={page}")
         except JSONDecodeError:
