@@ -14,8 +14,8 @@ from rest_framework.viewsets import GenericViewSet
 from games.models import Game, UserGame
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer
 from users.models import UserFollow
-from utils.constants import RAWG_UNAVAILABLE, ERROR, WRONG_SLUG, HLTB_UNAVAILABLE, FRIENDS_INFO_200_EXAMPLE, \
-    GAMES_SEARCH_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE
+from utils.constants import RAWG_UNAVAILABLE, ERROR, HLTB_UNAVAILABLE, FRIENDS_INFO_200_EXAMPLE, \
+    GAMES_SEARCH_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, GAME_NOT_FOUND
 from utils.functions import int_to_hours, translate_hltb_time, get_page_size
 from utils.openapi_params import query_param, page_param, page_size_param
 
@@ -60,7 +60,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             description=status.HTTP_404_NOT_FOUND,
             examples={
                 "application/json": {
-                    ERROR: WRONG_SLUG
+                    ERROR: GAME_NOT_FOUND
                 }
             }
         ),
@@ -77,7 +77,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         try:
             rawg_game = rawg.get_game(kwargs.get('slug'))
         except KeyError:
-            return Response({ERROR: WRONG_SLUG}, status=status.HTTP_404_NOT_FOUND)
+            return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
         except JSONDecodeError:
             return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -160,7 +160,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 description=status.HTTP_404_NOT_FOUND,
                 examples={
                     "application/json": {
-                        ERROR: WRONG_SLUG
+                        ERROR: GAME_NOT_FOUND
                     }
                 }
             ),
@@ -181,7 +181,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             try:
                 rawg_game = rawg.get_game(kwargs.get('slug'))
             except KeyError:
-                return Response({ERROR: WRONG_SLUG}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_400_BAD_REQUEST)
             except JSONDecodeError:
                 return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -201,7 +201,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 else:
                     game = Game.objects.create(rawg_name=rawg_game.name, rawg_id=rawg_game.id, rawg_slug=rawg_game.slug)
             except IntegrityError:
-                return Response({ERROR: WRONG_SLUG}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
         data.update({'user': request.user.pk,

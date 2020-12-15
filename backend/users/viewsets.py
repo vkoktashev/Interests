@@ -22,8 +22,9 @@ from movies.models import UserMovie, MovieLog
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer
 from utils.constants import USER_SIGNUP_400_EXAMPLE, \
-    USER_SIGNUP_200_EXAMPLE, ERROR, WRONG_URL, USER_LOG_200_EXAMPLE, ID_VALUE_ERROR, USER_DOES_NOT_EXIST, \
-    USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE
+    ERROR, WRONG_URL, USER_LOG_200_EXAMPLE, ID_VALUE_ERROR, \
+    USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, USER_NOT_FOUND, \
+    USER_SIGNUP_201_EXAMPLE
 from utils.functions import similar, get_page_size
 from utils.openapi_params import page_param, page_size_param, query_param, uid64_param, token_param, reset_token_param
 from .models import User, UserFollow, UserLog, UserPasswordToken
@@ -36,10 +37,10 @@ MINUTES_IN_HOUR = 60
 class AuthViewSet(GenericViewSet):
     @swagger_auto_schema(request_body=UserSerializer,
                          responses={
-                             status.HTTP_200_OK: openapi.Response(
+                             status.HTTP_201_CREATED: openapi.Response(
                                  description=status.HTTP_200_OK,
                                  examples={
-                                     "application/json": USER_SIGNUP_200_EXAMPLE
+                                     "application/json": USER_SIGNUP_201_EXAMPLE
                                  }
                              ),
                              status.HTTP_400_BAD_REQUEST: openapi.Response(
@@ -72,9 +73,14 @@ class AuthViewSet(GenericViewSet):
                                  examples={
                                      "application/json": None
                                  }
+                             ),
+                             status.HTTP_400_BAD_REQUEST: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": {ERROR: WRONG_URL}
+                                 }
                              )
-                         }
-                         )
+                         })
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
     def confirm_email(self, request, *args, **kwargs):
         try:
@@ -105,6 +111,12 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                  examples={
                                      "application/json": {ERROR: ID_VALUE_ERROR}
                                  }
+                             ),
+                             status.HTTP_404_NOT_FOUND: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": {ERROR: USER_NOT_FOUND}
+                                 }
                              )
                          })
     @action(detail=True, methods=['get'])
@@ -117,14 +129,14 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         try:
             user = User.objects.get(pk=user_id)
         except User.DoesNotExist:
-            return Response({ERROR: USER_DOES_NOT_EXIST}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
 
-        game_logs = GameLog.objects.filter(user=user).defer('game')
-        movie_logs = MovieLog.objects.filter(user=user).defer('movie')
-        user_logs = UserLog.objects.filter(user=user).defer('followed_user')
+        game_logs = GameLog.objects.filter(user=user)
+        movie_logs = MovieLog.objects.filter(user=user)
+        user_logs = UserLog.objects.filter(user=user)
 
         union_logs = sorted(chain(game_logs, movie_logs, user_logs),
                             key=lambda obj: obj.created, reverse=True)
@@ -150,6 +162,12 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                  examples={
                                      "application/json": {ERROR: ID_VALUE_ERROR}
                                  }
+                             ),
+                             status.HTTP_404_NOT_FOUND: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": {ERROR: USER_NOT_FOUND}
+                                 }
                              )
                          })
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
@@ -162,7 +180,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         try:
             user = User.objects.get(pk=user_id)
         except User.DoesNotExist:
-            return Response({ERROR: USER_DOES_NOT_EXIST}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
@@ -196,6 +214,12 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 examples={
                     "application/json": {ERROR: ID_VALUE_ERROR}
                 }
+            ),
+            status.HTTP_404_NOT_FOUND: openapi.Response(
+                description=status.HTTP_200_OK,
+                examples={
+                    "application/json": {ERROR: USER_NOT_FOUND}
+                }
             )
         })
     def retrieve(self, request, *args, **kwargs):
@@ -207,7 +231,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         try:
             user = User.objects.get(pk=user_id)
         except User.DoesNotExist:
-            return Response({ERROR: USER_DOES_NOT_EXIST}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         try:
             user_is_followed = UserFollow.objects.get(user=request.user, followed_user=user).is_following
@@ -285,18 +309,13 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         try:
             user_follow = UserFollow.objects.get(user=request.user, followed_user=user_id)
             serializer = UserFollowSerializer(user_follow, data=data)
-            created = False
         except UserFollow.DoesNotExist:
             serializer = UserFollowSerializer(data=data)
-            created = True
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        if created:
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -315,10 +334,10 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                     "application/json": None
                 }
             ),
-            status.HTTP_400_BAD_REQUEST: openapi.Response(
+            status.HTTP_404_NOT_FOUND: openapi.Response(
                 description=status.HTTP_200_OK,
                 examples={
-                    "application/json": {ERROR: USER_DOES_NOT_EXIST}
+                    "application/json": {ERROR: USER_NOT_FOUND}
                 }
             )
         })
@@ -329,7 +348,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            return Response({ERROR: USER_DOES_NOT_EXIST}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         reset_token = secrets.token_urlsafe()
 

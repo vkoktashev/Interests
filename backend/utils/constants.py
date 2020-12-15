@@ -12,17 +12,17 @@ DEFAULT_PAGE_SIZE = 5
 
 # errors
 ERROR = 'error'
-RAWG_UNAVAILABLE = 'Rawg unavailable.'
-WRONG_SLUG = 'Wrong slug.'
-HLTB_UNAVAILABLE = 'Hltb unavailable.'
-MOVIE_NOT_FOUND = "Movie not found."
-TMDB_UNAVAILABLE = "Tmdb unavailable."
-USER_EMAIL_EXISTS = 'A user with that email already exists.'
-USER_USERNAME_EXISTS = 'A user with that username already exists.'
-USERNAME_CONTAINS_ILLEGAL_CHARACTERS = 'Username contains illegal characters.'
-WRONG_URL = 'Wrong URL.'
-ID_VALUE_ERROR = 'Wrong id, must be integer.'
-USER_DOES_NOT_EXIST = 'User does not exist.'
+RAWG_UNAVAILABLE = 'RAWG недоступен.'
+HLTB_UNAVAILABLE = 'HLTB недоступен.'
+GAME_NOT_FOUND = "Игра не найдена."
+MOVIE_NOT_FOUND = "Фильм не найден."
+TMDB_UNAVAILABLE = "TMDB недоступен."
+USER_EMAIL_EXISTS = 'Пользователь с такой электронной почтой уже существует.'
+USER_USERNAME_EXISTS = 'Пользователь с таким никнеймом уже существует.'
+USERNAME_CONTAINS_ILLEGAL_CHARACTERS = 'Никнейм содержит недопустимые символы.'
+WRONG_URL = 'Неверная ссылка.'
+ID_VALUE_ERROR = 'Неверный ID, должен быть целым числом.'
+USER_NOT_FOUND = 'Пользователь не найден.'
 
 # response examples
 GAMES_SEARCH_200_EXAMPLE = [
@@ -329,7 +329,7 @@ MOVIE_RETRIEVE_200_EXAMPLE = {
         "review": "string",
     }
 }
-USER_SIGNUP_200_EXAMPLE = {
+USER_SIGNUP_201_EXAMPLE = {
     "id": 0,
     "username": "string"
 }
