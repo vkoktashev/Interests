@@ -2,7 +2,7 @@ import secrets
 from itertools import chain
 
 from django.core.mail import EmailMessage
-from django.core.paginator import Paginator, EmptyPage
+from django.core.paginator import Paginator
 from django.template.defaultfilters import lower
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -21,10 +21,10 @@ from games.serializers import GameStatsSerializer, GameLogSerializer
 from movies.models import UserMovie, MovieLog
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer
-from utils.constants import DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, USER_SIGNUP_400_EXAMPLE, \
+from utils.constants import USER_SIGNUP_400_EXAMPLE, \
     USER_SIGNUP_200_EXAMPLE, ERROR, WRONG_URL, USER_LOG_200_EXAMPLE, ID_VALUE_ERROR, USER_DOES_NOT_EXIST, \
-    USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE
-from utils.functions import similar
+    USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE
+from utils.functions import similar, get_page_size
 from utils.openapi_params import page_param, page_size_param, query_param, uid64_param, token_param, reset_token_param
 from .models import User, UserFollow, UserLog, UserPasswordToken
 from .tokens import account_activation_token
@@ -119,15 +119,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except User.DoesNotExist:
             return Response({ERROR: USER_DOES_NOT_EXIST}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            page_size = int(request.GET.get('page_size'))
-        except (ValueError, TypeError):
-            page_size = DEFAULT_PAGE_SIZE
-
-        try:
-            page = int(request.GET.get('page'))
-        except (ValueError, TypeError):
-            page = DEFAULT_PAGE_NUMBER
+        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
+        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
 
         game_logs = GameLog.objects.filter(user=user).defer('game')
         movie_logs = MovieLog.objects.filter(user=user).defer('movie')
@@ -137,10 +130,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                             key=lambda obj: obj.created, reverse=True)
 
         paginator = Paginator(union_logs, page_size)
-        try:
-            paginator_page = paginator.page(page)
-        except (EmptyPage, TypeError):
-            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+        paginator_page = paginator.get_page(page)
 
         results = serialize_logs(paginator_page.object_list)
 
@@ -174,15 +164,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except User.DoesNotExist:
             return Response({ERROR: USER_DOES_NOT_EXIST}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            page_size = int(request.GET.get('page_size'))
-        except (ValueError, TypeError):
-            page_size = DEFAULT_PAGE_SIZE
-
-        try:
-            page = int(request.GET.get('page'))
-        except (ValueError, TypeError):
-            page = DEFAULT_PAGE_NUMBER
+        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
+        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
 
         user_follow_query = UserFollow.objects.filter(user=user).values('followed_user')
         game_logs = GameLog.objects.filter(user__in=user_follow_query)
@@ -193,31 +176,28 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                             key=lambda obj: obj.created, reverse=True)
 
         paginator = Paginator(union_logs, page_size)
-        try:
-            paginator_page = paginator.page(page)
-        except EmptyPage:
-            return Response('Wrong page number', status=status.HTTP_400_BAD_REQUEST)
+        paginator_page = paginator.get_page(page)
 
         results = serialize_logs(paginator_page.object_list)
 
         return Response({'log': results,
                          'has_next_page': paginator_page.has_next()})
 
-    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
-                         responses={
-                             status.HTTP_200_OK: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": USER_RETRIEVE_200_EXAMPLE
-                                 }
-                             ),
-                             status.HTTP_400_BAD_REQUEST: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": {ERROR: ID_VALUE_ERROR}
-                                 }
-                             )
-                         })
+    @swagger_auto_schema(
+        responses={
+            status.HTTP_200_OK: openapi.Response(
+                description=status.HTTP_200_OK,
+                examples={
+                    "application/json": USER_RETRIEVE_200_EXAMPLE
+                }
+            ),
+            status.HTTP_400_BAD_REQUEST: openapi.Response(
+                description=status.HTTP_200_OK,
+                examples={
+                    "application/json": {ERROR: ID_VALUE_ERROR}
+                }
+            )
+        })
     def retrieve(self, request, *args, **kwargs):
         try:
             user_id = int(kwargs.get('pk'))

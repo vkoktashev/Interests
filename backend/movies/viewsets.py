@@ -1,5 +1,5 @@
 import tmdbsimple as tmdb
-from django.core.paginator import Paginator, EmptyPage
+from django.core.paginator import Paginator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
@@ -14,7 +14,7 @@ from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer
 from users.models import UserFollow
 from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, MOVIES_SEARCH_200_EXAMPLE, \
     FRIENDS_INFO_200_EXAMPLE, MOVIE_RETRIEVE_200_EXAMPLE
-from utils.functions import get_page, get_page_size
+from utils.functions import get_page_size
 from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, page_size_param
 
 
@@ -96,7 +96,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                          responses=FRIENDS_INFO_200_EXAMPLE)
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_info(self, request, *args, **kwargs):
-        page = get_page(request.GET.get('page', DEFAULT_PAGE_NUMBER))
+        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
         page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
 
         try:
@@ -113,10 +113,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             friends_info = []
 
         paginator = Paginator(friends_info, page_size)
-        try:
-            paginator_page = paginator.page(page)
-        except EmptyPage:
-            paginator_page = paginator.page(paginator.num_pages)
+        paginator_page = paginator.get_page(page)
 
         return Response({'friends_info': paginator_page.object_list,
                          'has_next_page': paginator_page.has_next()})
