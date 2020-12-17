@@ -60,7 +60,7 @@ class AuthViewSet(GenericViewSet):
         uid64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = account_activation_token.make_token(user)
         activation_link = f"{request.scheme}://{SITE_URL}/confirm/?uid64={uid64}&token={token}"
-        message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
+        message = f"Привет {user.username}, для активации аккаунта перейди по ссылке:\n{activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
         # email.send()
         print(activation_link)
