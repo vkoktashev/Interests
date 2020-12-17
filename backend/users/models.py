@@ -6,6 +6,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from utils.constants import USER_EMAIL_EXISTS, USER_USERNAME_EXISTS
 from .managers import UserManager
 
 
@@ -16,14 +17,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         _('username'),
         max_length=150,
         unique=True,
-        help_text=_('Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'),
         validators=[username_validator],
         error_messages={
-            'unique': _("A user with that username already exists."),
+            'unique': _(USER_USERNAME_EXISTS),
         },
     )
     email = models.EmailField(_('email address'), unique=True, error_messages={
-        'unique': _("A user with that email already exists."),
+        'unique': _(USER_EMAIL_EXISTS),
     }, )
     is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
