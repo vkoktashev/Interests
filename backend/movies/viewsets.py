@@ -12,8 +12,8 @@ from rest_framework.viewsets import GenericViewSet
 from movies.models import Movie, UserMovie
 from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer
 from users.models import UserFollow
-from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, MOVIES_SEARCH_200_EXAMPLE, \
-    FRIENDS_INFO_200_EXAMPLE, MOVIE_RETRIEVE_200_EXAMPLE
+from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE
+from utils.documentation import FRIENDS_INFO_200_EXAMPLE, MOVIES_SEARCH_200_EXAMPLE, MOVIE_RETRIEVE_200_EXAMPLE
 from utils.functions import get_page_size
 from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, page_size_param
 

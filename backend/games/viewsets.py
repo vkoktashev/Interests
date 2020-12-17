@@ -14,8 +14,9 @@ from rest_framework.viewsets import GenericViewSet
 from games.models import Game, UserGame
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer
 from users.models import UserFollow
-from utils.constants import RAWG_UNAVAILABLE, ERROR, HLTB_UNAVAILABLE, FRIENDS_INFO_200_EXAMPLE, \
-    GAMES_SEARCH_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, GAME_NOT_FOUND
+from utils.constants import RAWG_UNAVAILABLE, ERROR, HLTB_UNAVAILABLE, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, \
+    GAME_NOT_FOUND
+from utils.documentation import GAMES_SEARCH_200_EXAMPLE, FRIENDS_INFO_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE
 from utils.functions import int_to_hours, translate_hltb_time, get_page_size
 from utils.openapi_params import query_param, page_param, page_size_param
 

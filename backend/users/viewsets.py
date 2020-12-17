@@ -21,10 +21,10 @@ from games.serializers import GameStatsSerializer, GameLogSerializer
 from movies.models import UserMovie, MovieLog
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer
-from utils.constants import USER_SIGNUP_400_EXAMPLE, \
-    ERROR, WRONG_URL, USER_LOG_200_EXAMPLE, ID_VALUE_ERROR, \
-    USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, USER_NOT_FOUND, \
-    USER_SIGNUP_201_EXAMPLE
+from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
+    DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, USER_NOT_FOUND
+from utils.documentation import USER_SIGNUP_201_EXAMPLE, USER_SIGNUP_400_EXAMPLE, USER_LOG_200_EXAMPLE, \
+    USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE
 from utils.functions import similar, get_page_size
 from utils.openapi_params import page_param, page_size_param, query_param, uid64_param, token_param, reset_token_param
 from .models import User, UserFollow, UserLog, UserPasswordToken

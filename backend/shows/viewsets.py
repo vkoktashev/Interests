@@ -8,8 +8,8 @@ from rest_framework.viewsets import GenericViewSet
 
 from shows.models import UserShow, Show
 from shows.serializers import UserShowSerializer
-from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, SHOW_RETRIEVE_200_EXAMPLE, \
-    SHOW_SEARCH_200_EXAMPLE, DEFAULT_PAGE_NUMBER
+from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER
+from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOW_SEARCH_200_EXAMPLE
 from utils.openapi_params import query_param, page_param
 
 
