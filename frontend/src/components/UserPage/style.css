@@ -101,6 +101,7 @@ a.logLink:active{
   display: inline-block;
   margin-bottom: 0px;
   margin-top: 0px;
+  width: 90%;
 }
 
 .logRow{
