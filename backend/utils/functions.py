@@ -5,7 +5,7 @@ from difflib import SequenceMatcher
 from django.db.models import DecimalField, IntegerField, CharField
 
 from games.models import UserGame
-from utils.openapi_params import DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE
+from utils.openapi_params import DEFAULT_PAGE_SIZE
 
 
 def similar(a, b):
@@ -100,18 +100,11 @@ def field_is_changed(choices_dict, field, fields, old_fields, default_int):
             return False
 
 
-def get_page(page):
-    try:
-        page = int(page)
-    except (ValueError, TypeError):
-        page = DEFAULT_PAGE_NUMBER
-
-    return page
-
-
 def get_page_size(page_size):
     try:
         page_size = int(page_size)
+        if page_size < 1:
+            page_size = DEFAULT_PAGE_SIZE
     except (ValueError, TypeError):
         page_size = DEFAULT_PAGE_SIZE
 

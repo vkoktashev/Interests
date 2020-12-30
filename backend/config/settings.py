@@ -111,7 +111,7 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -130,7 +130,7 @@ LOGIN_URL = 'users/auth/login'
 EMAIL_USE_SSL = True
 EMAIL_HOST = 'smtp.mail.ru'
 EMAIL_HOST_USER = 'your_interests@mail.ru'
-EMAIL_HOST_PASSWORD = 'uApP)iyuHK22'
+EMAIL_HOST_PASSWORD = 'MAcXIdur4u4}'
 EMAIL_PORT = 465
 
 SIMPLE_JWT = {
@@ -138,7 +138,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7)
 }
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-ru'
 
 TIME_ZONE = 'UTC'
 

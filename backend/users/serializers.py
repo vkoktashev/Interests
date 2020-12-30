@@ -1,21 +1,32 @@
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from users.models import User, UserFollow, UserLog
+from utils.constants import USER_USERNAME_EXISTS, USER_EMAIL_EXISTS, USERNAME_CONTAINS_ILLEGAL_CHARACTERS
 
 TYPE_USER = 'user'
 
 
 class UserSerializer(serializers.ModelSerializer):
-    def validate_email(self, value):
+    @staticmethod
+    def validate_email(value):
         if User.objects.filter(email__iexact=value).exists():
-            raise serializers.ValidationError('A user with that email already exists.')
+            raise serializers.ValidationError(USER_EMAIL_EXISTS)
         return value
 
-    def validate_username(self, value):
+    @staticmethod
+    def validate_username(value):
         if User.objects.filter(username__iexact=value).exists():
-            raise serializers.ValidationError('A user with that username already exists.')
+            raise serializers.ValidationError(USER_USERNAME_EXISTS)
+        if '@' in value:
+            raise serializers.ValidationError(USERNAME_CONTAINS_ILLEGAL_CHARACTERS)
+        return value
+
+    @staticmethod
+    def validate_password(value):
+        validate_password(value)
         return value
 
     def create(self, validated_data):
@@ -65,19 +76,24 @@ class UserLogSerializer(serializers.ModelSerializer):
     target = serializers.SerializerMethodField('get_target')
     target_id = serializers.SerializerMethodField('get_target_id')
 
-    def get_username(self, user_log):
+    @staticmethod
+    def get_username(user_log):
         return user_log.user.username
 
-    def get_user_id(self, user_log):
+    @staticmethod
+    def get_user_id(user_log):
         return user_log.user.id
 
-    def get_type(self, user_log):
+    @staticmethod
+    def get_type(user_log):
         return TYPE_USER
 
-    def get_target(self, user_log):
+    @staticmethod
+    def get_target(user_log):
         return user_log.followed_user.username
 
-    def get_target_id(self, user_log):
+    @staticmethod
+    def get_target_id(user_log):
         return user_log.followed_user.id
 
     class Meta:

@@ -42,19 +42,24 @@ class MovieLogSerializer(serializers.ModelSerializer):
     target = serializers.SerializerMethodField('get_target')
     target_id = serializers.SerializerMethodField('get_target_id')
 
-    def get_username(self, movie_log):
+    @staticmethod
+    def get_username(movie_log):
         return movie_log.user.username
 
-    def get_user_id(self, movie_log):
+    @staticmethod
+    def get_user_id(movie_log):
         return movie_log.user.id
 
-    def get_type(self, movie_log):
+    @staticmethod
+    def get_type(movie_log):
         return TYPE_MOVIE
 
-    def get_target(self, movie_log):
+    @staticmethod
+    def get_target(movie_log):
         return movie_log.movie.tmdb_name
 
-    def get_target_id(self, movie_log):
+    @staticmethod
+    def get_target_id(movie_log):
         return movie_log.movie.tmdb_id
 
     class Meta:

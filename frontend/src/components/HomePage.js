@@ -8,8 +8,8 @@ import React from "react";
 function HomePage () 
 {
     return (
-			<div>
-				<h1>Страница ещё не готова</h1>
+			<div className="bg">
+				<h1 style={{color: 'rgb(207, 207, 207)', marginTop: '50px'}}>Страница ещё не готова</h1>
 			</div>
     	);
 }

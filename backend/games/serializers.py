@@ -42,19 +42,24 @@ class GameLogSerializer(serializers.ModelSerializer):
     target = serializers.SerializerMethodField('get_target')
     target_id = serializers.SerializerMethodField('get_target_id')
 
-    def get_username(self, game_log):
+    @staticmethod
+    def get_username(game_log):
         return game_log.user.username
 
-    def get_user_id(self, game_log):
+    @staticmethod
+    def get_user_id(game_log):
         return game_log.user.id
 
-    def get_type(self, game_log):
+    @staticmethod
+    def get_type(game_log):
         return TYPE_GAME
 
-    def get_target(self, game_log):
+    @staticmethod
+    def get_target(game_log):
         return game_log.game.rawg_name
 
-    def get_target_id(self, game_log):
+    @staticmethod
+    def get_target_id(game_log):
         return game_log.game.rawg_slug
 
     class Meta:
