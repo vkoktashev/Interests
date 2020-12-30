@@ -71,7 +71,7 @@ class AuthViewSet(GenericViewSet):
                              status.HTTP_200_OK: openapi.Response(
                                  description=status.HTTP_200_OK,
                                  examples={
-                                     "application/json": None
+                                     "application/json": USER_RETRIEVE_200_EXAMPLE
                                  }
                              ),
                              status.HTTP_400_BAD_REQUEST: openapi.Response(
@@ -91,8 +91,10 @@ class AuthViewSet(GenericViewSet):
 
         if user is not None and account_activation_token.check_token(user, request.GET.get('token')):
             user.is_active = True
-            user.save()
-            return Response(status=status.HTTP_200_OK)
+            serializer = UserSerializer(user)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
 
