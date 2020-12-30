@@ -33,7 +33,7 @@ function RegistrationForm( {isOpen, closeForm, registrate, registrateArror, user
 	          <MDBCol>
 	            <form>
 			      <p className="note note-danger" hidden={!registrateArror} >Ошибка регистрации!</p>
-                  <p className="note note-success" hidden={user.email===""} >{user.login}, добро пожаловать! Осталось только подтвердить вашу почту: {user.email}</p>
+                  <p className="note note-success" hidden={user.email===""} >{user.login}, добро пожаловать! Осталось только подтвердить вашу почту</p>
 	              <h4>Регистрация</h4>
 
 	              <label htmlFor="loginInput">
