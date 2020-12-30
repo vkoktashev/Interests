@@ -12,15 +12,23 @@ class Show(models.Model):
 
 
 class Season(models.Model):
-    tmdb_season_number = models.IntegerField(unique=True)
+    tmdb_id = models.IntegerField(unique=True)
+    tmdb_season_number = models.IntegerField()
     tmdb_name = models.CharField(max_length=200)
     tmdb_show = models.ForeignKey(Show, on_delete=models.CASCADE)
 
+    class Meta:
+        unique_together = (("tmdb_season_number", "tmdb_show"),)
+
 
 class Episode(models.Model):
-    tmdb_episode_number = models.IntegerField(unique=True)
+    tmdb_id = models.IntegerField(unique=True)
+    tmdb_episode_number = models.IntegerField()
     tmdb_name = models.CharField(max_length=200)
     tmdb_season = models.ForeignKey(Season, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = (("tmdb_episode_number", "tmdb_season"),)
 
 
 class UserShow(UserScore):
