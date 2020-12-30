@@ -18,7 +18,7 @@ class Season(models.Model):
 
 
 class Episode(models.Model):
-    tmdb_season_number = models.IntegerField(unique=True)
+    tmdb_episode_number = models.IntegerField(unique=True)
     tmdb_name = models.CharField(max_length=200)
     tmdb_season = models.ForeignKey(Season, on_delete=models.CASCADE)
 
