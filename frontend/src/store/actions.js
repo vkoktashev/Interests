@@ -119,11 +119,11 @@ export function confirmEmailRequest(uid64, token){
     return async() => {
         confirmation(uid64, token).then((result) => {
             console.log(result);
-            if (result.status !== 400){
+            if (result.status === 200){
                 toast.success("Почта подтверждена!");
             }
             else{
-                toast.error(result.data);
+                toast.error(result.data.error);
             }
         });
     }

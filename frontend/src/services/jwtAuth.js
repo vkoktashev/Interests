@@ -54,7 +54,8 @@ export async function updateToken(refreshToken){
 export async function registration(username, email, password) {
    try{
         const res = await axios.post(REGISTRATE_URL, 
-            {  username: username,
+            {  
+                username: username,
                 email: email, 
                 password: password 
             }, axiosConfig);
@@ -70,12 +71,7 @@ export async function confirmation(uid64, token) {
     try{
         console.log(uid64);
         console.log(token);
-        const res = await axios.patch(CONFIRM_URL, 
-             {  
-                uid64: uid64,
-                token: token
-             }, 
-             axiosConfig);
+        const res = await axios.patch(CONFIRM_URL + '?uid64=' + uid64 + '&token=' + token);
         let data = res.data;	
         return data;
      }catch(e){
