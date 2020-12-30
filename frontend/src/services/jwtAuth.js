@@ -69,11 +69,8 @@ export async function registration(username, email, password) {
 
 export async function confirmation(uid64, token) {
     try{
-        console.log(uid64);
-        console.log(token);
         const res = await axios.patch(CONFIRM_URL + '?uid64=' + uid64 + '&token=' + token);
-        let data = res.data;	
-        return data;
+        return res;
      }catch(e){
          console.log("AXIOS ERROR: ", e.response);
          return e.response;

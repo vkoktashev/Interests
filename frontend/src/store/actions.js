@@ -123,7 +123,8 @@ export function confirmEmailRequest(uid64, token){
                 toast.success("Почта подтверждена!");
             }
             else{
-                toast.error(result.data.error);
+                if (result.data)
+                    toast.error(result.data.error);
             }
         });
     }
