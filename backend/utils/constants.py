@@ -22,3 +22,5 @@ WRONG_URL = 'Неверная ссылка.'
 ID_VALUE_ERROR = 'Неверный ID, должен быть целым числом.'
 USER_NOT_FOUND = 'Пользователь не найден.'
 SHOW_NOT_FOUND = "Сериал не найден."
+SEASON_NOT_FOUND = 'Сезон не найден.'
+EPISODE_NOT_FOUND = 'Эпизод не найден'
