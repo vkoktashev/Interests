@@ -49,6 +49,8 @@ function SearchPage ( { loggedIn, gamesIsLoading, moviesIsLoading, usersIsLoadin
             searchUsers(query);
             setQueryText(query);
             document.title = 'Поиск';
+            setGamesPage(1);
+            setMoviesPage(1);
 		},
 		[query, searchGame, searchMovie, searchUsers]
     );
@@ -111,19 +113,21 @@ function SearchPage ( { loggedIn, gamesIsLoading, moviesIsLoading, usersIsLoadin
                                     >
                                     <div hidden={activeCategory!=='Всё' && activeCategory!=='Игры'}>
                                         <h3>Игры</h3>
-                                        <button className="paginationButton" 
-                                            disabled={gamesPage===1}
-                                            onClick={() => {searchGame(query, gamesPage-1, 6); setGamesPage(gamesPage-1)}}
-                                            >
-                                            &lt;
-                                        </button>
-                                        {gamesCards}
-                                        <button className="paginationButton"
-                                            disabled={games.length < 6}
-                                            onClick={() => {searchGame(query, gamesPage+1, 6); setGamesPage(gamesPage+1)}}
-                                            >
-                                            &gt;
-                                        </button>
+                                        <div className="reslutsBlock">
+                                            <button className="paginationButton" 
+                                                disabled={gamesPage===1}
+                                                onClick={() => {searchGame(query, gamesPage-1, 6); setGamesPage(gamesPage-1)}}
+                                                >
+                                                &lt;
+                                            </button>
+                                            {gamesCards}
+                                            <button className="paginationButton"
+                                                disabled={games.length < 6}
+                                                onClick={() => {searchGame(query, gamesPage+1, 6); setGamesPage(gamesPage+1)}}
+                                                >
+                                                &gt;
+                                            </button>
+                                        </div>
                                     </div>
                                 </LoadingOverlay>
 
@@ -132,21 +136,23 @@ function SearchPage ( { loggedIn, gamesIsLoading, moviesIsLoading, usersIsLoadin
                                     spinner
                                     text='Ищем фильмы...'
                                     >
-                                    <div hidden={activeCategory!=='Всё' && activeCategory!=='Фильмы'}>
+                                    <div hidden={activeCategory!=='Всё' && activeCategory!=='Фильмы'} className="reslutsBlock">
                                         <h3>Фильмы</h3>
-                                        <button className="paginationButton" 
-                                            disabled={moviesPage===1}
-                                            onClick={() => {searchMovie(query, moviesPage-1); setMoviesPage(moviesPage-1)}}
-                                            >
-                                            &lt;
-                                        </button>
-                                        {moviesCards}
-                                        <button className="paginationButton"
-                                            disabled={movies.length < 20}
-                                            onClick={() => {searchMovie(query, moviesPage+1); setMoviesPage(moviesPage+1)}}
-                                            >
-                                            &gt;
-                                        </button>
+                                        <div className="reslutsBlock">
+                                            <button className="paginationButton" 
+                                                disabled={moviesPage===1}
+                                                onClick={() => {searchMovie(query, moviesPage-1); setMoviesPage(moviesPage-1)}}
+                                                >
+                                                &lt;
+                                            </button>
+                                            {moviesCards}
+                                            <button className="paginationButton"
+                                                disabled={movies.length < 20}
+                                                onClick={() => {searchMovie(query, moviesPage+1); setMoviesPage(moviesPage+1)}}
+                                                >
+                                                &gt;
+                                            </button>
+                                        </div>
                                     </div>       
                                 </LoadingOverlay>
                                 

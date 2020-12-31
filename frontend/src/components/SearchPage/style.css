@@ -15,7 +15,7 @@ a:active {
   text-align: center;
   width: 92%;
   display: inline-block;
-  margin-left: 0%;
+  margin-left: 4%;
 }
 
 .searchCardMovie{
@@ -114,8 +114,10 @@ a:active {
 }
 
 .paginationButton{
+  position: absolute;
+  top: 0;
   width: 4%;
-  height: 470px;
+  height: 100%;
   display: inline-block;
   vertical-align: top;
   color: rgb(207, 207, 207);
@@ -131,4 +133,8 @@ a:active {
 .paginationButton:active{
   border: none;
   background-color: rgb(43, 43, 43);
+}
+
+.reslutsBlock{
+  position: relative;
 }
