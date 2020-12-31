@@ -38,3 +38,12 @@ input.form-control:-webkit-autofill {
 .note{
     color: black;
 }
+
+.passwordResetLabel{
+    color:  rgb(207, 207, 207);
+}
+
+.passwordResetLabel:hover{
+    color: #7654de;
+    cursor: pointer;
+}
