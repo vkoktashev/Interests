@@ -283,10 +283,10 @@ export function requestUserPageFriendsLogs(userID, page, resultsOnPage){
     }
 }
 
-export function searchGames(query, page){
+export function searchGames(query, page, gamesCount){
     return async(dispatch) => {
         setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_GAMES, true);
-        Requests.searchGames(query, page).then((result) => {
+        Requests.searchGames(query, page, gamesCount).then((result) => {
             if (!result){
                 toast.error("Ошибка поиска")
             }
