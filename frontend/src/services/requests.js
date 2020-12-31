@@ -112,8 +112,9 @@ export async function setMovieStatus(token, id, user_info){
  */
 export async function searchGames(query, page, gamesCount){
     try{
-        const res = await axios.get(SEARCH_GAMES_URL, { params : {query: query, page: page} }, 
+        const res = await axios.get(SEARCH_GAMES_URL, { params : {query: query, page: page, page_size: gamesCount} }, 
             { 'headers': { 'Content-Type': 'application/json;charset=UTF-8' } });
+        console.warn(res.data);
         return res.data;
     }catch(e){
         console.log("AXIOS ERROR: ", e);
