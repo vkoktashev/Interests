@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import HomePage from "./components/HomePage";
 import GamePage from "./components/GamePage/GamePage";
 import MoviePage from "./components/MoviePage/MoviePage";
+import ShowPage from "./components/ShowPage/ShowPage";
 import SearchPage from "./components/SearchPage/SearchPage";
 import LoginForm from "./components/Modals/LoginForm";
 import RegistrationForm from "./components/Modals/RegistrationForm";
@@ -25,6 +26,7 @@ class Routes extends React.Component {
             <Route exact path="/" component={HomePage} />
             <Route exact path="/game/:id" component={GamePage} />
             <Route exact path="/movie/:id" component={MoviePage} />
+            <Route exact path="/show/:id" component={ShowPage} />
             <Route exact path="/search/:query" component={SearchPage} />
             <Route exact path="/confirm/" component={ConfirmPage} />
             <Route exact path="/confirm_password/" component={ConfirmPasswordPage} />
