@@ -18,7 +18,7 @@ function CardShow ( {show} ) {
                 setDate("");
 
             if (show.name.length > 55){
-                let newName = show.title.substr(0, 55) + "...";
+                let newName = show.name.substr(0, 55) + "...";
                 setName(newName);
             }else
                 setName(show.name);

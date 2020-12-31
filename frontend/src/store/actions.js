@@ -208,6 +208,45 @@ export function requestMovieFriends(id, page){
     }
 }
 
+export function requestShow(id){
+    return async(dispatch) => {
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, true);
+        setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, false);
+        Requests.getShow(localStorage.getItem('token'), id).then((result) => {
+            console.log(result);
+            if (result != null){
+                dispatch({
+                    type: actionTypes.SET_CONTENT_SHOW,
+                    show: result, 
+                });
+            }
+            else{
+                toast.error("Сериал не найден!");
+                setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, true);
+            }
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, false);
+        });
+    }
+}
+
+/*export function requestShowFriends(id, page){
+    return async(dispatch) => {
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_FRIENDS, true);
+        Requests.getMovieFriends(localStorage.getItem('token'), id, page).then((result) => {
+            if (result != null){
+                dispatch({
+                    type: actionTypes.SET_CONTENT_SHOW_FRIENDS,
+                    info: result, 
+                });
+            }
+            else{
+                toast.error("Ошибка загрузки логов!");
+            }
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_FRIENDS, false);
+        });
+    }
+}*/
+
 export function setGameStatus(user_info){
     return async(dispatch, getState) => {
         if (await dispatch(checkAuthorization())){

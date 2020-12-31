@@ -22,6 +22,8 @@ export const SEARCH_GAMES_URL = BACKEND_URL + "games/search/";
 export const GET_MOVIE_URL = BACKEND_URL + "movies/movie/";
 /**Адрес поиска фильмов */
 export const SEARCH_MOVIES_URL = BACKEND_URL + "movies/search/";
+/**Адрес запроса сериала */
+export const GET_SHOW_URL = BACKEND_URL + "shows/show/";
 /**Адрес поиска сериалов */
 export const SEARCH_SHOWS_URL = BACKEND_URL + "shows/search/";
 /**Адрес получения информации о пользователе */

@@ -1,5 +1,5 @@
 import axios from "axios";
-import {GET_GAME_URL, SEARCH_GAMES_URL, USER_INFO_URL, SEARCH_MOVIES_URL, GET_MOVIE_URL, SEARCH_USERS_URL, SEARCH_SHOWS_URL} from "../settings";
+import {GET_GAME_URL, SEARCH_GAMES_URL, USER_INFO_URL, SEARCH_MOVIES_URL, GET_MOVIE_URL, SEARCH_USERS_URL, SEARCH_SHOWS_URL, GET_SHOW_URL} from "../settings";
 
 let axiosConfig = {
     headers: {
@@ -51,6 +51,30 @@ export async function getMovie(token, id) {
             data = res.data;
         }else{
             const res = await axios.get(GET_MOVIE_URL + id + "/", axiosConfig);
+            data = res.data;
+        }
+        return data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
+ * Запрос к бд, получающий информацию о сериале
+ * @param {string} token Токен доступа
+ * @param {string} id ID сериала  
+ * @returns {object} Информация о сериале
+ */
+export async function getShow(token, id) {
+    let data;
+    try{
+        if (token){
+            var AuthStr = 'Bearer ' + token;
+            const res = await axios.get(GET_SHOW_URL + id + "/", { 'headers': { 'Authorization': AuthStr } });
+            data = res.data;
+        }else{
+            const res = await axios.get(GET_SHOW_URL + id + "/", axiosConfig);
             data = res.data;
         }
         return data;
