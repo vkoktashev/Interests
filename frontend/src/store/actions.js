@@ -99,7 +99,7 @@ export function registrationRequest(username, email, password){
         setError(dispatch, actionTypes.REGISTRATE_ERROR, false);
         auth.registration(username, email, password).then((result) => {
             console.log(result);
-            if (result.status !== 400){
+            if (result.status === 201){
                 dispatch({
                     type: actionTypes.SET_USER,
                     user: { login: result.username, email: result.email }, 
@@ -315,6 +315,24 @@ export function searchMovies(query, page){
                 });
             }
             setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_MOVIES, false);
+        });
+    }
+}
+
+export function searchShows(query, page){
+    return async(dispatch) => {
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_SHOWS, true);
+        Requests.searchShows(query, page).then((result) => {
+            if (!result){
+                toast.error("Ошибка поиска сериалов")
+            }
+            else{
+                dispatch({
+                    type: actionTypes.SET_SEARCH_CONTENT_SHOWS,
+                    shows: result.results, 
+                });
+            }
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_SHOWS, false);
         });
     }
 }

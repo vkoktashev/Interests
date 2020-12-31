@@ -1,5 +1,5 @@
 import axios from "axios";
-import {GET_GAME_URL, SEARCH_GAMES_URL, USER_INFO_URL, SEARCH_MOVIES_URL, GET_MOVIE_URL, SEARCH_USERS_URL} from "../settings";
+import {GET_GAME_URL, SEARCH_GAMES_URL, USER_INFO_URL, SEARCH_MOVIES_URL, GET_MOVIE_URL, SEARCH_USERS_URL, SEARCH_SHOWS_URL} from "../settings";
 
 let axiosConfig = {
     headers: {
@@ -130,6 +130,23 @@ export async function searchGames(query, page, gamesCount){
 export async function searchMovies(query, page){
     try{
         const res = await axios.get(SEARCH_MOVIES_URL, { params : {query: query, page: page} }, 
+            { 'headers': { 'Content-Type': 'application/json;charset=UTF-8' } });
+            console.log(res);
+        return res.data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
+ * Запрос на поиск сериалов
+ * @param {string} query Поисковый запрос
+ * @param {int} page Страница поиска
+ */
+export async function searchShows(query, page){
+    try{
+        const res = await axios.get(SEARCH_SHOWS_URL, { params : {query: query, page: page} }, 
             { 'headers': { 'Content-Type': 'application/json;charset=UTF-8' } });
             console.log(res);
         return res.data;

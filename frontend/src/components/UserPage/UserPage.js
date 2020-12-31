@@ -37,11 +37,18 @@ function UserPage ( { loggedIn, userIsLoading, getUserInfo, userInfo, currentUse
 		() => {
             getUserInfo(userID);
             getUserLogs(userID, 1, LOG_ROWS_COUNT);
+        },
+        // eslint-disable-next-line
+		[userID, getUserInfo, getUserLogs, getUserFriendsLogs]
+    );
+
+    useEffect(
+		() => {
             if (loggedIn)
                 getUserFriendsLogs(userID, 1, LOG_ROWS_COUNT);
         },
         // eslint-disable-next-line
-		[userID, getUserInfo, getUserLogs, getUserFriendsLogs]
+		[loggedIn]
     );
 
     useEffect(

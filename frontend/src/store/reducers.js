@@ -51,6 +51,7 @@ const initialState = Map(
         searchContent: {
             games: [],
             movies: [],
+            shows: [],
             users: []
         },
         userPageContent: {
@@ -62,7 +63,11 @@ const initialState = Map(
         },
         openedPages: { LoginForm: false, RegistrateForm: false, ResetPasswordForm: false },
         errors: {auth: false, registrate: false, gameRequest: false, movieRequest: false, userPage: false, resetPassword: false, confirmPassword: false },
-        isLoading: {contentGame: false, contentMovie: false, searchGames: false, searchMovies: false, userPageContent: false, searchUsers: false, userPageLogs: false, userPageFriendsLogs: false, contentGameFriends: false, contentMovieFriends: false}
+        isLoading: {    contentGame: false, contentGameFriends: false,
+                        contentMovie: false, contentMovieFriends: false,
+                        userPageContent: false, userPageLogs: false, userPageFriendsLogs: false,
+                        searchGames: false, searchMovies: false, searchShows: false,  searchUsers: false,
+                    }
     }
 );
 
@@ -85,6 +90,7 @@ export default function reducer(state = initialState, action) {
     //Редьюсеры результатов поиска
     case types.SET_SEARCH_CONTENT_GAMES: return state.setIn(['searchContent', 'games'], action.games);
     case types.SET_SEARCH_CONTENT_MOVIES: return state.setIn(['searchContent', 'movies'], action.movies);
+    case types.SET_SEARCH_CONTENT_SHOWS: return state.setIn(['searchContent', 'shows'], action.shows);
     case types.SET_SEARCH_CONTENT_USERS: return state.setIn(['searchContent', 'users'], action.users);
 
     //Редьюсеры страницы профиля
@@ -114,6 +120,7 @@ export default function reducer(state = initialState, action) {
     case types.SET_IS_LOADING_CONTENT_MOVIE_FRIENDS:  return state.setIn(['isLoading', 'contentMovieFriends'], action.isLoading);
     case types.SET_IS_LOADING_SEARCH_GAMES:  return state.setIn(['isLoading', 'searchGames'], action.isLoading);
     case types.SET_IS_LOADING_SEARCH_MOVIES:  return state.setIn(['isLoading', 'searchMovies'], action.isLoading);
+    case types.SET_IS_LOADING_SEARCH_SHOWS:  return state.setIn(['isLoading', 'searchShows'], action.isLoading);
     case types.SET_IS_LOADING_USER_PAGE_CONTENT:  return state.setIn(['isLoading', 'userPageContent'], action.isLoading);
     case types.SET_IS_LOADING_USER_PAGE_LOGS: return state.setIn(['isLoading', 'userPageLogs'], action.isLoading);
     case types.SET_IS_LOADING_USER_PAGE_FRIENDS_LOGS:  return state.setIn(['isLoading', 'userPageFriendsLogs'], action.isLoading);
@@ -137,6 +144,7 @@ export function getContentMovieFriends(state) {  return state.get('content').mov
 //Селекторы поисковых результатов
 export function getSearchContentGames(state) { return state.get('searchContent').games;}
 export function getSearchContentMovies(state) { return state.get('searchContent').movies; }
+export function getSearchContentShows(state) { return state.get('searchContent').shows; }
 export function getSearchContentUsers(state) { return state.get('searchContent').users; }
 
 //Селекторы ошибок
@@ -160,6 +168,7 @@ export function getIsLoadingContentMovie(state) {  return state.get('isLoading')
 export function getIsLoadingContentMovieFriends(state) { return state.get('isLoading').contentMovieFriends; }
 export function getIsLoadingSearchGames(state) { return state.get('isLoading').searchGames; }
 export function getIsLoadingSearchMovies(state) { return state.get('isLoading').searchMovies; }
+export function getIsLoadingSearchShows(state) { return state.get('isLoading').searchShows; }
 export function getIsLoadingSearchUsers(state) { return state.get('isLoading').searchUsers;}
 export function getIsLoadingSearchAll(state) { return (state.get('isLoading').searchUsers || state.get('isLoading').searchMovies || state.get('isLoading').searchGames); }
 export function getIsLoadingUserPageContent(state) { return state.get('isLoading').userPageContent; }
