@@ -9,7 +9,9 @@ import MoviePage from "./components/MoviePage/MoviePage";
 import SearchPage from "./components/SearchPage/SearchPage";
 import LoginForm from "./components/Modals/LoginForm";
 import RegistrationForm from "./components/Modals/RegistrationForm";
+import ResetPasswordForm from "./components/Modals/ResetPasswordForm";
 import ConfirmPage from "./components/ConfirmPage";
+import ConfirmPasswordPage from "./components/ConfirmPasswordPage";
 import UserPage from "./components/UserPage/UserPage";
 import Navbar from "./components/Navbar";
 
@@ -25,12 +27,14 @@ class Routes extends React.Component {
             <Route exact path="/movie/:id" component={MoviePage} />
             <Route exact path="/search/:query" component={SearchPage} />
             <Route exact path="/confirm/" component={ConfirmPage} />
+            <Route exact path="/confirm_password/" component={ConfirmPasswordPage} />
             <Route exact path="/user/:userID" component={UserPage} />
             <Route render={function () { return <h1>Not Found</h1>; }} />
         </Switch>
       <ToastContainer position="top-center" hideProgressBar newestOnTop closeOnClick/>
       <LoginForm/>
       <RegistrationForm/>
+      <ResetPasswordForm/>
       </div>
     );
   }

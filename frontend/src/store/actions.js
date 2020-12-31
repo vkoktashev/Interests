@@ -1,6 +1,6 @@
 import * as actionTypes from './actionTypes';
 import * as selectors from './reducers';
-import {getToken, updateToken, registration, confirmation} from "../services/jwtAuth";
+import * as auth from "../services/jwtAuth";
 import {TOKEN_LIFETIME} from "../settings";
 import * as Requests from "../services/requests";
 import { toast } from "react-toastify";
@@ -12,7 +12,7 @@ export function tryAuth(login, password) {
         setError(dispatch, actionTypes.AUTH_ERROR, false);
 
       try {
-        const res = await getToken(login, password);
+        const res = await auth.getToken(login, password);
         if (res !== null){
             localStorage.setItem('refreshToken', res.refreshToken);
             localStorage.setItem('token', res.token);
@@ -43,7 +43,7 @@ export function tryAuth(login, password) {
 export function checkAuthorization(){
     return async(dispatch) => {
         if (localStorage.getItem('token') === null | Date.now() - localStorage.getItem('tokenTime') > TOKEN_LIFETIME){
-            const res = await updateToken(localStorage.getItem("refreshToken"));
+            const res = await auth.updateToken(localStorage.getItem("refreshToken"));
             if (res !== null){
                 dispatch({
                     type: actionTypes.SET_AUTH,
@@ -97,7 +97,7 @@ export function resetAuthorization(){
 export function registrationRequest(username, email, password){
     return async(dispatch) => {
         setError(dispatch, actionTypes.REGISTRATE_ERROR, false);
-        registration(username, email, password).then((result) => {
+        auth.registration(username, email, password).then((result) => {
             console.log(result);
             if (result.status !== 400){
                 dispatch({
@@ -117,7 +117,7 @@ export function registrationRequest(username, email, password){
 
 export function confirmEmailRequest(uid64, token){
     return async() => {
-        confirmation(uid64, token).then((result) => {
+        auth.confirmation(uid64, token).then((result) => {
             console.log(result);
             if (result.status === 200){
                 toast.success("Почта подтверждена!");
@@ -373,6 +373,52 @@ export function setUserStatus(is_following, userID){
     }
 }
 
+export function resetPassword(email){
+    return async(dispatch) => {
+        dispatch({
+            type: actionTypes.RESET_PASSWORD_ERROR,
+            error: false
+        });
+        auth.resetPassword(email).then((result) => {
+            if (result.status !== 200){
+                dispatch({
+                    type: actionTypes.RESET_PASSWORD_ERROR,
+                    error: result.data.error
+                });
+            }
+            else{
+                dispatch({
+                    type: actionTypes.RESET_PASSWORD_ERROR,
+                    error: 'ok'
+                });
+            }
+        });
+    }
+}
+
+export function confirmPassword(token, password){
+    return async(dispatch) => {
+        dispatch({
+            type: actionTypes.CONFIRM_PASSWORD_ERROR,
+            error: false
+        });
+        auth.confirmPassword(token, password).then((result) => {
+            if (result.status !== 200){
+                dispatch({
+                    type: actionTypes.CONFIRM_PASSWORD_ERROR,
+                    error: result.data.error?result.data.error:'Неизвестная ошибка'
+                });
+            }
+            else{
+                dispatch({
+                    type: actionTypes.CONFIRM_PASSWORD_ERROR,
+                    error: 'ok'
+                });
+            }
+        });
+    }
+}
+
 export function setUser(user) {
     return({ type: actionTypes.SET_USER, user: user });
 }
@@ -391,6 +437,14 @@ export function openRegistrateForm() {
 
 export function closeRegistrateForm() {
     return({ type: actionTypes.SET_REGISTRATEFORM, isOpen: false  });
+}
+
+export function openResetPasswordForm() {
+    return({ type: actionTypes.SET_RESET_PASSWORD_FORM, isOpen: true  });
+}
+
+export function closeResetPasswordForm() {
+    return({ type: actionTypes.SET_RESET_PASSWORD_FORM, isOpen: false  });
 }
 
 function setLoading(dispatch, type, isLoading){
