@@ -13,3 +13,4 @@ howlongtobeatpy
 drf-yasg
 tmdbsimple
 requests
+drf-nested-routers

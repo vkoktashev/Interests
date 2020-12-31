@@ -52,7 +52,7 @@ function GameBlock ( {games, stats} ) {
                                 status: game.status,
                                 score: game.score,
                                 review: game.review,
-                                spent_time: game.spent_time,
+                                spent_time: parseFloat(game.spent_time),
                                 /*clickEvent: (e) => {
                                     //window.open('/game/' + game.game.rawg_slug);
                                     history.push('/game/' + game.game.rawg_slug);

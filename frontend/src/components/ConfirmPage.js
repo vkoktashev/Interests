@@ -17,7 +17,6 @@ function ConfirmPage ( {confirmEmailRequest} )
 
 	useEffect(
 		() => {
-			alert('вызвал')
 			confirmEmailRequest(uid64, token);
 		},
 		// eslint-disable-next-line
@@ -25,8 +24,7 @@ function ConfirmPage ( {confirmEmailRequest} )
 	);
 	
     return (
-			<div>
-				
+			<div className="bg">
 			</div>
     	);
 }

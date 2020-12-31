@@ -74,7 +74,7 @@ class AuthViewSet(GenericViewSet):
                              status.HTTP_200_OK: openapi.Response(
                                  description=status.HTTP_200_OK,
                                  examples={
-                                     "application/json": None
+                                     "application/json": USER_RETRIEVE_200_EXAMPLE
                                  }
                              ),
                              status.HTTP_400_BAD_REQUEST: openapi.Response(
@@ -87,15 +87,16 @@ class AuthViewSet(GenericViewSet):
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
     def confirm_email(self, request, *args, **kwargs):
         try:
-            uid = force_text(urlsafe_base64_decode(request.GET.get('uid64')))
+            uid = force_text(urlsafe_base64_decode(request.query_params.get('uid64')))
             user = User.objects.get(pk=uid)
         except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist):
             user = None
 
-        if user is not None and account_activation_token.check_token(user, request.GET.get('token')):
+        if user is not None and account_activation_token.check_token(user, request.query_params.get('token')):
             user.is_active = True
             user.save()
-            return Response(status=status.HTTP_200_OK)
+            serializer = UserSerializer(instance=user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -238,7 +239,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         try:
             user_is_followed = UserFollow.objects.get(user=request.user, followed_user=user).is_following
-        except UserFollow.DoesNotExist:
+        except (UserFollow.DoesNotExist, TypeError):
             user_is_followed = False
 
         stats = {}
@@ -365,9 +366,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         user_password_token.save()
 
         mail_subject = 'Сброс пароля.'
-        activation_link = f"{request.scheme}://{SITE_URL}/confirm_password_reset/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
-        #activation_link = f"{request.scheme}://localhost:8000/" \
-        #                  f"confirm_password_reset/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
+        activation_link = f"{request.scheme}://{SITE_URL}/" \
+                          f"confirm_password/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
         message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
         email.send()
@@ -385,7 +385,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
     def confirm_password_reset(self, request, *args, **kwargs):
         try:
-            reset_token = force_text(urlsafe_base64_decode(request.GET.get('reset_token')))
+            reset_token = force_text(urlsafe_base64_decode(request.query_params.get('reset_token')))
             password = request.data.get('password')
             user_password_token = UserPasswordToken.objects.get(reset_token=reset_token)
             user = User.objects.get(id=user_password_token.user.id)

@@ -60,8 +60,8 @@ const initialState = Map(
             userLogs: {log: []},
             userFriendsLogs: {log: []},
         },
-        openedPages: { LoginForm: false, RegistrateForm: false },
-        errors: {auth: false, registrate: false, gameRequest: false, movieRequest: false, userPage: false },
+        openedPages: { LoginForm: false, RegistrateForm: false, ResetPasswordForm: false },
+        errors: {auth: false, registrate: false, gameRequest: false, movieRequest: false, userPage: false, resetPassword: false, confirmPassword: false },
         isLoading: {contentGame: false, contentMovie: false, searchGames: false, searchMovies: false, userPageContent: false, searchUsers: false, userPageLogs: false, userPageFriendsLogs: false, contentGameFriends: false, contentMovieFriends: false}
     }
 );
@@ -96,6 +96,7 @@ export default function reducer(state = initialState, action) {
     //Редьюсеры состояния всплывающих окон
     case types.SET_LOGINFORM:  return state.setIn(['openedPages', 'LoginForm'], action.isOpen);
     case types.SET_REGISTRATEFORM:  return state.setIn(['openedPages', 'RegistrateForm'], action.isOpen);
+    case types.SET_RESET_PASSWORD_FORM:  return state.setIn(['openedPages', 'ResetPasswordForm'], action.isOpen);
 
     //Редьюсеры ошибок
     case types.AUTH_ERROR:  return state.setIn(['errors', 'auth'], action.error);
@@ -103,6 +104,8 @@ export default function reducer(state = initialState, action) {
     case types.GAME_REQUEST_ERROR: return state.setIn(['errors', 'gameRequest'], action.error);
     case types.MOVIE_REQUEST_ERROR:  return state.setIn(['errors', 'movieRequest'], action.error);
     case types.USER_PAGE_ERROR: return state.setIn(['errors', 'userPage'], action.error);
+    case types.RESET_PASSWORD_ERROR: return state.setIn(['errors', 'resetPassword'], action.error);
+    case types.CONFIRM_PASSWORD_ERROR: return state.setIn(['errors', 'confirmPassword'], action.error);
 
     //Редьюсеры состояния загрузки
     case types.SET_IS_LOADING_CONTENT_GAME:  return state.setIn(['isLoading', 'contentGame'], action.isLoading);
@@ -142,10 +145,13 @@ export function getRegistrateError(state) { return state.get('errors').registrat
 export function getGameRequestError(state) {  return state.get('errors').gameRequest; }
 export function getMovieRequestError(state) { return state.get('errors').movieRequest; }
 export function getUserPageError(state) {  return state.get('errors').userPage;}
+export function getResetPasswordError(state) {  return state.get('errors').resetPassword;}
+export function getConfirmPasswordError(state) {  return state.get('errors').confirmPassword;}
 
 //Селекторы состояния высплывающих окон
 export function getLoginForm(state) { return state.get('openedPages').LoginForm; }
 export function getRegistrateForm (state) { return state.get('openedPages').RegistrateForm; }
+export function getResetPasswordForm (state) { return state.get('openedPages').ResetPasswordForm; }
 
 //Селекторы состояния загрузки
 export function getIsLoadingContentGame(state) { return state.get('isLoading').contentGame; }

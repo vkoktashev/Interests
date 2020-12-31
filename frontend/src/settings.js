@@ -10,6 +10,10 @@ export const REFRESH_TOKEN_URL = BACKEND_URL + "users/auth/refresh-token/";
 export const REGISTRATE_URL = BACKEND_URL + "users/auth/signup/";
 /**Адрес подтверждения почты */
 export const CONFIRM_URL = BACKEND_URL + "users/auth/confirm_email/";
+/**Адрес сброса пароля */
+export const RESET_PASSWORD_URL = BACKEND_URL + "users/user/password_reset/"; 
+/**Адрес подтверждения сброса пароля */
+export const CONFIRM_PASSWORD_URL = BACKEND_URL + "users/user/confirm_password_reset/";
 /**Адрес запроса игры */
 export const GET_GAME_URL = BACKEND_URL + "games/game/";
 /**Адрес поиска игр */

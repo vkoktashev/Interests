@@ -1,6 +1,6 @@
 import axios from "axios";
 import jwt_decode from 'jwt-decode';
-import {GET_TOKEN_URL, REFRESH_TOKEN_URL, REGISTRATE_URL, CONFIRM_URL} from '../settings';
+import * as urls from '../settings';
 
 let axiosConfig = {
     headers: {
@@ -15,7 +15,7 @@ let axiosConfig = {
  */
 export async function getToken(username, password){
     try{
-        const res = await axios.post(GET_TOKEN_URL, {
+        const res = await axios.post(urls.GET_TOKEN_URL, {
                     username: username,
                     password: password 
                 }, axiosConfig);
@@ -36,7 +36,7 @@ export async function getToken(username, password){
 export async function updateToken(refreshToken){
     if (typeof refreshToken !== 'undefined' & refreshToken != null)
         try{
-            const res = await axios.post(REFRESH_TOKEN_URL, {
+            const res = await axios.post(urls.REFRESH_TOKEN_URL, {
                         refresh: refreshToken
                     }, axiosConfig);
                     
@@ -53,8 +53,9 @@ export async function updateToken(refreshToken){
 
 export async function registration(username, email, password) {
    try{
-        const res = await axios.post(REGISTRATE_URL, 
-            {  username: username,
+        const res = await axios.post(urls.REGISTRATE_URL, 
+            {  
+                username: username,
                 email: email, 
                 password: password 
             }, axiosConfig);
@@ -68,16 +69,28 @@ export async function registration(username, email, password) {
 
 export async function confirmation(uid64, token) {
     try{
-        console.log(uid64);
-        console.log(token);
-        const res = await axios.patch(CONFIRM_URL, 
-             {  
-                uid64: uid64,
-                token: token
-             }, 
-             axiosConfig);
-        let data = res.data;	
-        return data;
+        const res = await axios.patch(urls.CONFIRM_URL + '?uid64=' + uid64 + '&token=' + token);
+        return res;
+     }catch(e){
+         console.log("AXIOS ERROR: ", e.response);
+         return e.response;
+     }
+ }
+
+ export async function resetPassword(email) {
+    try{
+        const res = await axios.put(urls.RESET_PASSWORD_URL,  {  email: email }, axiosConfig);
+        return res;
+     }catch(e){
+         console.log("AXIOS ERROR: ", e.response);
+         return e.response;
+     }
+ }
+
+ export async function confirmPassword(token, password) {
+    try{
+        const res = await axios.patch(urls.CONFIRM_PASSWORD_URL + '?reset_token=' + token,  { password: password }, axiosConfig);
+        return res;
      }catch(e){
          console.log("AXIOS ERROR: ", e.response);
          return e.response;

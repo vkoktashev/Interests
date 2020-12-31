@@ -18,7 +18,7 @@ import * as selectors from '../../store/reducers';
  * КОмпонент формы авторизации
  * @param {number} Параметр, при изменении которого компонент открывается 
  */
-function LoginForm( {isOpen, closeForm, logIn, authError} ) {
+function LoginForm( {isOpen, closeForm, logIn, authError, openResetPasswordForm} ) {
 	const [password, setPassword] = useState("");
 	const [login, setLogin] = useState("");
 
@@ -45,11 +45,15 @@ function LoginForm( {isOpen, closeForm, logIn, authError} ) {
 	              <input type="password" id="passwordInput" className="form-control" 
 				  	value={password}
 					onChange={(event) =>setPassword(event.target.value)}/>
+				
 
 	              <div className="text-center mt-4">
 					<MDBBtn type="submit" className="confirmButton">
 						Войти
 					</MDBBtn>
+					<label className="passwordResetLabel" onClick={() => {closeForm(); openResetPasswordForm()}}>
+						Восстановить пароль
+	              	</label>
 	              </div>
 	            </form>
 	          </MDBCol>
@@ -72,6 +76,9 @@ const mapDispatchToProps = (dispatch) => {
 		},
 		logIn: (login, password) => {
 			dispatch(actions.tryAuth(login, password));
+		},
+		openResetPasswordForm: () => {
+			dispatch(actions.openResetPasswordForm());
 		},
 	}
 };
