@@ -236,7 +236,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         try:
             user_is_followed = UserFollow.objects.get(user=request.user, followed_user=user).is_following
-        except UserFollow.DoesNotExist:
+        except (UserFollow.DoesNotExist, TypeError):
             user_is_followed = False
 
         stats = {}
@@ -363,9 +363,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         user_password_token.save()
 
         mail_subject = 'Сброс пароля.'
-        # activation_link = f"{request.scheme}://{SITE_URL}/confirm_password_reset/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
-        activation_link = f"{request.scheme}://localhost:8000/" \
-                          f"confirm_password_reset/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
+        activation_link = f"{request.scheme}://{SITE_URL}/" \
+                          f"confirm_password/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
         message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
         # email.send()
