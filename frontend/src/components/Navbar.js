@@ -26,7 +26,7 @@ function Navbar( {loggedIn, onLoginClick, onLogoutClick, onRegistrationClick, us
 
     return(
             <MDBNavbar style={{ backgroundColor: "#4527a0" }} dark expand="md" fixed="top">
-            <MDBNavbarBrand onClick={ (event) => {event.preventDefault(); history.push('/search/example'); return false; }}>
+            <MDBNavbarBrand onClick={ (event) => {event.preventDefault(); history.push('/'); return false; }}>
                 <strong className="white-text" style={{cursor: 'pointer'}}>Interests</strong>
             </MDBNavbarBrand>
             <MDBNavbarNav left>
