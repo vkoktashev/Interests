@@ -375,8 +375,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
         try:
-            # email.send()
-            print(activation_link)
+            email.send()
+            # print(activation_link)
         except SMTPAuthenticationError:
             return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
