@@ -164,7 +164,7 @@ function ShowPage ( {requestShow, show, showIsLoading,
                                 </MDBRow>
                                 <div className="showContentBody"> 
                                     <h3 style={{paddingTop: "15px"}}>Список серий</h3>
-                                    <SeasonsBlock seasons={show.tmdb.seasons}/>
+                                    <SeasonsBlock seasons={show.tmdb.seasons} showID={show.tmdb.id}/>
                                 </div>
                                 <MDBCol size="6" style={{paddingLeft: "10px"}}>
                                     

@@ -8,7 +8,7 @@ import {
     MDBIcon
 } from "mdbreact";
 
-function EpisodeRow ( {episode} ) {
+function EpisodeRow ( {episode, season, showID} ) {
     let history = useHistory();
 
     useEffect(() =>{
@@ -24,7 +24,12 @@ function EpisodeRow ( {episode} ) {
 
     return(
         <div className="episodeRow">
-            Серия {episode + '  '}  
+            <a className="episodeRowName episodeLink" 
+                href={window.location.origin + '/show/' + showID + '/season/' + season + '/episode/'+ episode} 
+                onClick={(e) => { history.push('/show/' + showID + '/season/' + season + '/episode/'+ episode); e.preventDefault();}}
+                >
+                Серия {episode}
+            </a>  
             <Rating stop={10}
                 emptySymbol={<MDBIcon far icon="star" size="1x"/>}
                 fullSymbol={[1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" title={n}/>)}

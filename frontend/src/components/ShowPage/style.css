@@ -62,22 +62,18 @@
 
 a.episodeLink:link {
     color: rgb(238, 238, 238);
-    font-weight: 500;
 }
 
 a.episodeLink:visited{
     color: rgb(238, 238, 238);
-    font-weight: 500;
 }
 
 a.episodeLink:hover{
     color: #ff69b4;
-    font-weight: 500;
 }
 
 a.episodeLink:active{
     color: rgb(238, 238, 238);
-    font-weight: 500;
 }
 
 .seasonBlock{
@@ -126,4 +122,10 @@ li.episode:nth-child(even){
 
 .episodeRating{
     margin-left: 20px;
+}
+
+.episodeRowName{
+    width: 40px;
+    margin-bottom: 0px;
+    display: inline-block;
 }

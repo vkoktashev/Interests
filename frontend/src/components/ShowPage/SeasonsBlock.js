@@ -1,11 +1,13 @@
 import React, { useEffect, useState} from "react";
 import {
-    MDBIcon
-} from "mdbreact";
+    useHistory
+  } from "react-router-dom";
 import './style.css';
 import EpisodeRow from './EpisodeRow';
 
-function SeasonsBlock ( {seasons} ) {
+function SeasonsBlock ( {seasons, showID} ) {
+    let history = useHistory();
+
     const [hereSeasons, setHereSeasons] = useState([]);
 
     useEffect(() =>{
@@ -35,12 +37,17 @@ function SeasonsBlock ( {seasons} ) {
                 hereSeasons.map((season) => 
                     <div key={season.id} className="seasonBlock">
                         <div className='seasonName'>
-                            <h5 > {season.name} </h5>
+                            <a 
+                                href={window.location.origin + '/show/' + showID + '/season/' + season.id} 
+                                onClick={(e) => { history.push('/show/' + showID + '/season/' + season.id); e.preventDefault();}}
+                                >
+                                <h5 > {season.name} </h5>
+                            </a>
                         </div>
                         <details open={false} className='episodeRows'>
                             <summary>Развернуть</summary>
                                 <ul>
-                                {  season.episodes.map((episode) => <li className="episode"><EpisodeRow episode={episode} key={season.id+episode}/></li>) }
+                                {  season.episodes.map((episode) => <li className="episode"><EpisodeRow episode={episode} season={season.id} showID={showID} key={season.id+episode}/></li>) }
                                 </ul>
                         </details>
                         
