@@ -1,5 +1,6 @@
 import secrets
 from itertools import chain
+from smtplib import SMTPAuthenticationError
 
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
@@ -22,7 +23,7 @@ from movies.models import UserMovie, MovieLog
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer
 from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
-    DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, USER_NOT_FOUND
+    DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, USER_NOT_FOUND, EMAIL_ERROR
 from utils.documentation import USER_SIGNUP_201_EXAMPLE, USER_SIGNUP_400_EXAMPLE, USER_LOG_200_EXAMPLE, \
     USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE
 from utils.functions import similar, get_page_size
@@ -62,8 +63,11 @@ class AuthViewSet(GenericViewSet):
         activation_link = f"{request.scheme}://{SITE_URL}/confirm/?uid64={uid64}&token={token}"
         message = f"Привет {user.username}, для активации аккаунта перейди по ссылке:\n{activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
-        # email.send()
-        print(activation_link)
+        try:
+            # email.send()
+            print(activation_link)
+        except SMTPAuthenticationError:
+            return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(manual_parameters=[uid64_param, token_param],
@@ -367,8 +371,11 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                           f"confirm_password/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
         message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
-        # email.send()
-        print(activation_link)
+        try:
+            # email.send()
+            print(activation_link)
+        except SMTPAuthenticationError:
+            return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         return Response(status=status.HTTP_200_OK)
 

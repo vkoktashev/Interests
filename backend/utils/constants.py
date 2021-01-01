@@ -23,4 +23,5 @@ ID_VALUE_ERROR = 'Неверный ID, должен быть целым числ
 USER_NOT_FOUND = 'Пользователь не найден.'
 SHOW_NOT_FOUND = "Сериал не найден."
 SEASON_NOT_FOUND = 'Сезон не найден.'
-EPISODE_NOT_FOUND = 'Эпизод не найден'
+EPISODE_NOT_FOUND = 'Эпизод не найден.'
+EMAIL_ERROR = 'Возникла проблема с отправкой письма, попробуйте позже.'
