@@ -8,8 +8,10 @@ from rest_framework.viewsets import GenericViewSet
 
 from shows.models import UserShow, Show, UserSeason, Season, UserEpisode, Episode
 from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpisodeSerializer
-from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER
-from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOW_SEARCH_200_EXAMPLE
+from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
+    SEASON_NOT_FOUND
+from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
+    SEASON_RETRIEVE_200_EXAMPLE
 from utils.openapi_params import query_param, page_param
 
 
@@ -19,7 +21,7 @@ class SearchShowsViewSet(GenericViewSet, mixins.ListModelMixin):
                              status.HTTP_200_OK: openapi.Response(
                                  description=status.HTTP_200_OK,
                                  examples={
-                                     "application/json": SHOW_SEARCH_200_EXAMPLE
+                                     "application/json": SHOWS_SEARCH_200_EXAMPLE
                                  }
 
                              )
@@ -97,14 +99,14 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         status.HTTP_200_OK: openapi.Response(
             description=status.HTTP_200_OK,
             examples={
-                "application/json": SHOW_RETRIEVE_200_EXAMPLE
+                "application/json": SEASON_RETRIEVE_200_EXAMPLE
             }
         ),
         status.HTTP_404_NOT_FOUND: openapi.Response(
             description=status.HTTP_404_NOT_FOUND,
             examples={
                 "application/json": {
-                    ERROR: SHOW_NOT_FOUND
+                    ERROR: SEASON_NOT_FOUND
                 }
             }
         ),
@@ -124,7 +126,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except HTTPError as e:
             error_code = int(e.args[0].split(' ', 1)[0])
             if error_code == 404:
-                return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+                return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except ConnectionError:
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
@@ -148,14 +150,14 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         status.HTTP_200_OK: openapi.Response(
             description=status.HTTP_200_OK,
             examples={
-                "application/json": SHOW_RETRIEVE_200_EXAMPLE
+                "application/json": EPISODE_RETRIEVE_200_EXAMPLE
             }
         ),
         status.HTTP_404_NOT_FOUND: openapi.Response(
             description=status.HTTP_404_NOT_FOUND,
             examples={
                 "application/json": {
-                    ERROR: SHOW_NOT_FOUND
+                    ERROR: EPISODE_NOT_FOUND
                 }
             }
         ),
@@ -175,7 +177,7 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except HTTPError as e:
             error_code = int(e.args[0].split(' ', 1)[0])
             if error_code == 404:
-                return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+                return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except ConnectionError:
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)

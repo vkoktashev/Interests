@@ -130,7 +130,7 @@ LOGIN_URL = 'users/auth/login'
 EMAIL_USE_SSL = True
 EMAIL_HOST = 'smtp.mail.ru'
 EMAIL_HOST_USER = 'your_interests@mail.ru'
-EMAIL_HOST_PASSWORD = 'MAcXIdur4u4}'
+EMAIL_HOST_PASSWORD = 'tMPI24Aytyi$'
 EMAIL_PORT = 465
 
 SIMPLE_JWT = {

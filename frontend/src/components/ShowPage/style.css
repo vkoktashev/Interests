@@ -59,3 +59,73 @@
 .posterBlock{
     text-align: center;
 }
+
+a.episodeLink:link {
+    color: rgb(238, 238, 238);
+}
+
+a.episodeLink:visited{
+    color: rgb(238, 238, 238);
+}
+
+a.episodeLink:hover{
+    color: #ff69b4;
+}
+
+a.episodeLink:active{
+    color: rgb(238, 238, 238);
+}
+
+.seasonBlock{
+    margin-bottom: 0px;
+    margin-top: 10px;
+}
+
+.seasonName{
+    display: inline-block;
+    margin-left: 0px;
+    margin-right: 13px;
+    vertical-align: top;
+    font-weight: 400;
+}
+
+.episodeRows{
+    display: inline-block;
+    margin-bottom: 0px;
+    margin-top: 0px;
+    width: 90%;
+}
+
+.episodeRow{
+    margin-bottom: 0px;
+    margin-top: 0px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 4px;
+    font-size: 14px;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+ul{
+    list-style-type: none;
+    margin-left: -35px;
+}
+
+li.episode:nth-child(odd){
+    background-color: rgb(30, 30, 30);
+}
+li.episode:nth-child(even){
+    background-color: rgb(40, 40, 40);
+    border-radius: 5px;
+}
+
+.episodeRating{
+    margin-left: 20px;
+}
+
+.episodeRowName{
+    width: 40px;
+    margin-bottom: 0px;
+    display: inline-block;
+}
