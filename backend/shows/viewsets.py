@@ -1,4 +1,5 @@
 import tmdbsimple as tmdb
+from django.db import IntegrityError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
@@ -9,7 +10,7 @@ from rest_framework.viewsets import GenericViewSet
 from shows.models import UserShow, Show, UserSeason, Season, UserEpisode, Episode
 from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpisodeSerializer
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
-    SEASON_NOT_FOUND
+    SEASON_NOT_FOUND, SHOW_NOT_IN_DB
 from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
     SEASON_RETRIEVE_200_EXAMPLE
 from utils.openapi_params import query_param, page_param
@@ -89,6 +90,75 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response({'tmdb': tmdb_show, 'user_info': user_info})
 
+    @swagger_auto_schema(request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            "status": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                enum=list(dict(UserShow.STATUS_CHOICES).keys()) + list(dict(UserShow.STATUS_CHOICES).values())
+            ),
+            "score": openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                minimum=UserShow._meta.get_field('score').validators[0].limit_value,
+                maximum=UserShow._meta.get_field('score').validators[1].limit_value
+            ),
+            "review": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                maxLength=UserShow._meta.get_field('review').max_length
+            )
+        }
+    ),
+        responses={
+            status.HTTP_404_NOT_FOUND: openapi.Response(
+                description=status.HTTP_404_NOT_FOUND,
+                examples={
+                    "application/json": {
+                        ERROR: SHOW_NOT_FOUND
+                    }
+                }
+            ),
+            status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
+                description=status.HTTP_503_SERVICE_UNAVAILABLE,
+                examples={
+                    "application/json": {
+                        ERROR: TMDB_UNAVAILABLE
+                    },
+                }
+            )
+        }
+    )
+    def update(self, request, *args, **kwargs):
+        try:
+            show = Show.objects.get(tmdb_id=kwargs.get('tmdb_id'))
+        except Show.DoesNotExist:
+            try:
+                tmdb_show = tmdb.TV(kwargs.get('tmdb_id')).info(language=LANGUAGE)
+            except HTTPError as e:
+                error_code = int(e.args[0].split(' ', 1)[0])
+                if error_code == 404:
+                    return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+            show = Show.objects.create(tmdb_id=tmdb_show.get('id'),
+                                       tmdb_original_name=tmdb_show.get('original_name'),
+                                       tmdb_name=tmdb_show.get('name'),
+                                       tmdb_episode_run_time=tmdb_show.get('episode_run_time')[0])
+
+        data = request.data.copy()
+        data.update({'user': request.user.pk,
+                     'show': show.pk})
+
+        try:
+            user_show = UserShow.objects.get(user=request.user, show=show)
+            serializer = self.get_serializer(user_show, data=data)
+        except UserShow.DoesNotExist:
+            serializer = self.get_serializer(data=data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     queryset = UserSeason.objects.all()
@@ -140,6 +210,82 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response({'tmdb': tmdb_season, 'user_info': user_info})
 
+    @swagger_auto_schema(request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            "score": openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                minimum=UserSeason._meta.get_field('score').validators[0].limit_value,
+                maximum=UserSeason._meta.get_field('score').validators[1].limit_value
+            ),
+            "review": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                maxLength=UserSeason._meta.get_field('review').max_length
+            )
+        }
+    ),
+        responses={
+            status.HTTP_404_NOT_FOUND: openapi.Response(
+                description=status.HTTP_404_NOT_FOUND,
+                examples={
+                    "application/json": {
+                        ERROR: SEASON_NOT_FOUND
+                    }
+                }
+            ),
+            status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
+                description=status.HTTP_503_SERVICE_UNAVAILABLE,
+                examples={
+                    "application/json": {
+                        ERROR: TMDB_UNAVAILABLE
+                    },
+                }
+            ),
+            status.HTTP_400_BAD_REQUEST: openapi.Response(
+                description=status.HTTP_400_BAD_REQUEST,
+                examples={
+                    "application/json": {
+                        ERROR: SHOW_NOT_IN_DB
+                    },
+                }
+            )
+        }
+    )
+    def update(self, request, *args, **kwargs):
+        try:
+            season = Season.objects.get(tmdb_show=kwargs.get('show_tmdb_id'), tmdb_season_number=kwargs.get('number'))
+        except Season.DoesNotExist:
+            try:
+                tmdb_season = tmdb.TV_Seasons(kwargs.get('show_tmdb_id'), kwargs.get('number')).info(language=LANGUAGE)
+            except HTTPError as e:
+                error_code = int(e.args[0].split(' ', 1)[0])
+                if error_code == 404:
+                    return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+            try:
+                season = Season.objects.create(tmdb_id=tmdb_season.get('id'),
+                                               tmdb_season_number=tmdb_season.get('season_number'),
+                                               tmdb_name=tmdb_season.get('name'),
+                                               tmdb_show_id=kwargs.get('show_tmdb_id'))
+            except IntegrityError:
+                return Response({ERROR: SHOW_NOT_IN_DB}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = request.data.copy()
+        data.update({'user': request.user.pk,
+                     'season': season.pk})
+
+        try:
+            user_season = UserSeason.objects.get(user=request.user, season=season)
+            serializer = self.get_serializer(user_season, data=data)
+        except UserSeason.DoesNotExist:
+            serializer = self.get_serializer(data=data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     queryset = UserEpisode.objects.all()
@@ -190,3 +336,84 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             user_info = None
 
         return Response({'tmdb': tmdb_episode, 'user_info': user_info})
+
+    @swagger_auto_schema(request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            "score": openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                minimum=UserEpisode._meta.get_field('score').validators[0].limit_value,
+                maximum=UserEpisode._meta.get_field('score').validators[1].limit_value
+            ),
+            "review": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                maxLength=UserEpisode._meta.get_field('review').max_length
+            )
+        }
+    ),
+        responses={
+            status.HTTP_404_NOT_FOUND: openapi.Response(
+                description=status.HTTP_404_NOT_FOUND,
+                examples={
+                    "application/json": {
+                        ERROR: EPISODE_NOT_FOUND
+                    }
+                }
+            ),
+            status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
+                description=status.HTTP_503_SERVICE_UNAVAILABLE,
+                examples={
+                    "application/json": {
+                        ERROR: TMDB_UNAVAILABLE
+                    },
+                }
+            ),
+            status.HTTP_400_BAD_REQUEST: openapi.Response(
+                description=status.HTTP_400_BAD_REQUEST,
+                examples={
+                    "application/json": {
+                        ERROR: SHOW_NOT_IN_DB
+                    },
+                }
+            )
+        }
+    )
+    def update(self, request, *args, **kwargs):
+        try:
+            episode = Episode.objects.get(tmdb_show=kwargs.get('show_tmdb_id'),
+                                          tmdb_season_number=kwargs.get('season_number'),
+                                          tmdb_episode_number=kwargs.get('number'))
+        except Episode.DoesNotExist:
+            try:
+                tmdb_episode = tmdb.TV_Episodes(kwargs.get('show_tmdb_id'),
+                                                kwargs.get('season_number'),
+                                                kwargs.get('number')).info(language=LANGUAGE)
+            except HTTPError as e:
+                error_code = int(e.args[0].split(' ', 1)[0])
+                if error_code == 404:
+                    return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+            try:
+                episode = Episode.objects.create(tmdb_id=tmdb_episode.get('id'),
+                                                 tmdb_episode_number=tmdb_episode.get('episode_number'),
+                                                 tmdb_season_number=tmdb_episode.get('season_number'),
+                                                 tmdb_name=tmdb_episode.get('name'),
+                                                 tmdb_show_id=kwargs.get('show_tmdb_id'))
+            except IntegrityError:
+                return Response({ERROR: SHOW_NOT_IN_DB}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = request.data.copy()
+        data.update({'user': request.user.pk,
+                     'episode': episode.pk})
+
+        try:
+            user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
+            serializer = self.get_serializer(user_episode, data=data)
+        except UserEpisode.DoesNotExist:
+            serializer = self.get_serializer(data=data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
