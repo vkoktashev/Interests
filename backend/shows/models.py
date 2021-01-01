@@ -37,12 +37,14 @@ class UserShow(UserScore):
     STATUS_STOPPED = 'stopped'
     STATUS_GOING = 'going'
     STATUS_NOT_WATCHED = 'not watched'
+    STATUS_WATCHING = 'watching'
 
     STATUS_CHOICES = (
         (STATUS_WATCHED, 'Посмотрел'),
         (STATUS_STOPPED, 'Дропнул'),
         (STATUS_GOING, 'Буду смотреть'),
-        (STATUS_NOT_WATCHED, 'Не смотрел')
+        (STATUS_NOT_WATCHED, 'Не смотрел'),
+        (STATUS_WATCHING, 'Смотрю')
     )
 
     show = models.ForeignKey(Show, on_delete=models.CASCADE)
