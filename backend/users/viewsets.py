@@ -21,6 +21,8 @@ from games.models import UserGame, GameLog
 from games.serializers import GameStatsSerializer, GameLogSerializer
 from movies.models import UserMovie, MovieLog
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer
+from shows.models import UserShow, UserEpisode
+from shows.serializers import ShowStatsSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer
 from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
     DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, USER_NOT_FOUND, EMAIL_ERROR
@@ -251,6 +253,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .order_by('-updated_at')
         serializer = GameStatsSerializer(user_games, many=True)
         games = serializer.data
+        # games stats
         stats.update({'games_count': len(user_games),
                       'games_total_spent_time': sum(el.spent_time for el in user_games)})
 
@@ -260,10 +263,23 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .order_by('-updated_at')
         serializer = MovieStatsSerializer(user_movies, many=True)
         movies = serializer.data
+        # movies stats
         watched_movies = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_WATCHED)
         stats.update({'movies_count': len(watched_movies),
                       'movies_total_spent_time':
                           round(sum(el.movie.tmdb_runtime for el in watched_movies) / MINUTES_IN_HOUR, 1)})
+
+        # shows
+        user_shows = UserShow.objects.exclude(status=UserShow.STATUS_NOT_WATCHED) \
+            .filter(user=user) \
+            .order_by('-updated_at')
+        serializer = ShowStatsSerializer(user_shows, many=True)
+        shows = serializer.data
+        # shows stats
+        watched_episodes = UserEpisode.objects.exclude(score=-1).filter(user=user)
+        stats.update({'episodes_count': len(watched_episodes),
+                      'episodes_total_spent_time':
+                          sum(el.episode.tmdb_show.tmdb_episode_run_time for el in watched_episodes)})
 
         # followed_users
         followed_users = list(el.followed_user for el
@@ -273,7 +289,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response({'id': user.id, 'username': user.username, 'is_followed': user_is_followed,
                          'followed_users': followed_users,
-                         'games': games, 'movies': movies, 'stats': stats})
+                         'games': games, 'movies': movies, 'shows': shows, 'stats': stats})
 
     @swagger_auto_schema(
         request_body=openapi.Schema(

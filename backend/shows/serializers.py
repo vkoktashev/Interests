@@ -36,3 +36,10 @@ class UserEpisodeSerializer(serializers.ModelSerializer):
             'user': {'write_only': True},
             'episode': {'write_only': True}
         }
+
+
+class ShowStatsSerializer(UserShowSerializer):
+    class Meta:
+        model = UserShow
+        exclude = ('id', 'user', 'updated_at')
+        depth = 1
