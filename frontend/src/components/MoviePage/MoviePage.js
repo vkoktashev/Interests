@@ -38,10 +38,18 @@ function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieSta
     useEffect(
 		() => {
             requestMovie(id);
-            requestMovieFriends(id);
         },
         // eslint-disable-next-line
 		[id, requestMovie]
+    );
+
+    useEffect(
+		() => {
+            if (loggedIn)
+                requestMovieFriends(id, 1);
+        },
+        // eslint-disable-next-line
+		[loggedIn]
     );
 
     useEffect(

@@ -40,10 +40,18 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
     useEffect(
 		() => {
             requestGame(id);
-            requestGameFriends(id, 1);
         },
         // eslint-disable-next-line
 		[id, requestGame]
+    );
+
+    useEffect(
+		() => {
+            if (loggedIn)
+                requestGameFriends(id, 1);
+        },
+        // eslint-disable-next-line
+		[loggedIn]
     );
 
     useEffect(
