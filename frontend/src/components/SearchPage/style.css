@@ -13,6 +13,9 @@ a:active {
 
 .searchCardsGroup{
   text-align: center;
+  width: 92%;
+  display: inline-block;
+  margin-left: 4%;
 }
 
 .searchCardMovie{
@@ -63,7 +66,7 @@ a:active {
 
 .searchCardGameImage{
   height: 150px;
-  width: 250px;
+  width: 50%;
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -81,7 +84,7 @@ a:active {
   color: rgb(238, 238, 238);
   font-weight: 200;
   background-color: rgb(43, 43, 43);
-  width: 250px;
+  width: 50%;
   height: 150px;
   display: inline-block;
   margin: 0;
@@ -108,4 +111,30 @@ a:active {
 #searchInput2{
   color: rgb(207, 207, 207);
   background-color: rgb(30, 30, 30);
+}
+
+.paginationButton{
+  position: absolute;
+  top: 0;
+  width: 4%;
+  height: 100%;
+  display: inline-block;
+  vertical-align: top;
+  color: rgb(207, 207, 207);
+  background-color: rgb(30, 30, 30);
+  border-radius: 5px;
+  border: none;
+}
+
+.paginationButton:hover{
+  background-color: rgb(90, 90, 90);
+}
+
+.paginationButton:active{
+  border: none;
+  background-color: rgb(43, 43, 43);
+}
+
+.reslutsBlock{
+  position: relative;
 }

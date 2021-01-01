@@ -214,7 +214,7 @@ function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieSta
 
 const mapStateToProps = state => ({
     loggedIn: selectors.getLoggedIn(state),
-    requestError: selectors.getGameRequestError(state),
+    requestError: selectors.getMovieRequestError(state),
     movie: selectors.getContentMovie(state),
     movieIsLoading: selectors.getIsLoadingContentMovie(state),
     movieFriends: selectors.getContentMovieFriends(state),

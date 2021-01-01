@@ -161,7 +161,13 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                   setGameStatus({ status: status });
+                                                    setGameStatus(
+                                                        { 
+                                                           status: status,
+                                                           review: document.getElementById('reviewInput').value, 
+                                                           spent_time: document.getElementById('spentTimeInput').value
+                                                        }
+                                                    );
                                                 }
                                             }}
                                             />

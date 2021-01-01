@@ -28,7 +28,7 @@ const LOG_ROWS_COUNT = 15;
 /**
  * Основная страница приложения
  */
-function UserPage ( { userIsLoading, getUserInfo, userInfo, currentUserInfo, setUserStatus, getUserLogs, userLogs, userLogsIsLoading,getUserFriendsLogs, userFriendsLogs, userFriendsLogsIsLoading}) 
+function UserPage ( { loggedIn, userIsLoading, getUserInfo, userInfo, currentUserInfo, setUserStatus, getUserLogs, userLogs, userLogsIsLoading,getUserFriendsLogs, userFriendsLogs, userFriendsLogsIsLoading}) 
 { 
     let { userID } = useParams();
     const [activeCategory, setActiveCategory] = useState("Профиль");
@@ -37,9 +37,18 @@ function UserPage ( { userIsLoading, getUserInfo, userInfo, currentUserInfo, set
 		() => {
             getUserInfo(userID);
             getUserLogs(userID, 1, LOG_ROWS_COUNT);
-            getUserFriendsLogs(userID, 1, LOG_ROWS_COUNT);
-		},
+        },
+        // eslint-disable-next-line
 		[userID, getUserInfo, getUserLogs, getUserFriendsLogs]
+    );
+
+    useEffect(
+		() => {
+            if (loggedIn)
+                getUserFriendsLogs(userID, 1, LOG_ROWS_COUNT);
+        },
+        // eslint-disable-next-line
+		[loggedIn]
     );
 
     useEffect(

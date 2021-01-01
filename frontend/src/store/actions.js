@@ -99,7 +99,7 @@ export function registrationRequest(username, email, password){
         setError(dispatch, actionTypes.REGISTRATE_ERROR, false);
         auth.registration(username, email, password).then((result) => {
             console.log(result);
-            if (result.status !== 400){
+            if (result.status === 201){
                 dispatch({
                     type: actionTypes.SET_USER,
                     user: { login: result.username, email: result.email }, 
@@ -208,6 +208,45 @@ export function requestMovieFriends(id, page){
     }
 }
 
+export function requestShow(id){
+    return async(dispatch) => {
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, true);
+        setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, false);
+        Requests.getShow(localStorage.getItem('token'), id).then((result) => {
+            console.log(result);
+            if (result != null){
+                dispatch({
+                    type: actionTypes.SET_CONTENT_SHOW,
+                    show: result, 
+                });
+            }
+            else{
+                toast.error("Сериал не найден!");
+                setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, true);
+            }
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, false);
+        });
+    }
+}
+
+/*export function requestShowFriends(id, page){
+    return async(dispatch) => {
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_FRIENDS, true);
+        Requests.getMovieFriends(localStorage.getItem('token'), id, page).then((result) => {
+            if (result != null){
+                dispatch({
+                    type: actionTypes.SET_CONTENT_SHOW_FRIENDS,
+                    info: result, 
+                });
+            }
+            else{
+                toast.error("Ошибка загрузки логов!");
+            }
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_FRIENDS, false);
+        });
+    }
+}*/
+
 export function setGameStatus(user_info){
     return async(dispatch, getState) => {
         if (await dispatch(checkAuthorization())){
@@ -283,10 +322,10 @@ export function requestUserPageFriendsLogs(userID, page, resultsOnPage){
     }
 }
 
-export function searchGames(query, page){
+export function searchGames(query, page, gamesCount){
     return async(dispatch) => {
         setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_GAMES, true);
-        Requests.searchGames(query, page).then((result) => {
+        Requests.searchGames(query, page, gamesCount).then((result) => {
             if (!result){
                 toast.error("Ошибка поиска")
             }
@@ -315,6 +354,24 @@ export function searchMovies(query, page){
                 });
             }
             setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_MOVIES, false);
+        });
+    }
+}
+
+export function searchShows(query, page){
+    return async(dispatch) => {
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_SHOWS, true);
+        Requests.searchShows(query, page).then((result) => {
+            if (!result){
+                toast.error("Ошибка поиска сериалов")
+            }
+            else{
+                dispatch({
+                    type: actionTypes.SET_SEARCH_CONTENT_SHOWS,
+                    shows: result.results, 
+                });
+            }
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_SHOWS, false);
         });
     }
 }

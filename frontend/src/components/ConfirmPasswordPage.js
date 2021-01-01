@@ -22,7 +22,7 @@ function ConfirmPasswordPage ( {confirmPassword, confirmPasswordError} )
 			<div className="bg">
                 <form onSubmit={(event) => {event.preventDefault(); confirmPassword(token, password)}} className="confirmPasswordForm">
                     <p className="h4">Обновить пароль</p>
-                    <p className="note note-danger" hidden={!confirmPasswordError} >{confirmPasswordError}</p>
+                    <p className="note note-danger" hidden={!confirmPasswordError | confirmPasswordError==='ok'} >{confirmPasswordError}</p>
                     <p className="note note-success" hidden={confirmPasswordError !== 'ok'} >Пароль обновлен!</p>
 
                     <label htmlFor="passwordInput" className="confirmPasswordLabel">

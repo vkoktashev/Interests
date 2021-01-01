@@ -19,6 +19,7 @@ import LoadingOverlay from 'react-loading-overlay';
 
 import CardGame from './CardGame';
 import CardMovie from './CardMovie';
+import CardShow from './CardShow';
 import CardUser from '../Common/CardUser';
 import CategoriesTab from '../Common/CategoriesTab';
 
@@ -26,29 +27,36 @@ import { connect } from 'react-redux';
 import * as selectors from '../../store/reducers';
 import * as actions from '../../store/actions';
 
-
 /**
  * Основная страница приложения
  */
-function SearchPage ( { loggedIn, gamesIsLoading, moviesIsLoading, usersIsLoading, searchGame, games, searchMovie, movies, searchUsers, users } ) {
+function SearchPage ( { loggedIn, gamesIsLoading, moviesIsLoading, showsIsLoading, usersIsLoading, searchGame, games, searchMovie, movies, searchShow, shows, searchUsers, users } ) {
     let history = useHistory();
     let { query } = useParams();
     const [queryText, setQueryText] = useState("");
     const [gamesCards, setGamesCards] = useState("");
     const [moviesCards, setMoviesCards] = useState("");
+    const [showsCards, setShowsCards] = useState("");
     const [usersCards, setUsersCards] = useState("");
+    const [gamesPage, setGamesPage] = useState(1);
+    const [moviesPage, setMoviesPage] = useState(1);
+    const [showsPage, setShowsPage] = useState(1);
 
     const [activeCategory, setActiveCategory] = useState("Всё");
 
     useEffect(
 		() => {
-            searchGame(query, 1);
+            searchGame(query, 1, 6);
             searchMovie(query, 1);
+            searchShow(query, 1);
             searchUsers(query);
             setQueryText(query);
             document.title = 'Поиск';
+            setGamesPage(1);
+            setMoviesPage(1);
+            setShowsPage(1);
 		},
-		[query, searchGame, searchMovie, searchUsers]
+		[query, searchGame, searchMovie, searchUsers, searchShow]
     );
 
     useEffect(
@@ -65,6 +73,12 @@ function SearchPage ( { loggedIn, gamesIsLoading, moviesIsLoading, usersIsLoadin
 		[movies]
     );
 
+    useEffect(
+		() => {
+            setShowsCards(<div className="searchCardsGroup">{shows.map(show => <CardShow show={show} key={show.id}/>)}</div>);
+		},
+		[shows]
+    );
 
     useEffect(
 		() => {
@@ -96,7 +110,7 @@ function SearchPage ( { loggedIn, gamesIsLoading, moviesIsLoading, usersIsLoadin
 
                             <h1>Результаты поиска</h1>
                                 <CategoriesTab
-                                    categories={['Всё', 'Игры', 'Фильмы', 'Пользователи']}
+                                    categories={['Всё', 'Игры', 'Фильмы', 'Сериалы', 'Пользователи']}
                                     activeColor='#7654de' 
                                     onChangeCategory={(category) => {
                                         setActiveCategory(category);
@@ -109,7 +123,21 @@ function SearchPage ( { loggedIn, gamesIsLoading, moviesIsLoading, usersIsLoadin
                                     >
                                     <div hidden={activeCategory!=='Всё' && activeCategory!=='Игры'}>
                                         <h3>Игры</h3>
-                                        {gamesCards}
+                                        <div className="reslutsBlock">
+                                            <button className="paginationButton" 
+                                                disabled={gamesPage===1}
+                                                onClick={() => {searchGame(query, gamesPage-1, 6); setGamesPage(gamesPage-1)}}
+                                                >
+                                                &lt;
+                                            </button>
+                                            {gamesCards}
+                                            <button className="paginationButton"
+                                                disabled={games.length < 6}
+                                                onClick={() => {searchGame(query, gamesPage+1, 6); setGamesPage(gamesPage+1)}}
+                                                >
+                                                &gt;
+                                            </button>
+                                        </div>
                                     </div>
                                 </LoadingOverlay>
 
@@ -120,7 +148,46 @@ function SearchPage ( { loggedIn, gamesIsLoading, moviesIsLoading, usersIsLoadin
                                     >
                                     <div hidden={activeCategory!=='Всё' && activeCategory!=='Фильмы'}>
                                         <h3>Фильмы</h3>
-                                        {moviesCards}
+                                        <div className="reslutsBlock">
+                                            <button className="paginationButton" 
+                                                disabled={moviesPage===1}
+                                                onClick={() => {searchMovie(query, moviesPage-1); setMoviesPage(moviesPage-1)}}
+                                                >
+                                                &lt;
+                                            </button>
+                                            {moviesCards}
+                                            <button className="paginationButton"
+                                                disabled={movies.length < 20}
+                                                onClick={() => {searchMovie(query, moviesPage+1); setMoviesPage(moviesPage+1)}}
+                                                >
+                                                &gt;
+                                            </button>
+                                        </div>
+                                    </div>       
+                                </LoadingOverlay>
+
+                                <LoadingOverlay
+                                    active={showsIsLoading}
+                                    spinner
+                                    text='Ищем сериалы...'
+                                    >
+                                    <div hidden={activeCategory!=='Всё' && activeCategory!=='Сериалы'}>
+                                        <h3>Сериалы</h3>
+                                        <div className="reslutsBlock">
+                                            <button className="paginationButton" 
+                                                disabled={showsPage===1}
+                                                onClick={() => {searchShow(query, showsPage-1); setShowsPage(showsPage-1)}}
+                                                >
+                                                &lt;
+                                            </button>
+                                            {showsCards}
+                                            <button className="paginationButton"
+                                                disabled={shows.length < 20}
+                                                onClick={() => {searchShow(query, showsPage+1); setShowsPage(showsPage+1)}}
+                                                >
+                                                &gt;
+                                            </button>
+                                        </div>
                                     </div>       
                                 </LoadingOverlay>
                                 
@@ -147,19 +214,24 @@ const mapStateToProps = state => ({
     loggedIn: selectors.getLoggedIn(state),
     gamesIsLoading: selectors.getIsLoadingSearchGames(state),
     moviesIsLoading: selectors.getIsLoadingSearchMovies(state),
+    showsIsLoading: selectors.getIsLoadingSearchShows(state),
     usersIsLoading: selectors.getIsLoadingSearchUsers(state),
     games: selectors.getSearchContentGames(state),
     movies: selectors.getSearchContentMovies(state),
+    shows: selectors.getSearchContentShows(state),
     users: selectors.getSearchContentUsers(state)
 });
 
 const mapDispatchToProps = (dispatch) => {
 	return {
-        searchGame: (query, page) => {
-            dispatch(actions.searchGames(query, page));
+        searchGame: (query, page, gamesCount) => {
+            dispatch(actions.searchGames(query, page, gamesCount));
         },
         searchMovie: (query, page) => {
             dispatch(actions.searchMovies(query, page));
+        },
+        searchShow: (query, page) => {
+            dispatch(actions.searchShows(query, page));
         },
         searchUsers: (query) => {
             dispatch(actions.searchUsers(query));
