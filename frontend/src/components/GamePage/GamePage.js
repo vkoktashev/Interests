@@ -48,6 +48,15 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
 
     useEffect(
 		() => {
+            if (loggedIn)
+                requestGameFriends(id, 1);
+        },
+        // eslint-disable-next-line
+		[loggedIn]
+    );
+
+    useEffect(
+		() => {
             if (game.rawg.genres){
                 let newGenres = ""
                 for (let i = 0; i < game.rawg.genres.length; i++){
