@@ -115,8 +115,29 @@ export async function setGameStatus(token, gameSlug, user_info){
 export async function setMovieStatus(token, id, user_info){
     try{
         var AuthStr = 'Bearer ' + token;
-        console.log(user_info);
         const res = await axios.put(GET_MOVIE_URL + id + "/", 
+            user_info, { headers: { 'Authorization': AuthStr } });
+        console.log(res); 
+        
+        if (res.status === 204 || res.status === 200 || res.status === 201)
+            return res.data;
+        else return null;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
+ * Запрос на изменение статуса сериала
+ * @param {string} token Токен доступа
+ * @param {object} user_info Статус сериала
+ * @param {string} id ID сериала
+ */
+export async function setShowStatus(token, id, user_info){
+    try{
+        var AuthStr = 'Bearer ' + token;
+        const res = await axios.put(GET_SHOW_URL + id + "/", 
             user_info, { headers: { 'Authorization': AuthStr } });
         console.log(res); 
         

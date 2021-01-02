@@ -22,13 +22,17 @@ import FriendBlock from './FriendBlock';
 import MovieBlock from './MovieBlock';
 import UserLogBlock from './UserLogBlock';
 import CategoriesTab from '../Common/CategoriesTab';
+import ShowBlock from "./ShowBlock";
 
 const LOG_ROWS_COUNT = 15; 
 
 /**
  * Основная страница приложения
  */
-function UserPage ( { loggedIn, userIsLoading, getUserInfo, userInfo, currentUserInfo, setUserStatus, getUserLogs, userLogs, userLogsIsLoading,getUserFriendsLogs, userFriendsLogs, userFriendsLogsIsLoading}) 
+function UserPage ( { loggedIn, userInfo, 
+                    userIsLoading, getUserInfo, currentUserInfo, setUserStatus, 
+                    getUserLogs, userLogs, userLogsIsLoading,
+                    getUserFriendsLogs, userFriendsLogs, userFriendsLogsIsLoading}) 
 { 
     let { userID } = useParams();
     const [activeCategory, setActiveCategory] = useState("Профиль");
@@ -80,7 +84,7 @@ function UserPage ( { loggedIn, userIsLoading, getUserInfo, userInfo, currentUse
                             {userInfo.is_followed?'Отписаться':'Подписаться'}
                         </button>
                         <CategoriesTab
-                            categories={['Профиль', 'Игры', 'Фильмы', 'Друзья']}
+                            categories={['Профиль', 'Игры', 'Фильмы', 'Сериалы', 'Друзья']}
                             activeColor='#7654de' 
                             onChangeCategory={(category) => { setActiveCategory(category) }}/>
 
@@ -99,6 +103,9 @@ function UserPage ( { loggedIn, userIsLoading, getUserInfo, userInfo, currentUse
                             </div>
                             <div hidden={activeCategory!=='Фильмы'}>
                                 <MovieBlock movies={userInfo.movies} stats={userInfo.stats} />
+                            </div>
+                            <div hidden={activeCategory!=='Сериалы'}>
+                                <ShowBlock shows={userInfo.shows} stats={userInfo.stats} />
                             </div>
                             <div hidden={activeCategory!=='Друзья'}>
                                 <FriendBlock users={userInfo.followed_users?userInfo.followed_users:[]} />

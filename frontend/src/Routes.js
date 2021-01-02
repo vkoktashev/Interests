@@ -4,10 +4,10 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import HomePage from "./components/HomePage";
-import GamePage from "./components/GamePage/GamePage";
-import MoviePage from "./components/MoviePage/MoviePage";
-import ShowPage from "./components/ShowPage/ShowPage";
-import SearchPage from "./components/SearchPage/SearchPage";
+import GamePage from "./components/Game/GamePage";
+import MoviePage from "./components/Movie/MoviePage";
+import ShowPage from "./components/Show/ShowPage";
+import SearchPage from "./components/Search/SearchPage";
 import LoginForm from "./components/Modals/LoginForm";
 import RegistrationForm from "./components/Modals/RegistrationForm";
 import ResetPasswordForm from "./components/Modals/ResetPasswordForm";
