@@ -4,9 +4,9 @@ import {
     MDBDataTable
 } from "mdbreact";
 
-function MovieBlock ( {movies, stats} ) {
+function ShowBlock ( {shows, stats} ) {
 
-    const movieColumns = [
+    const showColumns = [
       {
         label: 'Название',
         field: 'name',
@@ -29,24 +29,24 @@ function MovieBlock ( {movies, stats} ) {
       }
     ];
 
-  const [movieTableData, setMovieTableData] = useState({
-      columns: movieColumns,
+  const [showTableData, setShowTableData] = useState({
+      columns: showColumns,
       rows: [
       ]
   });
 
     useEffect(() =>{
-            if (movies)
+            if (shows)
             {
-              setMovieTableData({
-                columns: movieColumns,
-                rows: movies.map((movie) => {
+              setShowTableData({
+                columns: showColumns,
+                rows: shows.map((show) => {
                     return {
-                            name: <a className="dataTable" href={window.location.origin + '/movie/' + movie.movie.tmdb_id}>{movie.movie.tmdb_name}</a>,
-                            name2: movie.movie.tmdb_name,
-                            status: movie.status,
-                            score: movie.score,
-                            review: movie.review,
+                            name: <a className="dataTable" href={window.location.origin + '/show/' + show.show.tmdb_id}>{show.show.tmdb_name}</a>,
+                            name2: show.show.tmdb_name,
+                            status: show.status,
+                            score: show.score,
+                            review: show.review,
                             /*clickEvent: (e) => {
                                 //window.open('/game/' + game.game.rawg_slug);
                                 history.push('/movie/' + movie.movie.tmdb_id)
@@ -57,27 +57,27 @@ function MovieBlock ( {movies, stats} ) {
             }
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [movies]
+        [shows]
     );
 
     return(
         <div>
-            <p>Фильмов посмотрено: {stats.movies?stats.movies.count:0}, часов просмотра: {stats.movies?stats.movies.total_spent_time:0}</p>  
+            <p>Серий сериалов посмотрено: {stats.episodes?stats.episodes.count:0}, часов просмотра: {stats.episodes?stats.episodes.total_spent_time:0}</p>  
             <MDBDataTable
                 striped
                 bordered
                 small
-                data={movieTableData}
+                data={showTableData}
                 info={false}
                 barReverse={true}
                 noBottomColumns={true}
                 noRecordsFoundLabel="Ничего не найдено!"
                 paginationLabel={["Предыдущая", "Следующая"]}
-                entriesLabel="Показывать фильмов на странице"
+                entriesLabel="Показывать сериалов на странице"
                 searchLabel='Поиск'
                 />
         </div>  
     )
 }
 
-export default MovieBlock;
+export default ShowBlock;

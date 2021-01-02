@@ -1,5 +1,6 @@
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 from users.models import UserScore, UserLog, UserLogAbstract
 
@@ -32,6 +33,7 @@ class UserGame(UserScore):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=STATUS_NOT_PLAYED)
     spent_time = models.DecimalField(validators=[MinValueValidator(0.0)], default=0.0, max_digits=7, decimal_places=1)
+    updated_at = models.DateTimeField(null=False, default=timezone.now)
 
     class Meta:
         unique_together = (("user", "game"),)

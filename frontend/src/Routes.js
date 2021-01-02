@@ -4,10 +4,11 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import HomePage from "./components/HomePage";
-import GamePage from "./components/GamePage/GamePage";
-import MoviePage from "./components/MoviePage/MoviePage";
-import ShowPage from "./components/ShowPage/ShowPage";
-import SearchPage from "./components/SearchPage/SearchPage";
+import GamePage from "./components/Game/GamePage";
+import MoviePage from "./components/Movie/MoviePage";
+import ShowPage from "./components/Show/ShowPage";
+import SeasonPage from "./components/Show/SeasonPage";
+import SearchPage from "./components/Search/SearchPage";
 import LoginForm from "./components/Modals/LoginForm";
 import RegistrationForm from "./components/Modals/RegistrationForm";
 import ResetPasswordForm from "./components/Modals/ResetPasswordForm";
@@ -27,6 +28,7 @@ class Routes extends React.Component {
             <Route exact path="/game/:id" component={GamePage} />
             <Route exact path="/movie/:id" component={MoviePage} />
             <Route exact path="/show/:id" component={ShowPage} />
+            <Route exact path="/show/:show_id/season/:number" component={SeasonPage} />
             <Route exact path="/search/:query" component={SearchPage} />
             <Route exact path="/confirm/" component={ConfirmPage} />
             <Route exact path="/confirm_password/" component={ConfirmPasswordPage} />
@@ -42,5 +44,5 @@ class Routes extends React.Component {
     );
   }
 }
-//confirm_password_reset
+// 
 export default Routes;

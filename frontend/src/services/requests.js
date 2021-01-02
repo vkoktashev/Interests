@@ -85,6 +85,31 @@ export async function getShow(token, id) {
 }
 
 /**
+ * Запрос к бд, получающий информацию о сезоне сериала
+ * @param {string} token Токен доступа
+ * @param {string} showID ID сериала 
+ *  * @param {string} seasonNumber номер сезона
+ * @returns {object} Информация о сериале
+ */
+export async function getShowSeason(token, showID, seasonNumber) {
+    let data;
+    try{
+        if (token){
+            var AuthStr = 'Bearer ' + token;
+            const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber, { 'headers': { 'Authorization': AuthStr } });
+            data = res.data;
+        }else{
+            const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber, axiosConfig);
+            data = res.data;
+        }
+        return data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
  * Запрос на изменение статуса игры
  * @param {string} token Токен доступа
  * @param {object} user_info Статус игры
@@ -115,8 +140,52 @@ export async function setGameStatus(token, gameSlug, user_info){
 export async function setMovieStatus(token, id, user_info){
     try{
         var AuthStr = 'Bearer ' + token;
-        console.log(user_info);
         const res = await axios.put(GET_MOVIE_URL + id + "/", 
+            user_info, { headers: { 'Authorization': AuthStr } });
+        console.log(res); 
+        
+        if (res.status === 204 || res.status === 200 || res.status === 201)
+            return res.data;
+        else return null;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
+ * Запрос на изменение статуса сериала
+ * @param {string} token Токен доступа
+ * @param {object} user_info Статус сериала
+ * @param {string} id ID сериала
+ */
+export async function setShowStatus(token, id, user_info){
+    try{
+        var AuthStr = 'Bearer ' + token;
+        const res = await axios.put(GET_SHOW_URL + id + "/", 
+            user_info, { headers: { 'Authorization': AuthStr } });
+        console.log(res); 
+        
+        if (res.status === 204 || res.status === 200 || res.status === 201)
+            return res.data;
+        else return null;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
+ * Запрос на изменение статуса сезона сериала
+ * @param {string} token Токен доступа
+ * @param {object} user_info Статус сезона сериала
+ * @param {string} showID ID сериала
+ *  * @param {string} seasonNumber номер сезона
+ */
+export async function setShowSeasonStatus(token, showID, seasonNumber, user_info){
+    try{
+        var AuthStr = 'Bearer ' + token;
+        const res = await axios.put(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/", 
             user_info, { headers: { 'Authorization': AuthStr } });
         console.log(res); 
         

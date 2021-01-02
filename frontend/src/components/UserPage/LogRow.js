@@ -49,6 +49,13 @@ function LogRow ( {log, showUsername} ) {
                     return 'фильм';
                 else
                     return 'фильма';
+            case 'show':
+                if (actionType === 'score' || actionType === 'review')
+                    return 'сериал';
+                else
+                    return 'сериала';
+            case 'season':
+                return '';
             case 'user':
                 return 'пользователя';
             default:
@@ -70,6 +77,28 @@ function LogRow ( {log, showUsername} ) {
                             onClick={(e) => { history.push('/movie/' + id); e.preventDefault();}}>
                                 {name}
                         </a>;
+            case 'show':
+                return  <a href={window.location.origin + '/show/' + id} 
+                            className="logLink"
+                            onClick={(e) => { history.push('/show/' + id); e.preventDefault();}}>
+                                {name}
+                        </a>;
+            case 'season':
+                return  <div style={{display: 'inline-block'}}>
+                            <a href={window.location.origin + '/show/' + id.show_id + '/season/' + id.season_number} 
+                                className="logLink"
+                                onClick={(e) => { history.push('/show/' + id.show_id  + '/season/' + id.season_number); e.preventDefault();}}>
+                                    {name.name}
+                            </a>
+                            &nbsp;сериала&nbsp;
+                            <a href={window.location.origin + '/show/' + id.show_id} 
+                                className="logLink"
+                                onClick={(e) => { history.push('/show/' + id.show_id); e.preventDefault();}}>
+                                    {name.parent_name}
+                            </a>
+                            
+                        </div>
+                        ;
             case 'user':
                 return  <a href={window.location.origin + '/user/' + id} 
                             className="logLink"

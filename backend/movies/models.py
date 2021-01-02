@@ -1,5 +1,6 @@
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 from users.models import UserLog, UserScore, UserLogAbstract
 
@@ -27,6 +28,7 @@ class UserMovie(UserScore):
 
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=STATUS_NOT_WATCHED)
+    updated_at = models.DateTimeField(null=False, default=timezone.now)
 
     class Meta:
         unique_together = (("user", "movie"),)

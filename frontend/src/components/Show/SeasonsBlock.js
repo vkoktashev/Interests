@@ -38,8 +38,8 @@ function SeasonsBlock ( {seasons, showID} ) {
                     <div key={season.id} className="seasonBlock">
                         <div className='seasonName'>
                             <a 
-                                href={window.location.origin + '/show/' + showID + '/season/' + season.id} 
-                                onClick={(e) => { history.push('/show/' + showID + '/season/' + season.id); e.preventDefault();}}
+                                href={window.location.origin + '/show/' + showID + '/season/' + season.season_number} 
+                                onClick={(e) => { history.push('/show/' + showID + '/season/' + season.season_number); e.preventDefault();}}
                                 >
                                 <h5 > {season.name} </h5>
                             </a>
@@ -47,7 +47,7 @@ function SeasonsBlock ( {seasons, showID} ) {
                         <details open={false} className='episodeRows'>
                             <summary>Развернуть</summary>
                                 <ul>
-                                {  season.episodes.map((episode) => <li className="episode"><EpisodeRow episode={episode} season={season.id} showID={showID} key={season.id+episode}/></li>) }
+                                {  season.episodes.map((episode) => <li className="episode" key={season.id+episode}><EpisodeRow episode={episode} season={season.season_number} showID={showID} /></li>) }
                                 </ul>
                         </details>
                         

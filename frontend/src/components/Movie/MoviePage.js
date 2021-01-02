@@ -38,10 +38,18 @@ function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieSta
     useEffect(
 		() => {
             requestMovie(id);
-            requestMovieFriends(id);
         },
         // eslint-disable-next-line
 		[id, requestMovie]
+    );
+
+    useEffect(
+		() => {
+            if (loggedIn)
+                requestMovieFriends(id, 1);
+        },
+        // eslint-disable-next-line
+		[loggedIn]
     );
 
     useEffect(
@@ -124,19 +132,20 @@ function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieSta
                         <MDBCol className="movieContentPage"> 
                             <MDBContainer>
                                 <MDBRow className="movieContentHeader rounded-top" >
-                                    <MDBCol size="5">
+                                    <MDBCol size="5" className="posterBlock">
                                         <img src={"http://image.tmdb.org/t/p/w600_and_h900_bestv2" + movie.tmdb.poster_path} className="img-fluid" alt=""/>
                                     </MDBCol>
                                     <MDBCol size="6">
                                         <h1>{movie.tmdb.title}</h1>
-                                        <p style={{marginBottom: "2px"}}>Дата релиза: {movie.tmdb.release_date}</p>
-                                        <p style={{marginBottom: "2px"}}>Продолжительность (мин): {movie.tmdb.runtime}</p>
-                                        <p style={{marginBottom: "2px"}}>Жанр: {genres}</p>
-                                        <p style={{marginBottom: "2px"}}>Компания: {companies}</p>
-                                        <p style={{marginBottom: "2px"}}>Слоган: {movie.tmdb.tagline}</p>
-                                        <p style={{marginBottom: "2px"}}>В ролях: {cast}</p>
-                                        <p style={{marginBottom: "2px"}}>Режиссер: {director}</p>
-                                        <br/>
+                                        <div className="mainInfo">
+                                            <p>Дата релиза: {movie.tmdb.release_date}</p>
+                                            <p>Продолжительность (мин): {movie.tmdb.runtime}</p>
+                                            <p>Жанр: {genres}</p>
+                                            <p>Компания: {companies}</p>
+                                            <p>Слоган: {movie.tmdb.tagline}</p>
+                                            <p>В ролях: {cast}</p>
+                                            <p>Режиссер: {director}</p>
+                                        </div>
                                         <Rating stop={10}
                                             emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}}/>}
                                             fullSymbol={[1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} title={n}/>)}
@@ -146,7 +155,8 @@ function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieSta
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                    setMovieStatus({score: score });
+                                                    setMovieStatus({score: score, review: document.getElementById('reviewInput').value, 
+                                                                    spent_time: document.getElementById('spentTimeInput').value });
                                                 }}
                                             }
                                         /> <br/>
@@ -158,7 +168,8 @@ function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieSta
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                   setMovieStatus({ status: status });
+                                                   setMovieStatus({ status: status, review: document.getElementById('reviewInput').value, 
+                                                                    spent_time: document.getElementById('spentTimeInput').value });
                                                 }
                                             }}/>
                                     </MDBCol>

@@ -10,6 +10,9 @@ import {
     MDBCol,
     MDBContainer
 } from "mdbreact";
+import {
+    PieChart, Pie, Legend, Cell
+  } from 'recharts';
 import './style.css';
 
 import { connect } from 'react-redux'; 
@@ -22,16 +25,23 @@ import FriendBlock from './FriendBlock';
 import MovieBlock from './MovieBlock';
 import UserLogBlock from './UserLogBlock';
 import CategoriesTab from '../Common/CategoriesTab';
+import ShowBlock from "./ShowBlock";
 
 const LOG_ROWS_COUNT = 15; 
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 /**
  * Основная страница приложения
  */
-function UserPage ( { loggedIn, userIsLoading, getUserInfo, userInfo, currentUserInfo, setUserStatus, getUserLogs, userLogs, userLogsIsLoading,getUserFriendsLogs, userFriendsLogs, userFriendsLogsIsLoading}) 
+function UserPage ( { loggedIn, userInfo, 
+                    userIsLoading, getUserInfo, currentUserInfo, setUserStatus, 
+                    getUserLogs, userLogs, userLogsIsLoading,
+                    getUserFriendsLogs, userFriendsLogs, userFriendsLogsIsLoading}) 
 { 
     let { userID } = useParams();
     const [activeCategory, setActiveCategory] = useState("Профиль");
+    const [chartData, setChartData] = useState([]);
 
     useEffect(
 		() => {
@@ -53,7 +63,18 @@ function UserPage ( { loggedIn, userIsLoading, getUserInfo, userInfo, currentUse
 
     useEffect(
 		() => {
+            setChartData([]);
             document.title = 'Профиль ' + userInfo.username;
+            if (userInfo.stats.games){
+                let newData = [];
+                if (userInfo.stats.games.total_spent_time > 0)
+                    newData.push({name: 'Часов в играх', value: userInfo.stats.games.total_spent_time});
+                if (userInfo.stats.movies.total_spent_time > 0)
+                    newData.push({name: 'Часов в фильмах', value: userInfo.stats.movies.total_spent_time});
+                if (userInfo.stats.episodes.total_spent_time > 0)
+                    newData.push({name: 'Часов в сериалах', value: userInfo.stats.episodes.total_spent_time});
+                setChartData(newData);
+            }
 		},
 		[userInfo]
     );
@@ -80,7 +101,7 @@ function UserPage ( { loggedIn, userIsLoading, getUserInfo, userInfo, currentUse
                             {userInfo.is_followed?'Отписаться':'Подписаться'}
                         </button>
                         <CategoriesTab
-                            categories={['Профиль', 'Игры', 'Фильмы', 'Друзья']}
+                            categories={['Профиль', 'Игры', 'Фильмы', 'Сериалы', 'Друзья']}
                             activeColor='#7654de' 
                             onChangeCategory={(category) => { setActiveCategory(category) }}/>
 
@@ -91,6 +112,25 @@ function UserPage ( { loggedIn, userIsLoading, getUserInfo, userInfo, currentUse
                                     spinner
                                     text='Загрузка активности...'
                                     >
+
+                                    <div hidden={chartData.length < 1}>
+                                        <PieChart width={300} height={220} hidden={chartData.length < 1}>
+                                            <Pie dataKey="value" 
+                                                data={chartData} 
+                                                cx="50%" cy="50%"
+                                                outerRadius={80} 
+                                                fill="#8884d8" 
+                                                labelLine={true}
+                                                label
+                                                >
+                                            {
+                                                chartData.map((entry, index) => <Cell fill={COLORS[index % COLORS.length]}/>)
+                                            }
+                                            </Pie>
+                                            <Legend verticalAlign="bottom" horizontalAlign="center"/>
+                                        </PieChart>
+                                    </div>
+
                                     <UserLogBlock logs={userLogs} onChangePage={(pageNumber) => getUserLogs(userID, pageNumber, LOG_ROWS_COUNT)}/>
                                 </LoadingOverlay>
                             </div>
@@ -99,6 +139,9 @@ function UserPage ( { loggedIn, userIsLoading, getUserInfo, userInfo, currentUse
                             </div>
                             <div hidden={activeCategory!=='Фильмы'}>
                                 <MovieBlock movies={userInfo.movies} stats={userInfo.stats} />
+                            </div>
+                            <div hidden={activeCategory!=='Сериалы'}>
+                                <ShowBlock shows={userInfo.shows} stats={userInfo.stats} />
                             </div>
                             <div hidden={activeCategory!=='Друзья'}>
                                 <FriendBlock users={userInfo.followed_users?userInfo.followed_users:[]} />

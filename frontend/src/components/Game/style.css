@@ -70,4 +70,12 @@
     border-bottom-right-radius: 5px;
 }
 
+.mainInfo{
+    margin-bottom: 10px;
+}
+
+.mainInfo p{
+    margin-bottom: 2px;
+}
+
 
