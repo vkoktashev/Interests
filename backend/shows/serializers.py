@@ -1,9 +1,11 @@
 from rest_framework import serializers
 
-from shows.models import UserShow, UserSeason, UserEpisode
+from shows.models import UserShow, UserSeason, UserEpisode, ShowLog, SeasonLog, EpisodeLog
 from utils.serializers import ChoicesField
 
-TYPE_MOVIE = 'show'
+TYPE_SHOW = 'show'
+TYPE_SEASON = 'season'
+TYPE_EPISODE = 'episode'
 
 
 class UserShowSerializer(serializers.ModelSerializer):
@@ -21,7 +23,7 @@ class UserShowSerializer(serializers.ModelSerializer):
 class UserSeasonSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSeason
-        exclude = ('id', 'updated_at')
+        exclude = ('id',)
         extra_kwargs = {
             'user': {'write_only': True},
             'season': {'write_only': True}
@@ -31,7 +33,7 @@ class UserSeasonSerializer(serializers.ModelSerializer):
 class UserEpisodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserEpisode
-        exclude = ('id', 'updated_at')
+        exclude = ('id',)
         extra_kwargs = {
             'user': {'write_only': True},
             'episode': {'write_only': True}
@@ -43,3 +45,112 @@ class ShowStatsSerializer(UserShowSerializer):
         model = UserShow
         exclude = ('id', 'user', 'updated_at')
         depth = 1
+
+
+class ShowLogSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField('get_username')
+    user_id = serializers.SerializerMethodField('get_user_id')
+    type = serializers.SerializerMethodField('get_type')
+    target = serializers.SerializerMethodField('get_target')
+    target_id = serializers.SerializerMethodField('get_target_id')
+
+    @staticmethod
+    def get_username(show_log):
+        return show_log.user.username
+
+    @staticmethod
+    def get_user_id(show_log):
+        return show_log.user.id
+
+    @staticmethod
+    def get_type(show_log):
+        return TYPE_SHOW
+
+    @staticmethod
+    def get_target(show_log):
+        return show_log.show.tmdb_name
+
+    @staticmethod
+    def get_target_id(show_log):
+        return show_log.show.tmdb_id
+
+    class Meta:
+        model = ShowLog
+        exclude = ('show',)
+
+
+class SeasonLogSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField('get_username')
+    user_id = serializers.SerializerMethodField('get_user_id')
+    type = serializers.SerializerMethodField('get_type')
+    target = serializers.SerializerMethodField('get_target')
+    target_id = serializers.SerializerMethodField('get_target_id')
+    target_parent = serializers.SerializerMethodField('get_target_parent')
+
+    @staticmethod
+    def get_username(season_log):
+        return season_log.user.username
+
+    @staticmethod
+    def get_user_id(season_log):
+        return season_log.user.id
+
+    @staticmethod
+    def get_type(season_log):
+        return TYPE_SEASON
+
+    @staticmethod
+    def get_target(season_log):
+        return season_log.season.tmdb_name
+
+    @staticmethod
+    def get_target_id(season_log):
+        return {'show_id': season_log.season.tmdb_show.tmdb_id,
+                'season_number': season_log.season.tmdb_season_number}
+
+    @staticmethod
+    def get_target_parent(season_log):
+        return season_log.season.tmdb_show.tmdb_name
+
+    class Meta:
+        model = SeasonLog
+        exclude = ('season',)
+
+
+class EpisodeLogSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField('get_username')
+    user_id = serializers.SerializerMethodField('get_user_id')
+    type = serializers.SerializerMethodField('get_type')
+    target = serializers.SerializerMethodField('get_target')
+    target_id = serializers.SerializerMethodField('get_target_id')
+    target_parent = serializers.SerializerMethodField('get_target_parent')
+
+    @staticmethod
+    def get_username(episode_log):
+        return episode_log.user.username
+
+    @staticmethod
+    def get_user_id(episode_log):
+        return episode_log.user.id
+
+    @staticmethod
+    def get_type(episode_log):
+        return TYPE_EPISODE
+
+    @staticmethod
+    def get_target(episode_log):
+        return episode_log.episode.tmdb_name
+
+    @staticmethod
+    def get_target_id(episode_log):
+        return {'show_id': episode_log.episode.tmdb_show.tmdb_id,
+                'season_number': episode_log.episode.tmdb_season_number,
+                'episode_number': episode_log.episode.tmdb_episode_number}
+
+    @staticmethod
+    def get_target_parent(episode_log):
+        return episode_log.episode.tmdb_show.tmdb_name
+
+    class Meta:
+        model = EpisodeLog
+        exclude = ('episode',)

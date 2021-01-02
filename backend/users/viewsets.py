@@ -21,11 +21,11 @@ from games.models import UserGame, GameLog
 from games.serializers import GameStatsSerializer, GameLogSerializer
 from movies.models import UserMovie, MovieLog
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer
-from shows.models import UserShow, UserEpisode
-from shows.serializers import ShowStatsSerializer
+from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog
+from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogSerializer, EpisodeLogSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer
 from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
-    DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, USER_NOT_FOUND, EMAIL_ERROR
+    USER_NOT_FOUND, EMAIL_ERROR
 from utils.documentation import USER_SIGNUP_201_EXAMPLE, USER_SIGNUP_400_EXAMPLE, USER_LOG_200_EXAMPLE, \
     USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE
 from utils.functions import similar, get_page_size
@@ -138,23 +138,9 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except User.DoesNotExist:
             return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
-        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
-        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
+        results, has_next_page = get_logs((user,), request.GET.get('page_size'), request.GET.get('page'))
 
-        game_logs = GameLog.objects.filter(user=user)
-        movie_logs = MovieLog.objects.filter(user=user)
-        user_logs = UserLog.objects.filter(user=user)
-
-        union_logs = sorted(chain(game_logs, movie_logs, user_logs),
-                            key=lambda obj: obj.created, reverse=True)
-
-        paginator = Paginator(union_logs, page_size)
-        paginator_page = paginator.get_page(page)
-
-        results = serialize_logs(paginator_page.object_list)
-
-        return Response({'log': results,
-                         'has_next_page': paginator_page.has_next()})
+        return Response({'log': results, 'has_next_page': has_next_page})
 
     @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
                          responses={
@@ -189,24 +175,10 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except User.DoesNotExist:
             return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
-        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
-        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
-
         user_follow_query = UserFollow.objects.filter(user=user).values('followed_user')
-        game_logs = GameLog.objects.filter(user__in=user_follow_query)
-        movie_logs = MovieLog.objects.filter(user__in=user_follow_query)
-        user_logs = UserLog.objects.filter(user__in=user_follow_query)
+        results, has_next_page = get_logs(user_follow_query, request.GET.get('page_size'), request.GET.get('page'))
 
-        union_logs = sorted(chain(game_logs, movie_logs, user_logs),
-                            key=lambda obj: obj.created, reverse=True)
-
-        paginator = Paginator(union_logs, page_size)
-        paginator_page = paginator.get_page(page)
-
-        results = serialize_logs(paginator_page.object_list)
-
-        return Response({'log': results,
-                         'has_next_page': paginator_page.has_next()})
+        return Response({'log': results, 'has_next_page': has_next_page})
 
     @swagger_auto_schema(
         responses={
@@ -438,10 +410,37 @@ def serialize_logs(logs):
             serializer = GameLogSerializer(entry)
         elif isinstance(entry, MovieLog):
             serializer = MovieLogSerializer(entry)
+        elif isinstance(entry, ShowLog):
+            serializer = ShowLogSerializer(entry)
+        elif isinstance(entry, SeasonLog):
+            serializer = SeasonLogSerializer(entry)
+        elif isinstance(entry, EpisodeLog):
+            serializer = EpisodeLogSerializer(entry)
         else:
             serializer = UserLogSerializer(entry)
         results.append(serializer.data)
     return results
+
+
+def get_logs(user_query, page_size, page_number):
+    page_size = get_page_size(page_size)
+    page = page_number
+
+    game_logs = GameLog.objects.filter(user__in=user_query)
+    movie_logs = MovieLog.objects.filter(user__in=user_query)
+    show_logs = ShowLog.objects.filter(user__in=user_query)
+    season_logs = SeasonLog.objects.filter(user__in=user_query)
+    episode_logs = EpisodeLog.objects.filter(user__in=user_query)
+    user_logs = UserLog.objects.filter(user__in=user_query)
+
+    union_logs = sorted(chain(game_logs, movie_logs, show_logs, season_logs, episode_logs, user_logs),
+                        key=lambda obj: obj.created, reverse=True)
+
+    paginator = Paginator(union_logs, page_size)
+    paginator_page = paginator.get_page(page)
+
+    results = serialize_logs(paginator_page.object_list)
+    return results, paginator_page.has_next()
 
 
 class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):
