@@ -80,11 +80,12 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except ConnectionError:
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
+        episode_run_time = tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0
         show, created = Show.objects.get_or_create(
             tmdb_id=tmdb_show['id'],
             defaults={'tmdb_original_name': tmdb_show['original_name'],
                       'tmdb_name': tmdb_show['name'],
-                      'tmdb_episode_run_time': tmdb_show['episode_run_time'][0],
+                      'tmdb_episode_run_time': episode_run_time,
                       'tmdb_backdrop_path': tmdb_show['backdrop_path']}
         )
 
