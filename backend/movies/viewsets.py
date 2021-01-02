@@ -105,7 +105,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             followed_user_movies = UserMovie.objects.filter(user__in=user_follow_query, movie=movie)
             serializer = FollowedUserMovieSerializer(followed_user_movies, many=True)
             friends_info = serializer.data
-        except Movie.DoesNotExist:
+        except (Movie.DoesNotExist, ValueError):
             friends_info = ()
 
         paginator = Paginator(friends_info, page_size)

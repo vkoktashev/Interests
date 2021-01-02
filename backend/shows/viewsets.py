@@ -1,19 +1,25 @@
 import tmdbsimple as tmdb
+from django.core.paginator import Paginator
 from django.db import IntegrityError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
 from rest_framework import status, mixins
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from shows.models import UserShow, Show, UserSeason, Season, UserEpisode, Episode
-from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpisodeSerializer
+from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpisodeSerializer, \
+    FollowedUserShowSerializer, FollowedUserSeasonSerializer, FollowedUserEpisodeSerializer
+from users.models import UserFollow
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
-    SEASON_NOT_FOUND, SHOW_NOT_IN_DB
+    SEASON_NOT_FOUND, SHOW_NOT_IN_DB, DEFAULT_PAGE_SIZE
 from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
     SEASON_RETRIEVE_200_EXAMPLE
-from utils.openapi_params import query_param, page_param
+from utils.functions import get_page_size
+from utils.openapi_params import query_param, page_param, page_size_param
 
 
 class SearchShowsViewSet(GenericViewSet, mixins.ListModelMixin):
@@ -167,6 +173,28 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
+                         responses={status.HTTP_200_OK: FollowedUserShowSerializer(many=True)})
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    def friends_info(self, request, *args, **kwargs):
+        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
+        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
+
+        try:
+            show = Show.objects.get(tmdb_id=kwargs.get('tmdb_id'))
+            user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
+            followed_user_shows = UserShow.objects.filter(user__in=user_follow_query, show=show)
+            serializer = FollowedUserShowSerializer(followed_user_shows, many=True)
+            friends_info = serializer.data
+        except (Show.DoesNotExist, ValueError):
+            friends_info = ()
+
+        paginator = Paginator(friends_info, page_size)
+        paginator_page = paginator.get_page(page)
+
+        return Response({'friends_info': paginator_page.object_list,
+                         'has_next_page': paginator_page.has_next()})
+
 
 class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     queryset = UserSeason.objects.all()
@@ -300,6 +328,28 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
+                         responses={status.HTTP_200_OK: FollowedUserSeasonSerializer(many=True)})
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    def friends_info(self, request, *args, **kwargs):
+        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
+        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
+
+        try:
+            season = Season.objects.get(tmdb_show=kwargs.get('show_tmdb_id'), tmdb_season_number=kwargs.get('number'))
+            user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
+            followed_user_seasons = UserSeason.objects.filter(user__in=user_follow_query, season=season)
+            serializer = FollowedUserSeasonSerializer(followed_user_seasons, many=True)
+            friends_info = serializer.data
+        except (Season.DoesNotExist, ValueError):
+            friends_info = ()
+
+        paginator = Paginator(friends_info, page_size)
+        paginator_page = paginator.get_page(page)
+
+        return Response({'friends_info': paginator_page.object_list,
+                         'has_next_page': paginator_page.has_next()})
 
 
 class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -439,6 +489,30 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
+                         responses={status.HTTP_200_OK: FollowedUserEpisodeSerializer(many=True)})
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    def friends_info(self, request, *args, **kwargs):
+        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
+        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
+
+        try:
+            episode = Episode.objects.get(tmdb_show=kwargs.get('show_tmdb_id'),
+                                          tmdb_season_number=kwargs.get('season_number'),
+                                          tmdb_episode_number=kwargs.get('number'))
+            user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
+            followed_user_episodes = UserEpisode.objects.filter(user__in=user_follow_query, episode=episode)
+            serializer = FollowedUserEpisodeSerializer(followed_user_episodes, many=True)
+            friends_info = serializer.data
+        except (Episode.DoesNotExist, ValueError):
+            friends_info = ()
+
+        paginator = Paginator(friends_info, page_size)
+        paginator_page = paginator.get_page(page)
+
+        return Response({'friends_info': paginator_page.object_list,
+                         'has_next_page': paginator_page.has_next()})
 
 
 def get_show_info(show_id, user):
