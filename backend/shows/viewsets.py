@@ -440,11 +440,13 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+# сделать рефакторинг через сериалайзеры ?
 def get_show_info(show_id, user):
     user_watched_show = False
     try:
         show = Show.objects.get(tmdb_id=show_id)
         show_name = show.tmdb_name
+        show_id = show.tmdb_id
         show_original_name = show.tmdb_original_name
         backdrop_path = show.tmdb_backdrop_path
 
@@ -459,11 +461,13 @@ def get_show_info(show_id, user):
         try:
             tmdb_show = tmdb.TV(show_id).info(language=LANGUAGE)
             show_name = tmdb_show['name']
+            show_id = tmdb_show['id']
             show_original_name = tmdb_show['original_name']
             backdrop_path = tmdb_show['backdrop_path']
         except HTTPError as e:
             raise HTTPError(e)
 
     return ({'show_name': show_name,
+             'show_id': show_id,
              'show_original_name': show_original_name,
              'backdrop_path': backdrop_path}, user_watched_show)

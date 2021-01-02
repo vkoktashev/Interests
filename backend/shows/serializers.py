@@ -85,7 +85,6 @@ class SeasonLogSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField('get_type')
     target = serializers.SerializerMethodField('get_target')
     target_id = serializers.SerializerMethodField('get_target_id')
-    target_parent = serializers.SerializerMethodField('get_target_parent')
 
     @staticmethod
     def get_username(season_log):
@@ -101,16 +100,13 @@ class SeasonLogSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_target(season_log):
-        return season_log.season.tmdb_name
+        return {'name': season_log.season.tmdb_name,
+                'parent_name': season_log.season.tmdb_show.tmdb_name}
 
     @staticmethod
     def get_target_id(season_log):
         return {'show_id': season_log.season.tmdb_show.tmdb_id,
                 'season_number': season_log.season.tmdb_season_number}
-
-    @staticmethod
-    def get_target_parent(season_log):
-        return season_log.season.tmdb_show.tmdb_name
 
     class Meta:
         model = SeasonLog
@@ -123,7 +119,6 @@ class EpisodeLogSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField('get_type')
     target = serializers.SerializerMethodField('get_target')
     target_id = serializers.SerializerMethodField('get_target_id')
-    target_parent = serializers.SerializerMethodField('get_target_parent')
 
     @staticmethod
     def get_username(episode_log):
@@ -139,17 +134,14 @@ class EpisodeLogSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_target(episode_log):
-        return episode_log.episode.tmdb_name
+        return {'name': episode_log.episode.tmdb_name,
+                'parent_name': episode_log.episode.tmdb_show.tmdb_name}
 
     @staticmethod
     def get_target_id(episode_log):
         return {'show_id': episode_log.episode.tmdb_show.tmdb_id,
                 'season_number': episode_log.episode.tmdb_season_number,
                 'episode_number': episode_log.episode.tmdb_episode_number}
-
-    @staticmethod
-    def get_target_parent(episode_log):
-        return episode_log.episode.tmdb_show.tmdb_name
 
     class Meta:
         model = EpisodeLog
