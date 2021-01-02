@@ -13,7 +13,7 @@ from movies.models import Movie, UserMovie
 from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer
 from users.models import UserFollow
 from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE
-from utils.documentation import FRIENDS_INFO_200_EXAMPLE, MOVIES_SEARCH_200_EXAMPLE, MOVIE_RETRIEVE_200_EXAMPLE
+from utils.documentation import MOVIES_SEARCH_200_EXAMPLE, MOVIE_RETRIEVE_200_EXAMPLE
 from utils.functions import get_page_size
 from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, page_size_param
 
@@ -93,7 +93,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response({'tmdb': tmdb_movie, 'user_info': user_info})
 
     @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
-                         responses=FRIENDS_INFO_200_EXAMPLE)
+                         responses={status.HTTP_200_OK: FollowedUserMovieSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_info(self, request, *args, **kwargs):
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
@@ -101,16 +101,12 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         try:
             movie = Movie.objects.get(tmdb_id=kwargs.get('tmdb_id'))
-            user_follow_query = UserFollow.objects.filter(user=request.user)
-            friends_info = []
-            for user_follow in user_follow_query:
-                followed_user_movie = UserMovie.objects.filter(user=user_follow.followed_user, movie=movie).first()
-                if followed_user_movie:
-                    serializer = FollowedUserMovieSerializer(followed_user_movie)
-                    friends_info.append(serializer.data)
-
+            user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
+            followed_user_movies = UserMovie.objects.filter(user__in=user_follow_query, movie=movie)
+            serializer = FollowedUserMovieSerializer(followed_user_movies, many=True)
+            friends_info = serializer.data
         except Movie.DoesNotExist:
-            friends_info = []
+            friends_info = ()
 
         paginator = Paginator(friends_info, page_size)
         paginator_page = paginator.get_page(page)

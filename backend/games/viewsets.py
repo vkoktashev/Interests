@@ -16,7 +16,7 @@ from games.serializers import UserGameSerializer, FollowedUserGameSerializer
 from users.models import UserFollow
 from utils.constants import RAWG_UNAVAILABLE, ERROR, HLTB_UNAVAILABLE, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, \
     GAME_NOT_FOUND
-from utils.documentation import GAMES_SEARCH_200_EXAMPLE, FRIENDS_INFO_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE
+from utils.documentation import GAMES_SEARCH_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE
 from utils.functions import int_to_hours, translate_hltb_time, get_page_size
 from utils.openapi_params import query_param, page_param, page_size_param
 
@@ -106,7 +106,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                          'user_info': user_info})
 
     @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
-                         responses=FRIENDS_INFO_200_EXAMPLE)
+                         responses={status.HTTP_200_OK: FollowedUserGameSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_info(self, request, *args, **kwargs):
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
@@ -114,16 +114,12 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         try:
             game = Game.objects.get(rawg_slug=kwargs.get('slug'))
-            user_follow_query = UserFollow.objects.filter(user=request.user)
-            friends_info = []
-            for user_follow in user_follow_query:
-                followed_user_game = UserGame.objects.filter(user=user_follow.followed_user, game=game).first()
-                if followed_user_game:
-                    serializer = FollowedUserGameSerializer(followed_user_game)
-                    friends_info.append(serializer.data)
-
+            user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
+            followed_user_games = UserGame.objects.filter(user__in=user_follow_query, game=game)
+            serializer = FollowedUserGameSerializer(followed_user_games, many=True)
+            friends_info = serializer.data
         except Game.DoesNotExist:
-            friends_info = []
+            friends_info = ()
 
         paginator = Paginator(friends_info, page_size)
         paginator_page = paginator.get_page(page)

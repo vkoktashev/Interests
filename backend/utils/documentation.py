@@ -1,6 +1,3 @@
-from drf_yasg import openapi
-from rest_framework import status
-
 from utils.constants import USER_USERNAME_EXISTS, USER_EMAIL_EXISTS
 
 # response examples
@@ -44,28 +41,6 @@ GAMES_SEARCH_200_EXAMPLE = [
         ]
     }
 ]
-FRIENDS_INFO_200_EXAMPLE = {
-    status.HTTP_200_OK: openapi.Response(
-        description=status.HTTP_200_OK,
-        examples={
-            "application/json": {
-                "friends_info": [
-                    {
-                        "status": "string",
-                        "user": {
-                            "id": 0,
-                            "username": "string"
-                        },
-                        "score": 0,
-                        "review": "string",
-                        "spent_time": "0.0"
-                    }
-                ],
-                "has_next_page": True
-            }
-        }
-    )
-}
 MOVIES_SEARCH_200_EXAMPLE = {
     "page": 1,
     "results": [
