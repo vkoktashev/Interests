@@ -2,6 +2,7 @@ import React, {
     useEffect,
     useState
 } from "react";
+import { useHistory } from "react-router-dom";
 import {
     useParams
 } from "react-router-dom";
@@ -31,6 +32,7 @@ import DetailedEpisodeRow from "./DetailedEpisodeRow";
 function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShowUserStatus,
                     loggedIn, openLoginForm
     } ) {
+    let history = useHistory();
     let { show_id, number } = useParams();
     const [date, setDate] = useState("");
     const [review, setReview] = useState("");
@@ -97,7 +99,14 @@ function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShow
                                         <img src={"http://image.tmdb.org/t/p/w600_and_h900_bestv2" + showSeason.tmdb.poster_path} className="img-fluid" alt=""/>
                                     </MDBCol>
                                     <MDBCol size="9">
-                                        <h1>{showSeason.tmdb.show_name + ' - ' + showSeason.tmdb.name}</h1>
+                                        <h1>
+                                            <a href={window.location.origin + '/show/' + show_id} 
+                                                onClick={(e) => { history.push('/show/' + show_id ); e.preventDefault();}}
+                                                >
+                                                {showSeason.tmdb.show_name}
+                                            </a>  
+                                            { ' - ' + showSeason.tmdb.name}
+                                        </h1>
                                         <h5 style={{marginBottom: "10px", marginTop: "-10px"}}>{showSeason.tmdb.show_original_name + ' - Season ' + showSeason.tmdb.season_number}</h5>
                                         <div className="mainInfo">
                                             <p hidden={date===''}>Дата выхода: {date}</p>
