@@ -1,5 +1,6 @@
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.utils import timezone
 
 from users.models import UserScore, UserLogAbstract
 
@@ -50,6 +51,7 @@ class UserShow(UserScore):
 
     show = models.ForeignKey(Show, on_delete=models.CASCADE)
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=STATUS_NOT_WATCHED)
+    updated_at = models.DateTimeField(null=False, default=timezone.now)
 
     class Meta:
         unique_together = (("user", "show"),)
