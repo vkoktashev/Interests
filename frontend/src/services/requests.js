@@ -185,7 +185,7 @@ export async function setShowStatus(token, id, user_info){
 export async function setShowSeasonStatus(token, showID, seasonNumber, user_info){
     try{
         var AuthStr = 'Bearer ' + token;
-        const res = await axios.put(GET_SHOW_URL + showID + "/season/" + seasonNumber, 
+        const res = await axios.put(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/", 
             user_info, { headers: { 'Authorization': AuthStr } });
         console.log(res); 
         

@@ -125,7 +125,31 @@ li.episode:nth-child(even){
 }
 
 .episodeRowName{
-    width: 40px;
+    width: 250px;
     margin-bottom: 0px;
     display: inline-block;
+}
+
+.mainInfo{
+    margin-bottom: 20px;
+}
+
+.mainInfo p{
+    margin-bottom: 2px;
+}
+
+#reviewSeasonInput{
+    background-color: rgb(0, 0, 0);
+    color: #fff;
+    width: 50%;
+}
+
+.episodeDate{
+    width: 100px;
+    margin-bottom: 0px;
+    display: inline-block;
+}
+
+.detailRow{
+    font-size: 16px;
 }
