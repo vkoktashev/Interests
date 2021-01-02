@@ -268,139 +268,136 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                          'followed_users': followed_users,
                          'games': games, 'movies': movies, 'shows': shows, 'stats': stats})
 
-
-@swagger_auto_schema(
-    request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            "is_following": openapi.Schema(
-                type=openapi.TYPE_BOOLEAN
-            )
-        }
-    ),
-    responses={
-        status.HTTP_200_OK: openapi.Response(
-            description=status.HTTP_200_OK,
-            examples={
-                "application/json": {
-                    "is_following": True,
-                    "followed_user": 0
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "is_following": openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN
+                )
+            }
+        ),
+        responses={
+            status.HTTP_200_OK: openapi.Response(
+                description=status.HTTP_200_OK,
+                examples={
+                    "application/json": {
+                        "is_following": True,
+                        "followed_user": 0
+                    }
                 }
-            }
-        ),
-        status.HTTP_400_BAD_REQUEST: openapi.Response(
-            description=status.HTTP_200_OK,
-            examples={
-                "application/json": {ERROR: ID_VALUE_ERROR}
-            }
-        )
-    })
-@action(detail=True, methods=['put'])
-def follow(self, request, *args, **kwargs):
-    try:
-        user_id = int(kwargs.get('pk'))
-    except ValueError:
-        return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
-
-    data = request.data.copy()
-    data.update({'user': request.user.pk, 'followed_user': user_id})
-
-    try:
-        user_follow = UserFollow.objects.get(user=request.user, followed_user=user_id)
-        serializer = UserFollowSerializer(user_follow, data=data)
-    except UserFollow.DoesNotExist:
-        serializer = UserFollowSerializer(data=data)
-
-    serializer.is_valid(raise_exception=True)
-    serializer.save()
-
-    return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-@swagger_auto_schema(
-    request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            "email": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                format=openapi.FORMAT_EMAIL
+            ),
+            status.HTTP_400_BAD_REQUEST: openapi.Response(
+                description=status.HTTP_200_OK,
+                examples={
+                    "application/json": {ERROR: ID_VALUE_ERROR}
+                }
             )
-        }
-    ),
-    responses={
-        status.HTTP_200_OK: openapi.Response(
-            description=status.HTTP_200_OK,
-            examples={
-                "application/json": None
+        })
+    @action(detail=True, methods=['put'])
+    def follow(self, request, *args, **kwargs):
+        try:
+            user_id = int(kwargs.get('pk'))
+        except ValueError:
+            return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = request.data.copy()
+        data.update({'user': request.user.pk, 'followed_user': user_id})
+
+        try:
+            user_follow = UserFollow.objects.get(user=request.user, followed_user=user_id)
+            serializer = UserFollowSerializer(user_follow, data=data)
+        except UserFollow.DoesNotExist:
+            serializer = UserFollowSerializer(data=data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "email": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    format=openapi.FORMAT_EMAIL
+                )
             }
         ),
-        status.HTTP_404_NOT_FOUND: openapi.Response(
-            description=status.HTTP_200_OK,
-            examples={
-                "application/json": {ERROR: USER_NOT_FOUND}
-            }
-        )
-    })
-@action(detail=False, methods=['put'], permission_classes=[AllowAny])
-def password_reset(self, request, *args, **kwargs):
-    email = request.data.get('email')
+        responses={
+            status.HTTP_200_OK: openapi.Response(
+                description=status.HTTP_200_OK,
+                examples={
+                    "application/json": None
+                }
+            ),
+            status.HTTP_404_NOT_FOUND: openapi.Response(
+                description=status.HTTP_200_OK,
+                examples={
+                    "application/json": {ERROR: USER_NOT_FOUND}
+                }
+            )
+        })
+    @action(detail=False, methods=['put'], permission_classes=[AllowAny])
+    def password_reset(self, request, *args, **kwargs):
+        email = request.data.get('email')
 
-    try:
-        user = User.objects.get(email=email)
-    except User.DoesNotExist:
-        return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
-    reset_token = secrets.token_urlsafe()
+        reset_token = secrets.token_urlsafe()
 
-    try:
-        user_password_token = UserPasswordToken.objects.get(user=user)
-        user_password_token.reset_token = reset_token
-        user_password_token.is_active = True
-    except UserPasswordToken.DoesNotExist:
-        user_password_token = UserPasswordToken.objects.create(user=user, reset_token=reset_token)
+        try:
+            user_password_token = UserPasswordToken.objects.get(user=user)
+            user_password_token.reset_token = reset_token
+            user_password_token.is_active = True
+        except UserPasswordToken.DoesNotExist:
+            user_password_token = UserPasswordToken.objects.create(user=user, reset_token=reset_token)
 
-    user_password_token.save()
-
-    mail_subject = 'Сброс пароля.'
-    activation_link = f"{request.scheme}://{SITE_URL}/" \
-                      f"confirm_password/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
-    message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
-    email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
-    try:
-        email.send()
-        # print(activation_link)
-    except SMTPAuthenticationError:
-        return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-    return Response(status=status.HTTP_200_OK)
-
-
-@swagger_auto_schema(manual_parameters=[reset_token_param],
-                     request_body=openapi.Schema(
-                         type=openapi.TYPE_OBJECT,
-                         properties={
-                             'password': openapi.Schema(type=openapi.TYPE_STRING),
-                         }
-                     ))
-@action(detail=False, methods=['patch'], permission_classes=[AllowAny])
-def confirm_password_reset(self, request, *args, **kwargs):
-    try:
-        reset_token = force_text(urlsafe_base64_decode(request.query_params.get('reset_token')))
-        password = request.data.get('password')
-        user_password_token = UserPasswordToken.objects.get(reset_token=reset_token)
-        user = User.objects.get(id=user_password_token.user.id)
-    except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist, UserPasswordToken.DoesNotExist):
-        return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
-
-    if user_password_token.is_active:
-        serializer = UserSerializer(instance=user, data={'password': password}, partial=True)
-        serializer.is_valid(raise_exception=True)
-        user_password_token.is_active = False
         user_password_token.save()
-        serializer.save()
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
-    else:
-        return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
+
+        mail_subject = 'Сброс пароля.'
+        activation_link = f"{request.scheme}://{SITE_URL}/" \
+                          f"confirm_password/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
+        message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
+        email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
+        try:
+            email.send()
+            # print(activation_link)
+        except SMTPAuthenticationError:
+            return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        return Response(status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(manual_parameters=[reset_token_param],
+                         request_body=openapi.Schema(
+                             type=openapi.TYPE_OBJECT,
+                             properties={
+                                 'password': openapi.Schema(type=openapi.TYPE_STRING),
+                             }
+                         ))
+    @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
+    def confirm_password_reset(self, request, *args, **kwargs):
+        try:
+            reset_token = force_text(urlsafe_base64_decode(request.query_params.get('reset_token')))
+            password = request.data.get('password')
+            user_password_token = UserPasswordToken.objects.get(reset_token=reset_token)
+            user = User.objects.get(id=user_password_token.user.id)
+        except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist, UserPasswordToken.DoesNotExist):
+            return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
+
+        if user_password_token.is_active:
+            serializer = UserSerializer(instance=user, data={'password': password}, partial=True)
+            serializer.is_valid(raise_exception=True)
+            user_password_token.is_active = False
+            user_password_token.save()
+            serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def serialize_logs(logs):
