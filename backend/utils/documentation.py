@@ -366,152 +366,159 @@ USER_SEARCH_200_EXAMPLE = [
     }
 ]
 SHOW_RETRIEVE_200_EXAMPLE = {
-    "backdrop_path": "/suopoADq0k8YZr4dQXcU6pToj6s.jpg",
-    "created_by": [
-        {
-            "id": 9813,
-            "credit_id": "5256c8c219c2956ff604858a",
-            "name": "David Benioff",
-            "gender": 2,
-            "profile_path": "/xvNN5huL0X8yJ7h3IZfGG4O2zBD.jpg"
+    "tmdb": {
+        "backdrop_path": "/suopoADq0k8YZr4dQXcU6pToj6s.jpg",
+        "created_by": [
+            {
+                "id": 9813,
+                "credit_id": "5256c8c219c2956ff604858a",
+                "name": "David Benioff",
+                "gender": 2,
+                "profile_path": "/xvNN5huL0X8yJ7h3IZfGG4O2zBD.jpg"
+            },
+            {
+                "id": 228068,
+                "credit_id": "552e611e9251413fea000901",
+                "name": "D. B. Weiss",
+                "gender": 2,
+                "profile_path": "/2RMejaT793U9KRk2IEbFfteQntE.jpg"
+            }
+        ],
+        "episode_run_time": [
+            60
+        ],
+        "first_air_date": "2011-04-17",
+        "genres": [
+            {
+                "id": 10765,
+                "name": "Sci-Fi & Fantasy"
+            },
+            {
+                "id": 18,
+                "name": "Drama"
+            },
+            {
+                "id": 10759,
+                "name": "Action & Adventure"
+            },
+            {
+                "id": 9648,
+                "name": "Mystery"
+            }
+        ],
+        "homepage": "http://www.hbo.com/game-of-thrones",
+        "id": 1399,
+        "in_production": False,
+        "languages": [
+            "en"
+        ],
+        "last_air_date": "2019-05-19",
+        "last_episode_to_air": {
+            "air_date": "2019-05-19",
+            "episode_number": 6,
+            "id": 1551830,
+            "name": "The Iron Throne",
+            "overview": "In the aftermath of the devastating attack on King's Landing, Daenerys must face the survivors.",
+            "production_code": "806",
+            "season_number": 8,
+            "still_path": "/3x8tJon5jXFa1ziAM93hPKNyW7i.jpg",
+            "vote_average": 4.8,
+            "vote_count": 106
         },
-        {
-            "id": 228068,
-            "credit_id": "552e611e9251413fea000901",
-            "name": "D. B. Weiss",
-            "gender": 2,
-            "profile_path": "/2RMejaT793U9KRk2IEbFfteQntE.jpg"
-        }
-    ],
-    "episode_run_time": [
-        60
-    ],
-    "first_air_date": "2011-04-17",
-    "genres": [
-        {
-            "id": 10765,
-            "name": "Sci-Fi & Fantasy"
-        },
-        {
-            "id": 18,
-            "name": "Drama"
-        },
-        {
-            "id": 10759,
-            "name": "Action & Adventure"
-        },
-        {
-            "id": 9648,
-            "name": "Mystery"
-        }
-    ],
-    "homepage": "http://www.hbo.com/game-of-thrones",
-    "id": 1399,
-    "in_production": False,
-    "languages": [
-        "en"
-    ],
-    "last_air_date": "2019-05-19",
-    "last_episode_to_air": {
-        "air_date": "2019-05-19",
-        "episode_number": 6,
-        "id": 1551830,
-        "name": "The Iron Throne",
-        "overview": "In the aftermath of the devastating attack on King's Landing, Daenerys must face the survivors.",
-        "production_code": "806",
-        "season_number": 8,
-        "still_path": "/3x8tJon5jXFa1ziAM93hPKNyW7i.jpg",
-        "vote_average": 4.8,
-        "vote_count": 106
+        "name": "Game of Thrones",
+        "next_episode_to_air": None,
+        "networks": [
+            {
+                "name": "HBO",
+                "id": 49,
+                "logo_path": "/tuomPhY2UtuPTqqFnKMVHvSb724.png",
+                "origin_country": "US"
+            }
+        ],
+        "number_of_episodes": 73,
+        "number_of_seasons": 8,
+        "origin_country": [
+            "US"
+        ],
+        "original_language": "en",
+        "original_name": "Game of Thrones",
+        "overview": "Seven noble families fight for control of the mythical land of Westeros. Friction between the houses leads to full-scale war. All while a very ancient evil awakens in the farthest north. Amidst the war, a neglected military order of misfits, the Night's Watch, is all that stands between the realms of men and icy horrors beyond.",
+        "popularity": 369.594,
+        "poster_path": "/u3bZgnGQ9T01sWNhyveQz0wH0Hl.jpg",
+        "production_companies": [
+            {
+                "id": 76043,
+                "logo_path": "/9RO2vbQ67otPrBLXCaC8UMp3Qat.png",
+                "name": "Revolution Sun Studios",
+                "origin_country": "US"
+            },
+            {
+                "id": 12525,
+                "logo_path": None,
+                "name": "Television 360",
+                "origin_country": ""
+            },
+            {
+                "id": 5820,
+                "logo_path": None,
+                "name": "Generator Entertainment",
+                "origin_country": ""
+            },
+            {
+                "id": 12526,
+                "logo_path": None,
+                "name": "Bighead Littlehead",
+                "origin_country": ""
+            }
+        ],
+        "production_countries": [
+            {
+                "iso_3166_1": "GB",
+                "name": "United Kingdom"
+            },
+            {
+                "iso_3166_1": "US",
+                "name": "United States of America"
+            }
+        ],
+        "seasons": [
+            {
+                "air_date": "2010-12-05",
+                "episode_count": 64,
+                "id": 3627,
+                "name": "Specials",
+                "overview": "",
+                "poster_path": "/kMTcwNRfFKCZ0O2OaBZS0nZ2AIe.jpg",
+                "season_number": 0
+            },
+            {
+                "air_date": "2011-04-17",
+                "episode_count": 10,
+                "id": 3624,
+                "name": "Season 1",
+                "overview": "Trouble is brewing in the Seven Kingdoms of Westeros. For the driven inhabitants of this visionary world, control of Westeros' Iron Throne holds the lure of great power. But in a land where the seasons can last a lifetime, winter is coming...and beyond the Great Wall that protects them, an ancient evil has returned. In Season One, the story centers on three primary areas: the Stark and the Lannister families, whose designs on controlling the throne threaten a tenuous peace; the dragon princess Daenerys, heir to the former dynasty, who waits just over the Narrow Sea with her malevolent brother Viserys; and the Great Wall--a massive barrier of ice where a forgotten danger is stirring.",
+                "poster_path": "/zwaj4egrhnXOBIit1tyb4Sbt3KP.jpg",
+                "season_number": 1
+            }
+        ],
+        "spoken_languages": [
+            {
+                "english_name": "English",
+                "iso_639_1": "en",
+                "name": "English"
+            }
+        ],
+        "status": "Ended",
+        "tagline": "Winter Is Coming",
+        "type": "Scripted",
+        "vote_average": 8.3,
+        "vote_count": 11504
     },
-    "name": "Game of Thrones",
-    "next_episode_to_air": None,
-    "networks": [
-        {
-            "name": "HBO",
-            "id": 49,
-            "logo_path": "/tuomPhY2UtuPTqqFnKMVHvSb724.png",
-            "origin_country": "US"
-        }
-    ],
-    "number_of_episodes": 73,
-    "number_of_seasons": 8,
-    "origin_country": [
-        "US"
-    ],
-    "original_language": "en",
-    "original_name": "Game of Thrones",
-    "overview": "Seven noble families fight for control of the mythical land of Westeros. Friction between the houses leads to full-scale war. All while a very ancient evil awakens in the farthest north. Amidst the war, a neglected military order of misfits, the Night's Watch, is all that stands between the realms of men and icy horrors beyond.",
-    "popularity": 369.594,
-    "poster_path": "/u3bZgnGQ9T01sWNhyveQz0wH0Hl.jpg",
-    "production_companies": [
-        {
-            "id": 76043,
-            "logo_path": "/9RO2vbQ67otPrBLXCaC8UMp3Qat.png",
-            "name": "Revolution Sun Studios",
-            "origin_country": "US"
-        },
-        {
-            "id": 12525,
-            "logo_path": None,
-            "name": "Television 360",
-            "origin_country": ""
-        },
-        {
-            "id": 5820,
-            "logo_path": None,
-            "name": "Generator Entertainment",
-            "origin_country": ""
-        },
-        {
-            "id": 12526,
-            "logo_path": None,
-            "name": "Bighead Littlehead",
-            "origin_country": ""
-        }
-    ],
-    "production_countries": [
-        {
-            "iso_3166_1": "GB",
-            "name": "United Kingdom"
-        },
-        {
-            "iso_3166_1": "US",
-            "name": "United States of America"
-        }
-    ],
-    "seasons": [
-        {
-            "air_date": "2010-12-05",
-            "episode_count": 64,
-            "id": 3627,
-            "name": "Specials",
-            "overview": "",
-            "poster_path": "/kMTcwNRfFKCZ0O2OaBZS0nZ2AIe.jpg",
-            "season_number": 0
-        },
-        {
-            "air_date": "2011-04-17",
-            "episode_count": 10,
-            "id": 3624,
-            "name": "Season 1",
-            "overview": "Trouble is brewing in the Seven Kingdoms of Westeros. For the driven inhabitants of this visionary world, control of Westeros' Iron Throne holds the lure of great power. But in a land where the seasons can last a lifetime, winter is coming...and beyond the Great Wall that protects them, an ancient evil has returned. In Season One, the story centers on three primary areas: the Stark and the Lannister families, whose designs on controlling the throne threaten a tenuous peace; the dragon princess Daenerys, heir to the former dynasty, who waits just over the Narrow Sea with her malevolent brother Viserys; and the Great Wall--a massive barrier of ice where a forgotten danger is stirring.",
-            "poster_path": "/zwaj4egrhnXOBIit1tyb4Sbt3KP.jpg",
-            "season_number": 1
-        }
-    ],
-    "spoken_languages": [
-        {
-            "english_name": "English",
-            "iso_639_1": "en",
-            "name": "English"
-        }
-    ],
-    "status": "Ended",
-    "tagline": "Winter Is Coming",
-    "type": "Scripted",
-    "vote_average": 8.3,
-    "vote_count": 11504
+    "user_info": {
+        "status": "string",
+        "score": 0,
+        "review": "string",
+    }
 }
 SHOWS_SEARCH_200_EXAMPLE = {
     "page": 1,
@@ -542,175 +549,189 @@ SHOWS_SEARCH_200_EXAMPLE = {
     "total_pages": 1
 }
 SEASON_RETRIEVE_200_EXAMPLE = {
-    "_id": "5256c89f19c2956ff6046d47",
-    "air_date": "2011-04-17",
-    "episodes": [
-        {
-            "air_date": "2011-04-17",
-            "episode_number": 1,
-            "crew": [
-                {
-                    "job": "Writer",
-                    "department": "Writing",
-                    "credit_id": "5256c8a219c2956ff6046e4b",
-                    "adult": False,
-                    "gender": 2,
-                    "id": 228068,
-                    "known_for_department": "Creator",
-                    "name": "D. B. Weiss",
-                    "original_name": "D. B. Weiss",
-                    "popularity": 2.089,
-                    "profile_path": None
-                }
-            ],
-            "guest_stars": [
-                {
-                    "credit_id": "5256c8a219c2956ff6046f40",
-                    "order": 0,
-                    "character": "Khal Drogo",
-                    "adult": False,
-                    "gender": 2,
-                    "id": 117642,
-                    "known_for_department": "Acting",
-                    "name": "Jason Momoa",
-                    "original_name": "Jason Momoa",
-                    "popularity": 9.159,
-                    "profile_path": "/6dEFBpZH8C8OijsynkSajQT99Pb.jpg"
-                }
-            ],
-            "id": 63056,
-            "name": "Winter Is Coming",
-            "overview": "Jon Arryn, the Hand of the King, is dead. King Robert Baratheon plans to ask his oldest friend, Eddard Stark, to take Jon's place. Across the sea, Viserys Targaryen plans to wed his sister to a nomadic warlord in exchange for an army.",
-            "production_code": "101",
-            "season_number": 1,
-            "still_path": "/xIfvIM7YgkADTrqp23rm3CLaOVQ.jpg",
-            "vote_average": 7.7,
-            "vote_count": 179
-        }
-    ],
-    "name": "Season 1",
-    "overview": "Trouble is brewing in the Seven Kingdoms of Westeros. For the driven inhabitants of this visionary world, control of Westeros' Iron Throne holds the lure of great power. But in a land where the seasons can last a lifetime, winter is coming...and beyond the Great Wall that protects them, an ancient evil has returned. In Season One, the story centers on three primary areas: the Stark and the Lannister families, whose designs on controlling the throne threaten a tenuous peace; the dragon princess Daenerys, heir to the former dynasty, who waits just over the Narrow Sea with her malevolent brother Viserys; and the Great Wall--a massive barrier of ice where a forgotten danger is stirring.",
-    "id": 3624,
-    "poster_path": "/zwaj4egrhnXOBIit1tyb4Sbt3KP.jpg",
-    "season_number": 1
+    "tmdb": {
+        "_id": "5256c89f19c2956ff6046d47",
+        "air_date": "2011-04-17",
+        "episodes": [
+            {
+                "air_date": "2011-04-17",
+                "episode_number": 1,
+                "crew": [
+                    {
+                        "job": "Writer",
+                        "department": "Writing",
+                        "credit_id": "5256c8a219c2956ff6046e4b",
+                        "adult": False,
+                        "gender": 2,
+                        "id": 228068,
+                        "known_for_department": "Creator",
+                        "name": "D. B. Weiss",
+                        "original_name": "D. B. Weiss",
+                        "popularity": 2.089,
+                        "profile_path": None
+                    }
+                ],
+                "guest_stars": [
+                    {
+                        "credit_id": "5256c8a219c2956ff6046f40",
+                        "order": 0,
+                        "character": "Khal Drogo",
+                        "adult": False,
+                        "gender": 2,
+                        "id": 117642,
+                        "known_for_department": "Acting",
+                        "name": "Jason Momoa",
+                        "original_name": "Jason Momoa",
+                        "popularity": 9.159,
+                        "profile_path": "/6dEFBpZH8C8OijsynkSajQT99Pb.jpg"
+                    }
+                ],
+                "id": 63056,
+                "name": "Winter Is Coming",
+                "overview": "Jon Arryn, the Hand of the King, is dead. King Robert Baratheon plans to ask his oldest friend, Eddard Stark, to take Jon's place. Across the sea, Viserys Targaryen plans to wed his sister to a nomadic warlord in exchange for an army.",
+                "production_code": "101",
+                "season_number": 1,
+                "still_path": "/xIfvIM7YgkADTrqp23rm3CLaOVQ.jpg",
+                "vote_average": 7.7,
+                "vote_count": 179
+            }
+        ],
+        "name": "Season 1",
+        "overview": "Trouble is brewing in the Seven Kingdoms of Westeros. For the driven inhabitants of this visionary world, control of Westeros' Iron Throne holds the lure of great power. But in a land where the seasons can last a lifetime, winter is coming...and beyond the Great Wall that protects them, an ancient evil has returned. In Season One, the story centers on three primary areas: the Stark and the Lannister families, whose designs on controlling the throne threaten a tenuous peace; the dragon princess Daenerys, heir to the former dynasty, who waits just over the Narrow Sea with her malevolent brother Viserys; and the Great Wall--a massive barrier of ice where a forgotten danger is stirring.",
+        "id": 3624,
+        "poster_path": "/zwaj4egrhnXOBIit1tyb4Sbt3KP.jpg",
+        "season_number": 1
+    },
+    "user_info": {
+        "score": 0,
+        "review": "string",
+    },
+    "user_watched_show": True
 }
 EPISODE_RETRIEVE_200_EXAMPLE = {
-    "air_date": "2011-04-17",
-    "crew": [
-        {
-            "id": 44797,
-            "credit_id": "5256c8a219c2956ff6046e77",
-            "name": "Tim Van Patten",
-            "department": "Directing",
-            "job": "Director",
-            "profile_path": "/6b7l9YbkDHDOzOKUFNqBVaPjcgm.jpg"
-        },
-        {
-            "id": 1318704,
-            "credit_id": "54eef2429251417974005cb6",
-            "name": "Alik Sakharov",
-            "department": "Camera",
-            "job": "Director of Photography",
-            "profile_path": "/50ZlHkh66aOPxQMjQ21LJDAkYlR.jpg"
-        },
-        {
-            "id": 18077,
-            "credit_id": "54eef2ab925141795f005d4f",
-            "name": "Oral Norrie Ottey",
-            "department": "Editing",
-            "job": "Editor",
-            "profile_path": None
-        },
-        {
-            "id": 9813,
-            "credit_id": "5256c8a019c2956ff6046e2b",
-            "name": "David Benioff",
-            "department": "Writing",
-            "job": "Writer",
-            "profile_path": "/8CuuNIKMzMUL1NKOPv9AqEwM7og.jpg"
-        },
-        {
-            "id": 228068,
-            "credit_id": "5256c8a219c2956ff6046e4b",
-            "name": "D. B. Weiss",
-            "department": "Writing",
-            "job": "Writer",
-            "profile_path": "/caUAtilEe06OwOjoQY3B7BgpARi.jpg"
-        }
-    ],
-    "episode_number": 1,
-    "guest_stars": [
-        {
-            "id": 117642,
-            "name": "Jason Momoa",
-            "credit_id": "5256c8a219c2956ff6046f40",
-            "character": "Khal Drogo",
-            "order": 0,
-            "profile_path": "/PSK6GmsVwdhqz9cd1lwzC6a7EA.jpg"
-        },
-        {
-            "id": 946696,
-            "name": "Ian Whyte",
-            "credit_id": "5750cd459251412b0f000224",
-            "character": "White Walker",
-            "order": 46,
-            "profile_path": "/6mRY7hTtHfDTGuTLmZmODOu9buF.jpg"
-        },
-        {
-            "id": 438859,
-            "name": "Susan Brown",
-            "credit_id": "57520bc19251414c470000de",
-            "character": "Septa Mordane",
-            "order": 52,
-            "profile_path": "/5bYvoJDOw4okAzSxJ1avXweUyA9.jpg"
-        },
-        {
-            "id": 1833,
-            "name": "Jamie Sives",
-            "credit_id": "5752136f9251414c510001a0",
-            "character": "Jory Cassel",
-            "order": 55,
-            "profile_path": "/92BcXrr2W7gZri6xVlLhpLLaPsf.jpg"
-        },
-        {
-            "id": 234907,
-            "name": "Dar Salim",
-            "credit_id": "5752158b9251414c470001c0",
-            "character": "Qotho",
-            "order": 56,
-            "profile_path": "/3CrPTwZJ0hsWzX7oi7sKFfzDo82.jpg"
-        },
-        {
-            "id": 11279,
-            "name": "Roger Allam",
-            "credit_id": "575216bdc3a36851fe0001d8",
-            "character": "Illyrio Mopatis",
-            "order": 57,
-            "profile_path": "/gr59GfVZz9QV6jZyHKOsKCBxXPr.jpg"
-        },
-        {
-            "id": 1600544,
-            "name": "Aimee Richardson",
-            "credit_id": "57521d4cc3a3685215000344",
-            "character": "Myrcella Baratheon",
-            "order": 60,
-            "profile_path": "/r53KnAfLiR8NaK3Kp2Nu4q0KSoP.jpg"
-        },
-        {
-            "id": 1600543,
-            "name": "Callum Wharry",
-            "credit_id": "57521fafc3a368521500041d",
-            "character": "Tommen Baratheon",
-            "order": 61,
-            "profile_path": "/rVaMQfGwylZWWM2eRJ3qAEkS0tK.jpg"
-        }
-    ],
-    "name": "Winter Is Coming",
-    "overview": "Jon Arryn, the Hand of the King, is dead. King Robert Baratheon plans to ask his oldest friend, Eddard Stark, to take Jon's place. Across the sea, Viserys Targaryen plans to wed his sister to a nomadic warlord in exchange for an army.",
-    "id": 63056,
-    "production_code": "101",
-    "season_number": 1,
-    "still_path": "/wrGWeW4WKxnaeA8sxJb2T9O6ryo.jpg",
-    "vote_average": 7.11904761904762,
-    "vote_count": 21
+    "tmdb": {
+        "air_date": "2011-04-17",
+        "crew": [
+            {
+                "id": 44797,
+                "credit_id": "5256c8a219c2956ff6046e77",
+                "name": "Tim Van Patten",
+                "department": "Directing",
+                "job": "Director",
+                "profile_path": "/6b7l9YbkDHDOzOKUFNqBVaPjcgm.jpg"
+            },
+            {
+                "id": 1318704,
+                "credit_id": "54eef2429251417974005cb6",
+                "name": "Alik Sakharov",
+                "department": "Camera",
+                "job": "Director of Photography",
+                "profile_path": "/50ZlHkh66aOPxQMjQ21LJDAkYlR.jpg"
+            },
+            {
+                "id": 18077,
+                "credit_id": "54eef2ab925141795f005d4f",
+                "name": "Oral Norrie Ottey",
+                "department": "Editing",
+                "job": "Editor",
+                "profile_path": None
+            },
+            {
+                "id": 9813,
+                "credit_id": "5256c8a019c2956ff6046e2b",
+                "name": "David Benioff",
+                "department": "Writing",
+                "job": "Writer",
+                "profile_path": "/8CuuNIKMzMUL1NKOPv9AqEwM7og.jpg"
+            },
+            {
+                "id": 228068,
+                "credit_id": "5256c8a219c2956ff6046e4b",
+                "name": "D. B. Weiss",
+                "department": "Writing",
+                "job": "Writer",
+                "profile_path": "/caUAtilEe06OwOjoQY3B7BgpARi.jpg"
+            }
+        ],
+        "episode_number": 1,
+        "guest_stars": [
+            {
+                "id": 117642,
+                "name": "Jason Momoa",
+                "credit_id": "5256c8a219c2956ff6046f40",
+                "character": "Khal Drogo",
+                "order": 0,
+                "profile_path": "/PSK6GmsVwdhqz9cd1lwzC6a7EA.jpg"
+            },
+            {
+                "id": 946696,
+                "name": "Ian Whyte",
+                "credit_id": "5750cd459251412b0f000224",
+                "character": "White Walker",
+                "order": 46,
+                "profile_path": "/6mRY7hTtHfDTGuTLmZmODOu9buF.jpg"
+            },
+            {
+                "id": 438859,
+                "name": "Susan Brown",
+                "credit_id": "57520bc19251414c470000de",
+                "character": "Septa Mordane",
+                "order": 52,
+                "profile_path": "/5bYvoJDOw4okAzSxJ1avXweUyA9.jpg"
+            },
+            {
+                "id": 1833,
+                "name": "Jamie Sives",
+                "credit_id": "5752136f9251414c510001a0",
+                "character": "Jory Cassel",
+                "order": 55,
+                "profile_path": "/92BcXrr2W7gZri6xVlLhpLLaPsf.jpg"
+            },
+            {
+                "id": 234907,
+                "name": "Dar Salim",
+                "credit_id": "5752158b9251414c470001c0",
+                "character": "Qotho",
+                "order": 56,
+                "profile_path": "/3CrPTwZJ0hsWzX7oi7sKFfzDo82.jpg"
+            },
+            {
+                "id": 11279,
+                "name": "Roger Allam",
+                "credit_id": "575216bdc3a36851fe0001d8",
+                "character": "Illyrio Mopatis",
+                "order": 57,
+                "profile_path": "/gr59GfVZz9QV6jZyHKOsKCBxXPr.jpg"
+            },
+            {
+                "id": 1600544,
+                "name": "Aimee Richardson",
+                "credit_id": "57521d4cc3a3685215000344",
+                "character": "Myrcella Baratheon",
+                "order": 60,
+                "profile_path": "/r53KnAfLiR8NaK3Kp2Nu4q0KSoP.jpg"
+            },
+            {
+                "id": 1600543,
+                "name": "Callum Wharry",
+                "credit_id": "57521fafc3a368521500041d",
+                "character": "Tommen Baratheon",
+                "order": 61,
+                "profile_path": "/rVaMQfGwylZWWM2eRJ3qAEkS0tK.jpg"
+            }
+        ],
+        "name": "Winter Is Coming",
+        "overview": "Jon Arryn, the Hand of the King, is dead. King Robert Baratheon plans to ask his oldest friend, Eddard Stark, to take Jon's place. Across the sea, Viserys Targaryen plans to wed his sister to a nomadic warlord in exchange for an army.",
+        "id": 63056,
+        "production_code": "101",
+        "season_number": 1,
+        "still_path": "/wrGWeW4WKxnaeA8sxJb2T9O6ryo.jpg",
+        "vote_average": 7.11904761904762,
+        "vote_count": 21
+    },
+    "user_info": {
+        "score": 0,
+        "review": "string",
+    },
+    "user_watched_show": True
 }
