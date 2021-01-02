@@ -209,7 +209,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
-            show_info, user_show_status = get_show_info(kwargs.get('show_tmdb_id'), request.user)
+            show_info, user_watched_show = get_show_info(kwargs.get('show_tmdb_id'), request.user)
         except (HTTPError, ConnectionError):
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -222,7 +222,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except (Season.DoesNotExist, UserSeason.DoesNotExist, TypeError):
             user_info = None
 
-        return Response({'tmdb': tmdb_season, 'user_info': user_info, 'user_show_status': user_show_status})
+        return Response({'tmdb': tmdb_season, 'user_info': user_info, 'user_watched_show': user_watched_show})
 
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
@@ -343,7 +343,7 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
-            show_info, user_show_status = get_show_info(kwargs.get('show_tmdb_id'), request.user)
+            show_info, user_watched_show = get_show_info(kwargs.get('show_tmdb_id'), request.user)
         except (HTTPError, ConnectionError):
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -356,7 +356,7 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except (Episode.DoesNotExist, UserEpisode.DoesNotExist, TypeError):
             user_info = None
 
-        return Response({'tmdb': tmdb_episode, 'user_info': user_info, 'user_show_status': user_show_status})
+        return Response({'tmdb': tmdb_episode, 'user_info': user_info, 'user_watched_show': user_watched_show})
 
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
@@ -441,7 +441,7 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
 
 def get_show_info(show_id, user):
-    user_show_status = UserShow.STATUS_NOT_WATCHED
+    user_watched_show = False
     try:
         show = Show.objects.get(tmdb_id=show_id)
         show_name = show.tmdb_name
@@ -450,7 +450,8 @@ def get_show_info(show_id, user):
 
         try:
             user_show = UserShow.objects.get(user=user, show=show)
-            user_show_status = user_show.status
+            if user_show.status != UserShow.STATUS_NOT_WATCHED:
+                user_watched_show = True
         except (UserShow.DoesNotExist, TypeError):
             pass
 
@@ -465,4 +466,4 @@ def get_show_info(show_id, user):
 
     return ({'show_name': show_name,
              'show_original_name': show_original_name,
-             'backdrop_path': backdrop_path}, user_show_status)
+             'backdrop_path': backdrop_path}, user_watched_show)
