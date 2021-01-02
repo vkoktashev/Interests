@@ -33,9 +33,6 @@ from utils.openapi_params import page_param, page_size_param, query_param, uid64
 from .models import User, UserFollow, UserLog, UserPasswordToken
 from .tokens import account_activation_token
 
-TYPE_GAME = 'game'
-TYPE_MOVIE = 'movie'
-TYPE_USER = 'user'
 SITE_URL = '35.193.124.214:81'
 MINUTES_IN_HOUR = 60
 
@@ -370,8 +367,8 @@ def password_reset(self, request, *args, **kwargs):
     message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
     email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
     try:
-        # email.send()
-        print(activation_link)
+        email.send()
+        # print(activation_link)
     except SMTPAuthenticationError:
         return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -400,46 +397,10 @@ def confirm_password_reset(self, request, *args, **kwargs):
         serializer.is_valid(raise_exception=True)
         user_password_token.is_active = False
         user_password_token.save()
-
-        mail_subject = 'Сброс пароля.'
-        activation_link = f"{request.scheme}://{SITE_URL}/" \
-                          f"confirm_password/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
-        message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
-        email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
-        try:
-            email.send()
-            # print(activation_link)
-        except SMTPAuthenticationError:
-            return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        return Response(status=status.HTTP_200_OK)
-
-    @swagger_auto_schema(manual_parameters=[reset_token_param],
-                         request_body=openapi.Schema(
-                             type=openapi.TYPE_OBJECT,
-                             properties={
-                                 'password': openapi.Schema(type=openapi.TYPE_STRING),
-                             }
-                         ))
-    @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
-    def confirm_password_reset(self, request, *args, **kwargs):
-        try:
-            reset_token = force_text(urlsafe_base64_decode(request.query_params.get('reset_token')))
-            password = request.data.get('password')
-            user_password_token = UserPasswordToken.objects.get(reset_token=reset_token)
-            user = User.objects.get(id=user_password_token.user.id)
-        except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist, UserPasswordToken.DoesNotExist):
-            return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
-
-        if user_password_token.is_active:
-            serializer = UserSerializer(instance=user, data={'password': password}, partial=True)
-            serializer.is_valid(raise_exception=True)
-            user_password_token.is_active = False
-            user_password_token.save()
-            serializer.save()
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+    else:
+        return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def serialize_logs(logs):
