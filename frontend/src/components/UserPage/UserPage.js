@@ -11,7 +11,7 @@ import {
     MDBContainer
 } from "mdbreact";
 import {
-    PieChart, Pie, Legend, Tooltip, Cell
+    PieChart, Pie, Legend, Cell
   } from 'recharts';
 import './style.css';
 
@@ -63,8 +63,9 @@ function UserPage ( { loggedIn, userInfo,
 
     useEffect(
 		() => {
+            setChartData([]);
             document.title = 'Профиль ' + userInfo.username;
-            if (userInfo.stats){
+            if (userInfo.stats.games){
                 let newData = [];
                 if (userInfo.stats.games.total_spent_time > 0)
                     newData.push({name: 'Часов в играх', value: userInfo.stats.games.total_spent_time});
@@ -126,7 +127,6 @@ function UserPage ( { loggedIn, userInfo,
                                                 chartData.map((entry, index) => <Cell fill={COLORS[index % COLORS.length]}/>)
                                             }
                                             </Pie>
-                                            <Tooltip />
                                             <Legend verticalAlign="bottom" horizontalAlign="center"/>
                                         </PieChart>
                                     </div>

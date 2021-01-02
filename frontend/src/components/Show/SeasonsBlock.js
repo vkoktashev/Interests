@@ -47,7 +47,7 @@ function SeasonsBlock ( {seasons, showID} ) {
                         <details open={false} className='episodeRows'>
                             <summary>Развернуть</summary>
                                 <ul>
-                                {  season.episodes.map((episode) => <li className="episode"><EpisodeRow episode={episode} season={season.season_number} showID={showID} key={season.id+episode}/></li>) }
+                                {  season.episodes.map((episode) => <li className="episode" key={season.id+episode}><EpisodeRow episode={episode} season={season.season_number} showID={showID} /></li>) }
                                 </ul>
                         </details>
                         

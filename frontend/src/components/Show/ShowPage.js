@@ -142,15 +142,16 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus,
                                     <MDBCol size="6">
                                         <h1>{show.tmdb.name}</h1>
                                         <h5 style={{marginBottom: "10px", marginTop: "-10px"}}>{show.tmdb.original_name}</h5>
-                                        <p style={{marginBottom: "2px"}}>Жанр: {genres}</p>
-                                        <p style={{marginBottom: "2px"}}>Компания: {companies}</p>
-                                        <p style={{marginBottom: "2px"}} hidden={firstDate===''}>Дата выхода первой серии: {firstDate}</p>
-                                        <p style={{marginBottom: "2px"}} hidden={lastDate===''}>Дата выхода последней серии: {lastDate}</p>
-                                        <p style={{marginBottom: "2px"}} hidden={show.tmdb.episode_run_time.length < 1}>Продолжительность (мин): {show.tmdb.episode_run_time[0]}</p>
-                                        <p style={{marginBottom: "2px"}}>Количество сезонов: {show.tmdb.number_of_seasons}</p>
-                                        <p style={{marginBottom: "2px"}}>Количество серий: {show.tmdb.number_of_episodes}</p>
-                                        <p style={{marginBottom: "2px"}}>Статус: {showStatus}</p>
-                                        <br/>
+                                        <div className="mainInfo">
+                                            <p>Жанр: {genres}</p>
+                                            <p>Компания: {companies}</p>
+                                            <p hidden={firstDate===''}>Дата выхода первой серии: {firstDate}</p>
+                                            <p hidden={lastDate===''}>Дата выхода последней серии: {lastDate}</p>
+                                            <p hidden={show.tmdb.episode_run_time?false:true}>Продолжительность (мин): {show.tmdb.episode_run_time?show.tmdb.episode_run_time[0]:0}</p>
+                                            <p>Количество сезонов: {show.tmdb.number_of_seasons}</p>
+                                            <p>Количество серий: {show.tmdb.number_of_episodes}</p>
+                                            <p>Статус: {showStatus}</p>
+                                        </div>
                                         <Rating stop={10}
                                             emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}}/>}
                                             fullSymbol={[1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} title={n}/>)}

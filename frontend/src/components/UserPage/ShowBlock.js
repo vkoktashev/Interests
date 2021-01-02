@@ -62,7 +62,7 @@ function ShowBlock ( {shows, stats} ) {
 
     return(
         <div>
-            <p>Серий сериалов посмотрено: {stats.episodes.count}, часов просмотра: {stats.episodes.total_spent_time}</p>  
+            <p>Серий сериалов посмотрено: {stats.episodes?stats.episodes.count:0}, часов просмотра: {stats.episodes?stats.episodes.total_spent_time:0}</p>  
             <MDBDataTable
                 striped
                 bordered
