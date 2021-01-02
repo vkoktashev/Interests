@@ -80,12 +80,19 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except ConnectionError:
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
+        show, created = Show.objects.get_or_create(
+            tmdb_id=tmdb_show['id'],
+            defaults={'tmdb_original_name': tmdb_show['original_name'],
+                      'tmdb_name': tmdb_show['name'],
+                      'tmdb_episode_run_time': tmdb_show['episode_run_time'][0],
+                      'tmdb_backdrop_path': tmdb_show['backdrop_path']}
+        )
+
         try:
-            show = Show.objects.get(tmdb_id=tmdb_show['id'])
             user_show = UserShow.objects.exclude(status=UserShow.STATUS_NOT_WATCHED).get(user=request.user,
                                                                                          show=show)
             user_info = self.get_serializer(user_show).data
-        except (Show.DoesNotExist, UserShow.DoesNotExist):
+        except (UserShow.DoesNotExist, TypeError):
             user_info = None
 
         return Response({'tmdb': tmdb_show, 'user_info': user_info})
@@ -191,8 +198,8 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     })
     def retrieve(self, request, *args, **kwargs):
         try:
-            tmdb_season = tmdb.TV_Seasons(kwargs.get('show_tmdb_id'), kwargs.get('number')).info(
-                language=LANGUAGE)
+            tmdb_season = tmdb.TV_Seasons(kwargs.get('show_tmdb_id'),
+                                          kwargs.get('number')).info(language=LANGUAGE)
         except HTTPError as e:
             error_code = int(e.args[0].split(' ', 1)[0])
             if error_code == 404:
@@ -202,13 +209,20 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
+            show_info, user_show_status = get_show_info(kwargs.get('show_tmdb_id'), request.user)
+        except (HTTPError, ConnectionError):
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        tmdb_season.update(show_info)
+
+        try:
             season = Season.objects.get(tmdb_id=tmdb_season.get('id'))
             user_season = UserSeason.objects.get(user=request.user, season=season)
             user_info = self.get_serializer(user_season).data
-        except (Season.DoesNotExist, UserSeason.DoesNotExist):
+        except (Season.DoesNotExist, UserSeason.DoesNotExist, TypeError):
             user_info = None
 
-        return Response({'tmdb': tmdb_season, 'user_info': user_info})
+        return Response({'tmdb': tmdb_season, 'user_info': user_info, 'user_show_status': user_show_status})
 
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
@@ -329,13 +343,20 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
+            show_info, user_show_status = get_show_info(kwargs.get('show_tmdb_id'), request.user)
+        except (HTTPError, ConnectionError):
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        tmdb_episode.update(show_info)
+
+        try:
             episode = Episode.objects.get(tmdb_id=tmdb_episode.get('id'))
             user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
             user_info = self.get_serializer(user_episode).data
-        except (Episode.DoesNotExist, UserEpisode.DoesNotExist):
+        except (Episode.DoesNotExist, UserEpisode.DoesNotExist, TypeError):
             user_info = None
 
-        return Response({'tmdb': tmdb_episode, 'user_info': user_info})
+        return Response({'tmdb': tmdb_episode, 'user_info': user_info, 'user_show_status': user_show_status})
 
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
@@ -417,3 +438,31 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+def get_show_info(show_id, user):
+    user_show_status = UserShow.STATUS_NOT_WATCHED
+    try:
+        show = Show.objects.get(tmdb_id=show_id)
+        show_name = show.tmdb_name
+        show_original_name = show.tmdb_original_name
+        backdrop_path = show.tmdb_backdrop_path
+
+        try:
+            user_show = UserShow.objects.get(user=user, show=show)
+            user_show_status = user_show.status
+        except (UserShow.DoesNotExist, TypeError):
+            pass
+
+    except Show.DoesNotExist:
+        try:
+            tmdb_show = tmdb.TV(show_id).info(language=LANGUAGE)
+            show_name = tmdb_show['name']
+            show_original_name = tmdb_show['original_name']
+            backdrop_path = tmdb_show['backdrop_path']
+        except HTTPError as e:
+            raise HTTPError(e)
+
+    return ({'show_name': show_name,
+             'show_original_name': show_original_name,
+             'backdrop_path': backdrop_path}, user_show_status)
