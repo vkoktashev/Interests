@@ -155,8 +155,7 @@ function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieSta
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                    setMovieStatus({score: score, review: document.getElementById('reviewInput').value, 
-                                                                    spent_time: document.getElementById('spentTimeInput').value });
+                                                    setMovieStatus({score: score, review: document.getElementById('reviewInput').value });
                                                 }}
                                             }
                                         /> <br/>
@@ -168,8 +167,7 @@ function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieSta
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                   setMovieStatus({ status: status, review: document.getElementById('reviewInput').value, 
-                                                                    spent_time: document.getElementById('spentTimeInput').value });
+                                                   setMovieStatus({ status: status, review: document.getElementById('reviewInput').value });
                                                 }
                                             }}/>
                                     </MDBCol>
