@@ -68,7 +68,7 @@ function GameBlock ( {games, stats} ) {
 
     return(
         <div>
-            <p>Игр сыграно: {stats.games_count}, часов наиграно: {stats.games_total_spent_time}</p>  
+            <p>Игр сыграно: {stats.games.count}, часов наиграно: {stats.games.total_spent_time}</p>  
             <MDBDataTable
                 striped
                 bordered

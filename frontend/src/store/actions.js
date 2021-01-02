@@ -229,6 +229,27 @@ export function requestShow(id){
     }
 }
 
+export function requestShowSeason(showID, seasonNumber){
+    return async(dispatch) => {
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, true);
+        setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, false);
+        Requests.getShowSeason(localStorage.getItem('token'), showID, seasonNumber).then((result) => {
+            console.log(result);
+            if (result != null){
+                dispatch({
+                    type: actionTypes.SET_CONTENT_SHOW,
+                    show: result, 
+                });
+            }
+            else{
+                toast.error("Сериал не найден!");
+                setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, true);
+            }
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, false);
+        });
+    }
+}
+
 /*export function requestShowFriends(id, page){
     return async(dispatch) => {
         setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_FRIENDS, true);

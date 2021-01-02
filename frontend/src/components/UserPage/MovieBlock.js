@@ -62,7 +62,7 @@ function MovieBlock ( {movies, stats} ) {
 
     return(
         <div>
-            <p>Фильмов посмотрено: {stats.movies_count}, часов просмотра: {stats.movies_total_spent_time}</p>  
+            <p>Фильмов посмотрено: {stats.movies.count}, часов просмотра: {stats.movies.total_spent_time}</p>  
             <MDBDataTable
                 striped
                 bordered
