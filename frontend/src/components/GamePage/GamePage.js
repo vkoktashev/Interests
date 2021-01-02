@@ -156,7 +156,8 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                    setGameStatus({score: score });
+                                                    setGameStatus({score: score, review: document.getElementById('reviewInput').value, 
+                                                                    spent_time: document.getElementById('spentTimeInput').value });
                                                 }}
                                             }
                                             style={{marginTop: "20px", marginBottom: "10px"}}

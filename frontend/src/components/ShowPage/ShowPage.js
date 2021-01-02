@@ -20,13 +20,13 @@ import { connect } from 'react-redux';
 import * as selectors from '../../store/reducers';
 import * as actions from '../../store/actions';
 import StatusButtonGroup from "../Common/StatusButtonGroup";
-import FriendsActivity from "../Common/FriendsActivity";
+//import FriendsActivity from "../Common/FriendsActivity";
 import SeasonsBlock from "./SeasonsBlock";
 
 /**
  * Основная страница приложения
  */
-function ShowPage ( {requestShow, show, showIsLoading,
+function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus,
                     loggedIn, openLoginForm
     } ) {
     let { id } = useParams();
@@ -36,7 +36,7 @@ function ShowPage ( {requestShow, show, showIsLoading,
     const [showStatus, setShowStatus] = useState("");
     const [firstDate, setFirstDate] = useState("");
     const [lastDate, setLastDate] = useState("");
-    //const [review, setReview] = useState("");
+    const [review, setReview] = useState("");
 
     useEffect(
 		() => {
@@ -113,9 +113,9 @@ function ShowPage ( {requestShow, show, showIsLoading,
             }else
                 setLastDate("");
 
-            /*if (show.user_info){
-                setReview(movie.user_info.review);
-            }*/
+            if (show.user_info){
+                setReview(show.user_info.review);
+            }
 
             document.title = show.tmdb.name;
 		},
@@ -151,6 +151,30 @@ function ShowPage ( {requestShow, show, showIsLoading,
                                         <p style={{marginBottom: "2px"}}>Количество серий: {show.tmdb.number_of_episodes}</p>
                                         <p style={{marginBottom: "2px"}}>Статус: {showStatus}</p>
                                         <br/>
+                                        <Rating stop={10}
+                                            emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}}/>}
+                                            fullSymbol={[1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} title={n}/>)}
+                                            initialRating={show.user_info?show.user_info.score:0}
+                                            readonly={!loggedIn | (!show.user_info)}
+                                            onChange={(score) => {
+                                                if (!loggedIn){
+                                                    openLoginForm();
+                                                }else{
+                                                    setShowUserStatus({score: score, review: document.getElementById('reviewInput').value });
+                                                }}
+                                            }
+                                        /> <br/>
+                                        <StatusButtonGroup loggedIn={loggedIn} 
+                                            statuses={['Не смотрел', 'Буду смотреть', 'Смотрю', 'Дропнул', 'Посмотрел']}
+                                            activeColor='#4527a0' 
+                                            userStatus={show.user_info?show.user_info.status:'Не смотрел'}
+                                            onChangeStatus={(status) => {
+                                                if (!loggedIn){
+                                                    openLoginForm();
+                                                }else{
+                                                    setShowUserStatus({ status: status, review: document.getElementById('reviewInput').value });
+                                                }
+                                            }}/>
                                     </MDBCol>
                                     <MDBCol size="1">
                                         { metascoreBlock }
@@ -167,7 +191,30 @@ function ShowPage ( {requestShow, show, showIsLoading,
                                     <SeasonsBlock seasons={show.tmdb.seasons} showID={show.tmdb.id}/>
                                 </div>
                                 <MDBCol size="6" style={{paddingLeft: "10px"}}>
-                                    
+                                    <h3 style={{paddingTop: "10px"}}>Отзывы</h3>
+                                        
+                                    <MDBInput 
+                                        type="textarea" 
+                                        id="reviewInput"
+                                        label="Ваш отзыв" 
+                                        value={review}
+                                        onChange={(event) =>setReview(event.target.value)}
+                                        outline
+                                    />
+                                    <button 
+                                        className={'savePreviewButton'} 
+                                        disabled={!loggedIn | (!show.user_info)}
+                                        onClick={() => {
+                                                if (!loggedIn){
+                                                    openLoginForm();
+                                                }else{
+                                                    setShowUserStatus({ review: document.getElementById('reviewInput').value });
+                                                }
+                                            }
+                                        }
+                                        >
+                                        Сохранить
+                                    </button>
                                 </MDBCol>
                             </MDBContainer>
                         </MDBCol>
@@ -190,6 +237,9 @@ const mapDispatchToProps = (dispatch) => {
 	return {
 		requestShow: (id) => {
             dispatch(actions.requestShow(id));
+        },
+        setShowUserStatus: (status) => {
+            dispatch(actions.setShowStatus(status));
         },
         openLoginForm: () => {
             dispatch(actions.openLoginForm());

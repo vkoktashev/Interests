@@ -394,6 +394,24 @@ export function setMovieStatus(user_info){
     }
 }
 
+export function setShowStatus(user_info){
+    return async(dispatch, getState) => {
+        if (await dispatch(checkAuthorization())){
+            Requests.setShowStatus(localStorage.getItem('token'), selectors.getContentShow(getState()).tmdb.id, user_info).then((result) => {
+                if (!result){
+                    toast.error("Ошибка обновления статуса")
+                }
+                else{
+                    dispatch({
+                        type: actionTypes.SET_CONTENT_SHOW_USERINFO,
+                        user_info: result
+                    });
+                }
+            });
+        }
+    }
+}
+
 export function searchUsers(query){
     return async(dispatch) => {
         setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_USERS, true);

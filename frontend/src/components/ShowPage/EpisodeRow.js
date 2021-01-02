@@ -17,11 +17,6 @@ function EpisodeRow ( {episode, season, showID} ) {
         [episode]
     );
 
-    function parseDate(date){
-        let newDate = new Date(date);
-        return newDate.toLocaleTimeString("ru-RU");
-    }
-
     return(
         <div className="episodeRow">
             <a className="episodeRowName episodeLink" 
