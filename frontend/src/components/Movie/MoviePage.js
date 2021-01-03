@@ -25,7 +25,10 @@ import FriendsActivity from "../Common/FriendsActivity";
 /**
  * Основная страница приложения
  */
-function MoviePage ( {requestMovie, movie, loggedIn, movieIsLoading, setMovieStatus, openLoginForm, requestMovieFriends, movieFriends, movieFriendsIsLoading
+function MoviePage ( {
+        requestMovie, movie, movieIsLoading, setMovieStatus,
+        requestMovieFriends, movieFriends, movieFriendsIsLoading,
+        loggedIn, openLoginForm, 
     } ) {
     let { id } = useParams();
     const [metascoreBlock, setMetascoreBlock] = useState("");

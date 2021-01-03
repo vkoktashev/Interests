@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from shows.models import UserShow, UserSeason, UserEpisode, ShowLog, SeasonLog, EpisodeLog
+from users.serializers import FollowedUserSerializer
 from utils.serializers import ChoicesField
 
 TYPE_SHOW = 'show'
@@ -31,6 +32,12 @@ class UserSeasonSerializer(serializers.ModelSerializer):
 
 
 class UserEpisodeSerializer(serializers.ModelSerializer):
+    episode_number = serializers.SerializerMethodField('get_episode_number')
+
+    @staticmethod
+    def get_episode_number(user_episode):
+        return user_episode.episode.tmdb_episode_number
+
     class Meta:
         model = UserEpisode
         exclude = ('id',)
@@ -146,3 +153,30 @@ class EpisodeLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = EpisodeLog
         exclude = ('episode',)
+
+
+class FollowedUserShowSerializer(UserShowSerializer):
+    user = FollowedUserSerializer()
+
+    class Meta:
+        model = UserShow
+        exclude = ('id', 'show', 'updated_at')
+        depth = 1
+
+
+class FollowedUserSeasonSerializer(UserSeasonSerializer):
+    user = FollowedUserSerializer()
+
+    class Meta:
+        model = UserSeason
+        exclude = ('id', 'season')
+        depth = 1
+
+
+class FollowedUserEpisodeSerializer(UserEpisodeSerializer):
+    user = FollowedUserSerializer()
+
+    class Meta:
+        model = UserEpisode
+        exclude = ('id', 'episode')
+        depth = 1

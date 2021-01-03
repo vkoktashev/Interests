@@ -20,7 +20,10 @@ function LogRow ( {log, showUsername} ) {
     function translateActionType(action, actionResult){
         switch (action) {
             case 'score':
-                return 'оценил(а)';
+                if (actionResult !== '0')
+                    return 'оценил(а)';
+                else
+                    return 'посмотрел(а)';
             case 'status':
                 return 'изменил(а) статус';
             case 'review':
@@ -55,6 +58,8 @@ function LogRow ( {log, showUsername} ) {
                 else
                     return 'сериала';
             case 'season':
+                return '';
+            case 'episode':
                 return '';
             case 'user':
                 return 'пользователя';
@@ -99,6 +104,23 @@ function LogRow ( {log, showUsername} ) {
                             
                         </div>
                         ;
+            case 'episode':
+                return  <div style={{display: 'inline-block'}}>
+                            
+                            <a href={window.location.origin + '/show/' + id.show_id + '/season/' + id.season_number + '/episode/' + id.episode_number} 
+                                className="logLink"
+                                onClick={(e) => { history.push('/show/' + id.show_id  + '/season/' + id.season_number + '/episode/' + id.episode_number); e.preventDefault();}}>
+                                    [s{id.season_number}e{id.episode_number}] серию
+                            </a>
+                            &nbsp;сериала&nbsp;
+                            <a href={window.location.origin + '/show/' + id.show_id} 
+                                className="logLink"
+                                onClick={(e) => { history.push('/show/' + id.show_id); e.preventDefault();}}>
+                                    {name.parent_name}
+                            </a>
+                            
+                        </div>
+                        ;
             case 'user':
                 return  <a href={window.location.origin + '/user/' + id} 
                             className="logLink"
@@ -118,15 +140,18 @@ function LogRow ( {log, showUsername} ) {
                     </a>;
     }
 
-    function actionResultToStr(actionType, actionResult){
+    function actionResultToStr(actionType, actionResult, target){
         switch (actionType){
             case 'score':
-                return  <Rating stop={10}
-                            emptySymbol={<MDBIcon far icon="star" size="1x"/>}
-                            fullSymbol={[1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" title={n}/>)}
-                            initialRating={actionResult}
-                            readonly={true}
-                        />
+                if (target !== 'episode' | actionResult > 0)
+                    return  <Rating stop={10}
+                                emptySymbol={<MDBIcon far icon="star" size="1x"/>}
+                                fullSymbol={[1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" title={n}/>)}
+                                initialRating={actionResult}
+                                readonly={true}
+                            />
+                else
+                    return '';
             case 'status':
                 return '"' + actionResult + '"';
             case 'review':
@@ -146,7 +171,7 @@ function LogRow ( {log, showUsername} ) {
     }
 
     return(
-            <p className="logRow">{parseDate(log.created)} {showUsername?userToLink(log.user, log.user_id):''} {translateActionType(log.action_type, log.action_result)} {translateType(log.type, log.action_type)} {nameToLink(log.target, log.type, log.target_id)}{log.type==='user'?'':':'} {actionResultToStr(log.action_type, log.action_result)}</p>
+            <div className="logRow">{parseDate(log.created)} {showUsername?userToLink(log.user, log.user_id):''} {translateActionType(log.action_type, log.action_result)} {translateType(log.type, log.action_type)} {nameToLink(log.target, log.type, log.target_id)}{(log.type==='user'|log.action_result==="0")?'':':'} {actionResultToStr(log.action_type, log.action_result, log.type)}</div>
     )
 }
 

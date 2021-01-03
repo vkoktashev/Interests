@@ -124,7 +124,7 @@ function UserPage ( { loggedIn, userInfo,
                                                 label
                                                 >
                                             {
-                                                chartData.map((entry, index) => <Cell fill={COLORS[index % COLORS.length]}/>)
+                                                chartData.map((entry, index) => <Cell fill={COLORS[index % COLORS.length]} key={index}/>)
                                             }
                                             </Pie>
                                             <Legend verticalAlign="bottom" horizontalAlign="center"/>
