@@ -95,6 +95,18 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                       'tmdb_backdrop_path': tmdb_show['backdrop_path']}
         )
 
+        for season in tmdb_show['seasons']:
+            episodes_user_info = []
+            episodes = Episode.objects.filter(tmdb_show=tmdb_show['id'], tmdb_season_number=season['season_number'])
+            for episode in episodes:
+                try:
+                    user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
+                    user_info = UserEpisodeSerializer(user_episode).data
+                except (UserEpisode.DoesNotExist, TypeError):
+                    user_info = ()
+                episodes_user_info.append(user_info)
+            season.update({'episodes_user_info': episodes_user_info})
+
         try:
             user_show = UserShow.objects.exclude(status=UserShow.STATUS_NOT_WATCHED).get(user=request.user,
                                                                                          show=show)
@@ -241,8 +253,17 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             show_info, user_watched_show = get_show_info(kwargs.get('show_tmdb_id'), request.user)
         except (HTTPError, ConnectionError):
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
         tmdb_season.update(show_info)
+
+        for tmdb_episode in tmdb_season['episodes']:
+            try:
+                episode = Episode.objects.get(tmdb_id=tmdb_episode['id'])
+                user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
+                user_info = UserEpisodeSerializer(user_episode).data
+            except (Episode.DoesNotExist, UserEpisode.DoesNotExist, TypeError):
+                user_info = ()
+
+            tmdb_episode.update({'user_info': user_info})
 
         try:
             season = Season.objects.get(tmdb_id=tmdb_season.get('id'))
@@ -546,3 +567,15 @@ def get_show_info(show_id, user):
              'show_id': show_id,
              'show_original_name': show_original_name,
              'backdrop_path': backdrop_path}, user_watched_show)
+
+
+def get_episode_info(show_id, season_number, episode_number, user):
+    try:
+        episode = Episode.objects.get(tmdb_show=show_id,
+                                      tmdb_season_number=season_number,
+                                      tmdb_episode_number=episode_number)
+        user_episode = UserEpisode.objects.get(user=user, episode=episode)
+        user_info = UserEpisodeSerializer(user_episode).data
+    except (Episode.DoesNotExist, UserEpisode, TypeError):
+        user_info = ()
+    return user_info
