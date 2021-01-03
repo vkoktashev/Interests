@@ -255,7 +255,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         watched_episodes = UserEpisode.objects.exclude(score=-1).filter(user=user)
         stats.update({'episodes': {
             'count': len(watched_episodes),
-            'total_spent_time': sum(el.episode.tmdb_show.tmdb_episode_run_time for el in watched_episodes)
+            'total_spent_time':
+                round(sum(el.episode.tmdb_show.tmdb_episode_run_time for el in watched_episodes) / MINUTES_IN_HOUR, 1)
         }})
 
         # followed_users
