@@ -56,6 +56,8 @@ function LogRow ( {log, showUsername} ) {
                     return 'сериала';
             case 'season':
                 return '';
+            case 'episode':
+                return '';
             case 'user':
                 return 'пользователя';
             default:
@@ -89,6 +91,23 @@ function LogRow ( {log, showUsername} ) {
                                 className="logLink"
                                 onClick={(e) => { history.push('/show/' + id.show_id  + '/season/' + id.season_number); e.preventDefault();}}>
                                     {name.name}
+                            </a>
+                            &nbsp;сериала&nbsp;
+                            <a href={window.location.origin + '/show/' + id.show_id} 
+                                className="logLink"
+                                onClick={(e) => { history.push('/show/' + id.show_id); e.preventDefault();}}>
+                                    {name.parent_name}
+                            </a>
+                            
+                        </div>
+                        ;
+            case 'episode':
+                return  <div style={{display: 'inline-block'}}>
+                            
+                            <a href={window.location.origin + '/show/' + id.show_id + '/season/' + id.season_number + '/episode/' + id.episode_number} 
+                                className="logLink"
+                                onClick={(e) => { history.push('/show/' + id.show_id  + '/season/' + id.season_number + '/episode/' + id.episode_number); e.preventDefault();}}>
+                                    [s{id.season_number}e{id.episode_number}] серию
                             </a>
                             &nbsp;сериала&nbsp;
                             <a href={window.location.origin + '/show/' + id.show_id} 
