@@ -33,7 +33,7 @@ function DetailedEpisodeRow ( {episode, showID, setShowEpisodeUserStatus, logged
                 emptySymbol={[<MDBIcon icon="eye-slash" />].concat([1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon far icon="star" size="1x" />))}
                 fullSymbol={[<MDBIcon icon="eye" />].concat([1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x"title={n}/>))}
                 readonly={!loggedIn}
-                initialRating={-1}
+                initialRating={episode.user_info?episode.user_info.score:-1}
                 onChange={(score) => {
                         setShowEpisodeUserStatus({score: score}, showID, episode.season_number, episode.episode_number );
                     }

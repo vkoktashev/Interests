@@ -26,7 +26,7 @@ import SeasonsBlock from "./SeasonsBlock";
 /**
  * Основная страница приложения
  */
-function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus,
+function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setShowEpisodeUserStatus,
                     requestShowFriends, showFriends, showFriendsIsLoading,
                     loggedIn, openLoginForm
     } ) {
@@ -199,7 +199,7 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus,
                                 </MDBRow>
                                 <div className="showContentBody"> 
                                     <h3 style={{paddingTop: "15px"}}>Список серий</h3>
-                                    <SeasonsBlock seasons={show.tmdb.seasons} showID={show.tmdb.id}/>
+                                    <SeasonsBlock seasons={show.tmdb.seasons} showID={show.tmdb.id} loggedIn={loggedIn} setShowEpisodeUserStatus={setShowEpisodeUserStatus}/>
                                 </div>
                                 <MDBCol size="6" style={{paddingLeft: "10px"}}>
                                     <h3 style={{paddingTop: "10px"}}>Отзывы</h3>
@@ -263,7 +263,10 @@ const mapDispatchToProps = (dispatch) => {
         },
         requestShowFriends: (id, page) => {
             dispatch(actions.requestShowFriends(id, page));
-        }
+        },
+        setShowEpisodeUserStatus: (status, showID, seasonNumber, episodeNumber) => {
+            dispatch(actions.setShowEpisodeStatusInRow(status, showID, seasonNumber, episodeNumber));
+        },
 	}
 };
 
