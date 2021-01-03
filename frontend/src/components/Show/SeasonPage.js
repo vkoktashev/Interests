@@ -29,7 +29,7 @@ import DetailedEpisodeRow from "./DetailedEpisodeRow";
 /**
  * Основная страница приложения
  */
-function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShowUserStatus,
+function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShowUserStatus, setShowEpisodeUserStatus,
                     loggedIn, openLoginForm
     } ) {
     let history = useHistory();
@@ -161,7 +161,7 @@ function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShow
                                     <details open={false} className='episodeRows'>
                                         <summary>Развернуть</summary>
                                             <ul>
-                                                {  showSeason.tmdb.episodes?showSeason.tmdb.episodes.map((episode) => <li className="episode" key={showSeason.tmdb.id+episode.episode_number}><DetailedEpisodeRow episode={episode} showID={show_id}/></li>):'' }
+                                                {  showSeason.tmdb.episodes?showSeason.tmdb.episodes.map((episode) => <li className="episode" key={showSeason.tmdb.id+episode.episode_number}><DetailedEpisodeRow episode={episode} showID={show_id} loggedIn={loggedIn} setShowEpisodeUserStatus={setShowEpisodeUserStatus}/></li>):'' }
                                             </ul>
                                     </details>
                                     <div hidden={!(chartData.length > 0)}>
@@ -209,6 +209,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         setShowUserStatus: (status, showID, seasonNumber) => {
             dispatch(actions.setShowSeasonStatus(status, showID, seasonNumber));
+        },
+        setShowEpisodeUserStatus: (status, showID, seasonNumber, episodeNumber) => {
+            dispatch(actions.setShowEpisodeStatusInRow(status, showID, seasonNumber, episodeNumber));
         },
         openLoginForm: () => {
             dispatch(actions.openLoginForm());

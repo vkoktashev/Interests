@@ -250,6 +250,27 @@ export function requestShowSeason(showID, seasonNumber){
     }
 }
 
+export function requestShowEpisode(showID, seasonNumber, episodeNumber){
+    return async(dispatch) => {
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, true);
+        setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, false);
+        Requests.getShowEpisode(localStorage.getItem('token'), showID, seasonNumber, episodeNumber).then((result) => {
+            console.log(result);
+            if (result != null){
+                dispatch({
+                    type: actionTypes.SET_CONTENT_SHOW,
+                    show: result, 
+                });
+            }
+            else{
+                toast.error("Серия не найдена!");
+                setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, true);
+            }
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, false);
+        });
+    }
+}
+
 /*export function requestShowFriends(id, page){
     return async(dispatch) => {
         setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_FRIENDS, true);
@@ -445,6 +466,39 @@ export function setShowSeasonStatus(user_info, showID, seasonNumber){
                         type: actionTypes.SET_CONTENT_SHOW_USERINFO,
                         user_info: result
                     });
+                }
+            });
+        }
+    }
+}
+
+export function setShowEpisodeStatus(user_info, showID, seasonNumber, episodeNumber){
+    return async(dispatch) => {
+        if (await dispatch(checkAuthorization())){
+            Requests.setShowEpisodeStatus(localStorage.getItem('token'), showID, seasonNumber, episodeNumber, user_info).then((result) => {
+                if (!result){
+                    toast.error("Ошибка обновления статуса")
+                }
+                else{
+                    dispatch({
+                        type: actionTypes.SET_CONTENT_SHOW_USERINFO,
+                        user_info: result
+                    });
+                }
+            });
+        }
+    }
+}
+
+export function setShowEpisodeStatusInRow(user_info, showID, seasonNumber, episodeNumber){
+    return async(dispatch) => {
+        if (await dispatch(checkAuthorization())){
+            Requests.setShowEpisodeStatus(localStorage.getItem('token'), showID, seasonNumber, episodeNumber, user_info).then((result) => {
+                if (!result){
+                    toast.error("Ошибка обновления статуса")
+                }
+                else{
+                    
                 }
             });
         }
