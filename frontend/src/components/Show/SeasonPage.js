@@ -23,13 +23,15 @@ import Rating from "react-rating";
 import { connect } from 'react-redux'; 
 import * as selectors from '../../store/reducers';
 import * as actions from '../../store/actions';
-//import FriendsActivity from "../Common/FriendsActivity";
+import FriendsActivity from "../Common/FriendsActivity";
 import DetailedEpisodeRow from "./DetailedEpisodeRow";
 
 /**
  * Основная страница приложения
  */
-function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShowUserStatus, setShowEpisodeUserStatus,
+function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShowUserStatus, 
+                    setShowEpisodeUserStatus,
+                    requestShowSeasonFriends, showFriends, showFriendsIsLoading,
                     loggedIn, openLoginForm
     } ) {
     let history = useHistory();
@@ -44,6 +46,15 @@ function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShow
         },
         // eslint-disable-next-line
 		[show_id, number, requestShowSeason]
+    );
+
+    useEffect(
+		() => {
+            if (loggedIn)
+                requestShowSeasonFriends(show_id, number, 1);
+        },
+        // eslint-disable-next-line
+		[loggedIn]
     );
 
     useEffect(
@@ -181,11 +192,11 @@ function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShow
                                         </AreaChart>
                                     </div>
                                 </div>
-                                <MDBCol size="6" style={{paddingLeft: "10px"}}>
-                                    <h3 style={{paddingTop: "10px"}}>Отзывы друзей</h3>
-                                        
-                                </MDBCol>
                             </MDBContainer>
+                            <div className="movieFriendsBlock" hidden={showFriends.friends_info.length < 1}>
+                                <h4>Отзывы друзей</h4>
+                                <FriendsActivity info={showFriends}/>
+                            </div>
                         </MDBCol>
                         <MDBCol md="0.5"></MDBCol>
                     </MDBRow>
@@ -199,7 +210,9 @@ const mapStateToProps = state => ({
     loggedIn: selectors.getLoggedIn(state),
     requestError: selectors.getShowRequestError(state),
     showSeason: selectors.getContentShow(state),
-    showSeasonIsLoading: selectors.getIsLoadingContentShow(state)
+    showSeasonIsLoading: selectors.getIsLoadingContentShow(state),
+    showFriends: selectors.getContentShowFriends(state),
+    showFriendsIsLoading: selectors.getIsLoadingContentShowFriends(state)
 });
 
 const mapDispatchToProps = (dispatch) => {
@@ -215,6 +228,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         openLoginForm: () => {
             dispatch(actions.openLoginForm());
+        },
+        requestShowSeasonFriends: (showID, seasonID, page) => {
+            dispatch(actions.requestShowSeasonFriends(showID, seasonID, page));
         }
 	}
 };
