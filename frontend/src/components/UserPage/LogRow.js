@@ -171,7 +171,7 @@ function LogRow ( {log, showUsername} ) {
     }
 
     return(
-            <p className="logRow">{parseDate(log.created)} {showUsername?userToLink(log.user, log.user_id):''} {translateActionType(log.action_type, log.action_result)} {translateType(log.type, log.action_type)} {nameToLink(log.target, log.type, log.target_id)}{(log.type==='user'|log.action_result==="0")?'':':'} {actionResultToStr(log.action_type, log.action_result, log.type)}</p>
+            <div className="logRow">{parseDate(log.created)} {showUsername?userToLink(log.user, log.user_id):''} {translateActionType(log.action_type, log.action_result)} {translateType(log.type, log.action_type)} {nameToLink(log.target, log.type, log.target_id)}{(log.type==='user'|log.action_result==="0")?'':':'} {actionResultToStr(log.action_type, log.action_result, log.type)}</div>
     )
 }
 

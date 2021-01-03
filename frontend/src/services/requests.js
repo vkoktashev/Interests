@@ -393,14 +393,9 @@ export async function getUserLog(token, userID, page, resultsOnPage) {
 export async function getUserFriendsLog(token, userID, page, resultsOnPage) {
     let data;
     try{
-        if (token){
-            var AuthStr = 'Bearer ' + token;
-            const res = await axios.get(USER_INFO_URL + userID + "/friends_log/", { params : { page: page, page_size: resultsOnPage }, 'headers': { 'Authorization': AuthStr } });
-            data = res.data;
-        }else{
-            const res = await axios.get(USER_INFO_URL + userID + "/friends_log/", { params : { page: page, page_size: resultsOnPage } }, axiosConfig);
-            data = res.data;
-        }
+        var AuthStr = 'Bearer ' + token;
+        const res = await axios.get(USER_INFO_URL + userID + "/friends_log/", { params : { page: page, page_size: resultsOnPage }, 'headers': { 'Authorization': AuthStr } });
+        data = res.data;
         return data;
     }catch(e){
         console.log("AXIOS ERROR: ", e);
@@ -416,15 +411,10 @@ export async function getUserFriendsLog(token, userID, page, resultsOnPage) {
 export async function getGameFriends(token, slug, page) {
     let data;
     try{
-        if (token){
-            var AuthStr = 'Bearer ' + token;
-            const res = await axios.get(GET_GAME_URL + slug + "/friends_info/", { params : { page: page } , 'headers': { 'Authorization': AuthStr } });
-            console.log(res);
-            data = res.data;
-        }else{
-            const res = await axios.get(GET_GAME_URL + slug + "/friends_info/", { params : { page: page } }, axiosConfig);
-            data = res.data;
-        }
+        var AuthStr = 'Bearer ' + token;
+        const res = await axios.get(GET_GAME_URL + slug + "/friends_info/", { params : { page: page } , 'headers': { 'Authorization': AuthStr } });
+        console.log(res);
+        data = res.data;
         return data;
     }catch(e){
         console.log("AXIOS ERROR: ", e);
@@ -441,15 +431,64 @@ export async function getGameFriends(token, slug, page) {
 export async function getMovieFriends(token, id, page) {
     let data;
     try{
-        if (token){
-            var AuthStr = 'Bearer ' + token;
-            const res = await axios.get(GET_MOVIE_URL + id + "/friends_info/", { params : { page: page } , 'headers': { 'Authorization': AuthStr } });
-            console.log(res);
-            data = res.data;
-        }else{
-            const res = await axios.get(GET_MOVIE_URL + id + "/friends_info/", { params : { page: page } }, axiosConfig);
-            data = res.data;
-        }
+        var AuthStr = 'Bearer ' + token;
+        const res = await axios.get(GET_MOVIE_URL + id + "/friends_info/", { params : { page: page } , 'headers': { 'Authorization': AuthStr } });
+        console.log(res);
+        data = res.data;
+        return data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
+ * Запрос к бд, получающий информацию об оценках друзей для сериала
+ * @param {string} showID id сериала
+ * @param {int} page страница
+ */
+export async function getShowFriends(token, showID, page) {
+    let data;
+    try{
+        var AuthStr = 'Bearer ' + token;
+        const res = await axios.get(GET_SHOW_URL + showID + "/friends_info/", { params : { page: page } , 'headers': { 'Authorization': AuthStr } });
+        data = res.data;
+        return data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
+ * Запрос к бд, получающий информацию об оценках друзей для сезона сериала
+ * @param {string} showID id сериала
+ * @param {int} page страница
+ */
+export async function getShowSeasonFriends(token, showID, seasonID, page) {
+    let data;
+    try{
+        var AuthStr = 'Bearer ' + token;
+        const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonID + "/friends_info/", { params : { page: page } , 'headers': { 'Authorization': AuthStr } });
+        data = res.data;
+        return data;
+    }catch(e){
+        console.log("AXIOS ERROR: ", e);
+        return null;
+    }
+}
+
+/**
+ * Запрос к бд, получающий информацию об оценках друзей для эпизода сериала
+ * @param {string} showID id сериала
+ * @param {int} page страница
+ */
+export async function getShowEpisodeFriends(token, showID, seasonID, episodeID, page) {
+    let data;
+    try{
+        var AuthStr = 'Bearer ' + token;
+        const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonID + "/episode/" + episodeID + "/friends_info/", { params : { page: page } , 'headers': { 'Authorization': AuthStr } });
+        data = res.data;
         return data;
     }catch(e){
         console.log("AXIOS ERROR: ", e);

@@ -8,7 +8,7 @@ import {
     MDBIcon
 } from "mdbreact";
 
-function EpisodeRow ( {episode, season, showID} ) {
+function EpisodeRow ( {episode, season, showID, userInfo, setShowEpisodeUserStatus, loggedIn} ) {
     let history = useHistory();
 
     useEffect(() =>{
@@ -24,14 +24,17 @@ function EpisodeRow ( {episode, season, showID} ) {
                 onClick={(e) => { history.push('/show/' + showID + '/season/' + season + '/episode/'+ episode); e.preventDefault();}}
                 >
                 Серия {episode}
-            </a>  
-            <Rating stop={10}
-                emptySymbol={<MDBIcon far icon="star" size="1x"/>}
-                fullSymbol={[1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" title={n}/>)}
-                initialRating={5}
-                readonly={true}
-                className='episodeRating'
-            />
+            </a>
+            <Rating start={-1} stop={10}
+                emptySymbol={[<MDBIcon icon="eye-slash" />].concat([1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon far icon="star" size="1x" />))}
+                fullSymbol={[<MDBIcon icon="eye" />].concat([1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x"title={n}/>))}
+                readonly={!loggedIn}
+                initialRating={userInfo?userInfo.score:-1}
+                onChange={(score) => {
+                        setShowEpisodeUserStatus({score: score}, showID, season, episode );
+                    }
+                }
+            />  
         </div>
     )
 }

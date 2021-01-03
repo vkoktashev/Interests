@@ -57,9 +57,10 @@ export async function registration(username, email, password) {
             {  
                 username: username,
                 email: email, 
-                password: password 
+                password: password, 
             }, axiosConfig);
-        let data = res.data;	
+        let data = res.data;
+        data.status = res.status;	
         return data;
     }catch(e){
         console.log("AXIOS ERROR: ", e.response);

@@ -5,7 +5,7 @@ import {
 import './style.css';
 import EpisodeRow from './EpisodeRow';
 
-function SeasonsBlock ( {seasons, showID} ) {
+function SeasonsBlock ( {seasons, showID, setShowEpisodeUserStatus, loggedIn} ) {
     let history = useHistory();
 
     const [hereSeasons, setHereSeasons] = useState([]);
@@ -47,7 +47,7 @@ function SeasonsBlock ( {seasons, showID} ) {
                         <details open={false} className='episodeRows'>
                             <summary>Развернуть</summary>
                                 <ul>
-                                {  season.episodes.map((episode) => <li className="episode" key={season.id+episode}><EpisodeRow episode={episode} season={season.season_number} showID={showID} /></li>) }
+                                {  season.episodes.map((episode) => <li className="episode" key={season.id+episode}><EpisodeRow episode={episode} season={season.season_number} showID={showID} userInfo={season.episodes_user_info.find(info => info.episode_number === episode)} setShowEpisodeUserStatus={setShowEpisodeUserStatus} loggedIn={loggedIn}/></li>) }
                                 </ul>
                         </details>
                         

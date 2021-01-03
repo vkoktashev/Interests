@@ -20,12 +20,13 @@ import Rating from "react-rating";
 import { connect } from 'react-redux'; 
 import * as selectors from '../../store/reducers';
 import * as actions from '../../store/actions';
-//import FriendsActivity from "../Common/FriendsActivity";
+import FriendsActivity from "../Common/FriendsActivity";
 
 /**
  * Основная страница приложения
  */
 function EpisodePage ( {requestShowEpisode, showEpisode, showEpisodeIsLoading, setShowUserStatus,
+                    requestShowEpisodeFriends, showFriends, showFriendsIsLoading,
                     loggedIn, openLoginForm
     } ) {
     let history = useHistory();
@@ -40,6 +41,15 @@ function EpisodePage ( {requestShowEpisode, showEpisode, showEpisodeIsLoading, s
         },
         // eslint-disable-next-line
 		[show_id, season_number, episode_number, requestShowEpisode]
+    );
+
+    useEffect(
+		() => {
+            if (loggedIn)
+                requestShowEpisodeFriends(show_id, season_number, episode_number, 1);
+        },
+        // eslint-disable-next-line
+		[loggedIn]
     );
 
     useEffect(
@@ -158,11 +168,11 @@ function EpisodePage ( {requestShowEpisode, showEpisode, showEpisodeIsLoading, s
                                         <div dangerouslySetInnerHTML={{__html: showEpisode.tmdb.overview}} />
                                     </MDBCol>
                                 </MDBRow>
-                                <MDBCol size="6" style={{paddingLeft: "10px"}}>
-                                    <h3 style={{paddingTop: "10px"}}>Отзывы друзей</h3>
-                                        
-                                </MDBCol>
                             </MDBContainer>
+                            <div className="movieFriendsBlock" hidden={showFriends.friends_info.length < 1}>
+                                <h4>Отзывы друзей</h4>
+                                <FriendsActivity info={showFriends}/>
+                            </div>
                         </MDBCol>
                         <MDBCol md="0.5"></MDBCol>
                     </MDBRow>
@@ -176,7 +186,9 @@ const mapStateToProps = state => ({
     loggedIn: selectors.getLoggedIn(state),
     requestError: selectors.getShowRequestError(state),
     showEpisode: selectors.getContentShow(state),
-    showEpisodeIsLoading: selectors.getIsLoadingContentShow(state)
+    showEpisodeIsLoading: selectors.getIsLoadingContentShow(state),
+    showFriends: selectors.getContentShowFriends(state),
+    showFriendsIsLoading: selectors.getIsLoadingContentShowFriends(state)
 });
 
 const mapDispatchToProps = (dispatch) => {
@@ -189,6 +201,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         openLoginForm: () => {
             dispatch(actions.openLoginForm());
+        },
+        requestShowEpisodeFriends: (showID, seasonID, episodeID, page) => {
+            dispatch(actions.requestShowEpisodeFriends(showID, seasonID, episodeID, page));
         }
 	}
 };
