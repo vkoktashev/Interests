@@ -4,6 +4,7 @@ from smtplib import SMTPAuthenticationError
 
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
+from django.db.models import Sum
 from django.template.defaultfilters import lower
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -227,8 +228,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         games = serializer.data
         # games stats
         stats.update({'games': {
-            'count': len(user_games),
-            'total_spent_time': sum(el.spent_time for el in user_games)
+            'count': user_games.count(),
+            'total_spent_time': user_games.aggregate(total_spent_time=Sum('spent_time'))['total_spent_time']
         }})
 
         # movies
@@ -240,9 +241,10 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         # movies stats
         watched_movies = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_WATCHED)
         stats.update({'movies': {
-            'count': len(watched_movies),
+            'count': watched_movies.count(),
             'total_spent_time':
-                round(sum(el.movie.tmdb_runtime for el in watched_movies) / MINUTES_IN_HOUR, 1)
+                round(watched_movies.aggregate(total_time_spent=Sum('movie__tmdb_runtime'))['total_time_spent']
+                      / MINUTES_IN_HOUR, 1)
         }})
 
         # shows
@@ -254,16 +256,17 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         # shows stats
         watched_episodes = UserEpisode.objects.exclude(score=-1).filter(user=user)
         stats.update({'episodes': {
-            'count': len(watched_episodes),
+            'count': watched_episodes.count(),
             'total_spent_time':
-                round(sum(el.episode.tmdb_show.tmdb_episode_run_time for el in watched_episodes) / MINUTES_IN_HOUR, 1)
+                round(watched_episodes.aggregate(
+                    total_spent_time=Sum('episode__tmdb_show__tmdb_episode_run_time'))['total_spent_time']
+                      / MINUTES_IN_HOUR, 1)
         }})
 
         # followed_users
-        followed_users = list(el.followed_user for el
-                              in UserFollow.objects.exclude(is_following=False).filter(user=user))
-        serializer = UserSerializer(followed_users, many=True)
-        followed_users = serializer.data
+        followed_users = User.objects.filter(id__in=UserFollow.objects
+                                             .filter(user=user, is_following=True).values('followed_user')) \
+            .values('id', 'username')
 
         return Response({'id': user.id, 'username': user.username, 'is_followed': user_is_followed,
                          'followed_users': followed_users,
