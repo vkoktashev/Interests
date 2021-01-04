@@ -7,6 +7,7 @@ LANGUAGE = 'ru'
 
 DEFAULT_PAGE_NUMBER = 1
 DEFAULT_PAGE_SIZE = 5
+CACHE_TIMEOUT = 60 * 60 * 10
 
 # errors
 ERROR = 'error'
