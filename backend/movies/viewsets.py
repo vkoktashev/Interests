@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from movies.models import Movie, UserMovie
+from movies.models import Movie, UserMovie, Genre, MovieGenre
 from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer
 from users.models import UserFollow
 from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, CACHE_TIMEOUT
@@ -44,6 +44,36 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     queryset = UserMovie.objects.all()
     serializer_class = UserMovieSerializer
     lookup_field = 'tmdb_id'
+
+    @action(methods=['get'], detail=False)
+    def fill(self, request):
+        user_movies = UserMovie.objects.all()
+        total = user_movies.count()
+        for user_movie in user_movies:
+            total -= 1
+            movie, created = Movie.objects.get_or_create(tmdb_id=user_movie.movie.tmdb_id)
+
+            try:
+                if not MovieGenre.objects.filter(movie=movie).exists():
+                    tmdb_movie = get_movie(user_movie.movie.tmdb_id)
+                    for genre in tmdb_movie.get('genres'):
+                        genre_obj, created = Genre.objects.get_or_create(tmdb_id=genre.get('id'),
+                                                                         defaults={
+                                                                             'tmdb_name': genre.get('name'),
+                                                                         })
+                        MovieGenre.objects.get_or_create(genre=genre_obj, movie=movie)
+
+            except HTTPError as e:
+                error_code = int(e.args[0].split(' ', 1)[0])
+                if error_code == 404:
+                    return Response({ERROR: MOVIE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            except ConnectionError:
+                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+            print(user_movie.movie.tmdb_name, '__Movies left:', total)
+
+        return Response(status=status.HTTP_200_OK)
 
     @swagger_auto_schema(responses={
         status.HTTP_200_OK: openapi.Response(
@@ -83,12 +113,26 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except ConnectionError:
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
+        movie, created = Movie.objects.get_or_create(tmdb_id=tmdb_movie.get('id'),
+                                                     defaults={
+                                                         'imdb_id': tmdb_movie.get('imdb_id'),
+                                                         'tmdb_original_name': tmdb_movie.get('original_title'),
+                                                         'tmdb_name': tmdb_movie.get('title'),
+                                                         'tmdb_runtime': tmdb_movie.get('runtime')
+                                                     })
+
+        for genre in tmdb_movie.get('genres'):
+            genre_obj, created = Genre.objects.get_or_create(tmdb_id=genre.get('id'),
+                                                             defaults={
+                                                                 'tmdb_name': genre.get('name')
+                                                             })
+            MovieGenre.objects.get_or_create(genre=genre_obj, movie=movie)
+
         try:
-            movie = Movie.objects.get(tmdb_id=tmdb_movie['id'])
             user_movie = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED).get(user=request.user,
                                                                                             movie=movie)
             user_info = self.get_serializer(user_movie).data
-        except (Movie.DoesNotExist, UserMovie.DoesNotExist):
+        except (UserMovie.DoesNotExist, TypeError):
             user_info = None
 
         return Response({'tmdb': tmdb_movie, 'user_info': user_info})
@@ -156,17 +200,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         try:
             movie = Movie.objects.get(tmdb_id=kwargs.get('tmdb_id'))
         except Movie.DoesNotExist:
-            try:
-                tmdb_movie = get_movie(kwargs.get('tmdb_id'))
-            except HTTPError as e:
-                error_code = int(e.args[0].split(' ', 1)[0])
-                if error_code == 404:
-                    return Response({ERROR: MOVIE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-            movie = Movie.objects.create(imdb_id=tmdb_movie.get('imdb_id'), tmdb_id=tmdb_movie.get('id'),
-                                         tmdb_original_name=tmdb_movie.get('original_title'),
-                                         tmdb_name=tmdb_movie.get('title'), tmdb_runtime=tmdb_movie.get('runtime'))
+            return Response({ERROR: MOVIE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         data = request.data.copy()
         data.update({'user': request.user.pk,
