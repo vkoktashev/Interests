@@ -2,6 +2,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils import timezone
 
+from movies.models import Genre
 from users.models import UserScore, UserLogAbstract
 
 
@@ -82,3 +83,11 @@ class SeasonLog(UserLogAbstract):
 
 class EpisodeLog(UserLogAbstract):
     episode = models.ForeignKey(Episode, on_delete=models.CASCADE)
+
+
+class ShowGenre(models.Model):
+    show = models.ForeignKey(Show, on_delete=models.CASCADE)
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = (("show", "genre"),)
