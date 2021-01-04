@@ -41,3 +41,17 @@ class UserGame(UserScore):
 
 class GameLog(UserLogAbstract):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
+
+
+class Genre(models.Model):
+    rawg_id = models.IntegerField(primary_key=True)
+    rawg_name = models.CharField(max_length=100)
+    rawg_slug = models.CharField(max_length=100, unique=True)
+
+
+class GameGenre(models.Model):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = (("game", "genre"),)

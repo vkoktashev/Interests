@@ -1,4 +1,4 @@
-import React, { useEffect} from "react";
+import React, { useEffect, useState } from "react";
 import {
     useHistory
   } from "react-router-dom";
@@ -8,17 +8,22 @@ import {
     MDBIcon
 } from "mdbreact";
 
-function EpisodeRow ( {episode, season, showID, userInfo, setShowEpisodeUserStatus, loggedIn} ) {
+function EpisodeRow ( {episode, season, showID, userInfo, setShowEpisodeUserStatus, loggedIn, onCheckBox, checked} ) {
     let history = useHistory();
+    const [isChecked, setIsChecked] = useState(false);
 
     useEffect(() =>{
-            
+            if (typeof checked !== 'undefined')
+                setIsChecked(checked);
+            else
+                setIsChecked(false);
         },
-        [episode]
+        [checked]
     );
 
     return(
         <div className="episodeRow">
+            <input type="checkbox" checked={isChecked} onChange={(res) => {onCheckBox(res.target.checked)}} hidden={!loggedIn}></input>&nbsp;
             <a className="episodeRowName episodeLink" 
                 href={window.location.origin + '/show/' + showID + '/season/' + season + '/episode/'+ episode} 
                 onClick={(e) => { history.push('/show/' + showID + '/season/' + season + '/episode/'+ episode); e.preventDefault();}}
@@ -31,7 +36,12 @@ function EpisodeRow ( {episode, season, showID, userInfo, setShowEpisodeUserStat
                 readonly={!loggedIn}
                 initialRating={userInfo?userInfo.score:-1}
                 onChange={(score) => {
-                        setShowEpisodeUserStatus({score: score}, showID, season, episode );
+                        setShowEpisodeUserStatus({episodes: [ {
+                                season_number: season,
+                                episode_number: episode,
+                                score: score
+                            }]},
+                            showID);
                     }
                 }
             />  

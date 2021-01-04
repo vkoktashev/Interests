@@ -1,7 +1,7 @@
 from json import JSONDecodeError
 
+from django.core.cache import cache
 from django.core.paginator import Paginator
-from django.db import IntegrityError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
@@ -11,13 +11,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from games.models import Game, UserGame
+from games.models import Game, UserGame, Genre, GameGenre
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer
 from users.models import UserFollow
 from utils.constants import RAWG_UNAVAILABLE, ERROR, HLTB_UNAVAILABLE, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, \
-    GAME_NOT_FOUND
+    GAME_NOT_FOUND, CACHE_TIMEOUT
 from utils.documentation import GAMES_SEARCH_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE
-from utils.functions import int_to_hours, translate_hltb_time, get_page_size
+from utils.functions import int_to_hours, get_page_size, int_to_minutes
 from utils.openapi_params import query_param, page_param, page_size_param
 
 
@@ -35,20 +35,45 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
         query = request.GET.get('query', '')
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
         page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
+
         try:
-            results = rawg.search(query, num_results=page_size, additional_param=f"&page={page}")
+            results = get_game_search_results(query, page, page_size)
         except JSONDecodeError:
             return Response(RAWG_UNAVAILABLE, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-        games_json = []
-        for game in results:
-            games_json.append(game.json)
-        return Response(games_json)
+
+        return Response(results)
 
 
 class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     queryset = UserGame.objects.all()
     serializer_class = UserGameSerializer
     lookup_field = 'slug'
+
+    @action(methods=['get'], detail=False)
+    def fill(self, request):
+        user_games = UserGame.objects.all()
+        total = user_games.count()
+        for user_game in user_games:
+            total -= 1
+            print(user_game.game.rawg_name, '__Games left:', total)
+            game, created = Game.objects.get_or_create(rawg_id=user_game.game.rawg_id)
+
+            try:
+                if not GameGenre.objects.filter(game=game).exists():
+                    rawg_game = get_game(user_game.game.rawg_slug)
+                    for genre in rawg_game.get('genres'):
+                        genre_obj, created = Genre.objects.get_or_create(rawg_id=genre.get('id'),
+                                                                         defaults={
+                                                                             'rawg_name': genre.get('name'),
+                                                                             'rawg_slug': genre.get('slug')
+                                                                         })
+                        GameGenre.objects.get_or_create(genre=genre_obj, game=game)
+            except KeyError:
+                return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            except JSONDecodeError:
+                return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        return Response(status=status.HTTP_200_OK)
 
     @swagger_auto_schema(responses={
         status.HTTP_200_OK: openapi.Response(
@@ -76,33 +101,52 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     })
     def retrieve(self, request, *args, **kwargs):
         try:
-            rawg_game = rawg.get_game(kwargs.get('slug'))
+            rawg_game = get_game(kwargs.get('slug'))
         except KeyError:
             return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
         except JSONDecodeError:
             return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
-            results_list = HowLongToBeat(0.9).search(rawg_game.name.replace('’', '\''), similarity_case_sensitive=False)
-            hltb_game = max(results_list, key=lambda element: element.similarity).__dict__
+            results = get_hltb_search_result(rawg_game.get('name'))
+            hltb_game = max(results, key=lambda element: element.similarity).__dict__
+            hltb_game_name = hltb_game.get('game_name')
+            hltb_game_id = hltb_game.get('game_id')
         except ValueError:
             hltb_game = None
+            hltb_game_name = None
+            hltb_game_id = None
         except ConnectionError:
             return Response({ERROR: HLTB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
+        game, created = Game.objects.get_or_create(rawg_id=rawg_game.get('id'),
+                                                   defaults={
+                                                       'rawg_slug': rawg_game.get('slug'),
+                                                       'rawg_name': rawg_game.get('name'),
+                                                       'hltb_name': hltb_game_name,
+                                                       'hltb_id': hltb_game_id
+                                                   })
+
+        for genre in rawg_game.get('genres'):
+            genre_obj, created = Genre.objects.get_or_create(rawg_id=genre.get('id'),
+                                                             defaults={
+                                                                 'rawg_name': genre.get('name'),
+                                                                 'rawg_slug': genre.get('slug')
+                                                             })
+            GameGenre.objects.get_or_create(genre=genre_obj, game=game)
+
         try:
-            game = Game.objects.get(rawg_slug=rawg_game.slug)
             user_game = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).get(user=request.user, game=game)
             user_info = self.get_serializer(user_game).data
         except (Game.DoesNotExist, UserGame.DoesNotExist, TypeError):
             user_info = None
 
-        rawg_game.json.update({'playtime': f'{rawg_game.playtime} {int_to_hours(rawg_game.playtime)}'})
+        rawg_game.update({'playtime': f'{rawg_game.get("playtime")} {int_to_hours(rawg_game.get("playtime"))}'})
         translate_hltb_time(hltb_game, 'gameplay_main', 'gameplay_main_unit')
         translate_hltb_time(hltb_game, 'gameplay_main_extra', 'gameplay_main_extra_unit')
         translate_hltb_time(hltb_game, 'gameplay_completionist', 'gameplay_completionist_unit')
 
-        return Response({'rawg': rawg_game.json, 'hltb': hltb_game,
+        return Response({'rawg': rawg_game, 'hltb': hltb_game,
                          'user_info': user_info})
 
     @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
@@ -160,14 +204,6 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                         ERROR: GAME_NOT_FOUND
                     }
                 }
-            ),
-            status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
-                description=status.HTTP_503_SERVICE_UNAVAILABLE,
-                examples={
-                    "application/json": {
-                        ERROR: RAWG_UNAVAILABLE
-                    },
-                }
             )
         }
     )
@@ -175,30 +211,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         try:
             game = Game.objects.get(rawg_slug=kwargs.get('slug'))
         except Game.DoesNotExist:
-            try:
-                rawg_game = rawg.get_game(kwargs.get('slug'))
-            except KeyError:
-                return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_400_BAD_REQUEST)
-            except JSONDecodeError:
-                return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-            try:
-                results_list = HowLongToBeat(0.9).search(rawg_game.name.replace('’', '\''),
-                                                         similarity_case_sensitive=False)
-                hltb_game = max(results_list, key=lambda element: element.similarity)
-            except ValueError:
-                hltb_game = None
-            except ConnectionError:
-                return Response({ERROR: HLTB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-            try:
-                if hltb_game is not None:
-                    game = Game.objects.create(rawg_name=rawg_game.name, rawg_id=rawg_game.id, rawg_slug=rawg_game.slug,
-                                               hltb_name=hltb_game.game_name, hltb_id=hltb_game.game_id)
-                else:
-                    game = Game.objects.create(rawg_name=rawg_game.name, rawg_id=rawg_game.id, rawg_slug=rawg_game.slug)
-            except IntegrityError:
-                return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         data = request.data.copy()
         data.update({'user': request.user.pk,
@@ -214,3 +227,54 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+def translate_hltb_time(hltb_game, time, time_unit):
+    if hltb_game is None or hltb_game.get(time) == -1:
+        return
+
+    gameplay_time = ''
+    for s in hltb_game.get(time):
+        if s.isdigit():
+            gameplay_time += s
+        else:
+            break
+    gameplay_time = int(gameplay_time)
+
+    gameplay_unit = hltb_game.get(time_unit)
+    if gameplay_unit == 'Hours':
+        gameplay_unit = int_to_hours(gameplay_time)
+    elif gameplay_unit == 'Mins':
+        gameplay_unit = int_to_minutes(gameplay_time)
+    hltb_game.update({time_unit: gameplay_unit})
+
+
+def get_game_search_results(query, page, page_size):
+    key = f'tmdb_game_search_{query}_page_{page}_page_size_{page_size}'
+    results = cache.get(key, None)
+    if results is None:
+        search_result = rawg.search(query, num_results=page_size, additional_param=f"&page={page}")
+        results = []
+        for game in search_result:
+            results.append(game.json)
+        cache.set(key, results, CACHE_TIMEOUT)
+    return results
+
+
+def get_hltb_search_result(game_name):
+    key = f'hltb_search_{game_name.replace(" ", "_")}'
+    results = cache.get(key, None)
+    if results is None:
+        results = HowLongToBeat(0.9).search(game_name.replace('’', '\''),
+                                            similarity_case_sensitive=False)
+        cache.set(key, results, CACHE_TIMEOUT)
+    return results
+
+
+def get_game(slug):
+    key = f'game_{slug}'
+    rawg_game = cache.get(key, None)
+    if rawg_game is None:
+        rawg_game = rawg.get_game(slug).json
+        cache.set(key, rawg_game, CACHE_TIMEOUT)
+    return rawg_game

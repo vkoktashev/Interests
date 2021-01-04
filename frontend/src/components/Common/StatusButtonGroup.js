@@ -16,9 +16,8 @@ function StatusButtonGroup( {statuses, activeColor, onChangeStatus, userStatus} 
                                             key={status}
                                             style={{backgroundColor: (activeStatus === status?activeColor:'#000000')}}
                                             onClick={()=>{ 
-                                                if (onChangeStatus(status)){
+                                                if (onChangeStatus(status))
                                                     setActiveStatus(status);
-                                                }
                                             }}>
                                             {status}
                                         </button>) }

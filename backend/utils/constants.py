@@ -7,6 +7,7 @@ LANGUAGE = 'ru'
 
 DEFAULT_PAGE_NUMBER = 1
 DEFAULT_PAGE_SIZE = 5
+CACHE_TIMEOUT = 60 * 60 * 10
 
 # errors
 ERROR = 'error'
@@ -25,4 +26,3 @@ SHOW_NOT_FOUND = "Сериал не найден."
 SEASON_NOT_FOUND = 'Сезон не найден.'
 EPISODE_NOT_FOUND = 'Эпизод не найден.'
 EMAIL_ERROR = 'Возникла проблема с отправкой письма, попробуйте позже.'
-SHOW_NOT_IN_DB = 'Запись о сериале отсутствует в базе данных.'

@@ -20,10 +20,14 @@ function LogRow ( {log, showUsername} ) {
     function translateActionType(action, actionResult){
         switch (action) {
             case 'score':
-                if (actionResult !== '0')
-                    return 'оценил(а)';
-                else
-                    return 'посмотрел(а)';
+                switch (actionResult) {
+                    case '0':
+                        return 'посмотрел(а)';
+                    case '-1':
+                        return 'не смотрела(а)';
+                    default:
+                        return 'оценил(а)';
+                }
             case 'status':
                 return 'изменил(а) статус';
             case 'review':

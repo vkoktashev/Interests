@@ -114,6 +114,8 @@ function MoviePage ( {
 
             if (movie.user_info){
                 setReview(movie.user_info.review);
+            }else{
+                setReview('');
             }
 
             document.title = movie.tmdb.title;
@@ -156,9 +158,9 @@ function MoviePage ( {
                                             readonly={!loggedIn | (!movie.user_info)}
                                             onChange={(score) => {
                                                 if (!loggedIn){
-                                                    openLoginForm();
+                                                    openLoginForm(); return false;
                                                 }else{
-                                                    setMovieStatus({score: score, review: document.getElementById('reviewInput').value });
+                                                    setMovieStatus({score: score }); return true;
                                                 }}
                                             }
                                         /> <br/>
@@ -170,7 +172,7 @@ function MoviePage ( {
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                   setMovieStatus({ status: status, review: document.getElementById('reviewInput').value });
+                                                   setMovieStatus({ status: status });
                                                 }
                                             }}/>
                                     </MDBCol>
@@ -184,7 +186,7 @@ function MoviePage ( {
                                         <div dangerouslySetInnerHTML={{__html: movie.tmdb.overview}} />
                                     </MDBCol>
                                 </MDBRow>
-                                <MDBCol size="6" style={{paddingLeft: "10px"}}>
+                                <MDBCol size="6" style={{paddingLeft: "10px"}} hidden={!loggedIn}>
                                     <h3 style={{paddingTop: "10px"}}>Отзывы</h3>
                                         
                                         <MDBInput 
@@ -211,7 +213,7 @@ function MoviePage ( {
                                         </button>
                                     </MDBCol>
                             </MDBContainer>
-                            <div className="movieFriendsBlock" hidden={movieFriends.friends_info.length < 1}>
+                            <div className="movieFriendsBlock" hidden={!loggedIn | movieFriends.friends_info.length < 1}>
                                 <h4>Отзывы друзей</h4>
                                 <FriendsActivity info={movieFriends}/>
                             </div>

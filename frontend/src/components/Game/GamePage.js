@@ -90,6 +90,9 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
             if (game.user_info){
                 setReview(game.user_info.review);
                 setSpentTime(game.user_info.spent_time);
+            }else{
+                setReview('');
+                setSpentTime(0);
             }
 
             if (game.rawg.developers){
@@ -157,8 +160,7 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                    setGameStatus({score: score, review: document.getElementById('reviewInput').value, 
-                                                                    spent_time: document.getElementById('spentTimeInput').value });
+                                                    setGameStatus({score: score});
                                                 }}
                                             }
                                             style={{marginBottom: "10px"}}
@@ -169,15 +171,9 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
                                             userStatus={game.user_info?game.user_info.status:'Не играл'}
                                             onChangeStatus={(status) => {
                                                 if (!loggedIn){
-                                                    openLoginForm();
+                                                    openLoginForm(); return false;
                                                 }else{
-                                                    setGameStatus(
-                                                        { 
-                                                           status: status,
-                                                           review: document.getElementById('reviewInput').value, 
-                                                           spent_time: document.getElementById('spentTimeInput').value
-                                                        }
-                                                    );
+                                                    setGameStatus( { status: status } ); return true;
                                                 }
                                             }}
                                             />
@@ -193,7 +189,7 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
                                     </MDBCol>
                                 </MDBRow>
                                 <MDBRow>
-                                <MDBCol size="6" style={{paddingLeft: "20px"}}>
+                                <MDBCol size="6" style={{paddingLeft: "20px"}} hidden={!loggedIn}>
                                     <h3 style={{paddingTop: "10px"}}>Отзывы</h3>
                                         
                                         <MDBInput 
@@ -228,7 +224,7 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
                                     </MDBCol>
                                 </MDBRow>
                             </MDBContainer>
-                            <div className="gameFriendsBlock" hidden={gameFriends.friends_info.length < 1}>
+                            <div className="gameFriendsBlock" hidden={!loggedIn | gameFriends.friends_info.length < 1}>
                                 <h4>Отзывы друзей</h4>
                                 <FriendsActivity info={gameFriends}/>
                             </div>

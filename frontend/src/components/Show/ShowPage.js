@@ -125,6 +125,8 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
 
             if (show.user_info){
                 setReview(show.user_info.review);
+            }else{
+                setReview('');
             }
 
             document.title = show.tmdb.name;
@@ -169,9 +171,9 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
                                             readonly={!loggedIn | (!show.user_info)}
                                             onChange={(score) => {
                                                 if (!loggedIn){
-                                                    openLoginForm();
+                                                    openLoginForm(); return false;
                                                 }else{
-                                                    setShowUserStatus({score: score, review: document.getElementById('reviewInput').value });
+                                                    setShowUserStatus({score: score }); return true;
                                                 }}
                                             }
                                         /> <br/>
@@ -183,7 +185,7 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                    setShowUserStatus({ status: status, review: document.getElementById('reviewInput').value });
+                                                    setShowUserStatus({ status: status });
                                                 }
                                             }}/>
                                     </MDBCol>
@@ -201,7 +203,7 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
                                     <h3 style={{paddingTop: "15px"}}>Список серий</h3>
                                     <SeasonsBlock seasons={show.tmdb.seasons} showID={show.tmdb.id} loggedIn={loggedIn} setShowEpisodeUserStatus={setShowEpisodeUserStatus}/>
                                 </div>
-                                <MDBCol size="6" style={{paddingLeft: "10px"}}>
+                                <MDBCol size="6" style={{paddingLeft: "10px"}} hidden={!loggedIn}>
                                     <h3 style={{paddingTop: "10px"}}>Отзывы</h3>
                                         
                                     <MDBInput 
@@ -264,8 +266,8 @@ const mapDispatchToProps = (dispatch) => {
         requestShowFriends: (id, page) => {
             dispatch(actions.requestShowFriends(id, page));
         },
-        setShowEpisodeUserStatus: (status, showID, seasonNumber, episodeNumber) => {
-            dispatch(actions.setShowEpisodeStatusInRow(status, showID, seasonNumber, episodeNumber));
+        setShowEpisodeUserStatus: (status, showID) => {
+            dispatch(actions.setShowEpisodesStatus(status, showID));
         },
 	}
 };

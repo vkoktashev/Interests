@@ -227,20 +227,15 @@ export async function setShowSeasonStatus(token, showID, seasonNumber, user_info
 /**
  * Запрос на изменение статуса сезона сериала
  * @param {string} token Токен доступа
- * @param {object} user_info Статус сезона сериала
+ * @param {object} episodesList Список объектов эпизодов
  * @param {string} showID ID сериала
- *  * @param {string} seasonNumber номер сезона
  */
-export async function setShowEpisodeStatus(token, showID, seasonNumber, episodeNumber, user_info){
+export async function setShowEpisodesStatus(token, showID, episodesList){
     try{
         var AuthStr = 'Bearer ' + token;
-        const res = await axios.put(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/episode/" + episodeNumber + "/", 
-            user_info, { headers: { 'Authorization': AuthStr } });
-        console.log(res); 
-        
-        if (res.status === 204 || res.status === 200 || res.status === 201)
-            return res.data;
-        else return null;
+        const res = await axios.put(GET_SHOW_URL + showID + "/episodes/", 
+            episodesList, { headers: { 'Authorization': AuthStr } });
+        return res;
     }catch(e){
         console.log("AXIOS ERROR: ", e);
         return null;

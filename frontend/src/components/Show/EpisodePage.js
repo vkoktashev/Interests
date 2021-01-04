@@ -25,7 +25,7 @@ import FriendsActivity from "../Common/FriendsActivity";
 /**
  * Основная страница приложения
  */
-function EpisodePage ( {requestShowEpisode, showEpisode, showEpisodeIsLoading, setShowUserStatus,
+function EpisodePage ( {requestShowEpisode, showEpisode, showEpisodeIsLoading, setEpisodeUserStatus,
                     requestShowEpisodeFriends, showFriends, showFriendsIsLoading,
                     loggedIn, openLoginForm
     } ) {
@@ -130,7 +130,12 @@ function EpisodePage ( {requestShowEpisode, showEpisode, showEpisodeIsLoading, s
                                                     if (!loggedIn){
                                                         openLoginForm();
                                                     }else{
-                                                        setShowUserStatus({score: score, review: document.getElementById('reviewSeasonInput').value }, show_id, season_number, episode_number );
+                                                        setEpisodeUserStatus( {episodes: [ {
+                                                                                                season_number: season_number,
+                                                                                                episode_number: episode_number,
+                                                                                                score: score
+                                                                                            }]},
+                                                                            show_id);
                                                     }}
                                                 }
                                             />
@@ -149,7 +154,12 @@ function EpisodePage ( {requestShowEpisode, showEpisode, showEpisodeIsLoading, s
                                                         if (!loggedIn){
                                                             openLoginForm();
                                                         }else{
-                                                            setShowUserStatus({ review: document.getElementById('reviewSeasonInput').value }, show_id, season_number, episode_number);
+                                                            setEpisodeUserStatus({episodes: [ {
+                                                                                                season_number: season_number,
+                                                                                                episode_number: episode_number,
+                                                                                                review: document.getElementById('reviewSeasonInput').value
+                                                                                            }]},
+                                                                                show_id);
                                                         }
                                                     }
                                                 }
@@ -196,8 +206,8 @@ const mapDispatchToProps = (dispatch) => {
 		requestShowEpisode: (showID, seasonNumber, episodeNumber) => {
             dispatch(actions.requestShowEpisode(showID, seasonNumber, episodeNumber));
         },
-        setShowUserStatus: (status, showID, seasonNumber, episodeNumber) => {
-            dispatch(actions.setShowEpisodeStatus(status, showID, seasonNumber, episodeNumber));
+        setEpisodeUserStatus: (status, showID) => {
+            dispatch(actions.setShowEpisodesStatus(status, showID));
         },
         openLoginForm: () => {
             dispatch(actions.openLoginForm());
