@@ -10,7 +10,8 @@ function SeasonsBlock ( {seasons, showID, setShowEpisodeUserStatus, loggedIn} ) 
     let history = useHistory();
 
     const [hereSeasons, setHereSeasons] = useState([]);
-    const [isChecked, setIsChecked] = useState(false);
+    const [isChecked, setIsChecked] = useState(Map({}));
+    const [isCheckedAll, setIsCheckedAll] = useState(false);
     const [checkboxes, setCheckboxes] = useState(Map({}));
     const [needHeader, setNeedHeader] = useState(false);
     
@@ -19,9 +20,11 @@ function SeasonsBlock ( {seasons, showID, setShowEpisodeUserStatus, loggedIn} ) 
         setHereSeasons([]);
         if (seasons){
             let newSeasons = [];
-            let newCheckBoxes = {}
+            let newCheckBoxes = {};
+            let newIsChecked = {};
             for (let season in seasons){
                 newCheckBoxes[seasons[season].season_number] = {};
+                newIsChecked[seasons[season].season_number] = false;
                 if (seasons[season].name !== 'Спецматериалы'){
                     let newSeason = seasons[season];
                     newSeason.episodes = [];
@@ -37,6 +40,7 @@ function SeasonsBlock ( {seasons, showID, setShowEpisodeUserStatus, loggedIn} ) 
             }
             setCheckboxes(Map(newCheckBoxes) );
             setHereSeasons(newSeasons);
+            setIsChecked(Map(newIsChecked));
         }
             
     },
@@ -56,6 +60,16 @@ function SeasonsBlock ( {seasons, showID, setShowEpisodeUserStatus, loggedIn} ) 
             current[episode].checked = toWatched;
         let newCheckboxes = checkboxes.set(season.toString(), current);
         setCheckboxes(newCheckboxes);
+        setNeedHeader(true);
+    }
+
+    function changeShowEpisodes(toWatched){ 
+        let current = checkboxes.toJS();
+        for (let season in current){
+            for (let episode in current[season])
+                current[season][episode].checked = toWatched;
+        }   
+        setCheckboxes(Map(current));
         setNeedHeader(true);
     }
 
@@ -79,6 +93,10 @@ function SeasonsBlock ( {seasons, showID, setShowEpisodeUserStatus, loggedIn} ) 
 
     return(
         <div>
+            <div style={{marginLeft: '5px'}}>
+                Выбрать все&nbsp;
+                <input type="checkbox" checked={isCheckedAll} onChange={(res) => {setIsCheckedAll(!isCheckedAll); changeShowEpisodes(res.target.checked)}}></input>
+            </div>
             { 
                 hereSeasons.map((season) => 
                     <div key={season.id} className="seasonBlock">
@@ -94,7 +112,13 @@ function SeasonsBlock ( {seasons, showID, setShowEpisodeUserStatus, loggedIn} ) 
                             <summary>Развернуть</summary>
                                 <div style={{marginLeft: '5px'}}>
                                     Выбрать все&nbsp;
-                                    <input type="checkbox" checked={isChecked} onChange={(res) => {setIsChecked(!isChecked); changeSeasonEpisodes(res.target.checked, season.season_number)}}></input>
+                                    <input type="checkbox" checked={isChecked.get(season.season_number)} onChange={
+                                            (res) => {
+                                                let newIsChecked = isChecked.toJS();
+                                                newIsChecked[season.season_number] = res.target.checked;
+                                                setIsChecked(Map(newIsChecked)); 
+                                                changeSeasonEpisodes(res.target.checked, season.season_number)
+                                        }}/>
                                 </div>
                                 <ul>
                                 {  season.episodes.map((episode, counter) => <li className="episode" key={counter}>
