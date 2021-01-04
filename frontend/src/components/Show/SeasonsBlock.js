@@ -73,12 +73,19 @@ function SeasonsBlock ( {seasons, showID, setShowEpisodeUserStatus, loggedIn} ) 
         setNeedHeader(true);
     }
 
+    function getSeasonByNumber(number){
+        for (let season in seasons)
+            if (seasons[season].season_number === number)
+                return seasons[season];
+    }
+
     function updateEpisodes(){
         let current = checkboxes.toJS();
         let changes = [];
         for (let season in current){
             for (let episode in current[season.toString()]){
-                if (current[season.toString()][episode].checked !== (seasons[season.toString()].episodes_user_info.find(info => info.episode_number === parseInt(episode))?.score > -1))
+                console.log(getSeasonByNumber(1));
+                if (current[season][episode].checked !== (getSeasonByNumber(parseInt(season)).episodes_user_info.find(info => info.episode_number === parseInt(episode))?.score > -1))
                     changes.push({
                         season_number: season,
                         episode_number: episode,
