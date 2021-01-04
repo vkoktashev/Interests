@@ -90,6 +90,9 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
             if (game.user_info){
                 setReview(game.user_info.review);
                 setSpentTime(game.user_info.spent_time);
+            }else{
+                setReview('');
+                setSpentTime(0);
             }
 
             if (game.rawg.developers){
@@ -157,8 +160,7 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                    setGameStatus({score: score, review: document.getElementById('reviewInput').value, 
-                                                                    spent_time: document.getElementById('spentTimeInput').value });
+                                                    setGameStatus({score: score});
                                                 }}
                                             }
                                             style={{marginBottom: "10px"}}
@@ -171,12 +173,7 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                    setGameStatus(
-                                                        { 
-                                                           status: status,
-                                                           review: document.getElementById('reviewInput').value, 
-                                                           spent_time: document.getElementById('spentTimeInput').value
-                                                        }
+                                                    setGameStatus( { status: status }
                                                     );
                                                 }
                                             }}

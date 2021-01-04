@@ -114,6 +114,8 @@ function MoviePage ( {
 
             if (movie.user_info){
                 setReview(movie.user_info.review);
+            }else{
+                setReview('');
             }
 
             document.title = movie.tmdb.title;
@@ -158,7 +160,7 @@ function MoviePage ( {
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                    setMovieStatus({score: score, review: document.getElementById('reviewInput').value });
+                                                    setMovieStatus({score: score });
                                                 }}
                                             }
                                         /> <br/>
@@ -170,7 +172,7 @@ function MoviePage ( {
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                   setMovieStatus({ status: status, review: document.getElementById('reviewInput').value });
+                                                   setMovieStatus({ status: status });
                                                 }
                                             }}/>
                                     </MDBCol>

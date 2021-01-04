@@ -71,6 +71,7 @@ function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShow
                 setReview(showSeason.user_info.review);
             }else
                 setReview("");
+                
             document.title = showSeason.tmdb.show_name + ' - ' + showSeason.tmdb.name;
 		},
 		[showSeason]
@@ -132,7 +133,7 @@ function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShow
                                                     if (!loggedIn){
                                                         openLoginForm();
                                                     }else{
-                                                        setShowUserStatus({score: score, review: document.getElementById('reviewSeasonInput').value }, show_id, showSeason.tmdb.season_number);
+                                                        setShowUserStatus({score: score }, show_id, showSeason.tmdb.season_number);
                                                     }}
                                                 }
                                             />

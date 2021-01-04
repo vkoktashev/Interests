@@ -125,6 +125,8 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
 
             if (show.user_info){
                 setReview(show.user_info.review);
+            }else{
+                setReview('');
             }
 
             document.title = show.tmdb.name;
@@ -171,7 +173,7 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                    setShowUserStatus({score: score, review: document.getElementById('reviewInput').value });
+                                                    setShowUserStatus({score: score });
                                                 }}
                                             }
                                         /> <br/>
@@ -183,7 +185,7 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
                                                 if (!loggedIn){
                                                     openLoginForm();
                                                 }else{
-                                                    setShowUserStatus({ status: status, review: document.getElementById('reviewInput').value });
+                                                    setShowUserStatus({ status: status });
                                                 }
                                             }}/>
                                     </MDBCol>

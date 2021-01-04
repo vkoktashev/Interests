@@ -130,7 +130,7 @@ function EpisodePage ( {requestShowEpisode, showEpisode, showEpisodeIsLoading, s
                                                     if (!loggedIn){
                                                         openLoginForm();
                                                     }else{
-                                                        setShowUserStatus({score: score, review: document.getElementById('reviewSeasonInput').value }, show_id, season_number, episode_number );
+                                                        setShowUserStatus({score: score }, show_id, season_number, episode_number );
                                                     }}
                                                 }
                                             />
