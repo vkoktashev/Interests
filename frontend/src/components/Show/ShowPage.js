@@ -266,8 +266,8 @@ const mapDispatchToProps = (dispatch) => {
         requestShowFriends: (id, page) => {
             dispatch(actions.requestShowFriends(id, page));
         },
-        setShowEpisodeUserStatus: (status, showID, seasonNumber, episodeNumber) => {
-            dispatch(actions.setShowEpisodeStatusInRow(status, showID, seasonNumber, episodeNumber));
+        setShowEpisodeUserStatus: (status, showID) => {
+            dispatch(actions.setShowEpisodesStatus(status, showID));
         },
 	}
 };

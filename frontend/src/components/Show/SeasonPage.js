@@ -224,8 +224,8 @@ const mapDispatchToProps = (dispatch) => {
         setShowUserStatus: (status, showID, seasonNumber) => {
             dispatch(actions.setShowSeasonStatus(status, showID, seasonNumber));
         },
-        setShowEpisodeUserStatus: (status, showID, seasonNumber, episodeNumber) => {
-            dispatch(actions.setShowEpisodeStatusInRow(status, showID, seasonNumber, episodeNumber));
+        setShowEpisodeUserStatus: (status, showID) => {
+            dispatch(actions.setShowEpisodesStatus(status, showID));
         },
         openLoginForm: () => {
             dispatch(actions.openLoginForm());

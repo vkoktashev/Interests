@@ -31,7 +31,12 @@ function EpisodeRow ( {episode, season, showID, userInfo, setShowEpisodeUserStat
                 readonly={!loggedIn}
                 initialRating={userInfo?userInfo.score:-1}
                 onChange={(score) => {
-                        setShowEpisodeUserStatus({score: score}, showID, season, episode );
+                        setShowEpisodeUserStatus({episodes: [ {
+                                season_number: season,
+                                episode_number: episode,
+                                score: score
+                            }]},
+                            showID);
                     }
                 }
             />  

@@ -35,7 +35,12 @@ function DetailedEpisodeRow ( {episode, showID, setShowEpisodeUserStatus, logged
                 readonly={!loggedIn}
                 initialRating={episode.user_info?episode.user_info.score:-1}
                 onChange={(score) => {
-                        setShowEpisodeUserStatus({score: score}, showID, episode.season_number, episode.episode_number );
+                        setShowEpisodeUserStatus({episodes: [ {
+                                season_number: episode.season_number,
+                                episode_number: episode.episode_number,
+                                score: score
+                            }]},
+                            showID);
                     }
                 }
             />
