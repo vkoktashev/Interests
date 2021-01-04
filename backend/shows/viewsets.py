@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import tmdbsimple as tmdb
 from django.core.cache import cache
 from django.core.paginator import Paginator
@@ -49,36 +51,6 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     queryset = UserShow.objects.all()
     serializer_class = UserShowSerializer
     lookup_field = 'tmdb_id'
-
-    @action(methods=['get'], detail=False)
-    def fill(self, request):
-        user_shows = UserShow.objects.all()
-        total = user_shows.count()
-        for user_show in user_shows:
-            total -= 1
-            show, created = Show.objects.get_or_create(tmdb_id=user_show.show.tmdb_id)
-
-            try:
-                if not ShowGenre.objects.filter(show=show).exists():
-                    tmdb_show = get_show(user_show.show.tmdb_id)
-                    for genre in tmdb_show.get('genres'):
-                        genre_obj, created = Genre.objects.get_or_create(tmdb_id=genre.get('id'),
-                                                                         defaults={
-                                                                             'tmdb_name': genre.get('name'),
-                                                                         })
-                        ShowGenre.objects.get_or_create(genre=genre_obj, show=show)
-
-            except HTTPError as e:
-                error_code = int(e.args[0].split(' ', 1)[0])
-                if error_code == 404:
-                    return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-            except ConnectionError:
-                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-            print(user_show.show.tmdb_name, '__Shows left:', total)
-
-        return Response(status=status.HTTP_200_OK)
 
     @swagger_auto_schema(responses={
         status.HTTP_200_OK: openapi.Response(
@@ -281,97 +253,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     )
     @action(detail=True, methods=['put'])
     def episodes(self, request, *args, **kwargs):
-        episodes = request.data.get('episodes')
-        for data in episodes:
-            try:
-                episode = Episode.objects.get(tmdb_show=kwargs.get('tmdb_id'),
-                                              tmdb_season_number=data['season_number'],
-                                              tmdb_episode_number=data['episode_number'])
-            except Episode.DoesNotExist:
-                try:
-                    tmdb_episode = get_episode(kwargs.get('tmdb_id'),
-                                               data['season_number'],
-                                               data['episode_number'])
-                except HTTPError as e:
-                    error_code = int(e.args[0].split(' ', 1)[0])
-                    if error_code == 404:
-                        return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-                    return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-                try:
-                    episode = Episode.objects.create(tmdb_id=tmdb_episode.get('id'),
-                                                     tmdb_episode_number=tmdb_episode.get('episode_number'),
-                                                     tmdb_season_number=tmdb_episode.get('season_number'),
-                                                     tmdb_name=tmdb_episode.get('name'),
-                                                     tmdb_show_id=kwargs.get('tmdb_id'))
-                except IntegrityError:
-                    return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-
-            data = data.copy()
-            data.update({'user': request.user.pk,
-                         'show': kwargs.get('tmdb_id'),
-                         'episode': episode.pk})
-
-            try:
-                user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
-                serializer = UserEpisodeSerializer(user_episode, data=data)
-            except UserEpisode.DoesNotExist:
-                serializer = UserEpisodeSerializer(data=data)
-
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-        return Response(status=status.HTTP_200_OK)
-
-    @swagger_auto_schema(request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            'episodes': openapi.Schema(
-                type=openapi.TYPE_ARRAY,
-                items=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'season_number': openapi.Schema(
-                            type=openapi.TYPE_INTEGER
-                        ),
-                        "episode_number": openapi.Schema(
-                            type=openapi.TYPE_INTEGER
-                        ),
-                        "score": openapi.Schema(
-                            type=openapi.TYPE_INTEGER,
-                            minimum=UserEpisode._meta.get_field('score').validators[0].limit_value,
-                            maximum=UserEpisode._meta.get_field('score').validators[1].limit_value
-                        ),
-                        "review": openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            maxLength=UserEpisode._meta.get_field('review').max_length
-                        )
-                    }
-                )
-            )
-        }
-    ),
-        responses={
-            status.HTTP_404_NOT_FOUND: openapi.Response(
-                description=status.HTTP_404_NOT_FOUND,
-                examples={
-                    "application/json": {
-                        ERROR: EPISODE_NOT_FOUND
-                    }
-                }
-            ),
-            status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
-                description=status.HTTP_503_SERVICE_UNAVAILABLE,
-                examples={
-                    "application/json": {
-                        ERROR: TMDB_UNAVAILABLE
-                    },
-                }
-            )
-        }
-    )
-    @action(detail=True, methods=['put'])
-    def episodes2(self, request, *args, **kwargs):
+        start = datetime.now()
         episodes = request.data.get('episodes')
         for data in episodes:
             try:
@@ -421,7 +303,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             serializer.is_valid(raise_exception=True)
             serializer.save()
-
+        print('time2:', datetime.now() - start)
         return Response(status=status.HTTP_200_OK)
 
 

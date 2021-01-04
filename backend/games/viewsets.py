@@ -49,32 +49,6 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     serializer_class = UserGameSerializer
     lookup_field = 'slug'
 
-    @action(methods=['get'], detail=False)
-    def fill(self, request):
-        user_games = UserGame.objects.all()
-        total = user_games.count()
-        for user_game in user_games:
-            total -= 1
-            print(user_game.game.rawg_name, '__Games left:', total)
-            game, created = Game.objects.get_or_create(rawg_id=user_game.game.rawg_id)
-
-            try:
-                if not GameGenre.objects.filter(game=game).exists():
-                    rawg_game = get_game(user_game.game.rawg_slug)
-                    for genre in rawg_game.get('genres'):
-                        genre_obj, created = Genre.objects.get_or_create(rawg_id=genre.get('id'),
-                                                                         defaults={
-                                                                             'rawg_name': genre.get('name'),
-                                                                             'rawg_slug': genre.get('slug')
-                                                                         })
-                        GameGenre.objects.get_or_create(genre=genre_obj, game=game)
-            except KeyError:
-                return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-            except JSONDecodeError:
-                return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        return Response(status=status.HTTP_200_OK)
-
     @swagger_auto_schema(responses={
         status.HTTP_200_OK: openapi.Response(
             description=status.HTTP_200_OK,
