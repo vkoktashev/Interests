@@ -186,7 +186,7 @@ function MoviePage ( {
                                         <div dangerouslySetInnerHTML={{__html: movie.tmdb.overview}} />
                                     </MDBCol>
                                 </MDBRow>
-                                <MDBCol size="6" style={{paddingLeft: "10px"}}>
+                                <MDBCol size="6" style={{paddingLeft: "10px"}} hidden={!loggedIn}>
                                     <h3 style={{paddingTop: "10px"}}>Отзывы</h3>
                                         
                                         <MDBInput 
@@ -213,7 +213,7 @@ function MoviePage ( {
                                         </button>
                                     </MDBCol>
                             </MDBContainer>
-                            <div className="movieFriendsBlock" hidden={movieFriends.friends_info.length < 1}>
+                            <div className="movieFriendsBlock" hidden={!loggedIn | movieFriends.friends_info.length < 1}>
                                 <h4>Отзывы друзей</h4>
                                 <FriendsActivity info={movieFriends}/>
                             </div>

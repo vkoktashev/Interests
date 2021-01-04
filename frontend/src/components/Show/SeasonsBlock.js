@@ -93,7 +93,7 @@ function SeasonsBlock ( {seasons, showID, setShowEpisodeUserStatus, loggedIn} ) 
 
     return(
         <div>
-            <div style={{marginLeft: '5px'}}>
+            <div style={{marginLeft: '5px'}} hidden={!loggedIn}>
                 Выбрать все&nbsp;
                 <input type="checkbox" checked={isCheckedAll} onChange={(res) => {setIsCheckedAll(!isCheckedAll); changeShowEpisodes(res.target.checked)}}></input>
             </div>
@@ -110,7 +110,7 @@ function SeasonsBlock ( {seasons, showID, setShowEpisodeUserStatus, loggedIn} ) 
                         </div>
                         <details open={false} className='episodeRows'>
                             <summary>Развернуть</summary>
-                                <div style={{marginLeft: '5px'}}>
+                                <div style={{marginLeft: '5px'}} hidden={!loggedIn}>
                                     Выбрать все&nbsp;
                                     <input type="checkbox" checked={isChecked.get(season.season_number)} onChange={
                                             (res) => {

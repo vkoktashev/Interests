@@ -190,7 +190,7 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
                                     </MDBCol>
                                 </MDBRow>
                                 <MDBRow>
-                                <MDBCol size="6" style={{paddingLeft: "20px"}}>
+                                <MDBCol size="6" style={{paddingLeft: "20px"}} hidden={!loggedIn}>
                                     <h3 style={{paddingTop: "10px"}}>Отзывы</h3>
                                         
                                         <MDBInput 
@@ -225,7 +225,7 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
                                     </MDBCol>
                                 </MDBRow>
                             </MDBContainer>
-                            <div className="gameFriendsBlock" hidden={gameFriends.friends_info.length < 1}>
+                            <div className="gameFriendsBlock" hidden={!loggedIn | gameFriends.friends_info.length < 1}>
                                 <h4>Отзывы друзей</h4>
                                 <FriendsActivity info={gameFriends}/>
                             </div>
