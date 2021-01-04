@@ -153,3 +153,31 @@ li.episode:nth-child(even){
 .detailRow{
     font-size: 16px;
 }
+
+.saveEpisodesHeader{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    z-index: 1000;
+    text-align: center;
+    padding-top: 5px;
+    background-color: rgb(50, 50, 50);
+}
+
+.saveEpisodesButton{
+    width: 150px;
+    height: 50px;
+    background-color:#4527a0;
+    color: rgb(255, 555, 255);
+    border-radius: 5px;
+}
+
+.saveEpisodesButton:hover{
+    color: rgb(238, 238, 238);
+  }
+  
+  .saveEpisodesButton:active {
+    background-color: #532fbd;
+  }

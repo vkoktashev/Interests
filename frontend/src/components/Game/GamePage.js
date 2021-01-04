@@ -171,10 +171,9 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
                                             userStatus={game.user_info?game.user_info.status:'Не играл'}
                                             onChangeStatus={(status) => {
                                                 if (!loggedIn){
-                                                    openLoginForm();
+                                                    openLoginForm(); return false;
                                                 }else{
-                                                    setGameStatus( { status: status }
-                                                    );
+                                                    setGameStatus( { status: status } ); return true;
                                                 }
                                             }}
                                             />
@@ -190,7 +189,7 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
                                     </MDBCol>
                                 </MDBRow>
                                 <MDBRow>
-                                <MDBCol size="6" style={{paddingLeft: "20px"}}>
+                                <MDBCol size="6" style={{paddingLeft: "20px"}} hidden={!loggedIn}>
                                     <h3 style={{paddingTop: "10px"}}>Отзывы</h3>
                                         
                                         <MDBInput 
@@ -225,7 +224,7 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
                                     </MDBCol>
                                 </MDBRow>
                             </MDBContainer>
-                            <div className="gameFriendsBlock" hidden={gameFriends.friends_info.length < 1}>
+                            <div className="gameFriendsBlock" hidden={!loggedIn | gameFriends.friends_info.length < 1}>
                                 <h4>Отзывы друзей</h4>
                                 <FriendsActivity info={gameFriends}/>
                             </div>

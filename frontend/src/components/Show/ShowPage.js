@@ -171,9 +171,9 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
                                             readonly={!loggedIn | (!show.user_info)}
                                             onChange={(score) => {
                                                 if (!loggedIn){
-                                                    openLoginForm();
+                                                    openLoginForm(); return false;
                                                 }else{
-                                                    setShowUserStatus({score: score });
+                                                    setShowUserStatus({score: score }); return true;
                                                 }}
                                             }
                                         /> <br/>
@@ -203,7 +203,7 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
                                     <h3 style={{paddingTop: "15px"}}>Список серий</h3>
                                     <SeasonsBlock seasons={show.tmdb.seasons} showID={show.tmdb.id} loggedIn={loggedIn} setShowEpisodeUserStatus={setShowEpisodeUserStatus}/>
                                 </div>
-                                <MDBCol size="6" style={{paddingLeft: "10px"}}>
+                                <MDBCol size="6" style={{paddingLeft: "10px"}} hidden={!loggedIn}>
                                     <h3 style={{paddingTop: "10px"}}>Отзывы</h3>
                                         
                                     <MDBInput 
