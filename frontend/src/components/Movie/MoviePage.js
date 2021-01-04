@@ -158,9 +158,9 @@ function MoviePage ( {
                                             readonly={!loggedIn | (!movie.user_info)}
                                             onChange={(score) => {
                                                 if (!loggedIn){
-                                                    openLoginForm();
+                                                    openLoginForm(); return false;
                                                 }else{
-                                                    setMovieStatus({score: score });
+                                                    setMovieStatus({score: score }); return true;
                                                 }}
                                             }
                                         /> <br/>

@@ -171,9 +171,9 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
                                             readonly={!loggedIn | (!show.user_info)}
                                             onChange={(score) => {
                                                 if (!loggedIn){
-                                                    openLoginForm();
+                                                    openLoginForm(); return false;
                                                 }else{
-                                                    setShowUserStatus({score: score });
+                                                    setShowUserStatus({score: score }); return true;
                                                 }}
                                             }
                                         /> <br/>

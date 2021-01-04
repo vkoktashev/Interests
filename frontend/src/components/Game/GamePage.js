@@ -171,10 +171,9 @@ function GamePage ( {requestGame, game, loggedIn, openLoginForm, setGameStatus, 
                                             userStatus={game.user_info?game.user_info.status:'Не играл'}
                                             onChangeStatus={(status) => {
                                                 if (!loggedIn){
-                                                    openLoginForm();
+                                                    openLoginForm(); return false;
                                                 }else{
-                                                    setGameStatus( { status: status }
-                                                    );
+                                                    setGameStatus( { status: status } ); return true;
                                                 }
                                             }}
                                             />
