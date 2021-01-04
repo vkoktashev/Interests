@@ -18,7 +18,7 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from config.settings import EMAIL_HOST_USER
-from games.models import UserGame, GameLog
+from games.models import UserGame, GameLog, GameGenre
 from games.serializers import GameStatsSerializer, GameLogSerializer
 from movies.models import UserMovie, MovieLog
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer
@@ -227,9 +227,19 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         serializer = GameStatsSerializer(user_games, many=True)
         games = serializer.data
         # games stats
+        total_spent_time = user_games.aggregate(total_spent_time=Sum('spent_time'))['total_spent_time']
+
+        genres_spent_time = GameGenre.objects.filter(game__usergame__user=user) \
+            .values('genre__rawg_name') \
+            .annotate(genre_spent_time=Sum('game__usergame__spent_time') * 100 / total_spent_time)
+
+        for genre in genres_spent_time:
+            genre['genre_spent_time'] = round(genre['genre_spent_time'], 1)
+
         stats.update({'games': {
             'count': user_games.count(),
-            'total_spent_time': user_games.aggregate(total_spent_time=Sum('spent_time'))['total_spent_time']
+            'total_spent_time': total_spent_time,
+            'genres': genres_spent_time
         }})
 
         # movies
