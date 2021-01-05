@@ -11,8 +11,9 @@ import {
     MDBContainer
 } from "mdbreact";
 import {
-    PieChart, Pie, Legend, Cell
+    PieChart, Pie, Legend, Cell, Tooltip,
   } from 'recharts';
+import {COLORS} from "./Colors";
 import './style.css';
 
 import { connect } from 'react-redux'; 
@@ -29,7 +30,7 @@ import ShowBlock from "./ShowBlock";
 
 const LOG_ROWS_COUNT = 15; 
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+//const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#FA8542'];
 
 /**
  * Основная страница приложения
@@ -42,7 +43,7 @@ function UserPage ( { loggedIn, userInfo,
     let { userID } = useParams();
     const [activeCategory, setActiveCategory] = useState("Профиль");
     const [chartData, setChartData] = useState([]);
-
+    
     useEffect(
 		() => {
             getUserInfo(userID);
@@ -58,7 +59,7 @@ function UserPage ( { loggedIn, userInfo,
                 getUserFriendsLogs(userID, 1, LOG_ROWS_COUNT);
         },
         // eslint-disable-next-line
-		[loggedIn]
+		[loggedIn, userID]
     );
 
     useEffect(
@@ -114,7 +115,7 @@ function UserPage ( { loggedIn, userInfo,
                                     >
 
                                     <div hidden={chartData.length < 1}>
-                                        <PieChart width={300} height={220} hidden={chartData.length < 1}>
+                                        <PieChart width={350} height={250} hidden={chartData.length < 1}>
                                             <Pie dataKey="value" 
                                                 data={chartData} 
                                                 cx="50%" cy="50%"
@@ -122,26 +123,29 @@ function UserPage ( { loggedIn, userInfo,
                                                 fill="#8884d8" 
                                                 labelLine={true}
                                                 label
+                                                minAngle={5}
                                                 >
                                             {
-                                                chartData.map((entry, index) => <Cell fill={COLORS[index % COLORS.length]} key={index}/>)
+                                                chartData.map((entry, index) => <Cell fill={COLORS[index]} key={index}/>)
                                             }
                                             </Pie>
+                                            <Tooltip itemStyle={{color: 'rgb(238, 238, 238)', backgroundColor: 'rgb(30, 30, 30)'}}
+                                                contentStyle={{color: 'rgb(238, 238, 238)', backgroundColor: 'rgb(30, 30, 30)', borderRadius: "10px"}}
+                                                cursor={false}/>
                                             <Legend verticalAlign="bottom" horizontalAlign="center"/>
                                         </PieChart>
                                     </div>
-
                                     <UserLogBlock logs={userLogs} onChangePage={(pageNumber) => getUserLogs(userID, pageNumber, LOG_ROWS_COUNT)}/>
                                 </LoadingOverlay>
                             </div>
                             <div hidden={activeCategory!=='Игры'}>
-                                <GameBlock games={userInfo.games} stats={userInfo.stats} />
+                                <GameBlock games={userInfo.games} stats={userInfo.stats.games} />
                             </div>
                             <div hidden={activeCategory!=='Фильмы'}>
-                                <MovieBlock movies={userInfo.movies} stats={userInfo.stats} />
+                                <MovieBlock movies={userInfo.movies} stats={userInfo.stats.movies} />
                             </div>
                             <div hidden={activeCategory!=='Сериалы'}>
-                                <ShowBlock shows={userInfo.shows} stats={userInfo.stats} />
+                                <ShowBlock shows={userInfo.shows} stats={userInfo.stats.episodes} />
                             </div>
                             <div hidden={activeCategory!=='Друзья'}>
                                 <FriendBlock users={userInfo.followed_users?userInfo.followed_users:[]} />
@@ -153,7 +157,6 @@ function UserPage ( { loggedIn, userInfo,
                                     >
                                     <UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => getUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true}/>
                                 </LoadingOverlay>
-                                
                             </div>
                     </MDBCol>
                     <MDBCol md="0.5"></MDBCol>
