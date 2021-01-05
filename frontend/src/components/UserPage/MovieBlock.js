@@ -1,11 +1,15 @@
 import React, { useEffect, useState} from "react";
+import {
+  Cell, BarChart, Bar, XAxis, YAxis, Tooltip,
+} from 'recharts';
+import {COLORS} from "./Colors";
 
 import {
     MDBDataTable
 } from "mdbreact";
 
 function MovieBlock ( {movies, stats} ) {
-
+    const [movieChartData, setMovieChartData] = useState([]);
     const movieColumns = [
       {
         label: 'Название',
@@ -60,9 +64,26 @@ function MovieBlock ( {movies, stats} ) {
         [movies]
     );
 
+    useEffect(() =>{
+      setMovieChartData([]);
+      if (stats)
+      {
+        if (stats?.genres){
+            let newData = [];
+            for (let genre in stats.genres)
+                if (stats.genres[genre].spent_time_percent > 2)
+                  newData.push({name: stats.genres[genre].name, 'Процент': stats.genres[genre].spent_time_percent});
+            newData = newData.sort((a, b) => a['Процент'] > b['Процент'] ? -1 : 1);
+            setMovieChartData(newData);
+        }
+      }},
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [stats]
+      );
+
     return(
         <div>
-            <p>Фильмов посмотрено: {stats.movies?stats.movies.count:0}, часов просмотра: {stats.movies?stats.movies.total_spent_time:0}</p>  
+            <p>Фильмов посмотрено: {stats?.count}, часов просмотра: {stats?.total_spent_time}</p>  
             <MDBDataTable
                 striped
                 bordered
@@ -76,6 +97,24 @@ function MovieBlock ( {movies, stats} ) {
                 entriesLabel="Показывать фильмов на странице"
                 searchLabel='Поиск'
                 />
+
+            <div hidden={movieChartData.length < 1}>
+                <BarChart width={800} height={300}
+                    data={movieChartData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5, }}
+                >
+                  <XAxis dataKey="name" tickLine={false} tick={{ fill: "rgb(238, 238, 238)"}} />
+                  <YAxis domain={[0, 'dataMax']} tick={{ fill: "rgb(238, 238, 238)"}}/>
+                  <Tooltip itemStyle={{color: 'rgb(238, 238, 238)', backgroundColor: 'rgb(30, 30, 30)'}}
+                    contentStyle={{color: 'rgb(238, 238, 238)', backgroundColor: 'rgb(30, 30, 30)', borderRadius: "10px"}}
+                    cursor={false}/>
+                  <Bar dataKey="Процент">
+                      {
+                          movieChartData.map((entry, index) => <Cell fill={COLORS[index]} key={index}/>)
+                      }
+                  </Bar>
+                </BarChart>
+              </div>
         </div>  
     )
 }

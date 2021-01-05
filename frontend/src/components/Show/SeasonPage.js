@@ -186,8 +186,8 @@ function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShow
                                                     <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
                                                 </linearGradient>
                                             </defs>
-                                            <XAxis dataKey="name" interval={0} />
-                                            <YAxis tickLine={false}/>
+                                            <XAxis dataKey="name" interval={0} tick={{ fill: "rgb(238, 238, 238)"}}/>
+                                            <YAxis tickLine={false} domain={[0, 10]} tick={{ fill: "rgb(238, 238, 238)"}} tickCount={2}/>
                                             <Tooltip contentStyle={{color: 'rgb(238, 238, 238)', backgroundColor: 'rgb(30, 30, 30)'}}/>
                                             <Area type="monotone" dataKey="Оценка" stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
                                         </AreaChart>
