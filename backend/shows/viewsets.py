@@ -110,19 +110,13 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 try:
                     user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
                     user_info = UserEpisodeSerializer(user_episode).data
+                    episodes_user_info.append(user_info)
                 except (UserEpisode.DoesNotExist, TypeError):
-                    user_info = ()
-                episodes_user_info.append(user_info)
+                    pass
+
             season.update({'episodes_user_info': episodes_user_info})
 
-        try:
-            user_show = UserShow.objects.exclude(status=UserShow.STATUS_NOT_WATCHED).get(user=request.user,
-                                                                                         show=show)
-            user_info = self.get_serializer(user_show).data
-        except (UserShow.DoesNotExist, TypeError):
-            user_info = None
-
-        return Response({'tmdb': tmdb_show, 'user_info': user_info})
+        return Response({'tmdb': tmdb_show})
 
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
@@ -182,27 +176,28 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
-                         responses={status.HTTP_200_OK: FollowedUserShowSerializer(many=True)})
+    @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserShowSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
-    def friends_info(self, request, *args, **kwargs):
-        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
-        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
-
+    def user_info(self, request, *args, **kwargs):
         try:
             show = Show.objects.get(tmdb_id=kwargs.get('tmdb_id'))
+
+            try:
+                user_show = UserShow.objects.exclude(status=UserShow.STATUS_NOT_WATCHED).get(user=request.user,
+                                                                                             show=show)
+                user_info = self.get_serializer(user_show).data
+            except UserShow.DoesNotExist:
+                user_info = None
+
             user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
             followed_user_shows = UserShow.objects.filter(user__in=user_follow_query, show=show)
             serializer = FollowedUserShowSerializer(followed_user_shows, many=True)
             friends_info = serializer.data
         except (Show.DoesNotExist, ValueError):
+            user_info = None
             friends_info = ()
 
-        paginator = Paginator(friends_info, page_size)
-        paginator_page = paginator.get_page(page)
-
-        return Response({'friends_info': paginator_page.object_list,
-                         'has_next_page': paginator_page.has_next()})
+        return Response({'user_info': user_info, 'friends_info': friends_info})
 
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,

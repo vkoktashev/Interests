@@ -1,7 +1,6 @@
 from json import JSONDecodeError
 
 from django.core.cache import cache
-from django.core.paginator import Paginator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
@@ -109,41 +108,35 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                                              })
             GameGenre.objects.get_or_create(genre=genre_obj, game=game)
 
-        try:
-            user_game = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).get(user=request.user, game=game)
-            user_info = self.get_serializer(user_game).data
-        except (Game.DoesNotExist, UserGame.DoesNotExist, TypeError):
-            user_info = None
-
         rawg_game.update({'playtime': f'{rawg_game.get("playtime")} {int_to_hours(rawg_game.get("playtime"))}'})
         translate_hltb_time(hltb_game, 'gameplay_main', 'gameplay_main_unit')
         translate_hltb_time(hltb_game, 'gameplay_main_extra', 'gameplay_main_extra_unit')
         translate_hltb_time(hltb_game, 'gameplay_completionist', 'gameplay_completionist_unit')
 
-        return Response({'rawg': rawg_game, 'hltb': hltb_game,
-                         'user_info': user_info})
+        return Response({'rawg': rawg_game, 'hltb': hltb_game})
 
-    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
-                         responses={status.HTTP_200_OK: FollowedUserGameSerializer(many=True)})
+    @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserGameSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
-    def friends_info(self, request, *args, **kwargs):
-        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
-        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
-
+    def user_info(self, request, *args, **kwargs):
         try:
             game = Game.objects.get(rawg_slug=kwargs.get('slug'))
+
+            try:
+                user_game = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).get(user=request.user,
+                                                                                            game=game)
+                user_info = self.get_serializer(user_game).data
+            except UserGame.DoesNotExist:
+                user_info = None
+
             user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
             followed_user_games = UserGame.objects.filter(user__in=user_follow_query, game=game)
             serializer = FollowedUserGameSerializer(followed_user_games, many=True)
             friends_info = serializer.data
         except Game.DoesNotExist:
+            user_info = None
             friends_info = ()
 
-        paginator = Paginator(friends_info, page_size)
-        paginator_page = paginator.get_page(page)
-
-        return Response({'friends_info': paginator_page.object_list,
-                         'has_next_page': paginator_page.has_next()})
+        return Response({'user_info': user_info, 'friends_info': friends_info})
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
