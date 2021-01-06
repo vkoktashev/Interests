@@ -27,7 +27,7 @@ import SeasonsBlock from "./SeasonsBlock";
  * Основная страница приложения
  */
 function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setShowEpisodeUserStatus,
-                    requestShowFriends, showFriends, showFriendsIsLoading,
+                    requestShowUserInfo, showUserInfo, showUserInfoIsLoading,
                     loggedIn, openLoginForm
     } ) {
     let { id } = useParams();
@@ -38,9 +38,15 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
     const [firstDate, setFirstDate] = useState("");
     const [lastDate, setLastDate] = useState("");
     const [review, setReview] = useState("");
+    const [userStatus, setUserStatus] = useState('Не смотрел');
+    const [userRate, setUserRate] = useState(0);
 
     useEffect(
 		() => {
+            setClear();
+            setReview('');
+            setUserStatus('Не смотрел');
+            setUserRate(0);
             requestShow(id);
         },
         // eslint-disable-next-line
@@ -50,14 +56,20 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
     useEffect(
 		() => {
             if (loggedIn)
-                requestShowFriends(id, 1);
+                requestShowUserInfo(id);
+            else{
+                setReview('');
+                setUserRate(0);
+                setUserStatus('Не смотрел');
+            }
         },
         // eslint-disable-next-line
-		[loggedIn]
+		[loggedIn, id]
     );
 
     useEffect(
 		() => {
+            setClear();
             if (show.tmdb.vote_average){
                 setMetascoreBlock(
                     <div>
@@ -67,8 +79,6 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
                         <p className="metacriticText">TMDB score</p>
                     </div>
                 );
-            }else{
-                setMetascoreBlock("");
             }
 
             if (show.tmdb.genres){
@@ -91,7 +101,6 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
                 setCompanies(newCompanies);   
             }
 
-            
             switch (show.tmdb.status){
                 case 'Ended':
                     setShowStatus('Окончен');break;
@@ -113,26 +122,43 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
                 let mas = show.tmdb.first_air_date.split("-");
                 let newDate = mas[2] + "." + mas[1] + "." + mas[0];
                 setFirstDate(newDate);
-            }else
-                setFirstDate("");
+            }
 
             if (show.tmdb.last_air_date){
                 let mas = show.tmdb.last_air_date.split("-");
                 let newDate = mas[2] + "." + mas[1] + "." + mas[0];
                 setLastDate(newDate);
-            }else
-                setLastDate("");
-
-            if (show.user_info){
-                setReview(show.user_info.review);
-            }else{
-                setReview('');
             }
 
             document.title = show.tmdb.name;
 		},
 		[show]
     );
+
+    useEffect(
+		() => {
+            if (showUserInfo?.status){
+                setReview(showUserInfo.review);
+                setUserStatus(showUserInfo.status);
+                setUserRate(showUserInfo.score);
+            }else{
+                setReview('');
+                setUserRate(0);
+                setUserStatus('Не смотрел');
+            }
+        },
+        // eslint-disable-next-line
+		[showUserInfo]
+    );
+    
+    function setClear(){
+        setLastDate('');
+        setFirstDate('');
+        setShowStatus('');
+        setCompanies('');
+        setGenres(''); 
+        setMetascoreBlock('');
+    }
     
     return (
             <div>
@@ -164,30 +190,38 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
                                             <p>Количество серий: {show.tmdb.number_of_episodes}</p>
                                             <p>Статус: {showStatus}</p>
                                         </div>
-                                        <Rating stop={10}
-                                            emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}}/>}
-                                            fullSymbol={[1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} title={n}/>)}
-                                            initialRating={show.user_info?show.user_info.score:0}
-                                            readonly={!loggedIn | (!show.user_info)}
-                                            onChange={(score) => {
-                                                if (!loggedIn){
-                                                    openLoginForm(); return false;
-                                                }else{
-                                                    setShowUserStatus({score: score }); return true;
-                                                }}
-                                            }
-                                        /> <br/>
-                                        <StatusButtonGroup loggedIn={loggedIn} 
-                                            statuses={['Не смотрел', 'Буду смотреть', 'Смотрю', 'Дропнул', 'Посмотрел']}
-                                            activeColor='#4527a0' 
-                                            userStatus={show.user_info?show.user_info.status:'Не смотрел'}
-                                            onChangeStatus={(status) => {
-                                                if (!loggedIn){
-                                                    openLoginForm();
-                                                }else{
-                                                    setShowUserStatus({ status: status });
+                                        <LoadingOverlay active={showUserInfoIsLoading} spinner text='Загрузка...'>
+                                            <Rating stop={10}
+                                                emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}}/>}
+                                                fullSymbol={[1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} title={n}/>)}
+                                                initialRating={userRate}
+                                                readonly={!loggedIn | userStatus==='Не смотрел'}
+                                                onChange={(score) => {
+                                                    if (!loggedIn){
+                                                        openLoginForm(); 
+                                                    }else{
+                                                        setUserRate(score);
+                                                        setShowUserStatus({score: score });
+                                                    }}
                                                 }
-                                            }}/>
+                                            /> <br/>
+                                            <StatusButtonGroup loggedIn={loggedIn} 
+                                                statuses={['Не смотрел', 'Буду смотреть', 'Смотрю', 'Дропнул', 'Посмотрел']}
+                                                activeColor='#4527a0' 
+                                                userStatus={userStatus}
+                                                onChangeStatus={(status) => {
+                                                    if (!loggedIn){
+                                                        openLoginForm();
+                                                    }else{
+                                                        setUserStatus(status);
+                                                        setShowUserStatus({ status: status });
+                                                        if (status === 'Не смотрел'){
+                                                            setReview('');
+                                                            setUserRate(0);
+                                                    }
+                                                    }
+                                                }}/>
+                                        </LoadingOverlay>
                                     </MDBCol>
                                     <MDBCol size="1">
                                         { metascoreBlock }
@@ -205,34 +239,35 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
                                 </div>
                                 <MDBCol size="6" style={{paddingLeft: "10px"}} hidden={!loggedIn}>
                                     <h3 style={{paddingTop: "10px"}}>Отзывы</h3>
-                                        
-                                    <MDBInput 
-                                        type="textarea" 
-                                        id="reviewInput"
-                                        label="Ваш отзыв" 
-                                        value={review}
-                                        onChange={(event) =>setReview(event.target.value)}
-                                        outline
-                                    />
-                                    <button 
-                                        className={'savePreviewButton'} 
-                                        disabled={!loggedIn | (!show.user_info)}
-                                        onClick={() => {
-                                                if (!loggedIn){
-                                                    openLoginForm();
-                                                }else{
-                                                    setShowUserStatus({ review: document.getElementById('reviewInput').value });
+                                    <LoadingOverlay active={showUserInfoIsLoading} spinner text='Загрузка...'>   
+                                        <MDBInput 
+                                            type="textarea" 
+                                            id="reviewInput"
+                                            label="Ваш отзыв" 
+                                            value={review}
+                                            onChange={(event) =>setReview(event.target.value)}
+                                            outline
+                                        />
+                                        <button 
+                                            className={'savePreviewButton'} 
+                                            disabled={!loggedIn | userStatus==='Не смотрел'}
+                                            onClick={() => {
+                                                    if (!loggedIn){
+                                                        openLoginForm();
+                                                    }else{
+                                                        setShowUserStatus({ review: document.getElementById('reviewInput').value });
+                                                    }
                                                 }
                                             }
-                                        }
-                                        >
-                                        Сохранить
-                                    </button>
+                                            >
+                                            Сохранить
+                                        </button>
+                                    </LoadingOverlay>
                                 </MDBCol>
                             </MDBContainer>
-                            <div className="movieFriendsBlock" hidden={showFriends.friends_info.length < 1}>
+                            <div className="movieFriendsBlock" hidden={showUserInfo.friends_info.length < 1}>
                                 <h4>Отзывы друзей</h4>
-                                <FriendsActivity info={showFriends}/>
+                                <FriendsActivity info={showUserInfo.friends_info}/>
                             </div>
                         </MDBCol>
                         <MDBCol md="0.5"></MDBCol>
@@ -248,8 +283,8 @@ const mapStateToProps = state => ({
     requestError: selectors.getShowRequestError(state),
     show: selectors.getContentShow(state),
     showIsLoading: selectors.getIsLoadingContentShow(state),
-    showFriends: selectors.getContentShowFriends(state),
-    showFriendsIsLoading: selectors.getIsLoadingContentShowFriends(state)
+    showUserInfo: selectors.getContentShowUserInfo(state),
+    showUserInfoIsLoading: selectors.getIsLoadingContentShowUserInfo(state)
 });
 
 const mapDispatchToProps = (dispatch) => {
@@ -263,8 +298,8 @@ const mapDispatchToProps = (dispatch) => {
         openLoginForm: () => {
             dispatch(actions.openLoginForm());
         },
-        requestShowFriends: (id, page) => {
-            dispatch(actions.requestShowFriends(id, page));
+        requestShowUserInfo: (id) => {
+            dispatch(actions.requestShowUserInfo(id));
         },
         setShowEpisodeUserStatus: (status, showID) => {
             dispatch(actions.setShowEpisodesStatus(status, showID));

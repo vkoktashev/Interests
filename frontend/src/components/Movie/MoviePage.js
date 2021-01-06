@@ -27,7 +27,7 @@ import FriendsActivity from "../Common/FriendsActivity";
  */
 function MoviePage ( {
         requestMovie, movie, movieIsLoading, setMovieStatus,
-        requestMovieFriends, movieFriends, movieFriendsIsLoading,
+        requestMovieUserInfo, movieUserInfo, movieUserInfoIsLoading,
         loggedIn, openLoginForm, 
     } ) {
     let { id } = useParams();
@@ -37,9 +37,15 @@ function MoviePage ( {
     const [cast, setCast] = useState("");
     const [director, setDirector] = useState("");
     const [review, setReview] = useState("");
+    const [userStatus, setUserStatus] = useState('Не смотрел');
+    const [userRate, setUserRate] = useState(0);
 
     useEffect(
 		() => {
+            setClear();
+            setReview('');
+            setUserStatus('Не смотрел');
+            setUserRate(0);
             requestMovie(id);
         },
         // eslint-disable-next-line
@@ -49,14 +55,20 @@ function MoviePage ( {
     useEffect(
 		() => {
             if (loggedIn)
-                requestMovieFriends(id, 1);
+                requestMovieUserInfo(id);
+            else{
+                setReview('');
+                setUserRate(0);
+                setUserStatus('Не смотрел');
+            }
         },
         // eslint-disable-next-line
-		[loggedIn]
+		[loggedIn, id]
     );
 
     useEffect(
 		() => {
+            setClear();
             if (movie.tmdb.vote_average){
                 setMetascoreBlock(
                     <div>
@@ -66,8 +78,6 @@ function MoviePage ( {
                         <p className="metacriticText">TMDB score</p>
                     </div>
                 );
-            }else{
-                setMetascoreBlock("");
             }
 
             if (movie.tmdb.genres){
@@ -112,17 +122,35 @@ function MoviePage ( {
                 setDirector(newDirector);   
             }
 
-            if (movie.user_info){
-                setReview(movie.user_info.review);
-            }else{
-                setReview('');
-            }
-
             document.title = movie.tmdb.title;
 		},
 		[movie]
     );
     
+    useEffect(
+		() => {
+            if (movieUserInfo?.status){
+                setReview(movieUserInfo.review);
+                setUserStatus(movieUserInfo.status);
+                setUserRate(movieUserInfo.score);
+            }else{
+                setReview('');
+                setUserRate(0);
+                setUserStatus('Не смотрел');
+            }
+        },
+        // eslint-disable-next-line
+		[movieUserInfo]
+    );
+    
+    function setClear(){
+        setDirector('');
+        setCast('');
+        setCompanies('');
+        setGenres('');
+        setMetascoreBlock('');
+    }
+
     return (
             <div>
 			<div className="bg" style={{backgroundImage: `url(${ 'http://image.tmdb.org/t/p/w1920_and_h800_multi_faces' + movie.tmdb.backdrop_path})`}}/>
@@ -151,30 +179,39 @@ function MoviePage ( {
                                             <p>В ролях: {cast}</p>
                                             <p>Режиссер: {director}</p>
                                         </div>
-                                        <Rating stop={10}
-                                            emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}}/>}
-                                            fullSymbol={[1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} title={n}/>)}
-                                            initialRating={movie.user_info?movie.user_info.score:0}
-                                            readonly={!loggedIn | (!movie.user_info)}
-                                            onChange={(score) => {
-                                                if (!loggedIn){
-                                                    openLoginForm(); return false;
-                                                }else{
-                                                    setMovieStatus({score: score }); return true;
-                                                }}
-                                            }
-                                        /> <br/>
-                                        <StatusButtonGroup loggedIn={loggedIn} 
-                                            statuses={['Не смотрел', 'Буду смотреть', 'Дропнул', 'Посмотрел']}
-                                            activeColor='#4527a0' 
-                                            userStatus={movie.user_info?movie.user_info.status:'Не смотрел'}
-                                            onChangeStatus={(status) => {
-                                                if (!loggedIn){
-                                                    openLoginForm();
-                                                }else{
-                                                   setMovieStatus({ status: status });
+                                        <LoadingOverlay active={movieUserInfoIsLoading} spinner text='Загрузка...'>
+                                            <Rating stop={10}
+                                                emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}}/>}
+                                                fullSymbol={[1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} title={n}/>)}
+                                                initialRating={userRate}
+                                                readonly={!loggedIn | userStatus==='Не смотрел'}
+                                                onChange={(score) => {
+                                                    if (!loggedIn){
+                                                        openLoginForm();
+                                                    }else{
+                                                        setUserRate(score);
+                                                        setMovieStatus({score: score });
+                                                    }}
                                                 }
-                                            }}/>
+                                            /> <br/>
+                                            <StatusButtonGroup
+                                                statuses={['Не смотрел', 'Буду смотреть', 'Дропнул', 'Посмотрел']}
+                                                activeColor='#4527a0' 
+                                                userStatus={userStatus}
+                                                onChangeStatus={(status) => {
+                                                    if (!loggedIn){
+                                                        openLoginForm();
+                                                    }else{
+                                                        setUserStatus(status);
+                                                    setMovieStatus({ status: status }); 
+                                                    if (status === 'Не смотрел'){
+                                                            setReview('');
+                                                            setUserRate(0);
+                                                    }
+                                                    }
+                                                }}/>
+                                        </LoadingOverlay>
+                                        
                                     </MDBCol>
                                     <MDBCol size="1">
                                         { metascoreBlock }
@@ -188,34 +225,35 @@ function MoviePage ( {
                                 </MDBRow>
                                 <MDBCol size="6" style={{paddingLeft: "10px"}} hidden={!loggedIn}>
                                     <h3 style={{paddingTop: "10px"}}>Отзывы</h3>
-                                        
-                                        <MDBInput 
-                                            type="textarea" 
-                                            id="reviewInput"
-                                            label="Ваш отзыв" 
-                                            value={review}
-                                            onChange={(event) =>setReview(event.target.value)}
-                                            outline
-                                        />
-                                        <button 
-                                            className={'savePreviewButton'} 
-                                            disabled={!loggedIn | (!movie.user_info)}
-                                            onClick={() => {
-                                                    if (!loggedIn){
-                                                        openLoginForm();
-                                                    }else{
-                                                        setMovieStatus({   review: document.getElementById('reviewInput').value });
+                                        <LoadingOverlay active={movieUserInfoIsLoading} spinner text='Загрузка...'>
+                                            <MDBInput 
+                                                type="textarea" 
+                                                id="reviewInput"
+                                                label="Ваш отзыв" 
+                                                value={review}
+                                                onChange={(event) =>setReview(event.target.value)}
+                                                outline
+                                            />
+                                            <button 
+                                                className={'savePreviewButton'} 
+                                                disabled={!loggedIn | userStatus==='Не смотрел'}
+                                                onClick={() => {
+                                                        if (!loggedIn){
+                                                            openLoginForm();
+                                                        }else{
+                                                            setMovieStatus({   review: document.getElementById('reviewInput').value });
+                                                        }
                                                     }
                                                 }
-                                            }
-                                            >
-                                            Сохранить
-                                        </button>
+                                                >
+                                                Сохранить
+                                            </button>
+                                        </LoadingOverlay>
                                     </MDBCol>
                             </MDBContainer>
-                            <div className="movieFriendsBlock" hidden={!loggedIn | movieFriends.friends_info.length < 1}>
+                            <div className="movieFriendsBlock" hidden={!loggedIn | movieUserInfo?.friends_info?.length < 1}>
                                 <h4>Отзывы друзей</h4>
-                                <FriendsActivity info={movieFriends}/>
+                                <FriendsActivity info={movieUserInfo?.friends_info}/>
                             </div>
                         </MDBCol>
                         <MDBCol md="0.5"></MDBCol>
@@ -231,8 +269,8 @@ const mapStateToProps = state => ({
     requestError: selectors.getMovieRequestError(state),
     movie: selectors.getContentMovie(state),
     movieIsLoading: selectors.getIsLoadingContentMovie(state),
-    movieFriends: selectors.getContentMovieFriends(state),
-    movieFriendsIsLoading: selectors.getIsLoadingContentMovieFriends(state)
+    movieUserInfo: selectors.getContentMovieUserInfo(state),
+    movieUserInfoIsLoading: selectors.getIsLoadingContentMovieUserInfo(state)
 });
 
 const mapDispatchToProps = (dispatch) => {
@@ -246,8 +284,8 @@ const mapDispatchToProps = (dispatch) => {
         setMovieStatus: (status) => {
             dispatch(actions.setMovieStatus(status));
         },
-        requestMovieFriends: (id, page) => {
-            dispatch(actions.requestMovieFriends(id, page));
+        requestMovieUserInfo: (id) => {
+            dispatch(actions.requestMovieUserInfo(id));
         }
 	}
 };

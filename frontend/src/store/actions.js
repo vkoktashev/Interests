@@ -98,7 +98,6 @@ export function registrationRequest(username, email, password){
     return async(dispatch) => {
         setError(dispatch, actionTypes.REGISTRATE_ERROR, false);
         auth.registration(username, email, password).then((result) => {
-            console.log(result);
             if (result.status === 201 | result.status === 200){
                 dispatch({
                     type: actionTypes.SET_USER,
@@ -118,7 +117,6 @@ export function registrationRequest(username, email, password){
 export function confirmEmailRequest(uid64, token){
     return async() => {
         auth.confirmation(uid64, token).then((result) => {
-            console.log(result);
             if (result.status === 200){
                 toast.success("Почта подтверждена!");
             }
@@ -151,20 +149,21 @@ export function requestGame(id){
 }
 
 
-export function requestGameFriends(slug, page){
+export function requestGameUserInfo(slug){
     return async(dispatch) => {
-        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_GAME_FRIENDS, true);
-        Requests.getGameFriends(localStorage.getItem('token'), slug, page).then((result) => {
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_GAME_USER_INFO, true);
+        Requests.getGameUserInfo(localStorage.getItem('token'), slug).then((result) => {
             if (result != null){
+                let newResult = {...result.user_info, friends_info: result.friends_info};
                 dispatch({
-                    type: actionTypes.SET_CONTENT_GAME_FRIENDS,
-                    info: result, 
+                    type: actionTypes.SET_CONTENT_GAME_USER_INFO,
+                    user_info: newResult, 
                 });
             }
             else{
                 toast.error("Ошибка загрузки логов!");
             }
-            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_GAME_FRIENDS, false);
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_GAME_USER_INFO, false);
         });
     }
 }
@@ -174,7 +173,6 @@ export function requestMovie(id){
         setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_MOVIE, true);
         setError(dispatch, actionTypes.MOVIE_REQUEST_ERROR, false);
         Requests.getMovie(localStorage.getItem('token'), id).then((result) => {
-            console.log(result);
             if (result != null){
                 dispatch({
                     type: actionTypes.SET_CONTENT_MOVIE,
@@ -190,20 +188,21 @@ export function requestMovie(id){
     }
 }
 
-export function requestMovieFriends(id, page){
+export function requestMovieUserInfo(id){
     return async(dispatch) => {
-        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_MOVIE_FRIENDS, true);
-        Requests.getMovieFriends(localStorage.getItem('token'), id, page).then((result) => {
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_MOVIE_USER_INFO, true);
+        Requests.getMovieUserInfo(localStorage.getItem('token'), id).then((result) => {
             if (result != null){
+                let newResult = {...result.user_info, friends_info: result.friends_info};
                 dispatch({
-                    type: actionTypes.SET_CONTENT_MOVIE_FRIENDS,
-                    info: result, 
+                    type: actionTypes.SET_CONTENT_MOVIE_USER_INFO,
+                    user_info: newResult, 
                 });
             }
             else{
                 toast.error("Ошибка загрузки логов!");
             }
-            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_MOVIE_FRIENDS, false);
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_MOVIE_USER_INFO, false);
         });
     }
 }
@@ -213,7 +212,6 @@ export function requestShow(id){
         setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, true);
         setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, false);
         Requests.getShow(localStorage.getItem('token'), id).then((result) => {
-            console.log(result);
             if (result != null){
                 dispatch({
                     type: actionTypes.SET_CONTENT_SHOW,
@@ -234,7 +232,6 @@ export function requestShowSeason(showID, seasonNumber){
         setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, true);
         setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, false);
         Requests.getShowSeason(localStorage.getItem('token'), showID, seasonNumber).then((result) => {
-            console.log(result);
             if (result != null){
                 dispatch({
                     type: actionTypes.SET_CONTENT_SHOW,
@@ -255,7 +252,6 @@ export function requestShowEpisode(showID, seasonNumber, episodeNumber){
         setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, true);
         setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, false);
         Requests.getShowEpisode(localStorage.getItem('token'), showID, seasonNumber, episodeNumber).then((result) => {
-            console.log(result);
             if (result != null){
                 dispatch({
                     type: actionTypes.SET_CONTENT_SHOW,
@@ -271,56 +267,59 @@ export function requestShowEpisode(showID, seasonNumber, episodeNumber){
     }
 }
 
-export function requestShowFriends(id, page){
+export function requestShowUserInfo(id){
     return async(dispatch) => {
-        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_FRIENDS, true);
-        Requests.getShowFriends(localStorage.getItem('token'), id, page).then((result) => {
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, true);
+        Requests.getShowUserInfo(localStorage.getItem('token'), id).then((result) => {
             if (result != null){
+                let newResult = {...result.user_info, friends_info: result.friends_info};
                 dispatch({
-                    type: actionTypes.SET_CONTENT_SHOW_FRIENDS,
-                    info: result, 
+                    type: actionTypes.SET_CONTENT_SHOW_USER_INFO,
+                    user_info: newResult, 
                 });
             }
             else{
                 toast.error("Ошибка загрузки логов!");
             }
-            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_FRIENDS, false);
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, false);
         });
     }
 }
 
-export function requestShowSeasonFriends(showID, seasonID, page){
+export function requestShowSeasonUserInfo(showID, seasonID){
     return async(dispatch) => {
-        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_FRIENDS, true);
-        Requests.getShowSeasonFriends(localStorage.getItem('token'), showID, seasonID, page).then((result) => {
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, true);
+        Requests.getShowSeasonUserInfo(localStorage.getItem('token'), showID, seasonID).then((result) => {
             if (result != null){
+                let newResult = {...result.user_info, friends_info: result.friends_info};
                 dispatch({
-                    type: actionTypes.SET_CONTENT_SHOW_FRIENDS,
-                    info: result, 
+                    type: actionTypes.SET_CONTENT_SHOW_USER_INFO,
+                    user_info: newResult, 
                 });
             }
             else{
                 toast.error("Ошибка загрузки логов!");
             }
-            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_FRIENDS, false);
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, false);
         });
     }
 }
 
-export function requestShowEpisodeFriends(showID, seasonID, episodeID, page){
+export function requestShowEpisodeUserInfo(showID, seasonID, episodeID){
     return async(dispatch) => {
-        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_FRIENDS, true);
-        Requests.getShowEpisodeFriends(localStorage.getItem('token'), showID, seasonID, episodeID, page).then((result) => {
+        setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, true);
+        Requests.getShowEpisodeUserInfo(localStorage.getItem('token'), showID, seasonID, episodeID).then((result) => {
             if (result != null){
+                let newResult = {...result.user_info, friends_info: result.friends_info};
                 dispatch({
-                    type: actionTypes.SET_CONTENT_SHOW_FRIENDS,
-                    info: result, 
+                    type: actionTypes.SET_CONTENT_SHOW_USER_INFO,
+                    user_info: newResult, 
                 });
             }
             else{
                 toast.error("Ошибка загрузки логов!");
             }
-            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_FRIENDS, false);
+            setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, false);
         });
     }
 }
@@ -333,10 +332,10 @@ export function setGameStatus(user_info){
                     toast.error("Ошибка обновления статуса")
                 }
                 else{
-                    dispatch({
+                    /*dispatch({
                         type: actionTypes.SET_CONTENT_GAME_USERINFO,
                         user_info: result
-                    });
+                    });*/
                 }
             });
         }
@@ -462,10 +461,10 @@ export function setMovieStatus(user_info){
                     toast.error("Ошибка обновления статуса")
                 }
                 else{
-                    dispatch({
+                    /*dispatch({
                         type: actionTypes.SET_CONTENT_MOVIE_USERINFO,
                         user_info: result
-                    });
+                    });*/
                 }
             });
         }
@@ -480,10 +479,10 @@ export function setShowStatus(user_info){
                     toast.error("Ошибка обновления статуса")
                 }
                 else{
-                    dispatch({
+                    /*dispatch({
                         type: actionTypes.SET_CONTENT_SHOW_USERINFO,
                         user_info: result
-                    });
+                    });*/
                 }
             });
         }
@@ -498,10 +497,10 @@ export function setShowSeasonStatus(user_info, showID, seasonNumber){
                     toast.error("Ошибка обновления статуса")
                 }
                 else{
-                    dispatch({
+                    /*dispatch({
                         type: actionTypes.SET_CONTENT_SHOW_USERINFO,
                         user_info: result
-                    });
+                    });*/
                 }
             });
         }
