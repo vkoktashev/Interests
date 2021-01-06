@@ -88,7 +88,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             hltb_game_id = hltb_game.get('game_id')
         except ValueError:
             hltb_game = None
-            hltb_game_name = None
+            hltb_game_name = ''
             hltb_game_id = None
         except ConnectionError:
             return Response({ERROR: HLTB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
