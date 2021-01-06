@@ -31,17 +31,21 @@ import DetailedEpisodeRow from "./DetailedEpisodeRow";
  */
 function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShowUserStatus, 
                     setShowEpisodeUserStatus,
-                    requestShowSeasonFriends, showFriends, showFriendsIsLoading,
+                    requestShowSeasonUserInfo, showUserInfo, showUserInfoIsLoading,
                     loggedIn, openLoginForm
     } ) {
     let history = useHistory();
     let { show_id, number } = useParams();
     const [date, setDate] = useState("");
     const [review, setReview] = useState("");
+    const [userRate, setUserRate] = useState(0);
     const [chartData, setChartData] = useState([]);
 
     useEffect(
 		() => {
+            setClear();
+            setReview('');
+            setUserRate(0);
             requestShowSeason(show_id, number);
         },
         // eslint-disable-next-line
@@ -51,26 +55,24 @@ function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShow
     useEffect(
 		() => {
             if (loggedIn)
-                requestShowSeasonFriends(show_id, number, 1);
+                requestShowSeasonUserInfo(show_id, number);
+            else{
+                setReview('');
+                setUserRate(0);
+            }
         },
         // eslint-disable-next-line
-		[loggedIn]
+		[loggedIn, show_id, number]
     );
 
     useEffect(
 		() => {
-
+            setClear();
             if (showSeason.tmdb.air_date){
                 let mas = showSeason.tmdb.air_date.split("-");
                 let newDate = mas[2] + "." + mas[1] + "." + mas[0];
                 setDate(newDate);
-            }else
-                setDate("");
-
-            if (showSeason.user_info){
-                setReview(showSeason.user_info.review);
-            }else
-                setReview("");
+            }
                 
             document.title = showSeason.tmdb.show_name + ' - ' + showSeason.tmdb.name;
 		},
@@ -92,6 +94,26 @@ function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShow
 		},
 		[showSeason]
     );
+
+    useEffect(
+		() => {
+            if (showUserInfo?.review)
+                setReview(showUserInfo.review);
+            else
+                setReview('');
+
+            if (showUserInfo?.score)
+                setUserRate(showUserInfo.score);
+            else
+                setUserRate(0);
+        },
+        // eslint-disable-next-line
+		[showUserInfo]
+    );
+    
+    function setClear(){
+        setDate("");
+    }
 
     return (
             <div>
@@ -124,15 +146,17 @@ function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShow
                                             <p hidden={date===''}>Дата выхода: {date}</p>
                                             <p>Количество серий: {showSeason.tmdb.episodes?showSeason.tmdb.episodes.length:0}</p>
                                         </div>
-                                        <div hidden={!loggedIn | (!showSeason.user_watched_show)}>
+                                        <div hidden={!loggedIn | (!showUserInfo?.user_watched_show)}>
+                                        <LoadingOverlay active={showUserInfoIsLoading} spinner text='Загрузка...'>
                                             <Rating stop={10}
                                                 emptySymbol={<MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}}/>}
                                                 fullSymbol={[1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} title={n}/>)}
-                                                initialRating={showSeason.user_info?showSeason.user_info.score:0}
+                                                initialRating={userRate}
                                                 onChange={(score) => {
                                                     if (!loggedIn){
                                                         openLoginForm();
                                                     }else{
+                                                        setUserRate(score);
                                                         setShowUserStatus({score: score }, show_id, showSeason.tmdb.season_number);
                                                     }}
                                                 }
@@ -147,7 +171,7 @@ function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShow
                                             />
                                             <button 
                                                 className={'savePreviewButton'} 
-                                                hidden={!loggedIn | (!showSeason.user_watched_show)}
+                                                hidden={!loggedIn | (!showUserInfo?.user_watched_show)}
                                                 onClick={() => {
                                                         if (!loggedIn){
                                                             openLoginForm();
@@ -159,6 +183,7 @@ function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShow
                                                 >
                                                 Сохранить
                                             </button>
+                                        </LoadingOverlay>
                                         </div>
                                     </MDBCol>
                                 </MDBRow> 
@@ -194,9 +219,9 @@ function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShow
                                     </div>
                                 </div>
                             </MDBContainer>
-                            <div className="movieFriendsBlock" hidden={showFriends.friends_info.length < 1}>
+                            <div className="movieFriendsBlock" hidden={showUserInfo.friends_info.length < 1}>
                                 <h4>Отзывы друзей</h4>
-                                <FriendsActivity info={showFriends}/>
+                                <FriendsActivity info={showUserInfo.friends_info}/>
                             </div>
                         </MDBCol>
                         <MDBCol md="0.5"></MDBCol>
@@ -212,8 +237,8 @@ const mapStateToProps = state => ({
     requestError: selectors.getShowRequestError(state),
     showSeason: selectors.getContentShow(state),
     showSeasonIsLoading: selectors.getIsLoadingContentShow(state),
-    showFriends: selectors.getContentShowFriends(state),
-    showFriendsIsLoading: selectors.getIsLoadingContentShowFriends(state)
+    showUserInfo: selectors.getContentShowUserInfo(state),
+    showUserInfoIsLoading: selectors.getIsLoadingContentShowUserInfo(state)
 });
 
 const mapDispatchToProps = (dispatch) => {
@@ -230,8 +255,8 @@ const mapDispatchToProps = (dispatch) => {
         openLoginForm: () => {
             dispatch(actions.openLoginForm());
         },
-        requestShowSeasonFriends: (showID, seasonID, page) => {
-            dispatch(actions.requestShowSeasonFriends(showID, seasonID, page));
+        requestShowSeasonUserInfo: (showID, seasonID) => {
+            dispatch(actions.requestShowSeasonUserInfo(showID, seasonID));
         }
 	}
 };
