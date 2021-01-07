@@ -13,6 +13,11 @@ function EpisodeRow ( {episode, season, showID, userInfo, setShowEpisodeUserStat
     const [isChecked, setIsChecked] = useState(false);
 
     useEffect(() =>{
+        console.log(userInfo)
+    },
+    [userInfo]
+);
+    useEffect(() =>{
             if (typeof checked !== 'undefined')
                 setIsChecked(checked);
             else

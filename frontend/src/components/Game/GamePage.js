@@ -159,7 +159,7 @@ function GamePage ( {requestGame, openLoginForm, setGameStatus, requestGameUserI
                         <MDBCol className="gameContentPage"> 
                             <MDBContainer>
                                 <MDBRow className="gameContentHeader rounded-top" >
-                                    <MDBCol size="5">
+                                    <MDBCol size="5" className="posterBlock">
                                         <img src={game.rawg.background_image} className="img-fluid" alt=""/>
                                     </MDBCol>
                                     <MDBCol size="6">

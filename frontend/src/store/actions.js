@@ -291,7 +291,7 @@ export function requestShowSeasonUserInfo(showID, seasonID){
         setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, true);
         Requests.getShowSeasonUserInfo(localStorage.getItem('token'), showID, seasonID).then((result) => {
             if (result != null){
-                let newResult = {...result.user_info, friends_info: result.friends_info};
+                let newResult = {...result.user_info, user_watched_show: result.user_watched_show, episodes: result.episodes_user_info, friends_info: result.friends_info};
                 dispatch({
                     type: actionTypes.SET_CONTENT_SHOW_USER_INFO,
                     user_info: newResult, 
@@ -310,7 +310,7 @@ export function requestShowEpisodeUserInfo(showID, seasonID, episodeID){
         setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, true);
         Requests.getShowEpisodeUserInfo(localStorage.getItem('token'), showID, seasonID, episodeID).then((result) => {
             if (result != null){
-                let newResult = {...result.user_info, friends_info: result.friends_info};
+                let newResult = {...result.user_info, user_watched_show: result.user_watched_show, friends_info: result.friends_info};
                 dispatch({
                     type: actionTypes.SET_CONTENT_SHOW_USER_INFO,
                     user_info: newResult, 

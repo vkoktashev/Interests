@@ -130,7 +130,7 @@ function SeasonsBlock ( {seasons, showID, setShowEpisodeUserStatus, loggedIn} ) 
                                 <ul>
                                 {  season.episodes.map((episode, counter) => <li className="episode" key={counter}>
                                             <EpisodeRow loggedIn={loggedIn} episode={episode} season={season.season_number} showID={showID} 
-                                                userInfo={season.episodes_user_info.find(info => info.episode_number === episode)} 
+                                                userInfo={season.episodes_user_info[episode]} 
                                                 setShowEpisodeUserStatus={setShowEpisodeUserStatus}
                                                 checked={checkboxes.get(season.season_number.toString())?.[episode]?.checked}
                                                 onCheckBox={(value) => { changeEpisode(value, season.season_number, episode) } 

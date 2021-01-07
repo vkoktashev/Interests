@@ -115,6 +115,12 @@ function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShow
         setDate("");
     }
 
+    function getEpisodeByNumber(episodes, number){
+        for (let episode in episodes)
+            if (episodes[episode].episode_number === number)
+                return episodes[episode];
+    }
+
     return (
             <div>
 			<div className="bg" style={{backgroundImage: `url(${ 'http://image.tmdb.org/t/p/w1920_and_h800_multi_faces' + showSeason.tmdb.backdrop_path})`}}/>
@@ -198,7 +204,7 @@ function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShow
                                     <details open={false} className='episodeRows'>
                                         <summary>Развернуть</summary>
                                             <ul>
-                                                {  showSeason.tmdb.episodes?showSeason.tmdb.episodes.map((episode) => <li className="episode" key={showSeason.tmdb.id+episode.episode_number}><DetailedEpisodeRow episode={episode} showID={show_id} loggedIn={loggedIn} setShowEpisodeUserStatus={setShowEpisodeUserStatus}/></li>):'' }
+                                                {  showSeason.tmdb.episodes?showSeason.tmdb.episodes.map((episode) => <li className="episode" key={showSeason.tmdb.id+episode.episode_number}><DetailedEpisodeRow episode={episode} showID={show_id} loggedIn={loggedIn} userInfo={getEpisodeByNumber(showUserInfo.episodes, episode.episode_number)} setShowEpisodeUserStatus={setShowEpisodeUserStatus}/></li>):'' }
                                             </ul>
                                     </details>
                                     <div hidden={!(chartData.length > 0)}>
