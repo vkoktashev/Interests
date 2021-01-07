@@ -1,6 +1,5 @@
 import tmdbsimple as tmdb
 from django.core.cache import cache
-from django.db import IntegrityError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
@@ -246,50 +245,22 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=True, methods=['put'])
     def episodes(self, request, *args, **kwargs):
         episodes = request.data.get('episodes')
-        episode_obj = None
 
         for data in episodes:
             try:
-                episode_obj = Episode.objects.get(tmdb_show=kwargs.get('tmdb_id'),
-                                                  tmdb_season_number=data['season_number'],
-                                                  tmdb_episode_number=data['episode_number'])
+                episode = Episode.objects.get(tmdb_show=kwargs.get('tmdb_id'),
+                                              tmdb_season_number=data['season_number'],
+                                              tmdb_episode_number=data['episode_number'])
             except Episode.DoesNotExist:
-                try:
-                    tmdb_season = get_season(kwargs.get('tmdb_id'),
-                                             data['season_number'])
-                except HTTPError as e:
-                    error_code = int(e.args[0].split(' ', 1)[0])
-                    if error_code == 404:
-                        return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-                    return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-                try:
-                    for episode in tmdb_season.get('episodes'):
-                        if episode['episode_number'] == data['episode_number']:
-                            episode_obj = Episode.objects.create(tmdb_id=episode.get('id'),
-                                                                 tmdb_episode_number=episode.get('episode_number'),
-                                                                 tmdb_season_number=episode.get('season_number'),
-                                                                 tmdb_name=episode.get('name'),
-                                                                 tmdb_show_id=kwargs.get('tmdb_id'))
-                        else:
-                            Episode.objects.get_or_create(tmdb_show=kwargs.get('tmdb_id'),
-                                                          tmdb_episode_number=episode.get('episode_number'),
-                                                          tmdb_season_number=episode.get('season_number'),
-                                                          defaults={
-                                                              'tmdb_name': episode.get('name'),
-                                                              'tmdb_show_id': kwargs.get('tmdb_id')
-                                                          })
-
-                except IntegrityError:
-                    return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+                return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
             data = data.copy()
             data.update({'user': request.user.pk,
                          'show': kwargs.get('tmdb_id'),
-                         'episode': episode_obj.pk})
+                         'episode': episode.pk})
 
             try:
-                user_episode = UserEpisode.objects.get(user=request.user, episode=episode_obj)
+                user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
                 serializer = UserEpisodeSerializer(user_episode, data=data)
             except UserEpisode.DoesNotExist:
                 serializer = UserEpisodeSerializer(data=data)
@@ -347,6 +318,22 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         tmdb_season.update(show_info)
 
+        Season.objects.get_or_create(tmdb_id=tmdb_season.get('id'),
+                                     defaults={
+                                         'tmdb_season_number': tmdb_season.get('season_number'),
+                                         'tmdb_name': tmdb_season.get('name'),
+                                         'tmdb_show_id': kwargs.get('show_tmdb_id')
+                                     })
+
+        for episode in tmdb_season.get('episodes'):
+            Episode.objects.get_or_create(tmdb_id=episode.get('id'),
+                                          defaults={
+                                              'tmdb_episode_number': episode.get('episode_number'),
+                                              'tmdb_season_number': episode.get('season_number'),
+                                              'tmdb_name': episode.get('name'),
+                                              'tmdb_show_id': kwargs.get('show_tmdb_id')
+                                          })
+
         return Response({'tmdb': tmdb_season})
 
     @swagger_auto_schema(request_body=openapi.Schema(
@@ -386,21 +373,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         try:
             season = Season.objects.get(tmdb_show=kwargs.get('show_tmdb_id'), tmdb_season_number=kwargs.get('number'))
         except Season.DoesNotExist:
-            try:
-                tmdb_season = get_season(kwargs.get('show_tmdb_id'), kwargs.get('number'))
-            except HTTPError as e:
-                error_code = int(e.args[0].split(' ', 1)[0])
-                if error_code == 404:
-                    return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-            try:
-                season = Season.objects.create(tmdb_id=tmdb_season.get('id'),
-                                               tmdb_season_number=tmdb_season.get('season_number'),
-                                               tmdb_name=tmdb_season.get('name'),
-                                               tmdb_show_id=kwargs.get('show_tmdb_id'))
-            except IntegrityError:
-                return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         data = request.data.copy()
         data.update({'user': request.user.pk,
