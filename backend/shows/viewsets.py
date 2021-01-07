@@ -1,6 +1,5 @@
 import tmdbsimple as tmdb
 from django.core.cache import cache
-from django.core.paginator import Paginator
 from django.db import IntegrityError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -14,14 +13,14 @@ from rest_framework.viewsets import GenericViewSet
 from movies.models import Genre
 from shows.models import UserShow, Show, UserSeason, Season, UserEpisode, Episode, ShowGenre
 from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpisodeSerializer, \
-    FollowedUserShowSerializer, FollowedUserSeasonSerializer, FollowedUserEpisodeSerializer
+    FollowedUserShowSerializer, FollowedUserSeasonSerializer, FollowedUserEpisodeSerializer, \
+    UserEpisodeInSeasonSerializer
 from users.models import UserFollow
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
-    SEASON_NOT_FOUND, DEFAULT_PAGE_SIZE, CACHE_TIMEOUT
+    SEASON_NOT_FOUND, CACHE_TIMEOUT
 from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
     SEASON_RETRIEVE_200_EXAMPLE
-from utils.functions import get_page_size
-from utils.openapi_params import query_param, page_param, page_size_param
+from utils.openapi_params import query_param, page_param
 
 
 class SearchShowsViewSet(GenericViewSet, mixins.ListModelMixin):
@@ -49,36 +48,6 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     queryset = UserShow.objects.all()
     serializer_class = UserShowSerializer
     lookup_field = 'tmdb_id'
-
-    @action(methods=['get'], detail=False)
-    def fill(self, request):
-        user_shows = UserShow.objects.all()
-        total = user_shows.count()
-        for user_show in user_shows:
-            total -= 1
-            show, created = Show.objects.get_or_create(tmdb_id=user_show.show.tmdb_id)
-
-            try:
-                if not ShowGenre.objects.filter(show=show).exists():
-                    tmdb_show = get_show(user_show.show.tmdb_id)
-                    for genre in tmdb_show.get('genres'):
-                        genre_obj, created = Genre.objects.get_or_create(tmdb_id=genre.get('id'),
-                                                                         defaults={
-                                                                             'tmdb_name': genre.get('name'),
-                                                                         })
-                        ShowGenre.objects.get_or_create(genre=genre_obj, show=show)
-
-            except HTTPError as e:
-                error_code = int(e.args[0].split(' ', 1)[0])
-                if error_code == 404:
-                    return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-            except ConnectionError:
-                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-            print(user_show.show.tmdb_name, '__Shows left:', total)
-
-        return Response(status=status.HTTP_200_OK)
 
     @swagger_auto_schema(responses={
         status.HTTP_200_OK: openapi.Response(
@@ -138,19 +107,13 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 try:
                     user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
                     user_info = UserEpisodeSerializer(user_episode).data
+                    episodes_user_info.append(user_info)
                 except (UserEpisode.DoesNotExist, TypeError):
-                    user_info = ()
-                episodes_user_info.append(user_info)
+                    pass
+
             season.update({'episodes_user_info': episodes_user_info})
 
-        try:
-            user_show = UserShow.objects.exclude(status=UserShow.STATUS_NOT_WATCHED).get(user=request.user,
-                                                                                         show=show)
-            user_info = self.get_serializer(user_show).data
-        except (UserShow.DoesNotExist, TypeError):
-            user_info = None
-
-        return Response({'tmdb': tmdb_show, 'user_info': user_info})
+        return Response({'tmdb': tmdb_show})
 
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
@@ -210,27 +173,28 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
-                         responses={status.HTTP_200_OK: FollowedUserShowSerializer(many=True)})
+    @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserShowSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
-    def friends_info(self, request, *args, **kwargs):
-        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
-        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
-
+    def user_info(self, request, *args, **kwargs):
         try:
             show = Show.objects.get(tmdb_id=kwargs.get('tmdb_id'))
+
+            try:
+                user_show = UserShow.objects.exclude(status=UserShow.STATUS_NOT_WATCHED).get(user=request.user,
+                                                                                             show=show)
+                user_info = self.get_serializer(user_show).data
+            except UserShow.DoesNotExist:
+                user_info = None
+
             user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
             followed_user_shows = UserShow.objects.filter(user__in=user_follow_query, show=show)
             serializer = FollowedUserShowSerializer(followed_user_shows, many=True)
             friends_info = serializer.data
         except (Show.DoesNotExist, ValueError):
+            user_info = None
             friends_info = ()
 
-        paginator = Paginator(friends_info, page_size)
-        paginator_page = paginator.get_page(page)
-
-        return Response({'friends_info': paginator_page.object_list,
-                         'has_next_page': paginator_page.has_next()})
+        return Response({'user_info': user_info, 'friends_info': friends_info})
 
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
@@ -282,102 +246,13 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=True, methods=['put'])
     def episodes(self, request, *args, **kwargs):
         episodes = request.data.get('episodes')
+        episode_obj = None
+
         for data in episodes:
             try:
-                episode = Episode.objects.get(tmdb_show=kwargs.get('tmdb_id'),
-                                              tmdb_season_number=data['season_number'],
-                                              tmdb_episode_number=data['episode_number'])
-            except Episode.DoesNotExist:
-                try:
-                    tmdb_episode = get_episode(kwargs.get('tmdb_id'),
-                                               data['season_number'],
-                                               data['episode_number'])
-                except HTTPError as e:
-                    error_code = int(e.args[0].split(' ', 1)[0])
-                    if error_code == 404:
-                        return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-                    return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-                try:
-                    episode = Episode.objects.create(tmdb_id=tmdb_episode.get('id'),
-                                                     tmdb_episode_number=tmdb_episode.get('episode_number'),
-                                                     tmdb_season_number=tmdb_episode.get('season_number'),
-                                                     tmdb_name=tmdb_episode.get('name'),
-                                                     tmdb_show_id=kwargs.get('tmdb_id'))
-                except IntegrityError:
-                    return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-
-            data = data.copy()
-            data.update({'user': request.user.pk,
-                         'show': kwargs.get('tmdb_id'),
-                         'episode': episode.pk})
-
-            try:
-                user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
-                serializer = UserEpisodeSerializer(user_episode, data=data)
-            except UserEpisode.DoesNotExist:
-                serializer = UserEpisodeSerializer(data=data)
-
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-        return Response(status=status.HTTP_200_OK)
-
-    @swagger_auto_schema(request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            'episodes': openapi.Schema(
-                type=openapi.TYPE_ARRAY,
-                items=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'season_number': openapi.Schema(
-                            type=openapi.TYPE_INTEGER
-                        ),
-                        "episode_number": openapi.Schema(
-                            type=openapi.TYPE_INTEGER
-                        ),
-                        "score": openapi.Schema(
-                            type=openapi.TYPE_INTEGER,
-                            minimum=UserEpisode._meta.get_field('score').validators[0].limit_value,
-                            maximum=UserEpisode._meta.get_field('score').validators[1].limit_value
-                        ),
-                        "review": openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            maxLength=UserEpisode._meta.get_field('review').max_length
-                        )
-                    }
-                )
-            )
-        }
-    ),
-        responses={
-            status.HTTP_404_NOT_FOUND: openapi.Response(
-                description=status.HTTP_404_NOT_FOUND,
-                examples={
-                    "application/json": {
-                        ERROR: EPISODE_NOT_FOUND
-                    }
-                }
-            ),
-            status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
-                description=status.HTTP_503_SERVICE_UNAVAILABLE,
-                examples={
-                    "application/json": {
-                        ERROR: TMDB_UNAVAILABLE
-                    },
-                }
-            )
-        }
-    )
-    @action(detail=True, methods=['put'])
-    def episodes2(self, request, *args, **kwargs):
-        episodes = request.data.get('episodes')
-        for data in episodes:
-            try:
-                episode = Episode.objects.get(tmdb_show=kwargs.get('tmdb_id'),
-                                              tmdb_season_number=data['season_number'],
-                                              tmdb_episode_number=data['episode_number'])
+                episode_obj = Episode.objects.get(tmdb_show=kwargs.get('tmdb_id'),
+                                                  tmdb_season_number=data['season_number'],
+                                                  tmdb_episode_number=data['episode_number'])
             except Episode.DoesNotExist:
                 try:
                     tmdb_season = get_season(kwargs.get('tmdb_id'),
@@ -391,11 +266,11 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 try:
                     for episode in tmdb_season.get('episodes'):
                         if episode['episode_number'] == data['episode_number']:
-                            episode = Episode.objects.create(tmdb_id=episode.get('id'),
-                                                             tmdb_episode_number=episode.get('episode_number'),
-                                                             tmdb_season_number=episode.get('season_number'),
-                                                             tmdb_name=episode.get('name'),
-                                                             tmdb_show_id=kwargs.get('tmdb_id'))
+                            episode_obj = Episode.objects.create(tmdb_id=episode.get('id'),
+                                                                 tmdb_episode_number=episode.get('episode_number'),
+                                                                 tmdb_season_number=episode.get('season_number'),
+                                                                 tmdb_name=episode.get('name'),
+                                                                 tmdb_show_id=kwargs.get('tmdb_id'))
                         else:
                             Episode.objects.get_or_create(tmdb_show=kwargs.get('tmdb_id'),
                                                           tmdb_episode_number=episode.get('episode_number'),
@@ -411,17 +286,16 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             data = data.copy()
             data.update({'user': request.user.pk,
                          'show': kwargs.get('tmdb_id'),
-                         'episode': episode.pk})
+                         'episode': episode_obj.pk})
 
             try:
-                user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
+                user_episode = UserEpisode.objects.get(user=request.user, episode=episode_obj)
                 serializer = UserEpisodeSerializer(user_episode, data=data)
             except UserEpisode.DoesNotExist:
                 serializer = UserEpisodeSerializer(data=data)
 
             serializer.is_valid(raise_exception=True)
             serializer.save()
-
         return Response(status=status.HTTP_200_OK)
 
 
@@ -467,32 +341,13 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
-            show_info, user_watched_show = get_show_info(kwargs.get('show_tmdb_id'), request.user)
-        except (HTTPError, ConnectionError):
-            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            show_info = get_show_info(kwargs.get('show_tmdb_id'))
         except Show.DoesNotExist:
             return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         tmdb_season.update(show_info)
 
-        for tmdb_episode in tmdb_season['episodes']:
-            try:
-                episode = Episode.objects.get(tmdb_id=tmdb_episode['id'])
-                user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
-                user_info = UserEpisodeSerializer(user_episode).data
-            except (Episode.DoesNotExist, UserEpisode.DoesNotExist, TypeError):
-                user_info = ()
-
-            tmdb_episode.update({'user_info': user_info})
-
-        try:
-            season = Season.objects.get(tmdb_id=tmdb_season.get('id'))
-            user_season = UserSeason.objects.get(user=request.user, season=season)
-            user_info = self.get_serializer(user_season).data
-        except (Season.DoesNotExist, UserSeason.DoesNotExist, TypeError):
-            user_info = None
-
-        return Response({'tmdb': tmdb_season, 'user_info': user_info, 'user_watched_show': user_watched_show})
+        return Response({'tmdb': tmdb_season})
 
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
@@ -562,27 +417,39 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
-                         responses={status.HTTP_200_OK: FollowedUserSeasonSerializer(many=True)})
+    @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserSeasonSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
-    def friends_info(self, request, *args, **kwargs):
-        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
-        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
+    def user_info(self, request, *args, **kwargs):
+        show_id = kwargs.get('show_tmdb_id')
+        season_number = kwargs.get('number')
 
         try:
-            season = Season.objects.get(tmdb_show=kwargs.get('show_tmdb_id'), tmdb_season_number=kwargs.get('number'))
+            season = Season.objects.get(tmdb_show=show_id, tmdb_season_number=season_number)
+
+            # user_info
+            try:
+                user_season = UserSeason.objects.get(user=request.user, season=season)
+                user_info = self.get_serializer(user_season).data
+            except UserSeason.DoesNotExist:
+                user_info = None
+
+            # friends_info
             user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
             followed_user_seasons = UserSeason.objects.filter(user__in=user_follow_query, season=season)
             serializer = FollowedUserSeasonSerializer(followed_user_seasons, many=True)
             friends_info = serializer.data
         except (Season.DoesNotExist, ValueError):
+            user_info = None
             friends_info = ()
 
-        paginator = Paginator(friends_info, page_size)
-        paginator_page = paginator.get_page(page)
+        episodes = Episode.objects.filter(tmdb_show=show_id, tmdb_season_number=season_number)
+        user_episodes = UserEpisode.objects.filter(user=request.user, episode__in=episodes)
+        episodes_user_info = UserEpisodeInSeasonSerializer(user_episodes, many=True).data
 
-        return Response({'friends_info': paginator_page.object_list,
-                         'has_next_page': paginator_page.has_next()})
+        return Response({'user_info': user_info,
+                         'episodes_user_info': episodes_user_info,
+                         'friends_info': friends_info,
+                         'user_watched_show': user_watched_show(show_id, request.user)})
 
 
 class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -628,63 +495,67 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
-            show_info, user_watched_show = get_show_info(kwargs.get('show_tmdb_id'), request.user)
-        except (HTTPError, ConnectionError):
-            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            show_info = get_show_info(kwargs.get('show_tmdb_id'))
         except Show.DoesNotExist:
             return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         tmdb_episode.update(show_info)
 
-        try:
-            episode = Episode.objects.get(tmdb_id=tmdb_episode.get('id'))
-            user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
-            user_info = self.get_serializer(user_episode).data
-        except (Episode.DoesNotExist, UserEpisode.DoesNotExist, TypeError):
-            user_info = None
+        return Response({'tmdb': tmdb_episode})
 
-        return Response({'tmdb': tmdb_episode, 'user_info': user_info, 'user_watched_show': user_watched_show})
-
-    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
-                         responses={status.HTTP_200_OK: FollowedUserEpisodeSerializer(many=True)})
+    @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserEpisodeSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
-    def friends_info(self, request, *args, **kwargs):
-        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
-        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
+    def user_info(self, request, *args, **kwargs):
+        show_id = kwargs.get('show_tmdb_id')
+        season_number = kwargs.get('season_number')
+        episode_number = kwargs.get('number')
 
         try:
-            episode = Episode.objects.get(tmdb_show=kwargs.get('show_tmdb_id'),
-                                          tmdb_season_number=kwargs.get('season_number'),
-                                          tmdb_episode_number=kwargs.get('number'))
+            episode = Episode.objects.get(tmdb_show=show_id,
+                                          tmdb_season_number=season_number,
+                                          tmdb_episode_number=episode_number)
+
+            # user_info
+            try:
+                user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
+                user_info = self.get_serializer(user_episode).data
+            except UserEpisode.DoesNotExist:
+                user_info = None
+
+            # friends_info
             user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
             followed_user_episodes = UserEpisode.objects.filter(user__in=user_follow_query, episode=episode)
             serializer = FollowedUserEpisodeSerializer(followed_user_episodes, many=True)
             friends_info = serializer.data
         except (Episode.DoesNotExist, ValueError):
+            user_info = None
             friends_info = ()
 
-        paginator = Paginator(friends_info, page_size)
-        paginator_page = paginator.get_page(page)
-
-        return Response({'friends_info': paginator_page.object_list,
-                         'has_next_page': paginator_page.has_next()})
+        return Response({'user_info': user_info,
+                         'friends_info': friends_info,
+                         'user_watched_show': user_watched_show(show_id, request.user)})
 
 
-def get_show_info(show_id, user):
-    user_watched_show = False
+def user_watched_show(show_id, user):
+    try:
+        show = Show.objects.get(tmdb_id=show_id)
+    except Show.DoesNotExist:
+        return False
+
+    user_show = UserShow.objects.filter(user=user, show=show).first()
+    if user_show is not None and user_show.status != UserShow.STATUS_NOT_WATCHED:
+        return True
+
+    return False
+
+
+def get_show_info(show_id):
     show = Show.objects.get(tmdb_id=show_id)
 
-    try:
-        user_show = UserShow.objects.get(user=user, show=show)
-        if user_show.status != UserShow.STATUS_NOT_WATCHED:
-            user_watched_show = True
-    except (UserShow.DoesNotExist, TypeError):
-        pass
-
-    return ({'show_name': show.tmdb_name,
-             'show_id': show.tmdb_id,
-             'show_original_name': show.tmdb_original_name,
-             'backdrop_path': show.tmdb_backdrop_path}, user_watched_show)
+    return {'show_name': show.tmdb_name,
+            'show_id': show.tmdb_id,
+            'show_original_name': show.tmdb_original_name,
+            'backdrop_path': show.tmdb_backdrop_path}
 
 
 def get_episode_info(show_id, season_number, episode_number, user):

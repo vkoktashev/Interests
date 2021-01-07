@@ -154,6 +154,10 @@ li.episode:nth-child(even){
     font-size: 16px;
 }
 
+.episodeRowName.detailRow{
+    margin-right: 40px;
+}
+
 .saveEpisodesHeader{
     position: fixed;
     bottom: 0;
@@ -180,4 +184,8 @@ li.episode:nth-child(even){
   
   .saveEpisodesButton:active {
     background-color: #532fbd;
+  }
+
+  .episodeRowRate{
+      display: inline-block;
   }

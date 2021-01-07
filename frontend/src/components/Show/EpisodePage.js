@@ -26,17 +26,21 @@ import FriendsActivity from "../Common/FriendsActivity";
  * Основная страница приложения
  */
 function EpisodePage ( {requestShowEpisode, showEpisode, showEpisodeIsLoading, setEpisodeUserStatus,
-                    requestShowEpisodeFriends, showFriends, showFriendsIsLoading,
+                    requestShowEpisodeUserInfo, showUserInfo, showUserInfoIsLoading,
                     loggedIn, openLoginForm
     } ) {
     let history = useHistory();
     let { show_id, season_number, episode_number } = useParams();
     const [date, setDate] = useState("");
     const [review, setReview] = useState("");
+    const [userRate, setUserRate] = useState(0);
     const [metascoreBlock, setMetascoreBlock] = useState("");
 
     useEffect(
 		() => {
+            setClear();
+            setReview('');
+            setUserRate(0);
             requestShowEpisode(show_id, season_number, episode_number);
         },
         // eslint-disable-next-line
@@ -46,26 +50,24 @@ function EpisodePage ( {requestShowEpisode, showEpisode, showEpisodeIsLoading, s
     useEffect(
 		() => {
             if (loggedIn)
-                requestShowEpisodeFriends(show_id, season_number, episode_number, 1);
+                requestShowEpisodeUserInfo(show_id, season_number, episode_number);
+            else{
+                setReview('');
+                setUserRate(0);
+            }
         },
         // eslint-disable-next-line
-		[loggedIn]
+		[loggedIn, show_id, season_number, episode_number]
     );
 
     useEffect(
 		() => {
-
+            setClear();
             if (showEpisode.tmdb.air_date){
                 let mas = showEpisode.tmdb.air_date.split("-");
                 let newDate = mas[2] + "." + mas[1] + "." + mas[0];
                 setDate(newDate);
-            }else
-                setDate("");
-
-            if (showEpisode.user_info){
-                setReview(showEpisode.user_info.review);
-            }else
-                setReview("");
+            }
 
             if (showEpisode.tmdb.vote_average){
                 setMetascoreBlock(
@@ -76,15 +78,33 @@ function EpisodePage ( {requestShowEpisode, showEpisode, showEpisodeIsLoading, s
                         <p className="metacriticText">TMDB score</p>
                     </div>
                 );
-            }else{
-                setMetascoreBlock("");
             }
 
             document.title = showEpisode.tmdb.show_name + ' - ' + showEpisode.tmdb.name;
 		},
 		[showEpisode]
     );
+
+    useEffect(
+		() => {
+            if (showUserInfo?.review)
+                setReview(showUserInfo.review);
+            else
+                setReview('');
+
+            if (showUserInfo?.score)
+                setUserRate(showUserInfo.score);
+            else
+                setUserRate(0);
+        },
+        // eslint-disable-next-line
+		[showUserInfo]
+    );
     
+    function setClear(){
+        setMetascoreBlock("");
+        setDate("");
+    }
     
     return (
             <div>
@@ -121,51 +141,51 @@ function EpisodePage ( {requestShowEpisode, showEpisode, showEpisodeIsLoading, s
                                                 Сезон: {showEpisode.tmdb.season_number}
                                             </a> 
                                         </div>
-                                        <div hidden={!loggedIn | (!showEpisode.user_watched_show)}>
-                                            <Rating start={-1} stop={10}
-                                                emptySymbol={[<MDBIcon icon="eye-slash" />].concat([1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}}/>))}
-                                                fullSymbol={[<MDBIcon icon="eye" />].concat([1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} title={n}/>))}
-                                                initialRating={showEpisode.user_info?showEpisode.user_info.score:-1}
-                                                onChange={(score) => {
-                                                    if (!loggedIn){
-                                                        openLoginForm();
-                                                    }else{
-                                                        setEpisodeUserStatus( {episodes: [ {
-                                                                                                season_number: season_number,
-                                                                                                episode_number: episode_number,
-                                                                                                score: score
-                                                                                            }]},
-                                                                            show_id);
-                                                    }}
-                                                }
-                                            />
-                                            <MDBInput 
-                                                type="textarea" 
-                                                id="reviewSeasonInput"
-                                                label="Ваш отзыв" 
-                                                value={review}
-                                                onChange={(event) =>setReview(event.target.value)}
-                                                outline
-                                            />
-                                            <button 
-                                                className={'savePreviewButton'} 
-                                                hidden={!loggedIn | (!showEpisode.user_watched_show)}
-                                                onClick={() => {
+                                        <div hidden={!loggedIn | (!showUserInfo?.user_watched_show)}>
+                                            <LoadingOverlay active={showUserInfoIsLoading} spinner text='Загрузка...'>
+                                                <Rating start={-1} stop={10}
+                                                    emptySymbol={[<MDBIcon icon="eye-slash" />].concat([1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon far icon="star" size="1x" style={{fontSize: "25px"}}/>))}
+                                                    fullSymbol={[<MDBIcon icon="eye" />].concat([1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x" style={{fontSize: "25px"}} title={n}/>))}
+                                                    initialRating={userRate}
+                                                    onChange={(score) => {
                                                         if (!loggedIn){
                                                             openLoginForm();
                                                         }else{
-                                                            setEpisodeUserStatus({episodes: [ {
-                                                                                                season_number: season_number,
+                                                            setUserRate(score);
+                                                            setEpisodeUserStatus( {episodes: [ {season_number: season_number,
                                                                                                 episode_number: episode_number,
-                                                                                                review: document.getElementById('reviewSeasonInput').value
-                                                                                            }]},
-                                                                                show_id);
+                                                                                                score: score  }]},  show_id);
+                                                        }}
+                                                    }
+                                                />
+                                                <MDBInput 
+                                                    type="textarea" 
+                                                    id="reviewSeasonInput"
+                                                    label="Ваш отзыв" 
+                                                    value={review}
+                                                    onChange={(event) =>setReview(event.target.value)}
+                                                    outline
+                                                />
+                                                <button 
+                                                    className={'savePreviewButton'} 
+                                                    hidden={!loggedIn | (!showUserInfo?.user_watched_show)}
+                                                    onClick={() => {
+                                                            if (!loggedIn){
+                                                                openLoginForm();
+                                                            }else{
+                                                                setEpisodeUserStatus({episodes: [ {
+                                                                                                    season_number: season_number,
+                                                                                                    episode_number: episode_number,
+                                                                                                    review: document.getElementById('reviewSeasonInput').value
+                                                                                                }]},
+                                                                                    show_id);
+                                                            }
                                                         }
                                                     }
-                                                }
-                                                >
-                                                Сохранить
-                                            </button>
+                                                    >
+                                                    Сохранить
+                                                </button>
+                                            </LoadingOverlay>
                                         </div>
                                     </MDBCol>
                                     <MDBCol size="1">
@@ -179,9 +199,9 @@ function EpisodePage ( {requestShowEpisode, showEpisode, showEpisodeIsLoading, s
                                     </MDBCol>
                                 </MDBRow>
                             </MDBContainer>
-                            <div className="movieFriendsBlock" hidden={showFriends.friends_info.length < 1}>
+                            <div className="movieFriendsBlock" hidden={showUserInfo.friends_info.length < 1}>
                                 <h4>Отзывы друзей</h4>
-                                <FriendsActivity info={showFriends}/>
+                                <FriendsActivity info={showUserInfo.friends_info}/>
                             </div>
                         </MDBCol>
                         <MDBCol md="0.5"></MDBCol>
@@ -197,8 +217,8 @@ const mapStateToProps = state => ({
     requestError: selectors.getShowRequestError(state),
     showEpisode: selectors.getContentShow(state),
     showEpisodeIsLoading: selectors.getIsLoadingContentShow(state),
-    showFriends: selectors.getContentShowFriends(state),
-    showFriendsIsLoading: selectors.getIsLoadingContentShowFriends(state)
+    showUserInfo: selectors.getContentShowUserInfo(state),
+    showUserInfoIsLoading: selectors.getIsLoadingContentShowUserInfo(state)
 });
 
 const mapDispatchToProps = (dispatch) => {
@@ -212,8 +232,8 @@ const mapDispatchToProps = (dispatch) => {
         openLoginForm: () => {
             dispatch(actions.openLoginForm());
         },
-        requestShowEpisodeFriends: (showID, seasonID, episodeID, page) => {
-            dispatch(actions.requestShowEpisodeFriends(showID, seasonID, episodeID, page));
+        requestShowEpisodeUserInfo: (showID, seasonID, episodeID) => {
+            dispatch(actions.requestShowEpisodeUserInfo(showID, seasonID, episodeID));
         }
 	}
 };

@@ -1,6 +1,5 @@
 import tmdbsimple as tmdb
 from django.core.cache import cache
-from django.core.paginator import Paginator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
@@ -15,8 +14,7 @@ from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer
 from users.models import UserFollow
 from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, CACHE_TIMEOUT
 from utils.documentation import MOVIES_SEARCH_200_EXAMPLE, MOVIE_RETRIEVE_200_EXAMPLE
-from utils.functions import get_page_size
-from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, page_size_param
+from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER
 
 
 class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
@@ -44,36 +42,6 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     queryset = UserMovie.objects.all()
     serializer_class = UserMovieSerializer
     lookup_field = 'tmdb_id'
-
-    @action(methods=['get'], detail=False)
-    def fill(self, request):
-        user_movies = UserMovie.objects.all()
-        total = user_movies.count()
-        for user_movie in user_movies:
-            total -= 1
-            movie, created = Movie.objects.get_or_create(tmdb_id=user_movie.movie.tmdb_id)
-
-            try:
-                if not MovieGenre.objects.filter(movie=movie).exists():
-                    tmdb_movie = get_movie(user_movie.movie.tmdb_id)
-                    for genre in tmdb_movie.get('genres'):
-                        genre_obj, created = Genre.objects.get_or_create(tmdb_id=genre.get('id'),
-                                                                         defaults={
-                                                                             'tmdb_name': genre.get('name'),
-                                                                         })
-                        MovieGenre.objects.get_or_create(genre=genre_obj, movie=movie)
-
-            except HTTPError as e:
-                error_code = int(e.args[0].split(' ', 1)[0])
-                if error_code == 404:
-                    return Response({ERROR: MOVIE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-            except ConnectionError:
-                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-            print(user_movie.movie.tmdb_name, '__Movies left:', total)
-
-        return Response(status=status.HTTP_200_OK)
 
     @swagger_auto_schema(responses={
         status.HTTP_200_OK: openapi.Response(
@@ -128,36 +96,30 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                                              })
             MovieGenre.objects.get_or_create(genre=genre_obj, movie=movie)
 
-        try:
-            user_movie = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED).get(user=request.user,
-                                                                                            movie=movie)
-            user_info = self.get_serializer(user_movie).data
-        except (UserMovie.DoesNotExist, TypeError):
-            user_info = None
+        return Response({'tmdb': tmdb_movie})
 
-        return Response({'tmdb': tmdb_movie, 'user_info': user_info})
-
-    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
-                         responses={status.HTTP_200_OK: FollowedUserMovieSerializer(many=True)})
+    @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserMovieSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
-    def friends_info(self, request, *args, **kwargs):
-        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
-        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
-
+    def user_info(self, request, *args, **kwargs):
         try:
             movie = Movie.objects.get(tmdb_id=kwargs.get('tmdb_id'))
+
+            try:
+                user_movie = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED).get(user=request.user,
+                                                                                                movie=movie)
+                user_info = self.get_serializer(user_movie).data
+            except UserMovie.DoesNotExist:
+                user_info = None
+
             user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
             followed_user_movies = UserMovie.objects.filter(user__in=user_follow_query, movie=movie)
             serializer = FollowedUserMovieSerializer(followed_user_movies, many=True)
             friends_info = serializer.data
         except (Movie.DoesNotExist, ValueError):
+            user_info = None
             friends_info = ()
 
-        paginator = Paginator(friends_info, page_size)
-        paginator_page = paginator.get_page(page)
-
-        return Response({'friends_info': paginator_page.object_list,
-                         'has_next_page': paginator_page.has_next()})
+        return Response({'user_info': user_info, 'friends_info': friends_info})
 
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
