@@ -163,11 +163,7 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
     return (
             <div>
 			<div className="bg" style={{backgroundImage: `url(${ 'http://image.tmdb.org/t/p/w1920_and_h800_multi_faces' + show.tmdb.backdrop_path})`}}/>
-                <LoadingOverlay
-                    active={showIsLoading}
-                    spinner
-                    text='Загрузка...'
-                    >
+                <LoadingOverlay active={showIsLoading} spinner text='Загрузка...' >
                 <MDBContainer>
                     <MDBRow>
                         <MDBCol md="0.5"></MDBCol>
@@ -235,7 +231,7 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
                                 </MDBRow>
                                 <div className="showContentBody"> 
                                     <h3 style={{paddingTop: "15px"}}>Список серий</h3>
-                                    <SeasonsBlock seasons={show.tmdb.seasons} showID={show.tmdb.id} loggedIn={loggedIn} setShowEpisodeUserStatus={setShowEpisodeUserStatus}/>
+                                    <SeasonsBlock showID={show.tmdb.id} seasons={show.tmdb.seasons} setShowEpisodeUserStatus={setShowEpisodeUserStatus}/>
                                 </div>
                                 <MDBCol size="6" style={{paddingLeft: "10px"}} hidden={!loggedIn}>
                                     <h3 style={{paddingTop: "10px"}}>Отзывы</h3>

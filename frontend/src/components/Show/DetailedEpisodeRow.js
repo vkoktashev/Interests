@@ -6,12 +6,14 @@ import {
     MDBIcon
 } from "mdbreact";
 
-function DetailedEpisodeRow ( {episode, showID, setShowEpisodeUserStatus, loggedIn, userInfo} ) {
+function DetailedEpisodeRow ( {episode, showID, setShowEpisodeUserStatus, loggedIn, userInfo, onChecked} ) {
     let history = useHistory();
     const [userRate, setUserRate] = useState(0);
+    const [isChecked, setIsChecked] = useState(false);
 
     useEffect(() =>{
             setUserRate(userInfo?.score);
+            setIsChecked(userInfo?.score > -1);
         },
         [userInfo]
     );
@@ -23,6 +25,13 @@ function DetailedEpisodeRow ( {episode, showID, setShowEpisodeUserStatus, logged
 
     return(
         <div className="episodeRow detailRow">
+            <div className="episodeRowRate" hidden={!loggedIn}>
+                <input type="checkbox" checked={isChecked} onChange={
+                    (res) => {
+                        setIsChecked(res.target.checked); 
+                        onChecked(res.target.checked);
+                }}/>
+            </div>
             <p className="episodeDate">{parseDate(episode.air_date)}</p>
             <a className="episodeRowName episodeLink detailRow" 
                 href={window.location.origin + '/show/' + showID + '/season/' + episode.season_number + '/episode/'+ episode.episode_number} 
