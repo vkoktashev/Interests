@@ -165,11 +165,12 @@ function MoviePage ( {
                         <MDBCol className="movieContentPage"> 
                             <MDBContainer>
                                 <MDBRow className="movieContentHeader rounded-top" >
-                                    <MDBCol size="5" className="posterBlock">
+                                    <MDBCol size="4" className="posterBlock">
                                         <img src={"http://image.tmdb.org/t/p/w600_and_h900_bestv2" + movie.tmdb.poster_path} className="img-fluid" alt=""/>
                                     </MDBCol>
-                                    <MDBCol size="6">
+                                    <MDBCol size="7">
                                         <h1>{movie.tmdb.title}</h1>
+                                        <h5 style={{marginBottom: "10px", marginTop: "-10px"}}>{movie.tmdb.original_title}</h5>
                                         <div className="mainInfo">
                                             <p>Дата релиза: {movie.tmdb.release_date}</p>
                                             <p>Продолжительность (мин): {movie.tmdb.runtime}</p>
