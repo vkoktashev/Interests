@@ -10,22 +10,40 @@ function SeasonsBlock ( {showID, seasons, setShowEpisodeUserStatus} ) {
     
 
     const [needHeader, setNeedHeader] = useState(false);
-    const [changeEpisodes, setChangedEpisodes] = useState([]);
 
-    function updateEpisodes(){
+    let changedEpisodes = [];
 
+    function updateEpisodes(episode){
+        if (episode.addEpisode)
+            changedEpisodes.push(episode.episode);
+        else{
+            const index = changedEpisodes.findIndex((i => i.episode_number === episode.episode.episode_number && i.season_number === episode.episode.season_number));
+            if (index > -1)
+                changedEpisodes.splice(index, 1);
+        }
+        if (changedEpisodes.length > 0)
+            setNeedHeader(true);
+        else
+            setNeedHeader(false);
+        console.log(changedEpisodes); 
     }
 
     return(
         <div>
             { 
                 seasons?.map((season) => 
-                    <SeasonBlock showID={showID} seasonNumber={season.season_number} onChangeEpisodes={(episodes) => {console.log(episodes)}} key={season.season_number}/>
+                    <SeasonBlock showID={showID} seasonNumber={season.season_number}
+                        onChangeEpisodes={(episodes) => {console.log(episodes)}} key={season.season_number}
+                        onChangeStatus={(status) => updateEpisodes(status)}/>
                 )  
             } 
             <div className="saveEpisodesHeader" hidden={!needHeader}>
                 <button className="saveEpisodesButton"
-                    onClick={() => updateEpisodes()}>
+                    onClick={() =>  { 
+                        setShowEpisodeUserStatus({episodes: changedEpisodes},  showID);
+                        changedEpisodes = [];
+                        setNeedHeader(false);
+                        }}>
                     Сохранить
                 </button>
             </div>

@@ -9,12 +9,15 @@ import * as selectors from '../../store/reducers';
 import * as actions from '../../store/actions';
 import DetailedEpisodeRow from "./DetailedEpisodeRow";
 
-function SeasonBlock ( {showID, seasonNumber, loggedIn, showSeason, showSeasonIsLoading, showUserInfo, requestShowSeason, requestShowSeasonUserInfo, setShowEpisodeUserStatus} ) {
+function SeasonBlock ( {showID, seasonNumber, loggedIn, 
+        showSeason, showSeasonIsLoading, showUserInfo, 
+        requestShowSeason, requestShowSeasonUserInfo, setShowEpisodeUserStatus, onChangeStatus} ) {
     let history = useHistory();
-    const [isChecked, setIsChecked] = useState(false);
+    const [isChecked, setIsChecked] = useState(0);
 
     useEffect(
 		() => {
+            setIsChecked(0);
             requestShowSeason(showID, seasonNumber);
         },
         // eslint-disable-next-line
@@ -23,6 +26,7 @@ function SeasonBlock ( {showID, seasonNumber, loggedIn, showSeason, showSeasonIs
 
     useEffect(
 		() => {
+            setIsChecked(0);
             if (loggedIn)
                 requestShowSeasonUserInfo(showID, seasonNumber);
         },
@@ -50,11 +54,16 @@ function SeasonBlock ( {showID, seasonNumber, loggedIn, showSeason, showSeasonIs
                 <summary>Развернуть</summary>
                     <div style={{marginLeft: '5px'}} hidden={!loggedIn}>
                         Выбрать все&nbsp;
-                        <input type="checkbox" checked={isChecked} onChange={ (res) => { setIsChecked(res.target.checked); }}  />
+                        <input type="checkbox" checked={isChecked > 0} onChange={ (res) => { setIsChecked(res.target.checked?1:-1); }}  />
                     </div>
                     <ul>
                     {  showSeason?.tmdb?.episodes?.map((episode, counter) => <li className="episode" key={counter}>
-                            <DetailedEpisodeRow episode={episode} showID={showID} loggedIn={loggedIn} userInfo={getEpisodeByNumber(showUserInfo?.episodes, episode?.episode_number)} setShowEpisodeUserStatus={setShowEpisodeUserStatus}/>
+                            <DetailedEpisodeRow episode={episode} showID={showID} loggedIn={loggedIn}
+                                userInfo={getEpisodeByNumber(showUserInfo?.episodes, episode?.episode_number)} 
+                                setShowEpisodeUserStatus={setShowEpisodeUserStatus}
+                                onChangeStatus={(status) => onChangeStatus(status)}
+                                checkAll={isChecked}
+                                />
                         </li>) }
                     </ul>
             </details>
