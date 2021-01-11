@@ -188,4 +188,5 @@ li.episode:nth-child(even){
 
   .episodeRowRate{
       display: inline-block;
+      margin-right: 5px;
   }
