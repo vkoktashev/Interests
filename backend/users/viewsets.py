@@ -34,7 +34,7 @@ from utils.openapi_params import page_param, page_size_param, query_param, uid64
 from .models import User, UserFollow, UserLog, UserPasswordToken
 from .tokens import account_activation_token
 
-SITE_URL = '35.193.124.214:81'
+SITE_URL = 'interests.fun'
 MINUTES_IN_HOUR = 60
 
 
