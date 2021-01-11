@@ -32,7 +32,7 @@ services:
       context: ./frontend
       dockerfile: DockerFile
     ports:
-      - "81:81"
+      - "80:81"
     links:
       - back:back
     depends_on:
