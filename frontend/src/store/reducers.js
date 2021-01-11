@@ -16,7 +16,8 @@ const initialState = Map(
             },
             show: { main_info:{ tmdb: {  title: "", poster_path: "",developers: [{}], episode_run_time: []} },
                     user_info:{ status: null, review: "", score: 0, friends_info: [] }
-            }  
+            },
+            showSeasons: {} 
         },
         searchContent: { games: [], movies: [], shows: [], users: [] },
         userPageContent: {
@@ -31,6 +32,7 @@ const initialState = Map(
         isLoading: {    contentGame: false, contentGameUserInfo: false,
                         contentMovie: false, contentMovieUserInfo: false,
                         contentShow: false, contentShowUserInfo: false,
+                        contentShowSeasons: {},
                         userPageContent: false, userPageLogs: false, userPageFriendsLogs: false,
                         searchGames: false, searchMovies: false, searchShows: false,  searchUsers: false,
                     }
@@ -54,6 +56,11 @@ export default function reducer(state = initialState, action) {
     //Редьюсеры информации о сериале
     case types.SET_CONTENT_SHOW: return state.setIn(['content', 'show', 'main_info'], action.show);
     case types.SET_CONTENT_SHOW_USER_INFO: return state.setIn(['content', 'show', 'user_info'], action.user_info);
+
+    //Редьюсеры информации о сезонах сериала
+    case types.SET_CONTENT_SHOW_SEASONS: return state.setIn(['content', 'showSeasons', action.seasonNumber, 'main_info'], action.info);
+    case types.SET_CONTENT_SHOW_SEASONS_USER_INFO: return state.setIn(['content', 'showSeasons', action.seasonNumber, 'user_info'], action.user_info);
+    case types.SET_CONTENT_SHOW_SEASONS_EPISODE_SCORE: return state.setIn(['content', 'showSeasons', action.seasonNumber, 'user_info', 'episodes', action.episodeNumber, 'score'], action.score);
 
     //Редьюсеры результатов поиска
     case types.SET_SEARCH_CONTENT_GAMES: return state.setIn(['searchContent', 'games'], action.games);
@@ -89,6 +96,7 @@ export default function reducer(state = initialState, action) {
     case types.SET_IS_LOADING_CONTENT_MOVIE_USER_INFO:  return state.setIn(['isLoading', 'contentMovieUserInfo'], action.isLoading);
     case types.SET_IS_LOADING_CONTENT_SHOW:  return state.setIn(['isLoading', 'contentShow'], action.isLoading);
     case types.SET_IS_LOADING_CONTENT_SHOW_USER_INFO:  return state.setIn(['isLoading', 'contentShowUserInfo'], action.isLoading);
+    case types.SET_IS_LOADING_CONTENT_SHOW_SEASONS:  return state.setIn(['isLoading', 'contentShowSeasons', action.seasonNumber], action.isLoading);
     case types.SET_IS_LOADING_SEARCH_GAMES:  return state.setIn(['isLoading', 'searchGames'], action.isLoading);
     case types.SET_IS_LOADING_SEARCH_MOVIES:  return state.setIn(['isLoading', 'searchMovies'], action.isLoading);
     case types.SET_IS_LOADING_SEARCH_SHOWS:  return state.setIn(['isLoading', 'searchShows'], action.isLoading);
@@ -113,6 +121,8 @@ export function getContentMovie(state) { return state.get('content').movie.main_
 export function getContentMovieUserInfo(state) {  return state.get('content').movie.user_info; }
 export function getContentShow(state) { return state.get('content').show.main_info; }
 export function getContentShowUserInfo(state) {  return state.get('content').show.user_info; }
+export function getContentShowSeasons(state, seasonNumber) { return state.get('content').showSeasons[seasonNumber]?.main_info; }
+export function getContentShowSeasonsUserInfo(state, seasonNumber) {  return state.get('content').showSeasons[seasonNumber]?.user_info; }
 
 //Селекторы поисковых результатов
 export function getSearchContentGames(state) { return state.get('searchContent').games;}
@@ -142,6 +152,7 @@ export function getIsLoadingContentMovie(state) {  return state.get('isLoading')
 export function getIsLoadingContentMovieUserInfo(state) { return state.get('isLoading').contentMovieUserInfo; }
 export function getIsLoadingContentShow(state) {  return state.get('isLoading').contentShow; }
 export function getIsLoadingContentShowUserInfo(state) { return state.get('isLoading').contentShowUserInfo; }
+export function getIsLoadingContentShowSeasons(state, seasonNumber) {  return state.get('isLoading').contentShowSeasons[seasonNumber]; }
 export function getIsLoadingSearchGames(state) { return state.get('isLoading').searchGames; }
 export function getIsLoadingSearchMovies(state) { return state.get('isLoading').searchMovies; }
 export function getIsLoadingSearchShows(state) { return state.get('isLoading').searchShows; }

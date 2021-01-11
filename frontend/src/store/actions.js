@@ -247,6 +247,33 @@ export function requestShowSeason(showID, seasonNumber){
     }
 }
 
+export function requestShowSeasons(showID, seasonNumber){
+    return async(dispatch) => {
+        dispatch({
+            type: actionTypes.SET_IS_LOADING_CONTENT_SHOW_SEASONS,
+            seasonNumber: seasonNumber,
+            isLoading: true
+        });
+        Requests.getShowSeason(localStorage.getItem('token'), showID, seasonNumber).then((result) => {
+            if (result != null){
+                dispatch({
+                    type: actionTypes.SET_CONTENT_SHOW_SEASONS,
+                    seasonNumber: seasonNumber,
+                    info: result, 
+                });
+            }
+            else{
+                toast.error("Сериал не найден!");
+            }
+            dispatch({
+                type: actionTypes.SET_IS_LOADING_CONTENT_SHOW_SEASONS,
+                seasonNumber: seasonNumber,
+                isLoading: false
+            });
+        });
+    }
+}
+
 export function requestShowEpisode(showID, seasonNumber, episodeNumber){
     return async(dispatch) => {
         setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, true);
@@ -301,6 +328,34 @@ export function requestShowSeasonUserInfo(showID, seasonID){
                 toast.error("Ошибка загрузки логов!");
             }
             setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, false);
+        });
+    }
+}
+
+export function requestShowSeasonsUserInfo(showID, seasonID){
+    return async(dispatch) => {
+        dispatch({
+            type: actionTypes.SET_IS_LOADING_CONTENT_SHOW_SEASONS,
+            seasonNumber: seasonID,
+            isLoading: true
+        });
+        Requests.getShowSeasonUserInfo(localStorage.getItem('token'), showID, seasonID).then((result) => {
+            if (result != null){
+                let newResult = {...result.user_info, user_watched_show: result.user_watched_show, episodes: result.episodes_user_info, friends_info: result.friends_info};
+                dispatch({
+                    type: actionTypes.SET_CONTENT_SHOW_SEASONS_USER_INFO,
+                    seasonNumber: seasonID,
+                    user_info: newResult, 
+                });
+            }
+            else{
+                toast.error("Ошибка загрузки сезона!");
+            }
+            dispatch({
+                type: actionTypes.SET_IS_LOADING_CONTENT_SHOW_SEASONS,
+                seasonNumber: seasonID,
+                isLoading: false
+            });
         });
     }
 }
@@ -507,12 +562,22 @@ export function setShowSeasonStatus(user_info, showID, seasonNumber){
     }
 }
 
-export function setShowEpisodesStatus(episodesList, showID){
+export function setShowEpisodesStatus(episodesList, showID, needUpdate=false){
     return async(dispatch) => {
         if (await dispatch(checkAuthorization())){
             Requests.setShowEpisodesStatus(localStorage.getItem('token'), showID, episodesList).then((result) => {
                 if (result.status !== 204 & result.status !== 200 & result.status !== 201){
                     toast.error("Ошибка обновления статуса")
+                }else{
+                    if (needUpdate){
+                        let seasons = [];
+                        for (let episode in episodesList.episodes)
+                            if ( seasons.indexOf(episodesList.episodes[episode].season_number) === -1  )
+                                seasons.push(episodesList.episodes[episode].season_number);
+
+                        for (let season in seasons)
+                            dispatch(requestShowSeasonsUserInfo(showID, seasons[season]));
+                    }
                 }
             });
         }
