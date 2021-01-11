@@ -15,7 +15,7 @@ function HomePage ({user})
 				<h4 style={{marginLeft: '30px'}}>
 					Главная страница ещё не готова, однако можно воспользоваться <a href='/search/example' style={{fontWeight: '600'}}>поиском</a> или проверить свой <a href={"/user/"+user.id} style={{fontWeight: '600'}}>профиль</a>, если вы уже зарегистрированы
 				</h4>
-				<img src="images/cool.jpg" style={{marginLeft: '20px'}} alt="Картинка"/>
+				<img src="images/logo192.png" style={{marginLeft: '20px'}} alt="Картинка"/>
 			</div>
     	);
 }
