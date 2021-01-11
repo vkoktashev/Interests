@@ -82,7 +82,7 @@ function DetailedEpisodeRow ( {episode, showID, setShowEpisodeUserStatus, logged
                     onChange={(score) => {
                             setUserRate(score);
                             setIsChecked(score > -1);
-                            if (typeof onChangeStatus!=='undefined')
+                            /*if (typeof onChangeStatus!=='undefined')
                                 onChangeStatus({
                                     addEpisode: (score>-1) !== (userRate > -1),
                                     episode: {
@@ -90,7 +90,7 @@ function DetailedEpisodeRow ( {episode, showID, setShowEpisodeUserStatus, logged
                                         episode_number: episode.episode_number,
                                         score: (score>-1)?0:-1
                                     } 
-                                });
+                                });*/
                             setShowEpisodeUserStatus({episodes: [ {
                                     season_number: episode.season_number,
                                     episode_number: episode.episode_number,
