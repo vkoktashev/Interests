@@ -60,6 +60,7 @@ export default function reducer(state = initialState, action) {
     //Редьюсеры информации о сезонах сериала
     case types.SET_CONTENT_SHOW_SEASONS: return state.setIn(['content', 'showSeasons', action.seasonNumber, 'main_info'], action.info);
     case types.SET_CONTENT_SHOW_SEASONS_USER_INFO: return state.setIn(['content', 'showSeasons', action.seasonNumber, 'user_info'], action.user_info);
+    case types.SET_CONTENT_SHOW_SEASONS_EPISODE_SCORE: return state.setIn(['content', 'showSeasons', action.seasonNumber, 'user_info', 'episodes', action.episodeNumber, 'score'], action.score);
 
     //Редьюсеры результатов поиска
     case types.SET_SEARCH_CONTENT_GAMES: return state.setIn(['searchContent', 'games'], action.games);

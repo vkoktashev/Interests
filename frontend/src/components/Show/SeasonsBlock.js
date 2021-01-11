@@ -1,31 +1,22 @@
-import React, { useEffect, useState} from "react";
-import {
-    useHistory
-  } from "react-router-dom";
+import React, { useState} from "react";
 import './style.css';
-import { Map } from 'immutable';
 import SeasonBlock from './SeasonBlock';
 
 function SeasonsBlock ( {showID, seasons, setShowEpisodeUserStatus} ) {
-    
-
     const [needHeader, setNeedHeader] = useState(false);
-
-    let changedEpisodes = [];
+    const [changedEpisodes, setChangedEpisodes] = useState([]);
 
     function updateEpisodes(episode){
+        let newChangedEpisodes = changedEpisodes;
         if (episode.addEpisode)
-            changedEpisodes.push(episode.episode);
+            newChangedEpisodes.push(episode.episode);
         else{
-            const index = changedEpisodes.findIndex((i => i.episode_number === episode.episode.episode_number && i.season_number === episode.episode.season_number));
+            const index = newChangedEpisodes.findIndex((i => i.episode_number === episode.episode.episode_number && i.season_number === episode.episode.season_number));
             if (index > -1)
-                changedEpisodes.splice(index, 1);
+                newChangedEpisodes.splice(index, 1);
         }
-        if (changedEpisodes.length > 0)
-            setNeedHeader(true);
-        else
-            setNeedHeader(false);
-        console.log(changedEpisodes); 
+        setNeedHeader(newChangedEpisodes.length > 0);
+        setChangedEpisodes(newChangedEpisodes);
     }
 
     return(
@@ -41,7 +32,6 @@ function SeasonsBlock ( {showID, seasons, setShowEpisodeUserStatus} ) {
                 <button className="saveEpisodesButton"
                     onClick={() =>  { 
                         setShowEpisodeUserStatus({episodes: changedEpisodes},  showID);
-                        changedEpisodes = [];
                         setNeedHeader(false);
                         }}>
                     Сохранить

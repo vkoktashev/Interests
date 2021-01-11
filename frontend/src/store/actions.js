@@ -562,12 +562,22 @@ export function setShowSeasonStatus(user_info, showID, seasonNumber){
     }
 }
 
-export function setShowEpisodesStatus(episodesList, showID){
+export function setShowEpisodesStatus(episodesList, showID, needUpdate=false){
     return async(dispatch) => {
         if (await dispatch(checkAuthorization())){
             Requests.setShowEpisodesStatus(localStorage.getItem('token'), showID, episodesList).then((result) => {
                 if (result.status !== 204 & result.status !== 200 & result.status !== 201){
                     toast.error("Ошибка обновления статуса")
+                }else{
+                    if (needUpdate){
+                        let seasons = [];
+                        for (let episode in episodesList.episodes)
+                            if ( seasons.indexOf(episodesList.episodes[episode].season_number) === -1  )
+                                seasons.push(episodesList.episodes[episode].season_number);
+
+                        for (let season in seasons)
+                            dispatch(requestShowSeasonsUserInfo(showID, seasons[season]));
+                    }
                 }
             });
         }

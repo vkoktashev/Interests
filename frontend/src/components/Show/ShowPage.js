@@ -299,7 +299,7 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(actions.requestShowUserInfo(id));
         },
         setShowEpisodeUserStatus: (status, showID) => {
-            dispatch(actions.setShowEpisodesStatus(status, showID));
+            dispatch(actions.setShowEpisodesStatus(status, showID, true));
         },
 	}
 };
