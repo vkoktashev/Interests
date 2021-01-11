@@ -10,13 +10,13 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from movies.models import Genre
-from shows.models import UserShow, Show, UserSeason, Season, UserEpisode, Episode, ShowGenre
+from shows.models import UserShow, Show, UserSeason, Season, UserEpisode, Episode, ShowGenre, EpisodeLog, ShowLog
 from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpisodeSerializer, \
     FollowedUserShowSerializer, FollowedUserSeasonSerializer, FollowedUserEpisodeSerializer, \
     UserEpisodeInSeasonSerializer
 from users.models import UserFollow
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
-    SEASON_NOT_FOUND, CACHE_TIMEOUT
+    SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE
 from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
     SEASON_RETRIEVE_200_EXAMPLE
 from utils.openapi_params import query_param, page_param
@@ -245,6 +245,8 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=True, methods=['put'])
     def episodes(self, request, *args, **kwargs):
         episodes = request.data.get('episodes')
+        first_watched_episode_log = None
+        watched_episodes_count = 0
 
         for data in episodes:
             try:
@@ -261,12 +263,44 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             try:
                 user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
+                current_user_episode_score = user_episode.score
+                current_user_episode_review = user_episode.review
                 serializer = UserEpisodeSerializer(user_episode, data=data)
             except UserEpisode.DoesNotExist:
+                user_episode = None
                 serializer = UserEpisodeSerializer(data=data)
+                current_user_episode_score = EPISODE_NOT_WATCHED_SCORE
+                current_user_episode_review = ''
 
             serializer.is_valid(raise_exception=True)
             serializer.save()
+
+            if user_episode is not None and current_user_episode_review != serializer.data.get('review') or \
+                    user_episode is None and serializer.data.get('review') != '':
+                EpisodeLog.objects.create(user=request.user, episode=episode,
+                                          action_type='review', action_result=serializer.validated_data.get('review'))
+
+            if current_user_episode_score == EPISODE_NOT_WATCHED_SCORE and \
+                    serializer.data.get('score') == EPISODE_WATCHED_SCORE:
+                if watched_episodes_count == 0:
+                    if user_episode is not None and current_user_episode_score != serializer.data.get('score') or \
+                            user_episode is None and serializer.data.get('score') != EPISODE_NOT_WATCHED_SCORE:
+                        first_watched_episode_log = EpisodeLog(user=request.user, episode=episode,
+                                                               action_type='score',
+                                                               action_result=serializer.validated_data.get('score'))
+                watched_episodes_count += 1
+
+            elif user_episode is not None and current_user_episode_score != serializer.data.get('score') or \
+                    user_episode is None and serializer.data.get('score') != EPISODE_NOT_WATCHED_SCORE:
+                EpisodeLog.objects.create(user=request.user, episode=episode,
+                                          action_type='score', action_result=serializer.validated_data.get('score'))
+
+        if watched_episodes_count > 1:
+            ShowLog.objects.create(user=request.user, show_id=kwargs.get('tmdb_id'),
+                                   action_type='episodes', action_result=watched_episodes_count)
+        elif watched_episodes_count == 1 and first_watched_episode_log is not None:
+            first_watched_episode_log.save()
+
         return Response(status=status.HTTP_200_OK)
 
 
@@ -508,6 +542,24 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                          'friends_info': friends_info,
                          'user_watched_show': user_watched_show(show_id, request.user)})
 
+
+# def create_episodes_log(episodes):
+#     try:
+#         old_instance = UserEpisode.objects.get(user=instance.user, episode=instance.episode)
+#         old_fields = UserEpisodeSerializer(old_instance).data
+#     except UserEpisode.DoesNotExist:
+#         old_fields = None
+#
+#     fields = UserEpisodeSerializer(instance).data
+#     episode_log_dict = dict(EpisodeLog.ACTION_TYPE_CHOICES)
+#
+#     for field in fields:
+#         if field_is_changed(episode_log_dict, field, fields, old_fields,
+#                             UserEpisode._meta.get_field('score').get_default()):
+#             action_type = field
+#             action_result = fields[field]
+#             EpisodeLog.objects.create(user=instance.user, episode=instance.episode,
+#                                       action_type=action_type, action_result=action_result)
 
 def user_watched_show(show_id, user):
     try:
