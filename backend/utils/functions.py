@@ -64,13 +64,13 @@ def field_is_changed(choices_dict, field, fields, old_fields, default_int):
         if old_fields is None:
             if fields[field] is None:
                 return False
-            if isinstance(UserGame._meta.get_field(field), DecimalField):
+            if isinstance(fields[field], DecimalField):
                 if decimal.Decimal(fields[field]) == 0:
                     return False
-            elif isinstance(UserGame._meta.get_field(field), IntegerField):
+            elif isinstance(fields[field], IntegerField):
                 if int(fields[field]) == default_int:
                     return False
-            elif isinstance(UserGame._meta.get_field(field), CharField):
+            elif isinstance(fields[field], CharField):
                 if str(fields[field]) == '':
                     return False
             return True
