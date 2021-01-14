@@ -232,7 +232,7 @@ function ShowPage ( {requestShow, show, showIsLoading, setShowUserStatus, setSho
                                 <div className="showContentBody"> 
                                     <h3 style={{paddingTop: "15px"}}>Список серий</h3>
                                     <SeasonsBlock showID={show.tmdb.id} seasons={show.tmdb.seasons} 
-                                        setShowEpisodeUserStatus={setShowEpisodeUserStatus}/>
+                                        setShowEpisodeUserStatus={setShowEpisodeUserStatus} userWatchedShow={userStatus!=='Не смотрел'}/>
                                 </div>
                                 <MDBCol size="6" style={{paddingLeft: "10px"}} hidden={!loggedIn}>
                                     <h3 style={{paddingTop: "10px"}}>Отзывы</h3>

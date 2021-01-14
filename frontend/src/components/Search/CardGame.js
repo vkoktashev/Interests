@@ -7,7 +7,6 @@ import {
 function CardGame( {game} ) {
     let history = useHistory();
     const [date, setDate] = useState("");
-    const [name, setName] = useState("");
 
     useEffect(() =>{
             if (game.released){
@@ -16,31 +15,21 @@ function CardGame( {game} ) {
                 setDate(newDate);
             }else
                 setDate("");
-
-            if (game.name.length > 55){
-                let newName = game.name.substr(0, 55) + "...";
-                setName(newName);
-            }else
-                setName(game.name);
         },
         [game]
     );
-
-    /*const mouseDownHandler = ( event ) => {
-        if( event.button === 1 ) {
-            console.log(window.location.origin + '/game/' + game.slug );
-
-        }
-      }*/
 
     return(
         <div className="searchCardGame" >
             <div className="searchCardGameImage" style={{backgroundImage: `url(${game.background_image})`}}> </div>
             <div className="searchCardGameText">
-                <a href={window.location.origin + '/game/' + game.slug} 
-                    onClick={(e) => { history.push('/game/' + game.slug); e.preventDefault();}}>
-                        <h4 >{name}</h4>
-                </a>
+                <div className="searchCardGameName">
+                    <a href={window.location.origin + '/game/' + game.slug} 
+                        onClick={(e) => { history.push('/game/' + game.slug); e.preventDefault();}}
+                        title={game.name}>
+                        <h4 >{game.name}</h4>
+                    </a>
+                </div>
                 <p>{date}</p>
             </div>
         </div> 

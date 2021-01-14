@@ -28,7 +28,7 @@ import UserLogBlock from './UserLogBlock';
 import CategoriesTab from '../Common/CategoriesTab';
 import ShowBlock from "./ShowBlock";
 
-const LOG_ROWS_COUNT = 15; 
+const LOG_ROWS_COUNT = 20; 
 
 //const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#FA8542'];
 
