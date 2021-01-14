@@ -204,7 +204,16 @@ function ShowPage ( {requestShowSeason, showSeason, showSeasonIsLoading, setShow
                                     <details open={false} className='episodeRows'>
                                         <summary>Развернуть</summary>
                                             <ul>
-                                                {  showSeason.tmdb.episodes?showSeason.tmdb.episodes.map((episode) => <li className="episode" key={showSeason.tmdb.id+episode.episode_number}><DetailedEpisodeRow episode={episode} showID={show_id} loggedIn={loggedIn} userInfo={getEpisodeByNumber(showUserInfo.episodes, episode.episode_number)} setShowEpisodeUserStatus={setShowEpisodeUserStatus}/></li>):'' }
+                                                {  showSeason.tmdb.episodes?showSeason.tmdb.episodes.map((episode) => 
+                                                    <li className="episode" key={showSeason.tmdb.id+episode.episode_number}>
+                                                        <DetailedEpisodeRow episode={episode} 
+                                                            showID={show_id} 
+                                                            loggedIn={loggedIn} 
+                                                            userInfo={getEpisodeByNumber(showUserInfo.episodes, episode.episode_number)} 
+                                                            setShowEpisodeUserStatus={setShowEpisodeUserStatus}
+                                                            userWatchedShow={showUserInfo?.user_watched_show}
+                                                        />
+                                                    </li>):'' }
                                             </ul>
                                     </details>
                                     <div hidden={!(chartData.length > 0)}>

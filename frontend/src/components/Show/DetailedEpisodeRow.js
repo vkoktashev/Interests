@@ -6,7 +6,7 @@ import {
     MDBIcon
 } from "mdbreact";
 
-function DetailedEpisodeRow ( {episode, showID, setShowEpisodeUserStatus, loggedIn, userInfo, onChangeStatus, checkAll} ) {
+function DetailedEpisodeRow ( {episode, showID, setShowEpisodeUserStatus, loggedIn, userInfo, onChangeStatus, checkAll, userWatchedShow} ) {
     let history = useHistory();
     const [userRate, setUserRate] = useState(0);
     const [isChecked, setIsChecked] = useState(false);
@@ -42,6 +42,7 @@ function DetailedEpisodeRow ( {episode, showID, setShowEpisodeUserStatus, logged
         }
         
     },
+    // eslint-disable-next-line
     [checkAll]
 );
 
@@ -52,7 +53,7 @@ function DetailedEpisodeRow ( {episode, showID, setShowEpisodeUserStatus, logged
 
     return(
         <div className="episodeRow detailRow">
-            <div className="episodeRowRate" hidden={!loggedIn || typeof onChangeStatus==='undefined'}>
+            <div className="episodeRowRate" hidden={!loggedIn || typeof onChangeStatus==='undefined' || (!userWatchedShow)}>
                 <input type="checkbox" checked={isChecked} onChange={
                     (res) => {
                         setIsChecked(res.target.checked); 
@@ -70,10 +71,11 @@ function DetailedEpisodeRow ( {episode, showID, setShowEpisodeUserStatus, logged
             <a className="episodeRowName episodeLink detailRow" 
                 href={window.location.origin + '/show/' + showID + '/season/' + episode.season_number + '/episode/'+ episode.episode_number} 
                 onClick={(e) => { history.push('/show/' + showID + '/season/' + episode.season_number + '/episode/'+ episode.episode_number); e.preventDefault();}}
+                title={episode.name}
                 >
                 Серия {episode.episode_number} - {episode.name}
             </a>
-            <div hidden={!loggedIn} className="episodeRowRate"> 
+            <div hidden={!loggedIn || (!userWatchedShow)} className="episodeRowRate"> 
                 <Rating start={-1} stop={10}
                     emptySymbol={[<MDBIcon icon="eye-slash" />].concat([1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon far icon="star" size="1x" />))}
                     fullSymbol={[<MDBIcon icon="eye" />].concat([1,2,3,4,5,6,7,8,9,10].map(n => <MDBIcon icon="star" size="1x"title={n}/>))}

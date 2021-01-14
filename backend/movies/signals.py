@@ -19,7 +19,7 @@ def create_log(instance, **kwargs):
     movie_log_dict = dict(MovieLog.ACTION_TYPE_CHOICES)
 
     for field in fields:
-        if field_is_changed(movie_log_dict, field, fields, old_fields, UserMovie._meta.get_field('score').get_default()):
+        if field_is_changed(movie_log_dict, field, fields, old_fields, UserMovie._meta):
             action_type = field
             action_result = fields[field]
             MovieLog.objects.create(user=instance.user, movie=instance.movie,

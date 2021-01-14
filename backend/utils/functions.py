@@ -4,7 +4,6 @@ from difflib import SequenceMatcher
 
 from django.db.models import DecimalField, IntegerField, CharField
 
-from games.models import UserGame
 from utils.openapi_params import DEFAULT_PAGE_SIZE
 
 
@@ -59,19 +58,25 @@ def int_to_minutes(number):
         return 'минут'
 
 
-def field_is_changed(choices_dict, field, fields, old_fields, default_int):
+def field_is_changed(choices_dict, field, fields, old_fields, class_meta):
     if field in choices_dict:
         if old_fields is None:
+            class_meta_field = class_meta.get_field(field)
+
             if fields[field] is None:
                 return False
-            if isinstance(UserGame._meta.get_field(field), DecimalField):
-                if decimal.Decimal(fields[field]) == 0:
+            if isinstance(class_meta_field, DecimalField):
+                if decimal.Decimal(fields[field]) == class_meta_field.get_default():
                     return False
-            elif isinstance(UserGame._meta.get_field(field), IntegerField):
-                if int(fields[field]) == default_int:
+            elif isinstance(class_meta_field, IntegerField):
+                if int(fields[field]) == class_meta_field.get_default():
                     return False
-            elif isinstance(UserGame._meta.get_field(field), CharField):
-                if str(fields[field]) == '':
+            elif isinstance(class_meta_field, CharField):
+                if class_meta_field.choices is not None and \
+                        str(fields[field]) == dict(class_meta_field.choices).get(class_meta_field.get_default()):
+                    return False
+
+                if str(fields[field]) == class_meta_field.get_default():
                     return False
             return True
         elif fields[field] != old_fields[field]:

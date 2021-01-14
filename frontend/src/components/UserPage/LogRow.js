@@ -34,6 +34,11 @@ function LogRow ( {log, showUsername} ) {
                 return 'оставил(а) отзыв на';
             case 'spent_time':
                 return 'изменил(а) время прохождения';
+            case 'episodes':
+                if (actionResult > 0)
+                    return 'посмотрел(а) ' + actionResult + ' серий';
+                else
+                    return 'не смотрел(а) ' + (actionResult * -1) + ' серий';
             case 'is_following':
                 if (actionResult === 'True')
                     return 'подписан(а) на';
@@ -99,7 +104,7 @@ function LogRow ( {log, showUsername} ) {
                                 onClick={(e) => { history.push('/show/' + id.show_id  + '/season/' + id.season_number); e.preventDefault();}}>
                                     {name.name}
                             </a>
-                            &nbsp;сериала&nbsp;
+                            &thinsp;сериала&thinsp;
                             <a href={window.location.origin + '/show/' + id.show_id} 
                                 className="logLink"
                                 onClick={(e) => { history.push('/show/' + id.show_id); e.preventDefault();}}>
@@ -116,7 +121,7 @@ function LogRow ( {log, showUsername} ) {
                                 onClick={(e) => { history.push('/show/' + id.show_id  + '/season/' + id.season_number + '/episode/' + id.episode_number); e.preventDefault();}}>
                                     [s{id.season_number}e{id.episode_number}] серию
                             </a>
-                            &nbsp;сериала&nbsp;
+                            &thinsp;сериала&thinsp;
                             <a href={window.location.origin + '/show/' + id.show_id} 
                                 className="logLink"
                                 onClick={(e) => { history.push('/show/' + id.show_id); e.preventDefault();}}>
@@ -162,6 +167,8 @@ function LogRow ( {log, showUsername} ) {
                 return '"' + actionResult + '"';
             case 'spent_time':
                 return actionResult + ' ' + intToHours(actionResult);
+            case 'episodes':
+                return '';
             case 'is_following':
                 return '';
             default:
@@ -175,7 +182,15 @@ function LogRow ( {log, showUsername} ) {
     }
 
     return(
-            <div className="logRow">{parseDate(log.created)} {showUsername?userToLink(log.user, log.user_id):''} {translateActionType(log.action_type, log.action_result)} {translateType(log.type, log.action_type)} {nameToLink(log.target, log.type, log.target_id)}{(log.type==='user'|log.action_result==="0")?'':':'} {actionResultToStr(log.action_type, log.action_result, log.type)}</div>
+            <div className="logRow">
+                {parseDate(log.created)}&thinsp;
+                {showUsername?userToLink(log.user, log.user_id):''}&thinsp;
+                {translateActionType(log.action_type, log.action_result)}&thinsp;
+                {translateType(log.type, log.action_type)}&thinsp;
+                {nameToLink(log.target, log.type, log.target_id)}
+                {(log.type==='user'|log.action_type==='episodes'|log.action_result==="0"|log.action_result==="-1")?'':':'}&thinsp;
+                {actionResultToStr(log.action_type, log.action_result, log.type)}
+            </div>
     )
 }
 

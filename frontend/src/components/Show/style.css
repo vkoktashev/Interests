@@ -79,14 +79,12 @@ a.episodeLink:active{
 .seasonBlock{
     margin-bottom: 0px;
     margin-top: 10px;
+    margin-bottom: 15px;
 }
 
-.seasonName{
+.seasonBlockName{
     display: inline-block;
-    margin-left: 0px;
-    margin-right: 13px;
-    vertical-align: top;
-    font-weight: 400;
+    margin-right: 7px;
 }
 
 .episodeRows{
@@ -125,7 +123,7 @@ li.episode:nth-child(even){
 }
 
 .episodeRowName{
-    width: 250px;
+    width: 270px;
     margin-bottom: 0px;
     display: inline-block;
 }
@@ -155,7 +153,10 @@ li.episode:nth-child(even){
 }
 
 .episodeRowName.detailRow{
-    margin-right: 40px;
+    margin-right: 15px;
+    white-space: nowrap; /* Запрещаем перенос строк */
+    overflow: hidden; /* Обрезаем все, что не помещается в область */
+    text-overflow: ellipsis;
 }
 
 .saveEpisodesHeader{
