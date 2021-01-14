@@ -96,7 +96,7 @@ function SeasonBlock ( {showID, seasonNumber, loggedIn, openLoginForm,
                                 checkAll={isChecked}
                                 userWatchedShow={userWatchedShow}
                                 />
-                        </li>) }
+                        </li>).reverse() }
                     </ul>
             </details>
         </div>
