@@ -19,8 +19,7 @@ def create_show_log(instance, **kwargs):
     show_log_dict = dict(ShowLog.ACTION_TYPE_CHOICES)
 
     for field in fields:
-        if field_is_changed(show_log_dict, field, fields, old_fields,
-                            UserShow._meta.get_field('score').get_default()):
+        if field_is_changed(show_log_dict, field, fields, old_fields, UserShow._meta):
             action_type = field
             action_result = fields[field]
             ShowLog.objects.create(user=instance.user, show=instance.show,
@@ -39,8 +38,7 @@ def create_season_log(instance, **kwargs):
     season_log_dict = dict(SeasonLog.ACTION_TYPE_CHOICES)
 
     for field in fields:
-        if field_is_changed(season_log_dict, field, fields, old_fields,
-                            UserSeason._meta.get_field('score').get_default()):
+        if field_is_changed(season_log_dict, field, fields, old_fields, UserSeason._meta):
             action_type = field
             action_result = fields[field]
             SeasonLog.objects.create(user=instance.user, season=instance.season,
