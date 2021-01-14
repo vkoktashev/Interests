@@ -246,7 +246,9 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     def episodes(self, request, *args, **kwargs):
         episodes = request.data.get('episodes')
         first_watched_episode_log = None
+        first_not_watched_episode_log = None
         watched_episodes_count = 0
+        not_watched_episodes_count = 0
 
         for data in episodes:
             try:
@@ -290,6 +292,15 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                                                action_result=serializer.validated_data.get('score'))
                 watched_episodes_count += 1
 
+            elif current_user_episode_score != EPISODE_NOT_WATCHED_SCORE and \
+                    serializer.data.get('score') == EPISODE_NOT_WATCHED_SCORE:
+                if not_watched_episodes_count == 0:
+                    if user_episode is not None:
+                        first_not_watched_episode_log = EpisodeLog(user=request.user, episode=episode,
+                                                                   action_type='score',
+                                                                   action_result=serializer.validated_data.get('score'))
+                not_watched_episodes_count += 1
+
             elif user_episode is not None and current_user_episode_score != serializer.data.get('score') or \
                     user_episode is None and serializer.data.get('score') != EPISODE_NOT_WATCHED_SCORE:
                 EpisodeLog.objects.create(user=request.user, episode=episode,
@@ -300,6 +311,12 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                    action_type='episodes', action_result=watched_episodes_count)
         elif watched_episodes_count == 1 and first_watched_episode_log is not None:
             first_watched_episode_log.save()
+
+        if not_watched_episodes_count > 1:
+            ShowLog.objects.create(user=request.user, show_id=kwargs.get('tmdb_id'),
+                                   action_type='episodes', action_result=-not_watched_episodes_count)
+        elif not_watched_episodes_count == 1 and first_not_watched_episode_log is not None:
+            first_not_watched_episode_log.save()
 
         return Response(status=status.HTTP_200_OK)
 
