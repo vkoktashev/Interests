@@ -31,6 +31,11 @@ function ShowBlock ( {shows, stats} ) {
         label: 'Отзыв',
         field: 'review',
         sort: 'asc'
+      },
+      {
+        label: 'Часов просмотра',
+        field: 'spentTime',
+        sort: 'asc'
       }
     ];
 
@@ -52,6 +57,7 @@ function ShowBlock ( {shows, stats} ) {
                             status: show.status,
                             score: show.score,
                             review: show.review,
+                            spentTime: show.spent_time
                             /*clickEvent: (e) => {
                                 //window.open('/game/' + game.game.rawg_slug);
                                 history.push('/movie/' + movie.movie.tmdb_id)
