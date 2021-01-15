@@ -26,16 +26,13 @@ from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog
 from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogSerializer, EpisodeLogSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer
 from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
-    USER_NOT_FOUND, EMAIL_ERROR
+    USER_NOT_FOUND, EMAIL_ERROR, MINUTES_IN_HOUR, SITE_URL
 from utils.documentation import USER_SIGNUP_201_EXAMPLE, USER_SIGNUP_400_EXAMPLE, USER_LOG_200_EXAMPLE, \
     USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE
 from utils.functions import similar, get_page_size
 from utils.openapi_params import page_param, page_size_param, query_param, uid64_param, token_param, reset_token_param
 from .models import User, UserFollow, UserLog, UserPasswordToken
 from .tokens import account_activation_token
-
-SITE_URL = 'interests.fun'
-MINUTES_IN_HOUR = 60
 
 
 class AuthViewSet(GenericViewSet):
@@ -291,7 +288,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             shows_total_spent_time = watched_episodes.aggregate(
                 total_spent_time=Sum('episode__tmdb_show__tmdb_episode_run_time'))['total_spent_time']
 
-            shows_genres_spent_time = watched_episodes.values(name=F('episode__tmdb_show__showgenre__genre__tmdb_name')) \
+            shows_genres_spent_time = watched_episodes. \
+                values(name=F('episode__tmdb_show__showgenre__genre__tmdb_name')) \
                 .annotate(spent_time_percent=Sum('episode__tmdb_show__tmdb_episode_run_time'))
 
             for genre in shows_genres_spent_time:
