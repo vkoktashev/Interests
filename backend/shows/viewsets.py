@@ -1,5 +1,6 @@
 import tmdbsimple as tmdb
 from django.core.cache import cache
+from django.db.models import F
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
@@ -186,7 +187,8 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 user_info = None
 
             user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
-            followed_user_shows = UserShow.objects.filter(user__in=user_follow_query, show=show)
+            followed_user_shows = UserShow.objects.exclude(status=UserShow.STATUS_NOT_WATCHED) \
+                .filter(user__in=user_follow_query, show=show)
             serializer = FollowedUserShowSerializer(followed_user_shows, many=True)
             friends_info = serializer.data
         except (Show.DoesNotExist, ValueError):
@@ -459,7 +461,12 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             # friends_info
             user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
-            followed_user_seasons = UserSeason.objects.filter(user__in=user_follow_query, season=season)
+            followed_user_seasons = UserSeason.objects \
+                .filter(user__in=user_follow_query, season=season) \
+                .exclude(id__in=UserSeason.objects
+                         .filter(season__tmdb_show__usershow__user=F('user_id'),
+                                 season__tmdb_show__usershow__status=UserShow.STATUS_NOT_WATCHED)) \
+                .exclude(score=UserSeason._meta.get_field('score').get_default())
             serializer = FollowedUserSeasonSerializer(followed_user_seasons, many=True)
             friends_info = serializer.data
         except (Season.DoesNotExist, ValueError):
@@ -548,7 +555,11 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             # friends_info
             user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
-            followed_user_episodes = UserEpisode.objects.filter(user__in=user_follow_query, episode=episode)
+            followed_user_episodes = UserEpisode.objects.filter(user__in=user_follow_query, episode=episode) \
+                .exclude(id__in=UserEpisode.objects
+                         .filter(episode__tmdb_show__usershow__user=F('user_id'),
+                                 episode__tmdb_show__usershow__status=UserShow.STATUS_NOT_WATCHED)) \
+                .exclude(score=EPISODE_NOT_WATCHED_SCORE)
             serializer = FollowedUserEpisodeSerializer(followed_user_episodes, many=True)
             friends_info = serializer.data
         except (Episode.DoesNotExist, ValueError):
@@ -558,25 +569,6 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response({'user_info': user_info,
                          'friends_info': friends_info,
                          'user_watched_show': user_watched_show(show_id, request.user)})
-
-
-# def create_episodes_log(episodes):
-#     try:
-#         old_instance = UserEpisode.objects.get(user=instance.user, episode=instance.episode)
-#         old_fields = UserEpisodeSerializer(old_instance).data
-#     except UserEpisode.DoesNotExist:
-#         old_fields = None
-#
-#     fields = UserEpisodeSerializer(instance).data
-#     episode_log_dict = dict(EpisodeLog.ACTION_TYPE_CHOICES)
-#
-#     for field in fields:
-#         if field_is_changed(episode_log_dict, field, fields, old_fields,
-#                             UserEpisode._meta.get_field('score').get_default()):
-#             action_type = field
-#             action_result = fields[field]
-#             EpisodeLog.objects.create(user=instance.user, episode=instance.episode,
-#                                       action_type=action_type, action_result=action_result)
 
 def user_watched_show(show_id, user):
     try:
