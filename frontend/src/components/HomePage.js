@@ -1,8 +1,6 @@
 import React from "react";
-
 import { connect } from "react-redux";
 import * as selectors from "../store/reducers";
-//import * as actions from '../store/actions';
 
 /**
  * Основная страница приложения

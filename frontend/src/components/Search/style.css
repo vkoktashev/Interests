@@ -20,7 +20,8 @@ a:active {
 
 .searchCardMovie {
 	width: 500px;
-	height: 150px;
+	max-width: 100%;
+	height: 100px;
 	margin-right: 5px;
 	margin-left: 5px;
 	margin-bottom: 10px;
@@ -28,8 +29,8 @@ a:active {
 }
 
 .searchCardMovieImage {
-	height: 150px;
-	width: 250px;
+	height: 100px;
+	width: 50%;
 	background-position: center;
 	background-repeat: no-repeat;
 	background-size: cover;
@@ -47,8 +48,8 @@ a:active {
 	color: rgb(238, 238, 238);
 	font-weight: 200;
 	background-color: rgb(43, 43, 43);
-	width: 250px;
-	height: 150px;
+	height: 100px;
+	width: 50%;
 	display: inline-block;
 	margin: 0;
 	border-top-right-radius: 10px;
@@ -57,7 +58,8 @@ a:active {
 
 .searchCardGame {
 	width: 500px;
-	height: 150px;
+	max-width: 100%;
+	height: 100px;
 	margin-right: 5px;
 	margin-left: 5px;
 	margin-bottom: 10px;
@@ -65,7 +67,7 @@ a:active {
 }
 
 .searchCardGameImage {
-	height: 150px;
+	height: 100px;
 	width: 50%;
 	background-position: center;
 	background-repeat: no-repeat;
@@ -85,7 +87,7 @@ a:active {
 	font-weight: 200;
 	background-color: rgb(43, 43, 43);
 	width: 50%;
-	height: 150px;
+	height: 100px;
 	display: inline-block;
 	margin: 0;
 	border-top-right-radius: 10px;

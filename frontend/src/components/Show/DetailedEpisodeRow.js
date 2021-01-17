@@ -19,7 +19,7 @@ function DetailedEpisodeRow({ episode, showID, setShowEpisodeUserStatus, loggedI
 			if (checkAll === -1) {
 				setIsChecked(false);
 				onChangeStatus({
-					addEpisode: false !== userRate > -1,
+					addEpisode: userRate > -1,
 					episode: {
 						season_number: episode.season_number,
 						episode_number: episode.episode_number,
@@ -29,7 +29,7 @@ function DetailedEpisodeRow({ episode, showID, setShowEpisodeUserStatus, loggedI
 			} else if (checkAll === 1) {
 				setIsChecked(true);
 				onChangeStatus({
-					addEpisode: true !== userRate > -1,
+					addEpisode: !(userRate > -1),
 					episode: {
 						season_number: episode.season_number,
 						episode_number: episode.episode_number,
@@ -49,34 +49,26 @@ function DetailedEpisodeRow({ episode, showID, setShowEpisodeUserStatus, loggedI
 
 	return (
 		<div className='episodeRow detailRow'>
-			<div className='episodeRowRate' hidden={!loggedIn || typeof onChangeStatus === "undefined" || !userWatchedShow}>
-				<input
-					type='checkbox'
-					checked={isChecked}
-					onChange={(res) => {
-						setIsChecked(res.target.checked);
-						onChangeStatus({
-							addEpisode: res.target.checked !== userRate > -1,
-							episode: {
-								season_number: episode.season_number,
-								episode_number: episode.episode_number,
-								score: res.target.checked ? 0 : -1,
-							},
-						});
-					}}
-				/>
+			<div className='episodeRowCheckDate'>
+				<div className='episodeRowCheck' hidden={!loggedIn || typeof onChangeStatus === "undefined" || !userWatchedShow}>
+					<input
+						type='checkbox'
+						checked={isChecked}
+						onChange={(res) => {
+							setIsChecked(res.target.checked);
+							onChangeStatus({
+								addEpisode: res.target.checked === !(userRate > -1),
+								episode: {
+									season_number: episode.season_number,
+									episode_number: episode.episode_number,
+									score: res.target.checked ? 0 : -1,
+								},
+							});
+						}}
+					/>
+				</div>
+				<p className='episodeRowDate'>{parseDate(episode.air_date)}</p>
 			</div>
-			<p className='episodeDate'>{parseDate(episode.air_date)}</p>
-			<a
-				className='episodeRowName episodeLink detailRow'
-				href={window.location.origin + "/show/" + showID + "/season/" + episode.season_number + "/episode/" + episode.episode_number}
-				onClick={(e) => {
-					history.push("/show/" + showID + "/season/" + episode.season_number + "/episode/" + episode.episode_number);
-					e.preventDefault();
-				}}
-				title={episode.name}>
-				Серия {episode.episode_number} - {episode.name}
-			</a>
 			<div hidden={!loggedIn || !userWatchedShow} className='episodeRowRate'>
 				<Rating
 					start={-1}
@@ -112,6 +104,16 @@ function DetailedEpisodeRow({ episode, showID, setShowEpisodeUserStatus, loggedI
 					}}
 				/>
 			</div>
+			<a
+				className='episodeRowName episodeLink detailRow'
+				href={window.location.origin + "/show/" + showID + "/season/" + episode.season_number + "/episode/" + episode.episode_number}
+				onClick={(e) => {
+					history.push("/show/" + showID + "/season/" + episode.season_number + "/episode/" + episode.episode_number);
+					e.preventDefault();
+				}}
+				title={episode.name}>
+				Серия {episode.episode_number} - {episode.name}
+			</a>
 		</div>
 	);
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { MDBRow, MDBCol, MDBContainer, MDBIcon, MDBInput } from "mdbreact";
+import { MDBIcon, MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
 import "./style.css";
 
@@ -10,13 +10,13 @@ import * as selectors from "../../store/reducers";
 import * as actions from "../../store/actions";
 import StatusButtonGroup from "../Common/StatusButtonGroup";
 import FriendsActivity from "../Common/FriendsActivity";
+import ScoreBlock from "../Common/ScoreBlock";
 
 /**
  * Основная страница приложения
  */
 function MoviePage({ requestMovie, movie, movieIsLoading, setMovieStatus, requestMovieUserInfo, movieUserInfo, movieUserInfoIsLoading, loggedIn, openLoginForm }) {
 	let { id } = useParams();
-	const [metascoreBlock, setMetascoreBlock] = useState("");
 	const [genres, setGenres] = useState("");
 	const [companies, setCompanies] = useState("");
 	const [cast, setCast] = useState("");
@@ -52,17 +52,6 @@ function MoviePage({ requestMovie, movie, movieIsLoading, setMovieStatus, reques
 
 	useEffect(() => {
 		setClear();
-		if (movie.tmdb.vote_average) {
-			setMetascoreBlock(
-				<div>
-					<div className='metacritic'>
-						<p>{movie.tmdb.vote_average * 10}</p>
-					</div>
-					<p className='metacriticText'>TMDB score</p>
-				</div>
-			);
-		}
-
 		if (movie.tmdb.genres) {
 			let newGenres = "";
 			for (let i = 0; i < movie.tmdb.genres.length; i++) {
@@ -126,107 +115,98 @@ function MoviePage({ requestMovie, movie, movieIsLoading, setMovieStatus, reques
 		setCast("");
 		setCompanies("");
 		setGenres("");
-		setMetascoreBlock("");
 	}
 
 	return (
 		<div>
 			<div className='bg' style={{ backgroundImage: `url(${"http://image.tmdb.org/t/p/w1920_and_h800_multi_faces" + movie.tmdb.backdrop_path})` }} />
 			<LoadingOverlay active={movieIsLoading} spinner text='Загрузка...'>
-				<MDBContainer>
-					<MDBRow>
-						<MDBCol md='0.5'></MDBCol>
-						<MDBCol className='movieContentPage'>
-							<MDBContainer>
-								<MDBRow className='movieContentHeader rounded-top'>
-									<MDBCol size='4' className='posterBlock'>
-										<img src={"http://image.tmdb.org/t/p/w600_and_h900_bestv2" + movie.tmdb.poster_path} className='img-fluid' alt='' />
-									</MDBCol>
-									<MDBCol size='7'>
-										<h1>{movie.tmdb.title}</h1>
-										<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{movie.tmdb.original_title}</h5>
-										<div className='mainInfo'>
-											<p>Дата релиза: {movie.tmdb.release_date}</p>
-											<p>Продолжительность (мин): {movie.tmdb.runtime}</p>
-											<p>Жанр: {genres}</p>
-											<p>Компания: {companies}</p>
-											<p>Слоган: {movie.tmdb.tagline}</p>
-											<p>В ролях: {cast}</p>
-											<p>Режиссер: {director}</p>
-										</div>
-										<LoadingOverlay active={movieUserInfoIsLoading} spinner text='Загрузка...'>
-											<Rating
-												stop={10}
-												emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
-												fullSymbol={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-													<MDBIcon icon='star' size='1x' style={{ fontSize: "25px" }} title={n} />
-												))}
-												initialRating={userRate}
-												readonly={!loggedIn | (userStatus === "Не смотрел")}
-												onChange={(score) => {
-													if (!loggedIn) {
-														openLoginForm();
-													} else {
-														setUserRate(score);
-														setMovieStatus({ score: score });
-													}
-												}}
-											/>{" "}
-											<br />
-											<StatusButtonGroup
-												statuses={["Не смотрел", "Буду смотреть", "Дропнул", "Посмотрел"]}
-												activeColor='#4527a0'
-												userStatus={userStatus}
-												onChangeStatus={(status) => {
-													if (!loggedIn) {
-														openLoginForm();
-													} else {
-														setUserStatus(status);
-														setMovieStatus({ status: status });
-														if (status === "Не смотрел") {
-															setReview("");
-															setUserRate(0);
-														}
-													}
-												}}
-											/>
-										</LoadingOverlay>
-									</MDBCol>
-									<MDBCol size='1'>{metascoreBlock}</MDBCol>
-								</MDBRow>
-								<MDBRow className='movieContentBody'>
-									<MDBCol>
-										<h3 style={{ paddingTop: "15px" }}>Описание</h3>
-										<div dangerouslySetInnerHTML={{ __html: movie.tmdb.overview }} />
-									</MDBCol>
-								</MDBRow>
-								<MDBCol size='6' style={{ paddingLeft: "10px" }} hidden={!loggedIn}>
-									<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
-									<LoadingOverlay active={movieUserInfoIsLoading} spinner text='Загрузка...'>
-										<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
-										<button
-											className={"savePreviewButton"}
-											disabled={!loggedIn | (userStatus === "Не смотрел")}
-											onClick={() => {
-												if (!loggedIn) {
-													openLoginForm();
-												} else {
-													setMovieStatus({ review: document.getElementById("reviewInput").value });
-												}
-											}}>
-											Сохранить
-										</button>
-									</LoadingOverlay>
-								</MDBCol>
-							</MDBContainer>
-							<div className='movieFriendsBlock' hidden={!loggedIn | (movieUserInfo?.friends_info?.length < 1)}>
-								<h4>Отзывы друзей</h4>
-								<FriendsActivity info={movieUserInfo?.friends_info} />
+				<div className='movieContentPage'>
+					<div className='movieContentHeader'>
+						<div className='moviePosterBlock'>
+							<img src={"http://image.tmdb.org/t/p/w600_and_h900_bestv2" + movie.tmdb.poster_path} className='img-fluid' alt='' />
+						</div>
+						<div className='movieInfoBlock'>
+							<h1 className='header'>{movie.tmdb.title}</h1>
+							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{movie.tmdb.original_title}</h5>
+							<div className='mainInfo'>
+								<p>Дата релиза: {movie.tmdb.release_date}</p>
+								<p>Продолжительность (мин): {movie.tmdb.runtime}</p>
+								<p>Жанр: {genres}</p>
+								<p>Компания: {companies}</p>
+								<p>Слоган: {movie.tmdb.tagline}</p>
+								<p>В ролях: {cast}</p>
+								<p>Режиссер: {director}</p>
 							</div>
-						</MDBCol>
-						<MDBCol md='0.5'></MDBCol>
-					</MDBRow>
-				</MDBContainer>
+							<LoadingOverlay active={movieUserInfoIsLoading} spinner text='Загрузка...'>
+								<Rating
+									stop={10}
+									emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
+									fullSymbol={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+										<MDBIcon icon='star' size='1x' style={{ fontSize: "25px" }} title={n} />
+									))}
+									initialRating={userRate}
+									readonly={!loggedIn | (userStatus === "Не смотрел")}
+									onChange={(score) => {
+										if (!loggedIn) {
+											openLoginForm();
+										} else {
+											setUserRate(score);
+											setMovieStatus({ score: score });
+										}
+									}}
+								/>{" "}
+								<br />
+								<StatusButtonGroup
+									statuses={["Не смотрел", "Буду смотреть", "Дропнул", "Посмотрел"]}
+									activeColor='#4527a0'
+									userStatus={userStatus}
+									onChangeStatus={(status) => {
+										if (!loggedIn) {
+											openLoginForm();
+										} else {
+											setUserStatus(status);
+											setMovieStatus({ status: status });
+											if (status === "Не смотрел") {
+												setReview("");
+												setUserRate(0);
+											}
+										}
+									}}
+								/>
+							</LoadingOverlay>
+							<ScoreBlock score={movie.tmdb.vote_average * 10} text='TMDB score' className='scoreBlock' />
+						</div>
+					</div>
+					<div className='movieContentBody'>
+						<div>
+							<h3 style={{ paddingTop: "15px" }}>Описание</h3>
+							<div dangerouslySetInnerHTML={{ __html: movie.tmdb.overview }} />
+						</div>
+						<div className='movieReviewBody' hidden={!loggedIn}>
+							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
+							<LoadingOverlay active={movieUserInfoIsLoading} spinner text='Загрузка...'>
+								<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
+								<button
+									className={"savePreviewButton"}
+									disabled={!loggedIn | (userStatus === "Не смотрел")}
+									onClick={() => {
+										if (!loggedIn) {
+											openLoginForm();
+										} else {
+											setMovieStatus({ review: document.getElementById("reviewInput").value });
+										}
+									}}>
+									Сохранить
+								</button>
+							</LoadingOverlay>
+						</div>
+						<div className='movieFriendsBlock' hidden={!loggedIn | (movieUserInfo?.friends_info?.length < 1)}>
+							<h4>Отзывы друзей</h4>
+							<FriendsActivity info={movieUserInfo?.friends_info} />
+						</div>
+					</div>
+				</div>
 			</LoadingOverlay>
 		</div>
 	);

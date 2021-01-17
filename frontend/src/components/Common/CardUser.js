@@ -1,10 +1,8 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useHistory } from "react-router-dom";
 
 function CardUser({ user }) {
 	let history = useHistory();
-
-	useEffect(() => {}, [user]);
 
 	return (
 		<a

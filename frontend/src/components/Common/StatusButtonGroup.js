@@ -3,10 +3,10 @@ import "./style.css";
 
 function StatusButtonGroup({ statuses, activeColor, onChangeStatus, userStatus }) {
 	return (
-		<div>
+		<div className='contentStatuses'>
 			{statuses.map((status) => (
 				<button
-					className={"contentStatuses"}
+					className={"contentStatus"}
 					key={status}
 					style={{ backgroundColor: userStatus === status ? activeColor : "#000000" }}
 					onClick={() => {

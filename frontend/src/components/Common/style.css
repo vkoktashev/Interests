@@ -17,22 +17,25 @@
 	outline: 0 !important;
 }
 
-.contentStatuses {
+.contentStatus {
 	background-color: rgb(0, 0, 0);
 	border: 1px solid #fff;
 	color: white;
 	padding: 4px 8px;
 	text-align: center;
 	text-decoration: none;
-	display: inline-block;
-	margin-left: 0px;
-	margin-right: 0px;
-	margin-top: 15px;
+	margin: 0px;
 	cursor: pointer;
-	font-size: 14px;
+	font-size: 1rem;
+}
+
+.contentStatuses {
+	max-width: 100%;
+	margin-top: 15px;
 }
 
 .cardUser {
+	max-width: 100%;
 	width: 250px;
 	height: 75px;
 	margin-right: 5px;
@@ -70,6 +73,7 @@
 }
 
 .friendsBlock {
+	width: 100%;
 	display: flex;
 	flex-direction: row;
 }
@@ -78,13 +82,14 @@
 	display: inline-flex;
 	margin-bottom: 0px;
 	margin-top: 10px;
-	margin-right: 10px;
+	margin-right: 1rem;
 	background-color: rgb(43, 43, 43);
 	color: rgb(199, 199, 199);
 	vertical-align: top;
-	width: 550px;
+	width: 38rem;
+	max-width: 100%;
 	border-radius: 5px;
-	padding-bottom: 10px;
+	padding-bottom: 1rem;
 }
 
 .fActivityUser {
@@ -121,4 +126,47 @@
 .md-form label.active {
 	color: rgb(207, 207, 207) !important;
 	background-color: rgb(30, 30, 30) !important;
+}
+
+.metacritic {
+	vertical-align: middle;
+	text-align: center;
+	color: #fff !important;
+	font-family: Arial, Helvetica, sans-serif;
+	font-style: normal !important;
+	font-weight: bold !important;
+	background-color: darkgrey;
+	font-size: 35px;
+	height: 2em;
+	width: 2em;
+	line-height: 2em;
+	border-radius: 6px;
+}
+
+.metacriticGreen {
+	background-color: rgb(102, 204, 51) !important;
+}
+
+.metacriticYellow {
+	background-color: rgb(243, 193, 43) !important;
+}
+
+.metacriticRed {
+	background-color: rgb(255, 0, 0) !important;
+}
+
+.metacriticText {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	text-align: center;
+	padding-left: 3px;
+}
+
+.scoreBlock {
+	position: absolute;
+	top: 0;
+	right: 0;
+	margin-right: 10px;
+	margin-top: 10px;
+	vertical-align: top;
 }
