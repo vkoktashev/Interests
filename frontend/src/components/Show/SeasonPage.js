@@ -189,20 +189,37 @@ function ShowPage({
 									</ul>
 								</details>
 								<div hidden={!(chartData.length > 0)}>
-									<ResponsiveContainer width='100%' height={200}>
-										<AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-											<defs>
-												<linearGradient id='colorUv' x1='0' y1='0' x2='0' y2='1'>
-													<stop offset='5%' stopColor='#8884d8' stopOpacity={0.8} />
-													<stop offset='95%' stopColor='#8884d8' stopOpacity={0} />
-												</linearGradient>
-											</defs>
-											<XAxis dataKey='name' interval={0} tick={{ fill: "rgb(238, 238, 238)" }} />
-											<YAxis tickLine={false} domain={[0, 10]} tick={{ fill: "rgb(238, 238, 238)" }} tickCount={2} />
-											<Tooltip contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }} />
-											<Area type='monotone' dataKey='Оценка' stroke='#8884d8' fillOpacity={1} fill='url(#colorUv)' />
-										</AreaChart>
-									</ResponsiveContainer>
+									{document.body.clientHeight < document.body.clientWidth ? (
+										<ResponsiveContainer width='100%' height={200}>
+											<AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+												<defs>
+													<linearGradient id='colorUv' x1='0' y1='0' x2='0' y2='1'>
+														<stop offset='5%' stopColor='#8884d8' stopOpacity={0.8} />
+														<stop offset='95%' stopColor='#8884d8' stopOpacity={0} />
+													</linearGradient>
+												</defs>
+												<XAxis dataKey='name' interval={0} tick={{ fill: "rgb(238, 238, 238)" }} />
+												<YAxis tickLine={false} domain={[0, 10]} tick={{ fill: "rgb(238, 238, 238)" }} tickCount={2} />
+												<Tooltip contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }} />
+												<Area type='monotone' dataKey='Оценка' stroke='#8884d8' fillOpacity={1} fill='url(#colorUv)' />
+											</AreaChart>
+										</ResponsiveContainer>
+									) : (
+										<ResponsiveContainer width='100%' height={chartData.length * 30}>
+											<AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }} layout='vertical'>
+												<defs>
+													<linearGradient id='colorUv' x1='0' y1='0' x2='0' y2='1'>
+														<stop offset='5%' stopColor='#8884d8' stopOpacity={0.8} />
+														<stop offset='95%' stopColor='#8884d8' stopOpacity={0} />
+													</linearGradient>
+												</defs>
+												<YAxis dataKey='name' interval={0} tick={{ fill: "rgb(238, 238, 238)" }} type='category' />
+												<XAxis tickLine={false} domain={[0, 10]} tick={{ fill: "rgb(238, 238, 238)" }} tickCount={2} type='number' />
+												<Tooltip contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }} />
+												<Area type='monotone' dataKey='Оценка' stroke='#8884d8' fillOpacity={1} fill='url(#colorUv)' />
+											</AreaChart>
+										</ResponsiveContainer>
+									)}
 								</div>
 							</div>
 							<div className='movieFriendsBlock' hidden={showUserInfo.friends_info.length < 1}>

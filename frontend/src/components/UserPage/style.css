@@ -126,6 +126,7 @@ a.logLink:active {
 
 .dataTable {
 	color: rgb(207, 207, 207);
+	max-width: 100%;
 }
 
 a.dataTable:link {

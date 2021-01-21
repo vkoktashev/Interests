@@ -75,7 +75,12 @@ function GameBlock({ games, stats }) {
 			if (stats) {
 				if (stats?.genres) {
 					let newData = [];
-					for (let genre in stats.genres) if (stats.genres[genre].spent_time_percent > 2) newData.push({ name: stats.genres[genre].name, Процент: stats.genres[genre].spent_time_percent });
+					let counter = 0;
+					for (let genre in stats.genres)
+						if (stats.genres[genre].spent_time_percent > 2 && counter < 11) {
+							newData.push({ name: stats.genres[genre].name, Процент: stats.genres[genre].spent_time_percent });
+							counter++;
+						}
 					newData = newData.sort((a, b) => (a["Процент"] > b["Процент"] ? -1 : 1));
 					setGameChartData(newData);
 				}
@@ -103,22 +108,40 @@ function GameBlock({ games, stats }) {
 				entriesLabel='Показывать игр на странице'
 				searchLabel='Поиск'
 				className='dataTable'
+				responsive={true}
 			/>
 			<div hidden={gameChartData.length < 1}>
-				<BarChart width={1000} height={300} data={gameChartData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
-					<XAxis dataKey='name' tickLine={false} tick={{ fill: "rgb(238, 238, 238)" }} interval={0} angle={-10} tickMargin={15} />
-					<YAxis domain={[0, "dataMax"]} tick={{ fill: "rgb(238, 238, 238)" }} />
-					<Tooltip
-						itemStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }}
-						contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)", borderRadius: "10px" }}
-						cursor={false}
-					/>
-					<Bar dataKey='Процент'>
-						{gameChartData.map((entry, index) => (
-							<Cell fill={COLORS[index]} key={index} />
-						))}
-					</Bar>
-				</BarChart>
+				{document.body.clientHeight < document.body.clientWidth ? (
+					<BarChart width={Math.min(gameChartData.length * 100, document.body.clientWidth)} height={300} data={gameChartData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
+						<XAxis dataKey='name' tickLine={false} tick={{ fill: "rgb(238, 238, 238)" }} interval={0} angle={-10} tickMargin={15} />
+						<YAxis domain={[0, "dataMax"]} tick={{ fill: "rgb(238, 238, 238)" }} />
+						<Tooltip
+							itemStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }}
+							contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)", borderRadius: "10px" }}
+							cursor={false}
+						/>
+						<Bar dataKey='Процент'>
+							{gameChartData.map((entry, index) => (
+								<Cell fill={COLORS[index]} key={index} />
+							))}
+						</Bar>
+					</BarChart>
+				) : (
+					<BarChart width={document.body.clientWidth - 25} height={gameChartData.length * 40} data={gameChartData} margin={{ top: 5, right: 0, left: 25, bottom: 20 }} layout='vertical'>
+						<YAxis dataKey='name' tickLine={false} tick={{ fill: "rgb(238, 238, 238)" }} interval={0} tickMargin={0} type='category' />
+						<XAxis domain={[0, "dataMax"]} tick={{ fill: "rgb(238, 238, 238)" }} type='number' />
+						<Tooltip
+							itemStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }}
+							contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)", borderRadius: "10px" }}
+							cursor={false}
+						/>
+						<Bar dataKey='Процент'>
+							{gameChartData.map((entry, index) => (
+								<Cell fill={COLORS[index]} key={index} />
+							))}
+						</Bar>
+					</BarChart>
+				)}
 			</div>
 		</div>
 	);
