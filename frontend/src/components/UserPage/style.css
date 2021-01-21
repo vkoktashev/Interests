@@ -1,179 +1,178 @@
-.userPage{
-  background-color: rgb(30, 30, 30);
-  color: rgb(207, 207, 207);
-  margin-top: 30px;
-  margin-bottom: 30px;
-  padding-left: 10px;
-  padding-top: 10px;
+.userPage {
+	background-color: rgb(30, 30, 30);
+	color: rgb(207, 207, 207);
+	margin-top: 30px;
+	margin-bottom: 30px;
+	padding-left: 10px;
+	padding-top: 10px;
 }
 
-.addFriendButton{
-  background-color:rgb(30, 30, 30);
-  border: 1px solid rgb(207, 207, 207);
-  color: rgb(207, 207, 207);
-  padding: 4px 8px;
-  text-align: center;
-  text-decoration: none;
-  margin-top: 10px;
-  font-size: 16px;
+.addFriendButton {
+	background-color: rgb(30, 30, 30);
+	border: 1px solid rgb(207, 207, 207);
+	color: rgb(207, 207, 207);
+	padding: 4px 8px;
+	text-align: center;
+	text-decoration: none;
+	margin-top: 10px;
+	font-size: 16px;
 }
 
-.addFriendButton:hover{
-  color: rgb(167, 126, 221);
+.addFriendButton:hover {
+	color: rgb(167, 126, 221);
 }
 
 .addFriendButton:active {
-  color: white;
+	color: white;
 }
 
-.friendCard{
-  width: 500px;
-  height: 150px;
-  margin-right: 5px;
-  margin-left: 5px;
-  margin-bottom: 10px;
-  display: inline-block;
+.friendCard {
+	width: 500px;
+	height: 150px;
+	margin-right: 5px;
+	margin-left: 5px;
+	margin-bottom: 10px;
+	display: inline-block;
 }
 
-.friendCardImage{
-  height: 150px;
-  width: 250px;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-color: gray;
-  display: inline-block;
-  margin: 0;
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
+.friendCardImage {
+	height: 150px;
+	width: 250px;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-color: gray;
+	display: inline-block;
+	margin: 0;
+	border-top-left-radius: 10px;
+	border-bottom-left-radius: 10px;
 }
 
-.friendCardText{
-  padding: 10px;
-  text-align: center;
-  vertical-align: top;
-  color: #fff;
-  font-weight: 200;
-  background-color: black;
-  width: 250px;
-  height: 150px;
-  display: inline-block;
-  margin: 0;
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
+.friendCardText {
+	padding: 10px;
+	text-align: center;
+	vertical-align: top;
+	color: #fff;
+	font-weight: 200;
+	background-color: black;
+	width: 250px;
+	height: 150px;
+	display: inline-block;
+	margin: 0;
+	border-top-right-radius: 10px;
+	border-bottom-right-radius: 10px;
 }
 
 a.logLink:link {
-  color: rgb(238, 238, 238);
-  font-weight: 500;
+	color: rgb(238, 238, 238);
+	font-weight: 500;
 }
 
-a.logLink:visited{
-  color: rgb(238, 238, 238);
-  font-weight: 500;
+a.logLink:visited {
+	color: rgb(238, 238, 238);
+	font-weight: 500;
 }
 
-a.logLink:hover{
-  color: #ff69b4;
-  font-weight: 500;
+a.logLink:hover {
+	color: #ff69b4;
+	font-weight: 500;
 }
 
-a.logLink:active{
-  color: rgb(238, 238, 238);
-  font-weight: 500;
+a.logLink:active {
+	color: rgb(238, 238, 238);
+	font-weight: 500;
 }
 
-
-.logDay{
-  margin-bottom: 0px;
-  margin-top: 10px;
+.logDay {
+	margin-bottom: 0px;
+	margin-top: 10px;
 }
 
-.logDate{
-  display: inline-block;
-  margin-left: 0px;
-  margin-right: 13px;
-  vertical-align: top;
-  font-weight: 400;
+.logDate {
+	display: inline-block;
+	margin-left: 0px;
+	margin-right: 13px;
+	vertical-align: top;
+	font-weight: 400;
 }
 
-.logRows{
-  display: inline-block;
-  margin-bottom: 0px;
-  margin-top: 0px;
-  width: 90%;
+.logRows {
+	display: inline-block;
+	margin-bottom: 0px;
+	margin-top: 0px;
+	width: 90%;
 }
 
-.logRow{
-  margin-bottom: 8px;
-  margin-top: 0px;
+.logRow {
+	margin-bottom: 8px;
+	margin-top: 0px;
 }
 
-.logPaginationButton{
-  margin-top: 10px;
-  margin-bottom: 20px;
-  margin-left: 10px;
-  width: 100px;
-  background-color: rgb(30, 30, 30);
-  border: 1px solid rgb(207, 207, 207);
-  color: rgb(207, 207, 207);
+.logPaginationButton {
+	margin-top: 10px;
+	margin-bottom: 20px;
+	margin-left: 10px;
+	width: 100px;
+	background-color: rgb(30, 30, 30);
+	border: 1px solid rgb(207, 207, 207);
+	color: rgb(207, 207, 207);
 }
 
-.friendsBlock{
-  margin-top: 20px;
-  margin-bottom: 15px;
-  display: inline;
+.friendsBlock {
+	margin-top: 20px;
+	margin-bottom: 15px;
+	display: inline;
 }
 
-.dataTable{
-  color: rgb(207, 207, 207);
+.dataTable {
+	color: rgb(207, 207, 207);
+	max-width: 100%;
 }
 
 a.dataTable:link {
-  color: rgb(238, 238, 238);
-  font-weight: 500;
+	color: rgb(238, 238, 238);
+	font-weight: 500;
 }
-a.dataTable:visited{
-  color: rgb(238, 238, 238);
-  font-weight: 500;
+a.dataTable:visited {
+	color: rgb(238, 238, 238);
+	font-weight: 500;
 }
-a.dataTable:hover{
-  color: #ff69b4;
-  font-weight: 500;
+a.dataTable:hover {
+	color: #ff69b4;
+	font-weight: 500;
 }
-a.dataTable:active{
-  color: rgb(238, 238, 238);
-  font-weight: 500;
+a.dataTable:active {
+	color: rgb(238, 238, 238);
+	font-weight: 500;
 }
-
 
 .md-form input.active {
-  color: rgb(207, 207, 207) !important;
-  background-color: rgb(30, 30, 30) !important;
+	color: rgb(207, 207, 207) !important;
+	background-color: rgb(30, 30, 30) !important;
 }
 
-.mdb-datatable-filter input{
-  background-color: rgb(30, 30, 30) !important;
-  color: rgb(207, 207, 207) !important;
+.mdb-datatable-filter input {
+	background-color: rgb(30, 30, 30) !important;
+	color: rgb(207, 207, 207) !important;
 }
 
-.dataTables_length select{
-  background-color: rgb(30, 30, 30) !important;
-  color: rgb(207, 207, 207) !important;
+.dataTables_length select {
+	background-color: rgb(30, 30, 30) !important;
+	color: rgb(207, 207, 207) !important;
 }
 
-.dataTables_paginate a{
-  color: rgb(207, 207, 207) !important;
+.dataTables_paginate a {
+	color: rgb(207, 207, 207) !important;
 }
 
-.dataTables_paginate li.active a{
-  background-color: #7654de !important;
+.dataTables_paginate li.active a {
+	background-color: #7654de !important;
 }
 
-.dataTables_paginate li a:hover{
-  background-color: #503a92 !important;
+.dataTables_paginate li a:hover {
+	background-color: #503a92 !important;
 }
 
 .table-striped tbody tr:nth-of-type(odd) {
-    background-color: rgb(30, 30, 30)
+	background-color: rgb(30, 30, 30);
 }

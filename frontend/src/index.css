@@ -1,37 +1,34 @@
-html { 
-  overflow-x: hidden; 
-  /*overflow-y: hidden;*/
+html {
+	overflow-x: hidden;
+	/*overflow-y: hidden;*/
 }
 
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-  'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-  sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+	margin: 0;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 .navbar {
-  margin-bottom: 30px;
+	margin-bottom: 30px;
 }
 
 .bg {
-  background-color: rgb(30, 30, 30);
-  color:  rgb(207, 207, 207);
-  height: 100vh;
-  width: 100vw;
-  position: fixed;
-  left: 0;
-  top: 0;
-  background-position: center;
-  background-size: cover;
+	background-color: rgb(30, 30, 30);
+	color: rgb(207, 207, 207);
+	height: 100vh;
+	width: 100vw;
+	position: fixed;
+	left: 0;
+	top: 0;
+	background-position: center;
+	background-size: cover;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-  monospace;
+	font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 .hs {
-  margin-left: .2em;
+	margin-left: 0.2em;
 }

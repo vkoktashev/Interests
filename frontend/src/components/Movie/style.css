@@ -1,65 +1,71 @@
 .movieContentPage {
-    padding: 1rem;
-    background-color: rgb(30, 30, 30);
-    color: rgb(207, 207, 207);
-    margin-top: 30px;
-    margin-bottom: 30px;
-    padding: 0px
+	width: 80rem;
+	max-width: 100%;
+	margin-left: auto;
+	margin-right: auto;
+	color: rgb(207, 207, 207);
+	margin-top: 5em;
+	margin-bottom: 2em;
+	padding: 0px;
 }
 
-.movieContentHeader{
-    background-color: rgb(0, 0, 0);
-    color: #fff;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    padding-left: 0px;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
+.movieContentHeader {
+	position: relative;
+	width: 100%;
+	background-color: rgb(0, 0, 0);
+	color: #fff;
+	padding: 0;
+	border-top-left-radius: 10px;
+	border-top-right-radius: 10px;
 }
 
-.movieContentBody{
-    padding-left: 10px;
-    padding-right: 10px;
-    border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 5px;
-    padding-bottom: 15px;
+.movieContentBody {
+	background-color: rgb(30, 30, 30);
+	padding-left: 1rem;
+	padding-right: 1rem;
+	padding-bottom: 1rem;
 }
 
-.metacritic{
-    vertical-align: middle;
-    text-align: center;
-    color: #fff!important;
-    font-family: Arial,Helvetica,sans-serif;
-    font-style: normal!important;
-    font-weight: bold!important;
-    font-size: 35px;
-    background-color: rgb(102, 204, 51);
-    height: 2em;
-    width: 2em;
-    line-height: 2em;
-    border-radius: 6px
+.movieFriendsBlock {
+	position: relative;
+	max-width: 100%;
+	width: 78rem;
 }
 
-.metacriticText{
-    font-family: Arial,Helvetica,sans-serif;
-    font-size: 12px;
-    text-align: center;
-    padding-left: 3px;
+.mainInfo {
+	margin-bottom: 10px;
 }
 
-.movieFriendsBlock{
-    margin-left: 25px;
-    margin-bottom: 20px;
+.mainInfo p {
+	margin-bottom: 2px;
 }
 
-.mainInfo{
-    margin-bottom: 20px;
+.moviePosterBlock {
+	display: inline-block;
+	text-align: center;
+	width: 25rem;
+	max-width: 100%;
+	padding: 0;
+	overflow: hidden;
 }
 
-.mainInfo p{
-    margin-bottom: 2px;
+.movieInfoBlock {
+	position: relative;
+	display: inline-block;
+	white-space: normal;
+	vertical-align: top;
+	max-width: 100%;
+	width: 55rem;
+	padding-left: 1rem;
+	padding-bottom: 1rem;
+	padding-right: 1rem;
 }
 
-.posterBlock{
-    text-align: center;
+.movieInfoBlock .header {
+	padding-right: 2.5em;
+}
+
+.movieReviewBody {
+	width: 40rem;
+	max-width: 100%;
 }
