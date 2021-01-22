@@ -313,7 +313,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .values('id', 'username')
 
         return Response({'id': user.id, 'username': user.username, 'is_followed': user_is_followed,
-                         'followed_users': followed_users,
+                         'followed_users': followed_users, 'last_activity': user.last_activity,
                          'games': games, 'movies': movies, 'shows': shows, 'stats': stats})
 
     @swagger_auto_schema(
