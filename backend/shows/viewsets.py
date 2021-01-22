@@ -102,14 +102,15 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         for season in tmdb_show['seasons']:
             episodes_user_info = []
-            episodes = Episode.objects.filter(tmdb_show=tmdb_show['id'], tmdb_season_number=season['season_number'])
-            for episode in episodes:
-                try:
-                    user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
-                    user_info = UserEpisodeSerializer(user_episode).data
-                    episodes_user_info.append(user_info)
-                except (UserEpisode.DoesNotExist, TypeError):
-                    pass
+            if request.user.is_authenticated:
+                episodes = Episode.objects.filter(tmdb_show=tmdb_show['id'], tmdb_season_number=season['season_number'])
+                for episode in episodes:
+                    try:
+                        user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
+                        user_info = UserEpisodeSerializer(user_episode).data
+                        episodes_user_info.append(user_info)
+                    except UserEpisode.DoesNotExist:
+                        pass
 
             season.update({'episodes_user_info': episodes_user_info})
 
@@ -570,6 +571,7 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                          'friends_info': friends_info,
                          'user_watched_show': user_watched_show(show_id, request.user)})
 
+
 def user_watched_show(show_id, user):
     try:
         show = Show.objects.get(tmdb_id=show_id)
@@ -590,18 +592,6 @@ def get_show_info(show_id):
             'show_id': show.tmdb_id,
             'show_original_name': show.tmdb_original_name,
             'backdrop_path': show.tmdb_backdrop_path}
-
-
-def get_episode_info(show_id, season_number, episode_number, user):
-    try:
-        episode = Episode.objects.get(tmdb_show=show_id,
-                                      tmdb_season_number=season_number,
-                                      tmdb_episode_number=episode_number)
-        user_episode = UserEpisode.objects.get(user=user, episode=episode)
-        user_info = UserEpisodeSerializer(user_episode).data
-    except (Episode.DoesNotExist, UserEpisode, TypeError):
-        user_info = ()
-    return user_info
 
 
 def get_show_search_results(query, page):
