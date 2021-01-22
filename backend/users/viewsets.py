@@ -4,7 +4,7 @@ from smtplib import SMTPAuthenticationError
 
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField
 from django.template.defaultfilters import lower
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -30,6 +30,7 @@ from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
 from utils.documentation import USER_SIGNUP_201_EXAMPLE, USER_SIGNUP_400_EXAMPLE, USER_LOG_200_EXAMPLE, \
     USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE
 from utils.functions import similar, get_page_size
+from utils.models import Round
 from utils.openapi_params import page_param, page_size_param, query_param, uid64_param, token_param, reset_token_param
 from .models import User, UserFollow, UserLog, UserPasswordToken
 from .tokens import account_activation_token
@@ -209,7 +210,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         stats = {}
 
         # games
-        user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED) \
+        user_games = UserGame.objects.prefetch_related('game')
+        user_games = user_games.exclude(status=UserGame.STATUS_NOT_PLAYED) \
             .filter(user=user) \
             .order_by('-updated_at')
         serializer = GameStatsSerializer(user_games, many=True)
@@ -238,7 +240,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         }})
 
         # movies
-        user_movies = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED) \
+        user_movies = UserMovie.objects.prefetch_related('movie')
+        user_movies = user_movies.exclude(status=UserMovie.STATUS_NOT_WATCHED) \
             .filter(user=user) \
             .order_by('-updated_at')
         serializer = MovieStatsSerializer(user_movies, many=True)
@@ -268,9 +271,17 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         }})
 
         # shows
-        user_shows = UserShow.objects.exclude(status=UserShow.STATUS_NOT_WATCHED) \
+        user_shows = UserShow.objects.prefetch_related('show')
+        user_shows = user_shows.exclude(status=UserShow.STATUS_NOT_WATCHED) \
             .filter(user=user) \
-            .order_by('-updated_at')
+            .order_by('-updated_at') \
+            .annotate(watched_episodes_count=Count('show__episode',
+                                                   filter=Q(show__episode__userepisode__user=user) &
+                                                          ~Q(show__episode__userepisode__score=-1))) \
+            .annotate(spent_time=ExpressionWrapper(
+            Round(1.0 * F('show__tmdb_episode_run_time') * F('watched_episodes_count') / MINUTES_IN_HOUR),
+            output_field=DecimalField()))
+
         serializer = ShowStatsSerializer(user_shows, many=True)
         shows = serializer.data
         # shows stats

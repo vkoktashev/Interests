@@ -1,8 +1,7 @@
 from rest_framework import serializers
 
-from shows.models import UserShow, UserSeason, UserEpisode, ShowLog, SeasonLog, EpisodeLog, Episode
+from shows.models import UserShow, UserSeason, UserEpisode, ShowLog, SeasonLog, EpisodeLog
 from users.serializers import FollowedUserSerializer
-from utils.constants import MINUTES_IN_HOUR
 from utils.serializers import ChoicesField
 
 TYPE_SHOW = 'show'
@@ -51,14 +50,7 @@ class UserEpisodeInSeasonSerializer(UserEpisodeSerializer):
 
 
 class ShowStatsSerializer(UserShowSerializer):
-    spent_time = serializers.SerializerMethodField('calculate_spent_time')
-
-    @staticmethod
-    def calculate_spent_time(user_show):
-        episodes = Episode.objects.filter(tmdb_show=user_show.show)
-        watched_episodes = UserEpisode.objects.exclude(score=-1).filter(user=user_show.user, episode__in=episodes)
-        spent_time = round(user_show.show.tmdb_episode_run_time * watched_episodes.count() / MINUTES_IN_HOUR, 1)
-        return spent_time
+    spent_time = serializers.DecimalField(max_digits=7, decimal_places=1)
 
     class Meta:
         model = UserShow
