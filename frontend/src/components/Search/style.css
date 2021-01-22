@@ -1,152 +1,154 @@
 a:link {
-  color: rgb(238, 238, 238);
+	color: rgb(238, 238, 238);
 }
 a:visited {
-  color: rgb(238, 238, 238);
+	color: rgb(238, 238, 238);
 }
 a:hover {
-  color: hotpink;
+	color: hotpink;
 }
 a:active {
-  color: rgb(238, 238, 238);
+	color: rgb(238, 238, 238);
 }
 
-.searchCardsGroup{
-  text-align: center;
-  width: 92%;
-  display: inline-block;
-  margin-left: 4%;
+.searchCardsGroup {
+	text-align: center;
+	width: 92%;
+	display: inline-block;
+	margin-left: 4%;
 }
 
-.searchCardMovie{
-  width: 500px;
-  height: 150px;
-  margin-right: 5px;
-  margin-left: 5px;
-  margin-bottom: 10px;
-  display: inline-block;
+.searchCardMovie {
+	width: 500px;
+	max-width: 100%;
+	height: 100px;
+	margin-right: 5px;
+	margin-left: 5px;
+	margin-bottom: 10px;
+	display: inline-block;
 }
 
-.searchCardMovieImage{
-  height: 150px;
-  width: 250px;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-color: gray;
-  display: inline-block;
-  margin: 0;
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
+.searchCardMovieImage {
+	height: 100px;
+	width: 50%;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-color: gray;
+	display: inline-block;
+	margin: 0;
+	border-top-left-radius: 10px;
+	border-bottom-left-radius: 10px;
 }
 
-.searchCardMovieText{
-  padding: 10px;
-  text-align: center;
-  vertical-align: top;
-  color: rgb(238, 238, 238);
-  font-weight: 200;
-  background-color: rgb(43, 43, 43);
-  width: 250px;
-  height: 150px;
-  display: inline-block;
-  margin: 0;
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
+.searchCardMovieText {
+	padding: 10px;
+	text-align: center;
+	vertical-align: top;
+	color: rgb(238, 238, 238);
+	font-weight: 200;
+	background-color: rgb(43, 43, 43);
+	height: 100px;
+	width: 50%;
+	display: inline-block;
+	margin: 0;
+	border-top-right-radius: 10px;
+	border-bottom-right-radius: 10px;
 }
 
-.searchCardGame{
-  width: 500px;
-  height: 150px;
-  margin-right: 5px;
-  margin-left: 5px;
-  margin-bottom: 10px;
-  display: inline-block;
+.searchCardGame {
+	width: 500px;
+	max-width: 100%;
+	height: 100px;
+	margin-right: 5px;
+	margin-left: 5px;
+	margin-bottom: 10px;
+	display: inline-block;
 }
 
-.searchCardGameImage{
-  height: 150px;
-  width: 50%;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  display: inline-block;
-  background-color: gray;
-  margin: 0;
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
+.searchCardGameImage {
+	height: 100px;
+	width: 50%;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	display: inline-block;
+	background-color: gray;
+	margin: 0;
+	border-top-left-radius: 10px;
+	border-bottom-left-radius: 10px;
 }
 
-.searchCardGameText{
-  padding: 10px;
-  text-align: center;
-  vertical-align: top;
-  color: rgb(238, 238, 238);
-  font-weight: 200;
-  background-color: rgb(43, 43, 43);
-  width: 50%;
-  height: 150px;
-  display: inline-block;
-  margin: 0;
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
+.searchCardGameText {
+	padding: 10px;
+	text-align: center;
+	vertical-align: top;
+	color: rgb(238, 238, 238);
+	font-weight: 200;
+	background-color: rgb(43, 43, 43);
+	width: 50%;
+	height: 100px;
+	display: inline-block;
+	margin: 0;
+	border-top-right-radius: 10px;
+	border-bottom-right-radius: 10px;
 }
 
-.searchBG{
-  background-size: auto;
-  background-repeat: repeat;
-  background-image: url('https://365psd.ru/images/backgrounds/bg-dark-4782.jpg');
-  height: 100vh;
+.searchBG {
+	background-size: auto;
+	background-repeat: repeat;
+	background-image: url("https://365psd.ru/images/backgrounds/bg-dark-4782.jpg");
+	height: 100vh;
 }
 
-.searchPage{
-  background-color: rgb(30, 30, 30);
-  color: rgb(207, 207, 207);
-  margin-top: 30px;
-  margin-bottom: 30px;
-  padding-left: 10px;
-  padding-top: 10px;
+.searchPage {
+	background-color: rgb(30, 30, 30);
+	color: rgb(207, 207, 207);
+	margin-top: 30px;
+	margin-bottom: 30px;
+	padding-left: 10px;
+	padding-top: 10px;
 }
 
-#searchInput2{
-  color: rgb(207, 207, 207);
-  background-color: rgb(30, 30, 30);
+#searchInput2 {
+	color: rgb(207, 207, 207);
+	background-color: rgb(30, 30, 30);
 }
 
-.paginationButton{
-  position: absolute;
-  top: 0;
-  width: 4%;
-  height: 100%;
-  display: inline-block;
-  vertical-align: top;
-  color: rgb(207, 207, 207);
-  background-color: rgb(30, 30, 30);
-  border-radius: 5px;
-  border: none;
+.paginationButton {
+	position: absolute;
+	top: 0;
+	width: 4%;
+	height: 100%;
+	display: inline-block;
+	vertical-align: top;
+	color: rgb(207, 207, 207);
+	background-color: rgb(30, 30, 30);
+	border-radius: 5px;
+	border: none;
 }
 
-.paginationButton:hover{
-  background-color: rgb(90, 90, 90);
+.paginationButton:hover {
+	background-color: rgb(90, 90, 90);
 }
 
-.paginationButton:active{
-  border: none;
-  background-color: rgb(43, 43, 43);
+.paginationButton:active {
+	border: none;
+	background-color: rgb(43, 43, 43);
 }
 
-.reslutsBlock{
-  position: relative;
+.reslutsBlock {
+	position: relative;
 }
 
-.searchCardMovieName{
-  overflow: hidden;
-  text-overflow: ellipsis;
-  height: 70%;
+.searchCardMovieName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 70%;
 }
 
-.searchCardGameName{
-  overflow: hidden;
-  text-overflow: ellipsis;
-  height: 70%;
+.searchCardGameName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 70%;
 }

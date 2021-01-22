@@ -1,40 +1,40 @@
 import React, { useEffect, useState } from "react";
-import {
-    useHistory
-  } from "react-router-dom";
+import { useHistory } from "react-router-dom";
 
+function CardGame({ game }) {
+	let history = useHistory();
+	const [date, setDate] = useState("");
 
-function CardGame( {game} ) {
-    let history = useHistory();
-    const [date, setDate] = useState("");
+	useEffect(() => {
+		if (game.released) {
+			let mas = game.released.split("-");
+			let newDate = mas[2] + "." + mas[1] + "." + mas[0];
+			setDate(newDate);
+		} else setDate("");
+	}, [game]);
 
-    useEffect(() =>{
-            if (game.released){
-                let mas = game.released.split("-");
-                let newDate = mas[2] + "." + mas[1] + "." + mas[0];
-                setDate(newDate);
-            }else
-                setDate("");
-        },
-        [game]
-    );
-
-    return(
-        <div className="searchCardGame" >
-            <div className="searchCardGameImage" style={{backgroundImage: `url(${game.background_image})`}}> </div>
-            <div className="searchCardGameText">
-                <div className="searchCardGameName">
-                    <a href={window.location.origin + '/game/' + game.slug} 
-                        onClick={(e) => { history.push('/game/' + game.slug); e.preventDefault();}}
-                        title={game.name}>
-                        <h4 >{game.name}</h4>
-                    </a>
-                </div>
-                <p>{date}</p>
-            </div>
-        </div> 
-    )
+	return (
+		<div className='searchCardGame'>
+			<div className='searchCardGameImage' style={{ backgroundImage: `url(${game.background_image})` }}>
+				{" "}
+			</div>
+			<div className='searchCardGameText'>
+				<div className='searchCardGameName'>
+					<a
+						href={window.location.origin + "/game/" + game.slug}
+						onClick={(e) => {
+							history.push("/game/" + game.slug);
+							e.preventDefault();
+						}}
+						title={game.name}>
+						<h4>{game.name}</h4>
+					</a>
+				</div>
+				<p>{date}</p>
+			</div>
+		</div>
+	);
 }
-//onMouseDown={mouseDownHandler} 
+//onMouseDown={mouseDownHandler}
 
 export default CardGame;
