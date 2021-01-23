@@ -12,7 +12,7 @@ class LastUserActivityMiddleware(MiddlewareMixin):
             last_activity = request.user.last_activity
             if not last_activity or \
                     timezone.now() - last_activity > timezone.timedelta(seconds=LAST_ACTIVITY_INTERVAL_SECS):
-                User.objects.filter(user=request.user.pk).update(
+                User.objects.filter(pk=request.user.pk).update(
                     last_activity=timezone.now()
                 )
         return response

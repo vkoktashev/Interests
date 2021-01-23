@@ -356,7 +356,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         try:
             user_follow = UserFollow.objects.get(user=request.user, followed_user=user_id)
-            serializer = UserFollowSerializer(user_follow, data=data)
+            serializer = UserFollowSerializer(user_follow, data=data, partial=True)
         except UserFollow.DoesNotExist:
             serializer = UserFollowSerializer(data=data)
 
@@ -473,12 +473,16 @@ def get_logs(user_query, page_size, page_number):
     page_size = get_page_size(page_size)
     page = page_number
 
-    game_logs = GameLog.objects.filter(user__in=user_query)
-    movie_logs = MovieLog.objects.filter(user__in=user_query)
-    show_logs = ShowLog.objects.filter(user__in=user_query)
-    season_logs = SeasonLog.objects.filter(user__in=user_query)
-    episode_logs = EpisodeLog.objects.filter(user__in=user_query)
-    user_logs = UserLog.objects.filter(user__in=user_query)
+    game_logs = GameLog.objects.select_related('user').prefetch_related('game').filter(user__in=user_query)
+    movie_logs = MovieLog.objects.select_related('user').prefetch_related('movie').filter(user__in=user_query)
+    show_logs = ShowLog.objects.select_related('user').prefetch_related('show').filter(user__in=user_query)
+    season_logs = SeasonLog.objects.select_related('user') \
+        .prefetch_related('season__tmdb_show') \
+        .filter(user__in=user_query)
+    episode_logs = EpisodeLog.objects.select_related('user') \
+        .prefetch_related('episode').prefetch_related('episode__tmdb_show') \
+        .filter(user__in=user_query)
+    user_logs = UserLog.objects.select_related('user').select_related('followed_user').filter(user__in=user_query)
 
     union_logs = sorted(chain(game_logs, movie_logs, show_logs, season_logs, episode_logs, user_logs),
                         key=lambda obj: obj.created, reverse=True)
