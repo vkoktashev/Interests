@@ -258,8 +258,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response({'log': results, 'has_next_page': has_next_page})
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
-    def friends_log(self, request, *args, **kwargs):
-        pass
+    def release_calendar(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         responses={
@@ -452,8 +452,6 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
 
 
 def serialize_logs(logs):
