@@ -1,3 +1,4 @@
+import debug_toolbar
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -17,7 +18,8 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('api/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('debug/', include(debug_toolbar.urls)),
     path('users/', include('users.urls')),
     path('games/', include('games.urls')),
     path('movies/', include('movies.urls')),

@@ -28,6 +28,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
     is_staff = models.BooleanField(_('staff status'), default=False)
+    last_activity = models.DateTimeField(default=timezone.now)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
@@ -41,7 +42,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 class UserScore(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     score = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], default=0)
-    review = models.CharField(max_length=300, blank=True)
+    review = models.CharField(max_length=3000, blank=True)
 
     class Meta:
         abstract = True

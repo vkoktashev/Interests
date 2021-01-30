@@ -39,7 +39,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware'
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'users.middleware.LastUserActivityMiddleware',
 ]
 
 REST_FRAMEWORK = {
@@ -59,6 +60,10 @@ SWAGGER_SETTINGS = {
 }
 
 SITE_ID = 1
+
+INTERNAL_IPS = [
+    '127.0.0.1'
+]
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True

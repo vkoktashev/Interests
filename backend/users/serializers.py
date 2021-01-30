@@ -48,7 +48,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserFollowSerializer(serializers.ModelSerializer):
     def validate_followed_user(self, value):
-        if value.pk is self.initial_data['user']:
+        if value.pk == self.initial_data['user']:
             raise serializers.ValidationError('You can\'t follow yourself')
 
         return value
