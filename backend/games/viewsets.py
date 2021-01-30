@@ -96,6 +96,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         new_fields = {
             'rawg_slug': rawg_game.get('slug'),
             'rawg_name': rawg_game.get('name'),
+            'rawg_release_date': rawg_game.get('released'),
             'hltb_name': hltb_game_name,
             'hltb_id': hltb_game_id
         }

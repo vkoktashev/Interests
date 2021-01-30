@@ -92,7 +92,8 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'tmdb_original_name': tmdb_show['original_name'],
             'tmdb_name': tmdb_show['name'],
             'tmdb_episode_run_time': episode_run_time,
-            'tmdb_backdrop_path': tmdb_show['backdrop_path']
+            'tmdb_backdrop_path': tmdb_show['backdrop_path'],
+            'tmdb_release_date': tmdb_show['first_air_date']
         }
 
         with transaction.atomic():
@@ -396,7 +397,8 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                             'tmdb_episode_number': episode.get('episode_number'),
                             'tmdb_season_number': episode.get('season_number'),
                             'tmdb_name': episode.get('name'),
-                            'tmdb_show_id': kwargs.get('show_tmdb_id')
+                            'tmdb_show_id': kwargs.get('show_tmdb_id'),
+                            'tmdb_release_date': episode.get('air_date')
                         }
                         update_fields_if_needed(existed_episode, new_fields)
                         break

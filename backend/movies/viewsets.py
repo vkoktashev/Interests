@@ -87,7 +87,8 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'imdb_id': tmdb_movie.get('imdb_id'),
             'tmdb_original_name': tmdb_movie.get('original_title'),
             'tmdb_name': tmdb_movie.get('title'),
-            'tmdb_runtime': tmdb_movie.get('runtime')
+            'tmdb_runtime': tmdb_movie.get('runtime'),
+            'tmdb_release_date': tmdb_movie.get('release_date')
         }
 
         with transaction.atomic():
