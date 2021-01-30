@@ -88,7 +88,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'tmdb_original_name': tmdb_movie.get('original_title'),
             'tmdb_name': tmdb_movie.get('title'),
             'tmdb_runtime': tmdb_movie.get('runtime'),
-            'tmdb_release_date': tmdb_movie.get('release_date')
+            'tmdb_release_date': tmdb_movie.get('release_date') if tmdb_movie.get('first_air_date') != "" else None
         }
 
         with transaction.atomic():
