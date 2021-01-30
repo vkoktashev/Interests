@@ -176,3 +176,66 @@ a.dataTable:active {
 .table-striped tbody tr:nth-of-type(odd) {
 	background-color: rgb(30, 30, 30);
 }
+
+.calendarBlock {
+	padding: 1rem;
+}
+
+.dayInfo {
+	display: inline-block;
+}
+
+.react-calendar {
+	display: inline-block;
+	width: 500px !important;
+	max-width: 100% !important;
+	background-color: rgb(30, 30, 30) !important;
+	border: 1px solid rgb(100, 100, 100) !important;
+	border-radius: 10px;
+}
+
+.calendarDay {
+	background-color: rgb(28, 122, 83);
+	color: antiquewhite;
+	padding: 0;
+	border-radius: 50%;
+	height: 50px;
+	text-align: center;
+	padding-top: 30%;
+}
+
+.react-calendar__tile--active {
+	background: #7654de !important;
+}
+
+.react-calendar__tile--hasActive {
+	background: #7654de !important;
+}
+
+.react-calendar button {
+	color: rgb(207, 207, 207) !important;
+}
+
+.react-calendar button:disabled {
+	background-color: rgb(22, 22, 22) !important;
+}
+
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus,
+.react-calendar__tile--now {
+	background-color: rgb(30, 30, 30) !important;
+}
+
+.react-calendar button:active {
+	background-color: rgb(53, 35, 35) !important;
+}
+
+.react-calendar button:hover {
+	color: #7654de !important;
+	background-color: rgb(40, 40, 40) !important;
+}
+
+.react-calendar__navigation__next2-button,
+.react-calendar__navigation__prev2-button {
+	display: none;
+}
