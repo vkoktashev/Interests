@@ -63,7 +63,7 @@ class UserLogAbstract(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created = models.DateTimeField(default=timezone.now)
-    action_result = models.CharField(max_length=300)
+    action_result = models.CharField(max_length=3000)
     action_type = models.CharField(max_length=30, choices=ACTION_TYPE_CHOICES)
 
     class Meta:
