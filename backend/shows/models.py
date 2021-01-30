@@ -12,7 +12,7 @@ class Show(models.Model):
     tmdb_name = models.CharField(max_length=200)
     tmdb_episode_run_time = models.IntegerField()
     tmdb_backdrop_path = models.CharField(max_length=200, null=True)
-    tmdb_release_date = models.DateTimeField(null=True)
+    tmdb_release_date = models.DateField(null=True)
 
 
 class Season(models.Model):
@@ -31,7 +31,7 @@ class Episode(models.Model):
     tmdb_season_number = models.IntegerField()
     tmdb_name = models.CharField(max_length=200)
     tmdb_show = models.ForeignKey(Show, on_delete=models.CASCADE)
-    tmdb_release_date = models.DateTimeField(null=True)
+    tmdb_release_date = models.DateField(null=True)
 
     class Meta:
         unique_together = (("tmdb_season_number", "tmdb_episode_number", "tmdb_show"),)
