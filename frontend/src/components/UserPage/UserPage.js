@@ -40,6 +40,7 @@ function UserPage({
 }) {
 	let { userID } = useParams();
 	const [activeCategory, setActiveCategory] = useState("Профиль");
+	const [lastActivity, setLastActivity] = useState("");
 	const [chartData, setChartData] = useState([]);
 
 	useEffect(
@@ -69,6 +70,11 @@ function UserPage({
 			if (userInfo.stats.episodes.total_spent_time > 0) newData.push({ name: "Часов в сериалах", value: userInfo.stats.episodes.total_spent_time });
 			setChartData(newData);
 		}
+		if (userInfo.last_activity) {
+			let date = new Date(userInfo.last_activity);
+			Date.now();
+			setLastActivity(date.toLocaleString());
+		} else setLastActivity("");
 	}, [userInfo]);
 
 	return (
@@ -80,6 +86,7 @@ function UserPage({
 						<MDBCol md='0.5'></MDBCol>
 						<MDBCol className='userPage'>
 							<h1>Информация о пользователе {userInfo.username}</h1>
+							<p>Последняя активность {lastActivity}</p>
 							<button
 								hidden={currentUserInfo.username === userInfo.username}
 								className='addFriendButton'
