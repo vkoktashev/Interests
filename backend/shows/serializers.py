@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from shows.models import UserShow, UserSeason, UserEpisode, ShowLog, SeasonLog, EpisodeLog
+from shows.models import UserShow, UserSeason, UserEpisode, ShowLog, SeasonLog, EpisodeLog, Episode
 from users.serializers import FollowedUserSerializer
 from utils.serializers import ChoicesField
 
@@ -184,3 +184,9 @@ class FollowedUserEpisodeSerializer(UserEpisodeSerializer):
         model = UserEpisode
         exclude = ('id', 'episode')
         depth = 1
+
+
+class EpisodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Episode
+        fields = '__all__'
