@@ -94,3 +94,13 @@ def get_page_size(page_size):
         page_size = DEFAULT_PAGE_SIZE
 
     return page_size
+
+
+def update_fields_if_needed(obj, new_fields):
+    fields_to_update = []
+    for key, value in new_fields.items():
+        if str(value) != str(getattr(obj, key)):
+            obj.__setattr__(key, value)
+            fields_to_update.append(key)
+
+    obj.save(update_fields=fields_to_update)
