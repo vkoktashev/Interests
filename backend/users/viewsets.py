@@ -1,6 +1,8 @@
 import secrets
+from datetime import datetime
 from itertools import chain
 from smtplib import SMTPAuthenticationError
+from time import sleep
 
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
@@ -18,18 +20,22 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from config.settings import EMAIL_HOST_USER
-from games.models import UserGame, GameLog
+from games.models import UserGame, GameLog, Game
 from games.serializers import GameStatsSerializer, GameLogSerializer
-from movies.models import UserMovie, MovieLog
+from games.viewsets import get_rawg_game
+from movies.models import UserMovie, MovieLog, Movie
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer
-from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog
-from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogSerializer, EpisodeLogSerializer
+from movies.viewsets import get_tmdb_movie
+from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, Show, Episode, Season
+from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogSerializer, EpisodeLogSerializer, \
+    UserEpisodeInSeasonSerializer, EpisodeSerializer
+from shows.viewsets import get_show, get_episode, get_season
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer
 from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
-    USER_NOT_FOUND, EMAIL_ERROR, MINUTES_IN_HOUR, SITE_URL
+    USER_NOT_FOUND, EMAIL_ERROR, MINUTES_IN_HOUR, SITE_URL, EPISODE_NOT_WATCHED_SCORE
 from utils.documentation import USER_SIGNUP_201_EXAMPLE, USER_SIGNUP_400_EXAMPLE, USER_LOG_200_EXAMPLE, \
     USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE
-from utils.functions import similar, get_page_size
+from utils.functions import similar, get_page_size, update_fields_if_needed
 from utils.models import Round
 from utils.openapi_params import page_param, page_size_param, query_param, uid64_param, token_param, reset_token_param
 from .models import User, UserFollow, UserLog, UserPasswordToken
@@ -267,9 +273,78 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response({'log': results, 'has_next_page': has_next_page})
 
-    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def release_calendar(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_200_OK)
+        # games = Game.objects.filter(rawg_release_date=None)
+        # total = games.count()
+        # i = 1
+        # for game in games:
+        #     rawg_game, cached = get_rawg_game(game.rawg_slug)
+        #     update_fields_if_needed(game, {'rawg_release_date': rawg_game.get('released')})
+        #     print(game.rawg_name, i, 'of', total)
+        #     i += 1
+        #
+        # movies = Movie.objects.filter(tmdb_release_date=None)
+        # total = movies.count()
+        # i = 1
+        # for movie in movies:
+        #     tmdb_movie, cached = get_tmdb_movie(movie.tmdb_id)
+        #     release = tmdb_movie.get('release_date')
+        #     if release == "":
+        #         release = None
+        #     update_fields_if_needed(movie, {'tmdb_release_date': release})
+        #     print(movie.tmdb_name, i, 'of', total)
+        #     i += 1
+        #
+        # shows = Show.objects.filter(tmdb_release_date=None)
+        # total = Season.objects.all().count()
+        # i = 1
+        # for show in shows:
+        #     tmdb_show, cached = get_show(show.tmdb_id)
+        #     release = tmdb_show.get('first_air_date')
+        #     if release == "":
+        #         release = None
+        #     update_fields_if_needed(show, {'tmdb_release_date': release})
+        #
+        #     for season in Season.objects.filter(tmdb_show=show):
+        #         tmdb_season, cached = get_season(show.tmdb_id, season.tmdb_season_number)
+        #         episodes = tmdb_season.get('episodes')
+        #         existed_episodes = Episode.objects.filter(
+        #             tmdb_id__in=[episode.get('id') for episode in episodes])
+        #
+        #         for episode in episodes:
+        #             for existed_episode in existed_episodes:
+        #                 if episode['id'] == existed_episode.tmdb_id:
+        #                     release = tmdb_show.get('air_date')
+        #                     if release == "":
+        #                         release = None
+        #                     new_fields = {
+        #                         'tmdb_release_date': release
+        #                     }
+        #                     update_fields_if_needed(existed_episode, new_fields)
+        #                     break
+        #         print(season.tmdb_show.tmdb_name, i, 'of', total)
+        #         i += 1
+
+        today_date = datetime.today().date()
+        user_games = UserGame.objects \
+            .filter(user=request.user, game__rawg_release_date__gt=today_date) \
+            .exclude(status=UserGame.STATUS_NOT_PLAYED)
+        games_serializer = GameStatsSerializer(user_games, many=True)
+
+        user_movies = UserMovie.objects\
+            .filter(user=request.user, movie__tmdb_release_date__gt=today_date)\
+            .exclude(status=UserMovie.STATUS_NOT_WATCHED)
+        movies_serializer = MovieStatsSerializer(user_movies, many=True)
+
+        shows = Show.objects.filter(usershow__user=request.user).exclude(usershow__status=UserShow.STATUS_NOT_WATCHED)
+        user_episodes = Episode.objects.filter(tmdb_show__in=shows, tmdb_release_date__gt=today_date)
+        episodes_serializer = EpisodeSerializer(user_episodes, many=True)
+
+        return Response({'games': games_serializer.data,
+                         'movies': movies_serializer.data,
+                         'episodes': episodes_serializer.data
+                         }, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         responses={

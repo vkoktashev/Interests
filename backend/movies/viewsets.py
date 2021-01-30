@@ -1,5 +1,6 @@
 import tmdbsimple as tmdb
 from django.core.cache import cache
+from django.db import transaction
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
@@ -14,6 +15,7 @@ from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer
 from users.models import UserFollow
 from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, CACHE_TIMEOUT
 from utils.documentation import MOVIES_SEARCH_200_EXAMPLE, MOVIE_RETRIEVE_200_EXAMPLE
+from utils.functions import update_fields_if_needed
 from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER
 
 
@@ -69,7 +71,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     })
     def retrieve(self, request, *args, **kwargs):
         try:
-            tmdb_movie = get_movie(kwargs.get('tmdb_id'))
+            tmdb_movie, returned_from_cache = get_tmdb_movie(kwargs.get('tmdb_id'))
             tmdb_cast_crew = get_cast_crew(kwargs.get('tmdb_id'))
             tmdb_movie['cast'] = tmdb_cast_crew.get('cast')
             tmdb_movie['crew'] = tmdb_cast_crew.get('crew')
@@ -81,20 +83,27 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except ConnectionError:
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        movie, created = Movie.objects.get_or_create(tmdb_id=tmdb_movie.get('id'),
-                                                     defaults={
-                                                         'imdb_id': tmdb_movie.get('imdb_id'),
-                                                         'tmdb_original_name': tmdb_movie.get('original_title'),
-                                                         'tmdb_name': tmdb_movie.get('title'),
-                                                         'tmdb_runtime': tmdb_movie.get('runtime')
-                                                     })
+        new_fields = {
+            'imdb_id': tmdb_movie.get('imdb_id'),
+            'tmdb_original_name': tmdb_movie.get('original_title'),
+            'tmdb_name': tmdb_movie.get('title'),
+            'tmdb_runtime': tmdb_movie.get('runtime'),
+            'tmdb_release_date': tmdb_movie.get('release_date') if tmdb_movie.get('first_air_date') != "" else None
+        }
 
-        for genre in tmdb_movie.get('genres'):
-            genre_obj, created = Genre.objects.get_or_create(tmdb_id=genre.get('id'),
-                                                             defaults={
-                                                                 'tmdb_name': genre.get('name')
-                                                             })
-            MovieGenre.objects.get_or_create(genre=genre_obj, movie=movie)
+        with transaction.atomic():
+            movie, created = Movie.objects.select_for_update().get_or_create(tmdb_id=tmdb_movie.get('id'),
+                                                                             defaults=new_fields)
+            if not created and not returned_from_cache:
+                update_fields_if_needed(movie, new_fields)
+
+        if created or not returned_from_cache:
+            for genre in tmdb_movie.get('genres'):
+                genre_obj, created = Genre.objects.get_or_create(tmdb_id=genre.get('id'),
+                                                                 defaults={
+                                                                     'tmdb_name': genre.get('name')
+                                                                 })
+                MovieGenre.objects.get_or_create(genre=genre_obj, movie=movie)
 
         return Response({'tmdb': tmdb_movie})
 
@@ -189,13 +198,15 @@ def get_movie_search_results(query, page):
     return results
 
 
-def get_movie(tmdb_id):
+def get_tmdb_movie(tmdb_id):
+    returned_from_cache = True
     key = f'movie_{tmdb_id}'
     tmdb_movie = cache.get(key, None)
     if tmdb_movie is None:
         tmdb_movie = tmdb.Movies(tmdb_id).info(language=LANGUAGE)
         cache.set(key, tmdb_movie, CACHE_TIMEOUT)
-    return tmdb_movie
+        returned_from_cache = False
+    return tmdb_movie, returned_from_cache
 
 
 def get_cast_crew(tmdb_id):

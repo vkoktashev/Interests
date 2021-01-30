@@ -1,6 +1,7 @@
 from json import JSONDecodeError
 
 from django.core.cache import cache
+from django.db import transaction
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
@@ -16,7 +17,7 @@ from users.models import UserFollow
 from utils.constants import RAWG_UNAVAILABLE, ERROR, HLTB_UNAVAILABLE, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, \
     GAME_NOT_FOUND, CACHE_TIMEOUT
 from utils.documentation import GAMES_SEARCH_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE
-from utils.functions import int_to_hours, get_page_size, int_to_minutes
+from utils.functions import int_to_hours, get_page_size, int_to_minutes, update_fields_if_needed
 from utils.openapi_params import query_param, page_param, page_size_param
 
 
@@ -74,7 +75,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     })
     def retrieve(self, request, *args, **kwargs):
         try:
-            rawg_game = get_game(kwargs.get('slug'))
+            rawg_game, returned_from_cache = get_rawg_game(kwargs.get('slug'))
         except KeyError:
             return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
         except JSONDecodeError:
@@ -92,21 +93,28 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except ConnectionError:
             return Response({ERROR: HLTB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        game, created = Game.objects.get_or_create(rawg_id=rawg_game.get('id'),
-                                                   defaults={
-                                                       'rawg_slug': rawg_game.get('slug'),
-                                                       'rawg_name': rawg_game.get('name'),
-                                                       'hltb_name': hltb_game_name,
-                                                       'hltb_id': hltb_game_id
-                                                   })
+        new_fields = {
+            'rawg_slug': rawg_game.get('slug'),
+            'rawg_name': rawg_game.get('name'),
+            'rawg_release_date': rawg_game.get('released'),
+            'hltb_name': hltb_game_name,
+            'hltb_id': hltb_game_id
+        }
 
-        for genre in rawg_game.get('genres'):
-            genre_obj, created = Genre.objects.get_or_create(rawg_id=genre.get('id'),
-                                                             defaults={
-                                                                 'rawg_name': genre.get('name'),
-                                                                 'rawg_slug': genre.get('slug')
-                                                             })
-            GameGenre.objects.get_or_create(genre=genre_obj, game=game)
+        with transaction.atomic():
+            game, created = Game.objects.select_for_update().get_or_create(rawg_id=rawg_game.get('id'),
+                                                                           defaults=new_fields)
+            if not created and not returned_from_cache:
+                update_fields_if_needed(game, new_fields)
+
+        if created or not returned_from_cache:
+            for genre in rawg_game.get('genres'):
+                genre_obj, created = Genre.objects.get_or_create(rawg_id=genre.get('id'),
+                                                                 defaults={
+                                                                     'rawg_name': genre.get('name'),
+                                                                     'rawg_slug': genre.get('slug')
+                                                                 })
+                GameGenre.objects.get_or_create(genre=genre_obj, game=game)
 
         rawg_game.update({'playtime': f'{rawg_game.get("playtime")} {int_to_hours(rawg_game.get("playtime"))}'})
         translate_hltb_time(hltb_game, 'gameplay_main', 'gameplay_main_unit')
@@ -238,10 +246,12 @@ def get_hltb_search_result(game_name):
     return results
 
 
-def get_game(slug):
+def get_rawg_game(slug):
+    returned_from_cache = True
     key = f'game_{slug}'
     rawg_game = cache.get(key, None)
     if rawg_game is None:
         rawg_game = rawg.get_game(slug).json
         cache.set(key, rawg_game, CACHE_TIMEOUT)
-    return rawg_game
+        returned_from_cache = False
+    return rawg_game, returned_from_cache
