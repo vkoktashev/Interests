@@ -172,6 +172,7 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 					</div>
 					<div className='gameContentBody'>
 						<div>
+							{/* <video width='800' height='450' controls='controls' poster={game.rawg?.clip?.preview} src={game.rawg?.clip?.clip} type='video' /> */}
 							<h3 style={{ paddingTop: "15px" }}>Описание</h3>
 							<div dangerouslySetInnerHTML={{ __html: game.rawg.description }} />
 						</div>
