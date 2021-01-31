@@ -41,8 +41,8 @@ function UserPage({
 	getUserCalendar,
 	userCalendar,
 }) {
-	let { userID } = useParams();
-	const [activeCategory, setActiveCategory] = useState("Профиль");
+	let { userID, section } = useParams();
+	const [activeCategory, setActiveCategory] = useState("");
 	const [lastActivity, setLastActivity] = useState("");
 	const [chartData, setChartData] = useState([]);
 
@@ -53,6 +53,15 @@ function UserPage({
 		},
 		// eslint-disable-next-line
 		[userID, getUserInfo, getUserLogs, getUserFriendsLogs]
+	);
+
+	useEffect(
+		() => {
+			if (section) setActiveCategory(section);
+			else setActiveCategory("Профиль");
+		},
+		// eslint-disable-next-line
+		[section]
 	);
 
 	useEffect(
@@ -106,9 +115,11 @@ function UserPage({
 							<CategoriesTab
 								categories={["Профиль", "Игры", "Фильмы", "Сериалы", "Друзья", currentUserInfo.username === userInfo.username ? "Календарь" : undefined]}
 								activeColor='#7654de'
+								activeCategory={activeCategory}
 								onChangeCategory={(category) => {
 									setActiveCategory(category);
 								}}
+								hidden={section}
 							/>
 
 							<div hidden={activeCategory !== "Профиль"}>
