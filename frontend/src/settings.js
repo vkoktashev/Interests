@@ -28,5 +28,7 @@ export const GET_SHOW_URL = BACKEND_URL + "shows/show/";
 export const SEARCH_SHOWS_URL = BACKEND_URL + "shows/search/";
 /**Адрес получения информации о пользователе */
 export const USER_INFO_URL = BACKEND_URL + "users/user/";
+/**Адрес получения календаря релизов пользователя */
+export const USER_CALENDAR_URL = BACKEND_URL + "users/user/release_calendar/";
 /**Адрес поиска пользователей */
 export const SEARCH_USERS_URL = BACKEND_URL + "users/search/";

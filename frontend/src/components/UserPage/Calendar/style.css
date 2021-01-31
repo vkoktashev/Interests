@@ -1,0 +1,106 @@
+.calendarBlock {
+	padding: 1rem;
+	display: inline-block;
+	vertical-align: top;
+}
+
+.dayInfo {
+	display: inline-block;
+}
+
+.dayInfoDate {
+	max-width: 90%;
+}
+
+.react-calendar {
+	display: inline-block;
+	vertical-align: top;
+	width: 500px;
+	max-width: 65% !important;
+	background-color: rgb(30, 30, 30) !important;
+	border: 1px solid rgb(100, 100, 100) !important;
+	border-radius: 10px;
+}
+
+.calendarDay {
+	color: rgb(207, 207, 207);
+	padding: 0;
+	height: auto;
+	text-align: center;
+	margin-top: 10px;
+}
+
+.calendarDayTile {
+	display: inline-block;
+	color: rgb(207, 207, 207);
+	padding: 0.25rem;
+	height: auto;
+	text-align: center;
+}
+.calendarDayTile.Games {
+	background-color: rgb(30, 117, 42);
+}
+.calendarDayTile.Movies {
+	background-color: rgb(131, 23, 23);
+}
+.calendarDayTile.Episodes {
+	background-color: rgb(36, 90, 107);
+}
+
+.dayInfoBlock {
+	display: inline-block;
+	padding-left: 1rem;
+}
+
+.dayInfoCategory {
+	margin-bottom: 1rem;
+}
+.react-calendar__tile--active,
+.react-calendar__tile--hasActive {
+	/*background: #7654de !important;*/
+	background: rgb(50, 50, 50) !important;
+	border-radius: 10px;
+}
+
+.react-calendar button:disabled {
+	background-color: rgb(22, 22, 22) !important;
+}
+
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus,
+.react-calendar__tile--now,
+.react-calendar button {
+	background-color: rgb(30, 30, 30) !important;
+	color: rgb(207, 207, 207) !important;
+}
+
+.react-calendar button:active,
+.react-calendar button:focus {
+	background-color: rgb(50, 50, 50) !important;
+}
+
+.react-calendar button:hover {
+	color: #7654de !important;
+	background-color: rgb(40, 40, 40) !important;
+}
+
+.react-calendar button:disabled {
+	background-color: rgb(20, 20, 20) !important;
+}
+
+.react-calendar__navigation__next2-button,
+.react-calendar__navigation__prev2-button {
+	display: none;
+}
+
+a.dayInfoLink:link,
+a.dayInfoLink:visited,
+a.dayInfoLink:active {
+	color: rgb(207, 207, 207);
+	font-weight: 500;
+}
+
+a.dayInfoLink:hover {
+	color: #ff69b4;
+	font-weight: 500;
+}

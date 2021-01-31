@@ -32,6 +32,11 @@ function GameBlock({ games, stats }) {
 			field: "spent_time",
 			sort: "asc",
 		},
+		/*{
+			label: "Дата выхода",
+			field: "release_date",
+			sort: "asc",
+		},*/
 	];
 
 	const [gameTableData, setGameTableData] = useState({
@@ -56,7 +61,8 @@ function GameBlock({ games, stats }) {
 							score: game.score,
 							review: game.review,
 							spent_time: parseFloat(game.spent_time),
-							/*clickEvent: (e) => {
+							/*release_date: new Date(game.game.rawg_release_date).toISOString().substr(0, 10).replace("-", "."),
+							clickEvent: (e) => {
                                     //window.open('/game/' + game.game.rawg_slug);
                                     history.push('/game/' + game.game.rawg_slug);
                                 }*/
