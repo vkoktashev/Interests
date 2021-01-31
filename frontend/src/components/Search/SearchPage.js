@@ -115,6 +115,7 @@ function SearchPage({ loggedIn, gamesIsLoading, moviesIsLoading, showsIsLoading,
 						<CategoriesTab
 							categories={["Всё", "Игры", "Фильмы", "Сериалы", "Пользователи"]}
 							activeColor='#7654de'
+							activeCategory={activeCategory}
 							onChangeCategory={(category) => {
 								setActiveCategory(category);
 							}}

@@ -61,3 +61,10 @@
 .dropdown-item:focus {
 	background-color: rgb(40, 40, 40) !important;
 }
+.navDropdownItem {
+	color: rgb(207, 207, 207) !important;
+	padding-left: 0;
+	margin-left: 0;
+	font-size: 1em !important;
+	font-weight: 400 !important;
+}

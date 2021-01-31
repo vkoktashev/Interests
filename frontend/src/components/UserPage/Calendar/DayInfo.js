@@ -12,10 +12,10 @@ function DayInfo({ day, date }) {
 				{day.games?.map((game) => (
 					<div key={game.rawg_id}>
 						<a
-							href={window.location.origin + "/game/" + game.rawg_id}
+							href={window.location.origin + "/game/" + game.rawg_slug}
 							className='dayInfoLink'
 							onClick={(e) => {
-								history.push("/game/" + game.rawg_id);
+								history.push("/game/" + game.rawg_slug);
 								e.preventDefault();
 							}}>
 							{game.rawg_name}
