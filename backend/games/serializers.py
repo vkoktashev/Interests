@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from games.models import UserGame, GameLog
+from games.models import UserGame, GameLog, Game
 from users.serializers import FollowedUserSerializer
 from utils.serializers import ChoicesField
 
@@ -65,3 +65,9 @@ class GameLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = GameLog
         exclude = ('game',)
+
+
+class GameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Game
+        exclude = ('id',)
