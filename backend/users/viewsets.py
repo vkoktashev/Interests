@@ -267,7 +267,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         # games
         games = Game.objects \
-            .filter(usergame__user=request.user, rawg_release_date__gt=today_date) \
+            .filter(usergame__user=request.user, rawg_release_date__gte=today_date) \
             .exclude(usergame__status=UserGame.STATUS_NOT_PLAYED) \
             .exclude(usergame__status=UserGame.STATUS_STOPPED)
 
@@ -283,7 +283,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         # movies
         movies = Movie.objects \
-            .filter(usermovie__user=request.user, tmdb_release_date__gt=today_date) \
+            .filter(usermovie__user=request.user, tmdb_release_date__gte=today_date) \
             .exclude(usermovie__status=UserMovie.STATUS_NOT_WATCHED) \
             .exclude(usermovie__status=UserMovie.STATUS_STOPPED)
 
@@ -303,7 +303,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .exclude(usershow__status=UserShow.STATUS_STOPPED)
 
         episodes = Episode.objects.select_related('tmdb_show').filter(tmdb_show__in=shows,
-                                                                      tmdb_release_date__gt=today_date)
+                                                                      tmdb_release_date__gte=today_date)
 
         for episode in episodes:
             tmdb_release_date_str = str(episode.tmdb_release_date)
