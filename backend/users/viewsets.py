@@ -315,6 +315,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             release_date['episodes'].append(EpisodeSerializer(episode).data)
 
+        calendar_dict = dict(sorted(calendar_dict.items()))
+
         return Response(calendar_dict, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
