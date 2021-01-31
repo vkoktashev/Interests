@@ -1,18 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
 import "./style.css";
 
-function CategoriesTab({ categories, activeColor, onChangeCategory }) {
-	const [activeCategory, setActiveCategory] = useState(categories[0]);
-
+function CategoriesTab({ categories, activeColor, onChangeCategory, activeCategory, hidden }) {
 	return (
-		<div>
+		<div hidden={hidden}>
 			{categories.map((category, counter) => (
 				<button
 					className={"categoriesTab"}
 					key={counter}
 					style={{ color: activeCategory === category ? activeColor : "rgb(207, 207, 207)" }}
 					onClick={() => {
-						setActiveCategory(category);
 						onChangeCategory(category);
 					}}>
 					{category}

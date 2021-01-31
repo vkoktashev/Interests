@@ -35,6 +35,7 @@ class Routes extends React.Component {
 					<Route exact path='/confirm/' component={ConfirmPage} />
 					<Route exact path='/confirm_password/' component={ConfirmPasswordPage} />
 					<Route exact path='/user/:userID' component={UserPage} />
+					<Route exact path='/user/:userID/:section' component={UserPage} />
 					<Route
 						render={function () {
 							return <h1>Not Found</h1>;

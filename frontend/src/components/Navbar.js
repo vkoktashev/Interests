@@ -54,16 +54,46 @@ function Navbar({ loggedIn, onLoginClick, onLogoutClick, onRegistrationClick, us
 							<span className='mr-2'>{user.username}</span>
 						</MDBDropdownToggle>
 						<MDBDropdownMenu>
-							<MDBDropdownItem
-								onClick={(event) => {
-									event.preventDefault();
-									history.push("/user/" + user.id);
-									return false;
-								}}>
-								<MDBIcon icon='user-circle' /> Профиль
+							<MDBDropdownItem>
+								<a
+									href={`/user/${user.id}`}
+									className='navDropdownItem'
+									onClick={(event) => {
+										event.preventDefault();
+										history.push(`/user/${user.id}`);
+										return false;
+									}}>
+									<MDBIcon icon='user-circle' /> Профиль
+								</a>
+							</MDBDropdownItem>
+							<MDBDropdownItem>
+								<a
+									href={`/user/${user.id}/Календарь`}
+									className='navDropdownItem'
+									onClick={(event) => {
+										event.preventDefault();
+										history.push(`/user/${user.id}/Календарь`);
+										return false;
+									}}>
+									<MDBIcon icon='calendar-day' /> Календарь
+								</a>
+							</MDBDropdownItem>
+							<MDBDropdownItem>
+								<a
+									href={`/user/${user.id}/Друзья`}
+									className='navDropdownItem'
+									onClick={(event) => {
+										event.preventDefault();
+										history.push(`/user/${user.id}/Друзья`);
+										return false;
+									}}>
+									<MDBIcon icon='user-friends' /> Друзья
+								</a>
 							</MDBDropdownItem>
 							<MDBDropdownItem onClick={onLogoutClick}>
-								<MDBIcon icon='sign-out-alt' /> Выйти
+								<a className='navDropdownItem' href='' onClick={(event) => event.preventDefault()}>
+									<MDBIcon icon='sign-out-alt' /> Выйти
+								</a>
 							</MDBDropdownItem>
 						</MDBDropdownMenu>
 					</MDBDropdown>
