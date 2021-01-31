@@ -10,6 +10,7 @@ import * as selectors from "../../store/reducers";
 import * as actions from "../../store/actions";
 
 import LoadingOverlay from "react-loading-overlay";
+import CalendarBlock from "./CalendarBlock";
 import GameBlock from "./GameBlock";
 import FriendBlock from "./FriendBlock";
 import MovieBlock from "./MovieBlock";
@@ -96,7 +97,14 @@ function UserPage({
 								{userInfo.is_followed ? "Отписаться" : "Подписаться"}
 							</button>
 							<CategoriesTab
-								categories={["Профиль", "Игры", "Фильмы", "Сериалы", "Друзья"]}
+								categories={[
+									"Профиль",
+									"Игры",
+									"Фильмы",
+									"Сериалы",
+									"Друзья",
+									//    , "Календарь"
+								]}
 								activeColor='#7654de'
 								onChangeCategory={(category) => {
 									setActiveCategory(category);
@@ -140,6 +148,9 @@ function UserPage({
 									<UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => getUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true} />
 								</LoadingOverlay>
 							</div>
+							{/*<div hidden={activeCategory !== "Календарь"}>
+								<CalendarBlock />
+                                                </div>*/}
 						</MDBCol>
 						<MDBCol md='0.5'></MDBCol>
 					</MDBRow>
