@@ -6,10 +6,10 @@ function CategoriesTab({ categories, activeColor, onChangeCategory }) {
 
 	return (
 		<div>
-			{categories.map((category) => (
+			{categories.map((category, counter) => (
 				<button
 					className={"categoriesTab"}
-					key={category}
+					key={counter}
 					style={{ color: activeCategory === category ? activeColor : "rgb(207, 207, 207)" }}
 					onClick={() => {
 						setActiveCategory(category);

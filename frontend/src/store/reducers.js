@@ -21,6 +21,7 @@ const initialState = Map({
 		},
 		userLogs: { log: [] },
 		userFriendsLogs: { log: [] },
+		calendar: {},
 	},
 	openedPages: { LoginForm: false, RegistrateForm: false, ResetPasswordForm: false },
 	errors: { auth: false, registrate: false, gameRequest: false, movieRequest: false, userPage: false, resetPassword: false, confirmPassword: false },
@@ -35,6 +36,7 @@ const initialState = Map({
 		userPageContent: false,
 		userPageLogs: false,
 		userPageFriendsLogs: false,
+		userPageCalendar: false,
 		searchGames: false,
 		searchMovies: false,
 		searchShows: false,
@@ -95,6 +97,8 @@ export default function reducer(state = initialState, action) {
 			return state.setIn(["userPageContent", "userLogs"], action.logs);
 		case types.SET_USER_PAGE_FRIENDS_LOGS:
 			return state.setIn(["userPageContent", "userFriendsLogs"], action.logs);
+		case types.SET_USER_PAGE_CALENDAR:
+			return state.setIn(["userPageContent", "calendar"], action.data);
 
 		//Редьюсеры состояния всплывающих окон
 		case types.SET_LOGINFORM:
@@ -143,15 +147,16 @@ export default function reducer(state = initialState, action) {
 			return state.setIn(["isLoading", "searchMovies"], action.isLoading);
 		case types.SET_IS_LOADING_SEARCH_SHOWS:
 			return state.setIn(["isLoading", "searchShows"], action.isLoading);
+		case types.SET_IS_LOADING_SEARCH_USERS:
+			return state.setIn(["isLoading", "searchUsers"], action.isLoading);
 		case types.SET_IS_LOADING_USER_PAGE_CONTENT:
 			return state.setIn(["isLoading", "userPageContent"], action.isLoading);
 		case types.SET_IS_LOADING_USER_PAGE_LOGS:
 			return state.setIn(["isLoading", "userPageLogs"], action.isLoading);
 		case types.SET_IS_LOADING_USER_PAGE_FRIENDS_LOGS:
 			return state.setIn(["isLoading", "userPageFriendsLogs"], action.isLoading);
-		case types.SET_IS_LOADING_SEARCH_USERS:
-			return state.setIn(["isLoading", "searchUsers"], action.isLoading);
-
+		case types.SET_IS_LOADING_USER_PAGE_CALENDAR:
+			return state.setIn(["isLoading", "userPageCalendar"], action.isLoading);
 		default:
 			return state;
 	}
@@ -206,6 +211,20 @@ export function getSearchContentShows(state) {
 }
 export function getSearchContentUsers(state) {
 	return state.get("searchContent").users;
+}
+
+//Селекторы страницы профиля
+export function getUserPageContent(state) {
+	return state.get("userPageContent").user;
+}
+export function getUserPageLogs(state) {
+	return state.get("userPageContent").userLogs;
+}
+export function getUserPageFriendsLogs(state) {
+	return state.get("userPageContent").userFriendsLogs;
+}
+export function getUserPageCalendar(state) {
+	return state.get("userPageContent").calendar;
 }
 
 //Селекторы ошибок
@@ -291,14 +310,6 @@ export function getIsLoadingUserPageLogs(state) {
 export function getIsLoadingUserPageFriendsLogs(state) {
 	return state.get("isLoading").userPageFriendsLogs;
 }
-
-//Селекторы страницы профиля
-export function getUserPageContent(state) {
-	return state.get("userPageContent").user;
-}
-export function getUserPageLogs(state) {
-	return state.get("userPageContent").userLogs;
-}
-export function getUserPageFriendsLogs(state) {
-	return state.get("userPageContent").userFriendsLogs;
+export function getIsLoadingUserPageCalendar(state) {
+	return state.get("isLoading").userPageCalendar;
 }

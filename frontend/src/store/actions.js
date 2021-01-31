@@ -2,7 +2,10 @@ import * as actionTypes from "./actionTypes";
 import * as selectors from "./reducers";
 import * as auth from "../services/jwtAuth";
 import { TOKEN_LIFETIME } from "../settings";
-import * as Requests from "../services/requests";
+import * as userRequests from "../services/userRequests";
+import * as gameRequests from "../services/gameRequests";
+import * as movieRequests from "../services/movieRequests";
+import * as showRequests from "../services/showRequests";
 import { toast } from "react-toastify";
 import jwt_decode from "jwt-decode";
 
@@ -125,7 +128,7 @@ export function requestGame(id) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_GAME, true);
 		setError(dispatch, actionTypes.GAME_REQUEST_ERROR, false);
-		Requests.getGame(localStorage.getItem("token"), id).then((result) => {
+		gameRequests.getGame(localStorage.getItem("token"), id).then((result) => {
 			if (result != null) {
 				dispatch({
 					type: actionTypes.SET_CONTENT_GAME,
@@ -143,7 +146,7 @@ export function requestGame(id) {
 export function requestGameUserInfo(slug) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_GAME_USER_INFO, true);
-		Requests.getGameUserInfo(localStorage.getItem("token"), slug).then((result) => {
+		gameRequests.getGameUserInfo(localStorage.getItem("token"), slug).then((result) => {
 			if (result != null) {
 				let newResult = { ...result.user_info, friends_info: result.friends_info };
 				dispatch({
@@ -162,7 +165,7 @@ export function requestMovie(id) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_MOVIE, true);
 		setError(dispatch, actionTypes.MOVIE_REQUEST_ERROR, false);
-		Requests.getMovie(localStorage.getItem("token"), id).then((result) => {
+		movieRequests.getMovie(localStorage.getItem("token"), id).then((result) => {
 			if (result != null) {
 				dispatch({
 					type: actionTypes.SET_CONTENT_MOVIE,
@@ -180,7 +183,7 @@ export function requestMovie(id) {
 export function requestMovieUserInfo(id) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_MOVIE_USER_INFO, true);
-		Requests.getMovieUserInfo(localStorage.getItem("token"), id).then((result) => {
+		movieRequests.getMovieUserInfo(localStorage.getItem("token"), id).then((result) => {
 			if (result != null) {
 				let newResult = { ...result.user_info, friends_info: result.friends_info };
 				dispatch({
@@ -199,7 +202,7 @@ export function requestShow(id) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, true);
 		setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, false);
-		Requests.getShow(localStorage.getItem("token"), id).then((result) => {
+		showRequests.getShow(localStorage.getItem("token"), id).then((result) => {
 			if (result != null) {
 				dispatch({
 					type: actionTypes.SET_CONTENT_SHOW,
@@ -218,7 +221,7 @@ export function requestShowSeason(showID, seasonNumber) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, true);
 		setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, false);
-		Requests.getShowSeason(localStorage.getItem("token"), showID, seasonNumber).then((result) => {
+		showRequests.getShowSeason(localStorage.getItem("token"), showID, seasonNumber).then((result) => {
 			if (result != null) {
 				dispatch({
 					type: actionTypes.SET_CONTENT_SHOW,
@@ -240,7 +243,7 @@ export function requestShowSeasons(showID, seasonNumber) {
 			seasonNumber: seasonNumber,
 			isLoading: true,
 		});
-		Requests.getShowSeason(localStorage.getItem("token"), showID, seasonNumber).then((result) => {
+		showRequests.getShowSeason(localStorage.getItem("token"), showID, seasonNumber).then((result) => {
 			if (result != null) {
 				dispatch({
 					type: actionTypes.SET_CONTENT_SHOW_SEASONS,
@@ -263,7 +266,7 @@ export function requestShowEpisode(showID, seasonNumber, episodeNumber) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, true);
 		setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, false);
-		Requests.getShowEpisode(localStorage.getItem("token"), showID, seasonNumber, episodeNumber).then((result) => {
+		showRequests.getShowEpisode(localStorage.getItem("token"), showID, seasonNumber, episodeNumber).then((result) => {
 			if (result != null) {
 				dispatch({
 					type: actionTypes.SET_CONTENT_SHOW,
@@ -281,7 +284,7 @@ export function requestShowEpisode(showID, seasonNumber, episodeNumber) {
 export function requestShowUserInfo(id) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, true);
-		Requests.getShowUserInfo(localStorage.getItem("token"), id).then((result) => {
+		showRequests.getShowUserInfo(localStorage.getItem("token"), id).then((result) => {
 			if (result != null) {
 				let newResult = { ...result.user_info, friends_info: result.friends_info };
 				dispatch({
@@ -299,7 +302,7 @@ export function requestShowUserInfo(id) {
 export function requestShowSeasonUserInfo(showID, seasonID) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, true);
-		Requests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then((result) => {
+		showRequests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then((result) => {
 			if (result != null) {
 				let newResult = { ...result.user_info, user_watched_show: result.user_watched_show, episodes: result.episodes_user_info, friends_info: result.friends_info };
 				dispatch({
@@ -321,7 +324,7 @@ export function requestShowSeasonsUserInfo(showID, seasonID) {
 			seasonNumber: seasonID,
 			isLoading: true,
 		});
-		Requests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then((result) => {
+		showRequests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then((result) => {
 			if (result != null) {
 				let newResult = { ...result.user_info, user_watched_show: result.user_watched_show, episodes: result.episodes_user_info, friends_info: result.friends_info };
 				dispatch({
@@ -344,7 +347,7 @@ export function requestShowSeasonsUserInfo(showID, seasonID) {
 export function requestShowEpisodeUserInfo(showID, seasonID, episodeID) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, true);
-		Requests.getShowEpisodeUserInfo(localStorage.getItem("token"), showID, seasonID, episodeID).then((result) => {
+		showRequests.getShowEpisodeUserInfo(localStorage.getItem("token"), showID, seasonID, episodeID).then((result) => {
 			if (result != null) {
 				let newResult = { ...result.user_info, user_watched_show: result.user_watched_show, friends_info: result.friends_info };
 				dispatch({
@@ -362,7 +365,7 @@ export function requestShowEpisodeUserInfo(showID, seasonID, episodeID) {
 export function setGameStatus(user_info) {
 	return async (dispatch, getState) => {
 		if (await dispatch(checkAuthorization())) {
-			Requests.setGameStatus(localStorage.getItem("token"), selectors.getContentGame(getState()).rawg.slug, user_info).then((result) => {
+			gameRequests.setGameStatus(localStorage.getItem("token"), selectors.getContentGame(getState()).rawg.slug, user_info).then((result) => {
 				if (!result) {
 					toast.error("Ошибка обновления статуса");
 				} else {
@@ -380,7 +383,7 @@ export function requestUserPageContent(username) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_CONTENT, true);
 		setError(dispatch, actionTypes.USER_PAGE_ERROR, false);
-		Requests.getUserInfo(localStorage.getItem("token"), username).then((result) => {
+		userRequests.getUserInfo(localStorage.getItem("token"), username).then((result) => {
 			if (result != null) {
 				dispatch({
 					type: actionTypes.SET_USER_PAGE_CONTENT,
@@ -398,7 +401,7 @@ export function requestUserPageContent(username) {
 export function requestUserPageLogs(userID, page, resultsOnPage) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_LOGS, true);
-		Requests.getUserLog(localStorage.getItem("token"), userID, page, resultsOnPage).then((result) => {
+		userRequests.getUserLog(localStorage.getItem("token"), userID, page, resultsOnPage).then((result) => {
 			if (result != null) {
 				dispatch({
 					type: actionTypes.SET_USER_PAGE_LOGs,
@@ -415,16 +418,33 @@ export function requestUserPageLogs(userID, page, resultsOnPage) {
 export function requestUserPageFriendsLogs(userID, page, resultsOnPage) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_FRIENDS_LOGS, true);
-		Requests.getUserFriendsLog(localStorage.getItem("token"), userID, page, resultsOnPage).then((result) => {
+		userRequests.getUserFriendsLog(localStorage.getItem("token"), userID, page, resultsOnPage).then((result) => {
 			if (result != null) {
 				dispatch({
 					type: actionTypes.SET_USER_PAGE_FRIENDS_LOGS,
 					logs: result,
 				});
 			} else {
-				toast.error("Ошибка загрузки логов!");
+				toast.error("Ошибка загрузки активности друзей!");
 			}
 			setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_FRIENDS_LOGS, false);
+		});
+	};
+}
+
+export function requestUserPageCalendar() {
+	return async (dispatch) => {
+		setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_CALENDAR, true);
+		userRequests.getUserCalendar(localStorage.getItem("token")).then((result) => {
+			if (result != null) {
+				dispatch({
+					type: actionTypes.SET_USER_PAGE_CALENDAR,
+					data: result,
+				});
+			} else {
+				toast.error("Ошибка загрузки календаря!");
+			}
+			setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_CALENDAR, false);
 		});
 	};
 }
@@ -432,7 +452,7 @@ export function requestUserPageFriendsLogs(userID, page, resultsOnPage) {
 export function searchGames(query, page, gamesCount) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_GAMES, true);
-		Requests.searchGames(query, page, gamesCount).then((result) => {
+		gameRequests.searchGames(query, page, gamesCount).then((result) => {
 			if (!result) {
 				toast.error("Ошибка поиска");
 			} else {
@@ -449,7 +469,7 @@ export function searchGames(query, page, gamesCount) {
 export function searchMovies(query, page) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_MOVIES, true);
-		Requests.searchMovies(query, page).then((result) => {
+		movieRequests.searchMovies(query, page).then((result) => {
 			if (!result) {
 				toast.error("Ошибка поиска фильмов");
 			} else {
@@ -466,7 +486,7 @@ export function searchMovies(query, page) {
 export function searchShows(query, page) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_SHOWS, true);
-		Requests.searchShows(query, page).then((result) => {
+		showRequests.searchShows(query, page).then((result) => {
 			if (!result) {
 				toast.error("Ошибка поиска сериалов");
 			} else {
@@ -483,7 +503,7 @@ export function searchShows(query, page) {
 export function setMovieStatus(user_info) {
 	return async (dispatch, getState) => {
 		if (await dispatch(checkAuthorization())) {
-			Requests.setMovieStatus(localStorage.getItem("token"), selectors.getContentMovie(getState()).tmdb.id, user_info).then((result) => {
+			movieRequests.setMovieStatus(localStorage.getItem("token"), selectors.getContentMovie(getState()).tmdb.id, user_info).then((result) => {
 				if (!result) {
 					toast.error("Ошибка обновления статуса");
 				} else {
@@ -500,7 +520,7 @@ export function setMovieStatus(user_info) {
 export function setShowStatus(user_info) {
 	return async (dispatch, getState) => {
 		if (await dispatch(checkAuthorization())) {
-			Requests.setShowStatus(localStorage.getItem("token"), selectors.getContentShow(getState()).tmdb.id, user_info).then((result) => {
+			showRequests.setShowStatus(localStorage.getItem("token"), selectors.getContentShow(getState()).tmdb.id, user_info).then((result) => {
 				if (!result) {
 					toast.error("Ошибка обновления статуса");
 				} else {
@@ -517,7 +537,7 @@ export function setShowStatus(user_info) {
 export function setShowSeasonStatus(user_info, showID, seasonNumber) {
 	return async (dispatch) => {
 		if (await dispatch(checkAuthorization())) {
-			Requests.setShowSeasonStatus(localStorage.getItem("token"), showID, seasonNumber, user_info).then((result) => {
+			showRequests.setShowSeasonStatus(localStorage.getItem("token"), showID, seasonNumber, user_info).then((result) => {
 				if (!result) {
 					toast.error("Ошибка обновления статуса");
 				} else {
@@ -534,7 +554,7 @@ export function setShowSeasonStatus(user_info, showID, seasonNumber) {
 export function setShowEpisodesStatus(episodesList, showID, needUpdate = false) {
 	return async (dispatch) => {
 		if (await dispatch(checkAuthorization())) {
-			Requests.setShowEpisodesStatus(localStorage.getItem("token"), showID, episodesList).then((result) => {
+			showRequests.setShowEpisodesStatus(localStorage.getItem("token"), showID, episodesList).then((result) => {
 				if ((result.status !== 204) & (result.status !== 200) & (result.status !== 201)) {
 					toast.error("Ошибка обновления статуса");
 				} else {
@@ -553,7 +573,7 @@ export function setShowEpisodesStatus(episodesList, showID, needUpdate = false) 
 export function searchUsers(query) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_USERS, true);
-		Requests.searchUsers(query).then((result) => {
+		userRequests.searchUsers(query).then((result) => {
 			if (!result) {
 				toast.error("Ошибка поиска");
 			} else {
@@ -570,7 +590,7 @@ export function searchUsers(query) {
 export function setUserStatus(is_following, userID) {
 	return async (dispatch) => {
 		if (await dispatch(checkAuthorization())) {
-			Requests.setUserStatus(localStorage.getItem("token"), is_following, userID).then((result) => {
+			userRequests.setUserStatus(localStorage.getItem("token"), is_following, userID).then((result) => {
 				if (!result) {
 					toast.error("Ошибка обновления статуса");
 				} else {
