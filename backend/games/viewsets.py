@@ -225,7 +225,7 @@ def translate_hltb_time(hltb_game, time, time_unit):
 
 
 def get_game_search_results(query, page, page_size):
-    key = f'tmdb_game_search_{query}_page_{page}_page_size_{page_size}'
+    key = f'tmdb_game_search_{query.replace(" ", "_")}_page_{page}_page_size_{page_size}'
     results = cache.get(key, None)
     if results is None:
         search_result = rawg.search(query, num_results=page_size, additional_param=f"&page={page}")
