@@ -48,3 +48,16 @@
 	width: 12rem;
 	border-radius: 5px;
 }
+
+.show .dropdown-menu {
+	background-color: rgb(30, 30, 30);
+}
+
+.dropdown-item {
+	color: rgb(207, 207, 207) !important;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+	background-color: rgb(40, 40, 40) !important;
+}

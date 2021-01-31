@@ -10,7 +10,7 @@ import * as selectors from "../../store/reducers";
 import * as actions from "../../store/actions";
 
 import LoadingOverlay from "react-loading-overlay";
-import CalendarBlock from "./CalendarBlock";
+import CalendarBlock from "./Calendar/CalendarBlock";
 import GameBlock from "./GameBlock";
 import FriendBlock from "./FriendBlock";
 import MovieBlock from "./MovieBlock";
@@ -38,6 +38,8 @@ function UserPage({
 	getUserFriendsLogs,
 	userFriendsLogs,
 	userFriendsLogsIsLoading,
+	getUserCalendar,
+	userCalendar,
 }) {
 	let { userID } = useParams();
 	const [activeCategory, setActiveCategory] = useState("Профиль");
@@ -55,7 +57,12 @@ function UserPage({
 
 	useEffect(
 		() => {
-			if (loggedIn) getUserFriendsLogs(userID, 1, LOG_ROWS_COUNT);
+			if (loggedIn) {
+				getUserFriendsLogs(userID, 1, LOG_ROWS_COUNT);
+				if (String(currentUserInfo.id) === userID) {
+					getUserCalendar();
+				}
+			}
 		},
 		// eslint-disable-next-line
 		[loggedIn, userID]
@@ -97,14 +104,7 @@ function UserPage({
 								{userInfo.is_followed ? "Отписаться" : "Подписаться"}
 							</button>
 							<CategoriesTab
-								categories={[
-									"Профиль",
-									"Игры",
-									"Фильмы",
-									"Сериалы",
-									"Друзья",
-									//    , "Календарь"
-								]}
+								categories={["Профиль", "Игры", "Фильмы", "Сериалы", "Друзья", currentUserInfo.username === userInfo.username ? "Календарь" : undefined]}
 								activeColor='#7654de'
 								onChangeCategory={(category) => {
 									setActiveCategory(category);
@@ -148,9 +148,9 @@ function UserPage({
 									<UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => getUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true} />
 								</LoadingOverlay>
 							</div>
-							{/*<div hidden={activeCategory !== "Календарь"}>
-								<CalendarBlock />
-                                                </div>*/}
+							<div hidden={activeCategory !== "Календарь"}>
+								<CalendarBlock calendar={userCalendar} />
+							</div>
 						</MDBCol>
 						<MDBCol md='0.5'></MDBCol>
 					</MDBRow>
@@ -169,6 +169,7 @@ const mapStateToProps = (state) => ({
 	userFriendsLogs: selectors.getUserPageFriendsLogs(state),
 	userFriendsLogsIsLoading: selectors.getIsLoadingUserPageFriendsLogs(state),
 	currentUserInfo: selectors.getUser(state),
+	userCalendar: selectors.getUserPageCalendar(state),
 });
 
 const mapDispatchToProps = (dispatch) => {
@@ -187,6 +188,9 @@ const mapDispatchToProps = (dispatch) => {
 		},
 		getUserFriendsLogs: (userID, page, resultsOnPage) => {
 			dispatch(actions.requestUserPageFriendsLogs(userID, page, resultsOnPage));
+		},
+		getUserCalendar: () => {
+			dispatch(actions.requestUserPageCalendar());
 		},
 	};
 };

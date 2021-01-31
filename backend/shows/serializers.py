@@ -190,3 +190,4 @@ class EpisodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Episode
         fields = '__all__'
+        depth = 1
