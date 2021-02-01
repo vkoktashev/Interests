@@ -1,3 +1,3 @@
-if $1="run" then RUN sudo docker-compose down && sudo docker-compose build && sudo docker-compose up fi
-if $1="migrate" then RUN sudo docker exec -it $(sudo docker ps | grep interests_back | awk '{{ print $1 }}') python manage.py migrate fi
-if $1="bash" then RUN sudo docker exec -it $(sudo docker ps | grep interests_back | awk '{{ print $1 }}') bash fi
+if [$1="run"]; then RUN sudo docker-compose down && sudo docker-compose build && sudo docker-compose up fi
+if [$1="migrate"]; then RUN sudo docker exec -it $(sudo docker ps | grep interests_back | awk '{{ print $1 }}') python manage.py migrate fi
+if [$1="bash"]; then RUN sudo docker exec -it $(sudo docker ps | grep interests_back | awk '{{ print $1 }}') bash fi
