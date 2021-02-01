@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import tmdbsimple as tmdb
 from django.core.cache import cache
 from django.db import transaction
@@ -318,6 +320,16 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             first_not_watched_episode_log.save()
 
         return Response(status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def upcoming_releases(self, request, *args, **kwargs):
+        today_date = datetime.today().date()
+        shows = Show.objects.filter(usershow__user=request.user).exclude(usershow__status=UserShow.STATUS_NOT_WATCHED)
+        episodes = Episode.objects.select_related('tmdb_show').filter(tmdb_show__in=shows,
+                                                                      tmdb_release_date__gt=today_date)
+
+        return Response()
+
 
 
 class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
