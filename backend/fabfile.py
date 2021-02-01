@@ -1,43 +1,14 @@
 from fabric.api import local
 
 
-def run(port=8000):
-    local(f"python manage.py runserver 0.0.0.0:{port}")
-
-
-def start():
-    local("cd ../frontend && npm start")
-
-
-def install():
-    local("cd ../frontend && npm install")
-
-
-def update():
-    local("python -m pip install -U pip")
-    local("pip install --upgrade -r requirements.txt")
+def up():
+    local("sudo docker-compose down | sudo docker-compose build | sudo docker-compose up -d")
 
 
 def migrate():
-    local("python manage.py makemigrations")
-    local("python manage.py migrate")
+    local(
+        "sudo docker exec -it $(sudo docker ps | grep interests_back | awk '{{ print $1 }}') python manage.py migrate")
 
 
-def makemigrations():
-    local("python manage.py makemigrations")
-
-
-def createsuperuser():
-    local("python manage.py createsuperuser")
-
-
-def createapp(name):
-    local(f"python manage.py startapp {name}")
-
-
-def test():
-    local("python manage.py test")
-
-
-def ngrok(port=8000):
-    local(f"ngrok.exe http {port} -region eu")
+def bash():
+    local("sudo docker exec -it $(sudo docker ps | grep interests_back | awk '{{ print $1 }}') bash")
