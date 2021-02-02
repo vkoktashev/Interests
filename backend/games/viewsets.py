@@ -17,7 +17,7 @@ from users.models import UserFollow
 from utils.constants import RAWG_UNAVAILABLE, ERROR, HLTB_UNAVAILABLE, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, \
     GAME_NOT_FOUND, CACHE_TIMEOUT
 from utils.documentation import GAMES_SEARCH_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE
-from utils.functions import int_to_hours, get_page_size, int_to_minutes, update_fields_if_needed
+from utils.functions import int_to_hours, get_page_size, int_to_minutes, update_fields_if_needed, get_rawg_game_key
 from utils.openapi_params import query_param, page_param, page_size_param
 
 
@@ -248,7 +248,7 @@ def get_hltb_search_result(game_name):
 
 def get_rawg_game(slug):
     returned_from_cache = True
-    key = f'game_{slug}'
+    key = get_rawg_game_key(slug)
     rawg_game = cache.get(key, None)
     if rawg_game is None:
         rawg_game = rawg.get_game(slug).json
