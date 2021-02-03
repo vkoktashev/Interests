@@ -240,7 +240,7 @@ def get_hltb_search_result(game_name):
     key = f'hltb_search_{game_name.replace(" ", "_")}'
     results = cache.get(key, None)
     if results is None:
-        results = HowLongToBeat(0.9).search(game_name.replace('’', '\''),
+        results = HowLongToBeat(1.0).search(game_name.replace('’', '\''),
                                             similarity_case_sensitive=False)
         cache.set(key, results, CACHE_TIMEOUT)
     return results
