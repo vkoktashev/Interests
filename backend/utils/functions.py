@@ -104,3 +104,20 @@ def update_fields_if_needed(obj, new_fields):
             fields_to_update.append(key)
 
     obj.save(update_fields=fields_to_update)
+
+
+# cache keys
+def get_rawg_game_key(slug):
+    return f'game_{slug}'
+
+
+def get_tmdb_movie_key(tmdb_id):
+    return f'movie_{tmdb_id}'
+
+
+def get_tmdb_show_key(tmdb_id):
+    return f'show_{tmdb_id}'
+
+
+def get_tmdb_episode_key(show_tmdb_id, season_number, episode_number):
+    return f'show_{show_tmdb_id}_season_{season_number}_episode_{episode_number}'

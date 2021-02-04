@@ -23,7 +23,7 @@ from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, D
     SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE
 from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
     SEASON_RETRIEVE_200_EXAMPLE
-from utils.functions import update_fields_if_needed
+from utils.functions import update_fields_if_needed, get_tmdb_show_key, get_tmdb_episode_key
 from utils.openapi_params import query_param, page_param
 
 
@@ -329,7 +329,6 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                                                       tmdb_release_date__gt=today_date)
 
         return Response()
-
 
 
 class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -641,7 +640,7 @@ def get_show_search_results(query, page):
 
 def get_show(tmdb_id):
     returned_from_cache = True
-    key = f'show_{tmdb_id}'
+    key = get_tmdb_show_key(tmdb_id)
     tmdb_show = cache.get(key, None)
     if tmdb_show is None:
         tmdb_show = tmdb.TV(tmdb_id).info(language=LANGUAGE)
@@ -662,7 +661,7 @@ def get_season(show_tmdb_id, season_number):
 
 
 def get_episode(show_tmdb_id, season_number, episode_number):
-    key = f'show_{show_tmdb_id}_season_{season_number}_episode_{episode_number}'
+    key = get_tmdb_episode_key(show_tmdb_id, season_number, episode_number)
     tmdb_episode = cache.get(key, None)
     if tmdb_episode is None:
         tmdb_episode = tmdb.TV_Episodes(show_tmdb_id, season_number, episode_number).info(language=LANGUAGE)

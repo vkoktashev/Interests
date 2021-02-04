@@ -13,3 +13,5 @@ drf-yasg
 tmdbsimple
 requests
 drf-nested-routers
+celery
+celery[redis]

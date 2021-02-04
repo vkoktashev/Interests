@@ -17,7 +17,7 @@ from users.models import UserFollow
 from utils.constants import RAWG_UNAVAILABLE, ERROR, HLTB_UNAVAILABLE, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, \
     GAME_NOT_FOUND, CACHE_TIMEOUT
 from utils.documentation import GAMES_SEARCH_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE
-from utils.functions import int_to_hours, get_page_size, int_to_minutes, update_fields_if_needed
+from utils.functions import int_to_hours, get_page_size, int_to_minutes, update_fields_if_needed, get_rawg_game_key
 from utils.openapi_params import query_param, page_param, page_size_param
 
 
@@ -97,6 +97,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'rawg_slug': rawg_game.get('slug'),
             'rawg_name': rawg_game.get('name'),
             'rawg_release_date': rawg_game.get('released'),
+            'rawg_tba': rawg_game.get('tba'),
             'hltb_name': hltb_game_name,
             'hltb_id': hltb_game_id
         }
@@ -240,7 +241,7 @@ def get_hltb_search_result(game_name):
     key = f'hltb_search_{game_name.replace(" ", "_")}'
     results = cache.get(key, None)
     if results is None:
-        results = HowLongToBeat(0.9).search(game_name.replace('’', '\''),
+        results = HowLongToBeat(1.0).search(game_name.replace('’', '\''),
                                             similarity_case_sensitive=False)
         cache.set(key, results, CACHE_TIMEOUT)
     return results
@@ -248,7 +249,7 @@ def get_hltb_search_result(game_name):
 
 def get_rawg_game(slug):
     returned_from_cache = True
-    key = f'game_{slug}'
+    key = get_rawg_game_key(slug)
     rawg_game = cache.get(key, None)
     if rawg_game is None:
         rawg_game = rawg.get_game(slug).json

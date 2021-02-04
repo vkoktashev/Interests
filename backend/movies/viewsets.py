@@ -15,7 +15,7 @@ from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer
 from users.models import UserFollow
 from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, CACHE_TIMEOUT
 from utils.documentation import MOVIES_SEARCH_200_EXAMPLE, MOVIE_RETRIEVE_200_EXAMPLE
-from utils.functions import update_fields_if_needed
+from utils.functions import update_fields_if_needed, get_tmdb_movie_key
 from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER
 
 
@@ -88,7 +88,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'tmdb_original_name': tmdb_movie.get('original_title'),
             'tmdb_name': tmdb_movie.get('title'),
             'tmdb_runtime': tmdb_movie.get('runtime'),
-            'tmdb_release_date': tmdb_movie.get('release_date') if tmdb_movie.get('first_air_date') != "" else None
+            'tmdb_release_date': tmdb_movie.get('release_date') if tmdb_movie.get('release_date') != "" else None
         }
 
         with transaction.atomic():
@@ -200,7 +200,7 @@ def get_movie_search_results(query, page):
 
 def get_tmdb_movie(tmdb_id):
     returned_from_cache = True
-    key = f'movie_{tmdb_id}'
+    key = get_tmdb_movie_key(tmdb_id)
     tmdb_movie = cache.get(key, None)
     if tmdb_movie is None:
         tmdb_movie = tmdb.Movies(tmdb_id).info(language=LANGUAGE)
