@@ -11,6 +11,7 @@ class Game(models.Model):
     rawg_slug = models.CharField(max_length=200, unique=True)
     rawg_id = models.IntegerField(unique=True)
     rawg_release_date = models.DateField(null=True)
+    rawg_tba = models.BooleanField(default=False)
     # howlongtobeat
     hltb_name = models.CharField(max_length=200, blank=True)
     hltb_id = models.IntegerField(null=True, blank=True)
