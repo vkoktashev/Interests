@@ -41,3 +41,11 @@ def test():
 
 def ngrok(port=8000):
     local(f"ngrok.exe http {port} -region eu")
+
+
+def worker():
+    local("celery -A config worker -l info -P threads")
+
+
+def beat():
+    local("celery -A config beat -l info")

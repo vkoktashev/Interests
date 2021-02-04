@@ -1,7 +1,6 @@
 import os
 from datetime import timedelta
 
-
 SECRET_KEY = '3^a%5=f#(3eyozrxer7)$mz#pk158#9+pm3#j#++p99_if9ee('
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -62,7 +61,7 @@ SWAGGER_SETTINGS = {
 SITE_ID = 1
 
 INTERNAL_IPS = [
-        '127.0.0.1'
+    '127.0.0.1'
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -144,6 +143,13 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7)
 }
+
+# celery
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
 
 LANGUAGE_CODE = 'ru-ru'
 
