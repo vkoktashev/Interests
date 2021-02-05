@@ -119,5 +119,9 @@ def get_tmdb_show_key(tmdb_id):
     return f'show_{tmdb_id}'
 
 
+def get_tmdb_season_key(show_tmdb_id, season_number):
+    return f'show_{show_tmdb_id}_season_{season_number}'
+
+
 def get_tmdb_episode_key(show_tmdb_id, season_number, episode_number):
     return f'show_{show_tmdb_id}_season_{season_number}_episode_{episode_number}'

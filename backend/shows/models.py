@@ -29,12 +29,13 @@ class Episode(models.Model):
     tmdb_id = models.IntegerField(unique=True, primary_key=True)
     tmdb_episode_number = models.IntegerField()
     tmdb_season_number = models.IntegerField()
+    tmdb_season = models.ForeignKey(Season, on_delete=models.CASCADE, null=True)
     tmdb_name = models.CharField(max_length=200)
     tmdb_show = models.ForeignKey(Show, on_delete=models.CASCADE)
     tmdb_release_date = models.DateField(null=True)
 
     class Meta:
-        unique_together = (("tmdb_season_number", "tmdb_episode_number", "tmdb_show"),)
+        unique_together = (("tmdb_season", "tmdb_episode_number"),)
 
 
 class UserShow(UserScore):
