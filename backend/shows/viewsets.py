@@ -1,9 +1,10 @@
 from datetime import datetime
 
+import psycopg2
 import tmdbsimple as tmdb
 from django.core.cache import cache
-from django.db import transaction
-from django.db.models import F
+from django.db import transaction, IntegrityError
+from django.db.models import F, Q
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
@@ -23,7 +24,7 @@ from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, D
     SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE
 from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
     SEASON_RETRIEVE_200_EXAMPLE
-from utils.functions import update_fields_if_needed, get_tmdb_show_key, get_tmdb_episode_key
+from utils.functions import update_fields_if_needed, get_tmdb_show_key, get_tmdb_episode_key, get_tmdb_season_key
 from utils.openapi_params import query_param, page_param
 
 
@@ -327,6 +328,71 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         shows = Show.objects.filter(usershow__user=request.user).exclude(usershow__status=UserShow.STATUS_NOT_WATCHED)
         episodes = Episode.objects.select_related('tmdb_show').filter(tmdb_show__in=shows,
                                                                       tmdb_release_date__gt=today_date)
+
+        return Response()
+
+    # @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    # def test(self, request, *args, **kwargs):
+    #     today_date = datetime.today().date()
+    #
+    #     seasons_to_check = Episode.objects.select_related('tmdb_show') \
+    #         .filter(Q(tmdb_release_date__gte=today_date) | Q(tmdb_release_date=None)) \
+    #         .exclude(tmdb_season_number=0) \
+    #         .values('tmdb_show__tmdb_id', 'tmdb_season_number').distinct()
+    #
+    #     for season in seasons_to_check:
+    #         show_id = season['tmdb_show__tmdb_id']
+    #         season_number = season['tmdb_season_number']
+    #         key = get_tmdb_season_key(show_id, season_number)
+    #         try:
+    #             tmdb_season = tmdb.TV_Seasons(show_id, season_number).info(language=LANGUAGE)
+    #         except HTTPError as e:
+    #             error_code = int(e.args[0].split(' ', 1)[0])
+    #             if error_code == 404:
+    #                 continue
+    #             else:
+    #                 print('ОШИБКА', error_code)
+    #                 raise HTTPError(e)
+    #         cache.set(key, tmdb_season, CACHE_TIMEOUT)
+    #
+    #         episodes = tmdb_season.get('episodes')
+    #         existed_episodes = Episode.objects.filter(
+    #             tmdb_id__in=[episode.get('id') for episode in episodes])
+    #         episodes_to_create = []
+    #
+    #         for episode in episodes:
+    #             exists = False
+    #
+    #             for existed_episode in existed_episodes:
+    #                 if episode['id'] == existed_episode.tmdb_id:
+    #                     exists = True
+    #
+    #                     new_fields = {
+    #                         'tmdb_id': episode.get('id'),
+    #                         'tmdb_episode_number': episode.get('episode_number'),
+    #                         'tmdb_season_number': episode.get('season_number'),
+    #                         'tmdb_name': episode.get('name'),
+    #                         'tmdb_show_id': existed_episode.tmdb_show_id,
+    #                         'tmdb_release_date': episode.get('air_date') if episode.get('air_date') != "" else None
+    #                     }
+    #                     update_fields_if_needed(existed_episode, new_fields)
+    #                     #print(existed_episode.__dict__)
+    #                     break
+    #
+    #             if not exists:
+    #                 #print(episode)
+    #                 episodes_to_create.append(Episode(tmdb_id=episode.get('id'),
+    #                                                   tmdb_episode_number=episode.get('episode_number'),
+    #                                                   tmdb_season_number=episode.get('season_number'),
+    #                                                   tmdb_name=episode.get('name'),
+    #                                                   tmdb_show_id=kwargs.get('show_tmdb_id')))
+    #
+    #         Episode.objects.bulk_create(episodes_to_create)
+
+        # seasons = Season.objects.filter(tmdb_season_number__in=list(episodes))
+        #
+        # for s in seasons:
+        #     print(s.tmdb_season_number, s.tmdb_show.tmdb_name)
 
         return Response()
 
@@ -651,7 +717,7 @@ def get_show(tmdb_id):
 
 def get_season(show_tmdb_id, season_number):
     returned_from_cache = True
-    key = f'show_{show_tmdb_id}_season_{season_number}'
+    key = get_tmdb_season_key(show_tmdb_id, season_number)
     tmdb_season = cache.get(key, None)
     if tmdb_season is None:
         tmdb_season = tmdb.TV_Seasons(show_tmdb_id, season_number).info(language=LANGUAGE)
