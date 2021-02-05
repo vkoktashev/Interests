@@ -10,6 +10,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 8080
+      POSTGRES_DB: interests
     ports:
       - "5454:5432"
 
