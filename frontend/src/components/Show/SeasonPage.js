@@ -129,7 +129,7 @@ function ShowPage({
 								<p>Количество серий: {showSeason.tmdb.episodes ? showSeason.tmdb.episodes.length : 0}</p>
 							</div>
 							<div hidden={!loggedIn | !showUserInfo?.user_watched_show}>
-								<LoadingOverlay active={showUserInfoIsLoading} spinner text='Загрузка...'>
+								<LoadingOverlay active={showUserInfoIsLoading & !showSeasonIsLoading} spinner text='Загрузка...'>
 									<Rating
 										stop={10}
 										emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}

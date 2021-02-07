@@ -13,6 +13,7 @@
     "react": "^16.14.0",
     "react-calendar": "^3.3.1",
     "react-dom": "^16.13.1",
+    "react-event-timeline": "^1.6.3",
     "react-loading-overlay": "^1.0.1",
     "react-rating": "^2.0.5",
     "react-redux": "^7.2.1",

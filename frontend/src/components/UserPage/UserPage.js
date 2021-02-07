@@ -49,10 +49,12 @@ function UserPage({
 	useEffect(
 		() => {
 			getUserInfo(userID);
-			getUserLogs(userID, 1, LOG_ROWS_COUNT);
+			if (section !== "Календарь") {
+				getUserLogs(userID, 1, LOG_ROWS_COUNT);
+			}
 		},
 		// eslint-disable-next-line
-		[userID, getUserInfo, getUserLogs, getUserFriendsLogs]
+		[userID, getUserInfo, getUserLogs, getUserFriendsLogs, section]
 	);
 
 	useEffect(
@@ -67,14 +69,14 @@ function UserPage({
 	useEffect(
 		() => {
 			if (loggedIn) {
-				getUserFriendsLogs(userID, 1, LOG_ROWS_COUNT);
+				if (section !== "Календарь") getUserFriendsLogs(userID, 1, LOG_ROWS_COUNT);
 				if (String(currentUserInfo.id) === userID) {
 					getUserCalendar();
 				}
 			}
 		},
 		// eslint-disable-next-line
-		[loggedIn, userID]
+		[loggedIn, userID, section]
 	);
 
 	useEffect(() => {
@@ -124,7 +126,7 @@ function UserPage({
 
 							<div hidden={activeCategory !== "Профиль"}>
 								<h4>Моя активность: </h4>
-								<LoadingOverlay active={userLogsIsLoading} spinner text='Загрузка активности...'>
+								<LoadingOverlay active={userLogsIsLoading && !userIsLoading} spinner text='Загрузка активности...'>
 									<div hidden={chartData.length < 1}>
 										<PieChart width={350} height={250} hidden={chartData.length < 1}>
 											<Pie dataKey='value' data={chartData} cx='50%' cy='50%' outerRadius={80} fill='#8884d8' labelLine={true} label minAngle={5}>
@@ -155,7 +157,7 @@ function UserPage({
 							<div hidden={activeCategory !== "Друзья"}>
 								<FriendBlock users={userInfo.followed_users ? userInfo.followed_users : []} />
 								<h4>Активность друзей: </h4>
-								<LoadingOverlay active={userFriendsLogsIsLoading} spinner text='Загрузка активности...'>
+								<LoadingOverlay active={userFriendsLogsIsLoading && !userIsLoading} spinner text='Загрузка активности...'>
 									<UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => getUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true} />
 								</LoadingOverlay>
 							</div>

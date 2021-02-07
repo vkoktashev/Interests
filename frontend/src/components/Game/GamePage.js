@@ -24,6 +24,7 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 	const [userStatus, setUserStatus] = useState("Не играл");
 	const [userRate, setUserRate] = useState(0);
 	const [developers, setDevelopers] = useState("");
+	const [platforms, setPlatforms] = useState("");
 	const [date, setDate] = useState("");
 	const [hltbInfo, setHtlbInfo] = useState({ gameplay_main_extra: -1, gameplay_main: -1, gameplay_comletionist: -1 });
 
@@ -74,6 +75,15 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 			setDevelopers(newDevelopers);
 		}
 
+		if (game.rawg.platforms) {
+			let newPlatforms = "";
+			for (let i = 0; i < game.rawg.platforms.length; i++) {
+				newPlatforms += game.rawg.platforms[i].platform.name;
+				if (i !== game.rawg.platforms.length - 1) newPlatforms += ", ";
+			}
+			setPlatforms(newPlatforms);
+		}
+
 		if (game.rawg.released) {
 			let mas = game.rawg.released.split("-");
 			let newDate = mas[2] + "." + mas[1] + "." + mas[0];
@@ -102,6 +112,7 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 		setGenres("");
 		setHtlbInfo({ gameplay_main_extra: -1, gameplay_main: -1, gameplay_completionist: -1 });
 		setDevelopers("");
+		setPlatforms("");
 		setDate("");
 	}
 
@@ -124,12 +135,13 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 						<div className='gameInfoBlock'>
 							<h1 className='header'>{game.rawg.name}</h1>
 							<div className='mainInfo'>
-								<p className='header'>Разработчики: {developers}</p>
+								<p>Разработчики: {developers}</p>
 								<p>Дата релиза: {date}</p>
 								<p>Жанр: {genres}</p>
+								<p>Платформы: {platforms}</p>
 								<TimeToBeat hltbInfo={hltbInfo} />
 							</div>
-							<LoadingOverlay active={gameUserInfoIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={gameUserInfoIsLoading & !gameIsLoading} spinner text='Загрузка...'>
 								<Rating
 									stop={10}
 									emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
@@ -178,7 +190,7 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 						</div>
 						<div className='gameReviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
-							<LoadingOverlay active={gameUserInfoIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={gameUserInfoIsLoading & !gameIsLoading} spinner text='Загрузка...'>
 								<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
 								<MDBInput type='number' id='spentTimeInput' label='Время прохождения (часы)' value={spentTime} onChange={(event) => setSpentTime(event.target.value)} />
 								<button
