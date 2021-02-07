@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import DayInfo from "./DayInfo";
+import ReleasesList from "./ReleasesList";
 import "./style.css";
 
 function CalendarBlock({ calendar }) {
@@ -37,8 +38,10 @@ function CalendarBlock({ calendar }) {
 
 	return (
 		<div className='calendarBlock'>
+			{/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? <DayInfo day={currentDay} date={value} /> : ""}
 			<Calendar className='calendar' onChange={onChange} value={value} defaultView='month' minDetail='decade' locale='ru-RU' minDate={new Date()} tileContent={dateToTile} />
-			<DayInfo day={currentDay} date={value} />
+			{/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? "" : <DayInfo day={currentDay} date={value} />}
+			<ReleasesList calendar={Object.entries(calendar)} />
 		</div>
 	);
 }

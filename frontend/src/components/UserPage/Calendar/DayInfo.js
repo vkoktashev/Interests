@@ -6,7 +6,9 @@ function DayInfo({ day, date }) {
 
 	return (
 		<div className='dayInfoBlock'>
-			<h2 className='dayInfoDate'>{date ? date.toLocaleDateString("ru-RU", { year: "numeric", month: "long", day: "numeric", weekday: "long" }) : ""}</h2>
+			<h3 className='dayInfoDate'>
+				{date ? date.toLocaleDateString("ru-RU", { year: date.getFullYear() === new Date().getFullYear() ? undefined : "numeric", month: "long", day: "numeric", weekday: "long" }) : ""}
+			</h3>
 			<div className='dayInfoCategory' hidden={!(day?.games?.length > 0)}>
 				<h3>Игры</h3>
 				{day.games?.map((game) => (

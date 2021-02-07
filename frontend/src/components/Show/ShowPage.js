@@ -156,7 +156,7 @@ function ShowPage({ requestShow, show, showIsLoading, setShowUserStatus, setShow
 								<p>Количество серий: {show.tmdb.number_of_episodes}</p>
 								<p>Статус: {showStatus}</p>
 							</div>
-							<LoadingOverlay active={showUserInfoIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={showUserInfoIsLoading & !showIsLoading} spinner text='Загрузка...'>
 								<Rating
 									stop={10}
 									emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
@@ -208,7 +208,7 @@ function ShowPage({ requestShow, show, showIsLoading, setShowUserStatus, setShow
 						</div>
 						<div className='showReviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
-							<LoadingOverlay active={showUserInfoIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={showUserInfoIsLoading & !showIsLoading} spinner text='Загрузка...'>
 								<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
 								<button
 									className={"savePreviewButton"}
