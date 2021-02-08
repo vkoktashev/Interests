@@ -66,8 +66,7 @@ class AuthViewSet(GenericViewSet):
         token = account_activation_token.make_token(user)
         activation_link = f"{request.scheme}://{SITE_URL}/confirm/?uid64={uid64}&token={token}"
         message = f"Привет {user.username}, для активации аккаунта перейди по ссылке:\n{activation_link}"
-        email = EmailMessage(mail_subject, message, to=[
-                             user.email], from_email=EMAIL_HOST_USER)
+        email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
         try:
             email.send()
             # print(activation_link)
@@ -89,12 +88,11 @@ class AuthViewSet(GenericViewSet):
                                      "application/json": {ERROR: WRONG_URL}
                                  }
                              )
-    })
+                         })
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
     def confirm_email(self, request, *args, **kwargs):
         try:
-            uid = force_text(urlsafe_base64_decode(
-                request.query_params.get('uid64')))
+            uid = force_text(urlsafe_base64_decode(request.query_params.get('uid64')))
             user = User.objects.get(pk=uid)
         except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist):
             user = None
@@ -147,8 +145,7 @@ class AuthViewSet(GenericViewSet):
             user_password_token.reset_token = reset_token
             user_password_token.is_active = True
         except UserPasswordToken.DoesNotExist:
-            user_password_token = UserPasswordToken.objects.create(
-                user=user, reset_token=reset_token)
+            user_password_token = UserPasswordToken.objects.create(user=user, reset_token=reset_token)
 
         user_password_token.save()
 
@@ -156,11 +153,10 @@ class AuthViewSet(GenericViewSet):
         activation_link = f"{request.scheme}://{SITE_URL}/" \
                           f"confirm_password/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
         message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
-        email = EmailMessage(mail_subject, message, to=[
-                             user.email], from_email=EMAIL_HOST_USER)
+        email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
         try:
-            # email.send()
-            print(activation_link)
+            email.send()
+            # print(activation_link)
         except SMTPAuthenticationError:
             return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -172,22 +168,19 @@ class AuthViewSet(GenericViewSet):
                              properties={
                                  'password': openapi.Schema(type=openapi.TYPE_STRING),
                              }
-    ))
+                         ))
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
     def confirm_password_reset(self, request, *args, **kwargs):
         try:
-            reset_token = force_text(urlsafe_base64_decode(
-                request.query_params.get('reset_token')))
+            reset_token = force_text(urlsafe_base64_decode(request.query_params.get('reset_token')))
             password = request.data.get('password')
-            user_password_token = UserPasswordToken.objects.get(
-                reset_token=reset_token)
+            user_password_token = UserPasswordToken.objects.get(reset_token=reset_token)
             user = User.objects.get(id=user_password_token.user.id)
         except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist, UserPasswordToken.DoesNotExist):
             return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
 
         if user_password_token.is_active:
-            serializer = UserSerializer(
-                instance=user, data={'password': password}, partial=True)
+            serializer = UserSerializer(instance=user, data={'password': password}, partial=True)
             serializer.is_valid(raise_exception=True)
             user_password_token.is_active = False
             user_password_token.save()
@@ -218,7 +211,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                      "application/json": {ERROR: USER_NOT_FOUND}
                                  }
                              )
-    })
+                         })
     @action(detail=True, methods=['get'])
     def log(self, request, *args, **kwargs):
         try:
@@ -228,8 +221,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except User.DoesNotExist:
             return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
-        results, has_next_page = get_logs(
-            (user,), request.GET.get('page_size'), request.GET.get('page'))
+        results, has_next_page = get_logs((user,), request.GET.get('page_size'), request.GET.get('page'))
 
         return Response({'log': results, 'has_next_page': has_next_page})
 
@@ -253,7 +245,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                      "application/json": {ERROR: USER_NOT_FOUND}
                                  }
                              )
-    })
+                         })
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_log(self, request, *args, **kwargs):
         try:
@@ -263,10 +255,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except User.DoesNotExist:
             return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
-        user_follow_query = UserFollow.objects.filter(
-            user=user).values('followed_user')
-        results, has_next_page = get_logs(
-            user_follow_query, request.GET.get('page_size'), request.GET.get('page'))
+        user_follow_query = UserFollow.objects.filter(user=user).values('followed_user')
+        results, has_next_page = get_logs(user_follow_query, request.GET.get('page_size'), request.GET.get('page'))
 
         return Response({'log': results, 'has_next_page': has_next_page})
 
@@ -312,9 +302,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .exclude(usershow__status=UserShow.STATUS_NOT_WATCHED) \
             .exclude(usershow__status=UserShow.STATUS_STOPPED)
 
-        episodes = Episode.objects.select_related('tmdb_show').filter(tmdb_show__in=shows,
-                                                                      tmdb_release_date__gte=today_date)
-
+        episodes = Episode.objects.select_related('tmdb_season').filter(tmdb_season__tmdb_show__in=shows,
+                                                                        tmdb_release_date__gte=today_date)
         for episode in episodes:
             tmdb_release_date_str = str(episode.tmdb_release_date)
             release_date = calendar_dict[tmdb_release_date_str]
@@ -359,8 +348,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         try:
-            user_is_followed = UserFollow.objects.get(
-                user=request.user, followed_user=user).is_following
+            user_is_followed = UserFollow.objects.get(user=request.user, followed_user=user).is_following
         except (UserFollow.DoesNotExist, TypeError):
             user_is_followed = False
 
@@ -375,8 +363,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         games = serializer.data
         # games stats
         if user_games.exists():
-            games_total_spent_time = user_games.aggregate(
-                total_spent_time=Sum('spent_time'))['total_spent_time']
+            games_total_spent_time = user_games.aggregate(total_spent_time=Sum('spent_time'))['total_spent_time']
 
             games_genres_spent_time = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED) \
                 .filter(user=user) \
@@ -385,8 +372,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             if games_total_spent_time > 0:
                 for genre in games_genres_spent_time:
-                    genre['spent_time_percent'] = round(
-                        genre['spent_time_percent'] * 100 / games_total_spent_time, 1)
+                    genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 / games_total_spent_time, 1)
 
         else:
             games_total_spent_time = 0
@@ -406,8 +392,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         serializer = MovieStatsSerializer(user_movies, many=True)
         movies = serializer.data
         # movies stats
-        watched_movies = UserMovie.objects.filter(
-            user=user, status=UserMovie.STATUS_WATCHED)
+        watched_movies = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_WATCHED)
         if watched_movies.exists():
             movies_total_spent_time = watched_movies.aggregate(total_time_spent=Sum('movie__tmdb_runtime')) \
                 .get('total_time_spent')
@@ -419,8 +404,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 /
                                                     movies_total_spent_time, 1)
 
-            movies_total_spent_time = round(
-                movies_total_spent_time / MINUTES_IN_HOUR, 1)
+            movies_total_spent_time = round(movies_total_spent_time / MINUTES_IN_HOUR, 1)
         else:
             movies_total_spent_time = 0
             movies_genres_spent_time = []
@@ -436,33 +420,30 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         user_shows = user_shows.exclude(status=UserShow.STATUS_NOT_WATCHED) \
             .filter(user=user) \
             .order_by('-updated_at') \
-            .annotate(watched_episodes_count=Count('show__episode',
-                                                   filter=Q(show__episode__userepisode__user=user) &
-                                                   ~Q(show__episode__userepisode__score=-1))) \
+            .annotate(watched_episodes_count=Count('show__season__episode',
+                                                   filter=Q(show__season__episode__userepisode__user=user) &
+                                                          ~Q(show__season__episode__userepisode__score=-1))) \
             .annotate(spent_time=ExpressionWrapper(
-                Round(1.0 * F('show__tmdb_episode_run_time') *
-                      F('watched_episodes_count') / MINUTES_IN_HOUR),
-                output_field=DecimalField()))
+            Round(1.0 * F('show__tmdb_episode_run_time') * F('watched_episodes_count') / MINUTES_IN_HOUR),
+            output_field=DecimalField()))
 
         serializer = ShowStatsSerializer(user_shows, many=True)
         shows = serializer.data
         # shows stats
-        watched_episodes = UserEpisode.objects.exclude(
-            score=-1).filter(user=user)
+        watched_episodes = UserEpisode.objects.exclude(score=-1).filter(user=user)
         if watched_episodes.exists():
             shows_total_spent_time = watched_episodes.aggregate(
-                total_spent_time=Sum('episode__tmdb_show__tmdb_episode_run_time'))['total_spent_time']
+                total_spent_time=Sum('episode__tmdb_season__tmdb_show__tmdb_episode_run_time'))['total_spent_time']
 
             shows_genres_spent_time = watched_episodes. \
-                values(name=F('episode__tmdb_show__showgenre__genre__tmdb_name')) \
-                .annotate(spent_time_percent=Sum('episode__tmdb_show__tmdb_episode_run_time'))
+                values(name=F('episode__tmdb_season__tmdb_show__showgenre__genre__tmdb_name')) \
+                .annotate(spent_time_percent=Sum('episode__tmdb_season__tmdb_show__tmdb_episode_run_time'))
 
             for genre in shows_genres_spent_time:
                 genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 /
                                                     shows_total_spent_time, 1)
 
-            shows_total_spent_time = round(
-                shows_total_spent_time / MINUTES_IN_HOUR, 1)
+            shows_total_spent_time = round(shows_total_spent_time / MINUTES_IN_HOUR, 1)
         else:
             shows_total_spent_time = 0
             shows_genres_spent_time = []
@@ -519,10 +500,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         data.update({'user': request.user.pk, 'followed_user': user_id})
 
         try:
-            user_follow = UserFollow.objects.get(
-                user=request.user, followed_user=user_id)
-            serializer = UserFollowSerializer(
-                user_follow, data=data, partial=True)
+            user_follow = UserFollow.objects.get(user=request.user, followed_user=user_id)
+            serializer = UserFollowSerializer(user_follow, data=data, partial=True)
         except UserFollow.DoesNotExist:
             serializer = UserFollowSerializer(data=data)
 
@@ -555,20 +534,16 @@ def get_logs(user_query, page_size, page_number):
     page_size = get_page_size(page_size)
     page = page_number
 
-    game_logs = GameLog.objects.select_related(
-        'user').prefetch_related('game').filter(user__in=user_query)
-    movie_logs = MovieLog.objects.select_related(
-        'user').prefetch_related('movie').filter(user__in=user_query)
-    show_logs = ShowLog.objects.select_related(
-        'user').prefetch_related('show').filter(user__in=user_query)
+    game_logs = GameLog.objects.select_related('user').prefetch_related('game').filter(user__in=user_query)
+    movie_logs = MovieLog.objects.select_related('user').prefetch_related('movie').filter(user__in=user_query)
+    show_logs = ShowLog.objects.select_related('user').prefetch_related('show').filter(user__in=user_query)
     season_logs = SeasonLog.objects.select_related('user') \
         .prefetch_related('season__tmdb_show') \
         .filter(user__in=user_query)
     episode_logs = EpisodeLog.objects.select_related('user') \
         .prefetch_related('episode').prefetch_related('episode__tmdb_show') \
         .filter(user__in=user_query)
-    user_logs = UserLog.objects.select_related('user').select_related(
-        'followed_user').filter(user__in=user_query)
+    user_logs = UserLog.objects.select_related('user').select_related('followed_user').filter(user__in=user_query)
 
     union_logs = sorted(chain(game_logs, movie_logs, show_logs, season_logs, episode_logs, user_logs),
                         key=lambda obj: obj.created, reverse=True)
@@ -603,13 +578,12 @@ class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):
                                      "application/json": USER_SEARCH_200_EXAMPLE
                                  }
                              )
-    })
+                         })
     def list(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
         results = []
         for user in User.objects.all():
-            similarity = similar(lower(query), lower(
-                user.username))  # similarity is 0.0-1.0
+            similarity = similar(lower(query), lower(user.username))  # similarity is 0.0-1.0
             if similarity > 0.4:
                 user.similarity = similarity
                 results.append(user)

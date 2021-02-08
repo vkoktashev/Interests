@@ -146,12 +146,12 @@ class EpisodeLogSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_target(episode_log):
         return {'name': episode_log.episode.tmdb_name,
-                'parent_name': episode_log.episode.tmdb_show.tmdb_name}
+                'parent_name': episode_log.episode.tmdb_season.tmdb_show.tmdb_name}
 
     @staticmethod
     def get_target_id(episode_log):
-        return {'show_id': episode_log.episode.tmdb_show.tmdb_id,
-                'season_number': episode_log.episode.tmdb_season_number,
+        return {'show_id': episode_log.episode.tmdb_season.tmdb_show.tmdb_id,
+                'season_number': episode_log.episode.tmdb_season.tmdb_season_number,
                 'episode_number': episode_log.episode.tmdb_episode_number}
 
     class Meta:
