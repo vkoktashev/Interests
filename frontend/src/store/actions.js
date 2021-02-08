@@ -126,6 +126,7 @@ export function confirmEmailRequest(uid64, token) {
 
 export function requestGame(id) {
 	return async (dispatch) => {
+		await dispatch(checkAuthorization());
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_GAME, true);
 		setError(dispatch, actionTypes.GAME_REQUEST_ERROR, false);
 		gameRequests.getGame(localStorage.getItem("token"), id).then((result) => {
@@ -145,6 +146,7 @@ export function requestGame(id) {
 
 export function requestGameUserInfo(slug) {
 	return async (dispatch) => {
+		await dispatch(checkAuthorization());
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_GAME_USER_INFO, true);
 		gameRequests.getGameUserInfo(localStorage.getItem("token"), slug).then((result) => {
 			if (result != null) {
@@ -163,6 +165,7 @@ export function requestGameUserInfo(slug) {
 
 export function requestMovie(id) {
 	return async (dispatch) => {
+		await dispatch(checkAuthorization());
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_MOVIE, true);
 		setError(dispatch, actionTypes.MOVIE_REQUEST_ERROR, false);
 		movieRequests.getMovie(localStorage.getItem("token"), id).then((result) => {
@@ -182,6 +185,7 @@ export function requestMovie(id) {
 
 export function requestMovieUserInfo(id) {
 	return async (dispatch) => {
+		await dispatch(checkAuthorization());
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_MOVIE_USER_INFO, true);
 		movieRequests.getMovieUserInfo(localStorage.getItem("token"), id).then((result) => {
 			if (result != null) {
@@ -200,6 +204,7 @@ export function requestMovieUserInfo(id) {
 
 export function requestShow(id) {
 	return async (dispatch) => {
+		await dispatch(checkAuthorization());
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, true);
 		setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, false);
 		showRequests.getShow(localStorage.getItem("token"), id).then((result) => {
@@ -219,6 +224,7 @@ export function requestShow(id) {
 
 export function requestShowSeason(showID, seasonNumber) {
 	return async (dispatch) => {
+		await dispatch(checkAuthorization());
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, true);
 		setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, false);
 		showRequests.getShowSeason(localStorage.getItem("token"), showID, seasonNumber).then((result) => {
@@ -238,6 +244,7 @@ export function requestShowSeason(showID, seasonNumber) {
 
 export function requestShowSeasons(showID, seasonNumber) {
 	return async (dispatch) => {
+		await dispatch(checkAuthorization());
 		dispatch({
 			type: actionTypes.SET_IS_LOADING_CONTENT_SHOW_SEASONS,
 			seasonNumber: seasonNumber,
@@ -264,6 +271,7 @@ export function requestShowSeasons(showID, seasonNumber) {
 
 export function requestShowEpisode(showID, seasonNumber, episodeNumber) {
 	return async (dispatch) => {
+		await dispatch(checkAuthorization());
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW, true);
 		setError(dispatch, actionTypes.SHOW_REQUEST_ERROR, false);
 		showRequests.getShowEpisode(localStorage.getItem("token"), showID, seasonNumber, episodeNumber).then((result) => {
@@ -283,82 +291,90 @@ export function requestShowEpisode(showID, seasonNumber, episodeNumber) {
 
 export function requestShowUserInfo(id) {
 	return async (dispatch) => {
-		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, true);
-		showRequests.getShowUserInfo(localStorage.getItem("token"), id).then((result) => {
-			if (result != null) {
-				let newResult = { ...result.user_info, friends_info: result.friends_info };
-				dispatch({
-					type: actionTypes.SET_CONTENT_SHOW_USER_INFO,
-					user_info: newResult,
-				});
-			} else {
-				toast.error("Ошибка загрузки логов!");
-			}
-			setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, false);
-		});
+		if (await dispatch(checkAuthorization())) {
+			setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, true);
+			showRequests.getShowUserInfo(localStorage.getItem("token"), id).then((result) => {
+				if (result != null) {
+					let newResult = { ...result.user_info, friends_info: result.friends_info };
+					dispatch({
+						type: actionTypes.SET_CONTENT_SHOW_USER_INFO,
+						user_info: newResult,
+					});
+				} else {
+					toast.error("Ошибка загрузки логов!");
+				}
+				setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, false);
+			});
+		}
 	};
 }
 
 export function requestShowSeasonUserInfo(showID, seasonID) {
 	return async (dispatch) => {
-		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, true);
-		showRequests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then((result) => {
-			if (result != null) {
-				let newResult = { ...result.user_info, user_watched_show: result.user_watched_show, episodes: result.episodes_user_info, friends_info: result.friends_info };
-				dispatch({
-					type: actionTypes.SET_CONTENT_SHOW_USER_INFO,
-					user_info: newResult,
-				});
-			} else {
-				toast.error("Ошибка загрузки логов!");
-			}
-			setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, false);
-		});
+		if (await dispatch(checkAuthorization())) {
+			setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, true);
+			showRequests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then((result) => {
+				if (result != null) {
+					let newResult = { ...result.user_info, user_watched_show: result.user_watched_show, episodes: result.episodes_user_info, friends_info: result.friends_info };
+					dispatch({
+						type: actionTypes.SET_CONTENT_SHOW_USER_INFO,
+						user_info: newResult,
+					});
+				} else {
+					toast.error("Ошибка загрузки логов!");
+				}
+				setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, false);
+			});
+		}
 	};
 }
 
 export function requestShowSeasonsUserInfo(showID, seasonID) {
 	return async (dispatch) => {
-		dispatch({
-			type: actionTypes.SET_IS_LOADING_CONTENT_SHOW_SEASONS,
-			seasonNumber: seasonID,
-			isLoading: true,
-		});
-		showRequests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then((result) => {
-			if (result != null) {
-				let newResult = { ...result.user_info, user_watched_show: result.user_watched_show, episodes: result.episodes_user_info, friends_info: result.friends_info };
-				dispatch({
-					type: actionTypes.SET_CONTENT_SHOW_SEASONS_USER_INFO,
-					seasonNumber: seasonID,
-					user_info: newResult,
-				});
-			} else {
-				toast.error("Ошибка загрузки сезона!");
-			}
+		if (await dispatch(checkAuthorization())) {
 			dispatch({
 				type: actionTypes.SET_IS_LOADING_CONTENT_SHOW_SEASONS,
 				seasonNumber: seasonID,
-				isLoading: false,
+				isLoading: true,
 			});
-		});
+			showRequests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then((result) => {
+				if (result != null) {
+					let newResult = { ...result.user_info, user_watched_show: result.user_watched_show, episodes: result.episodes_user_info, friends_info: result.friends_info };
+					dispatch({
+						type: actionTypes.SET_CONTENT_SHOW_SEASONS_USER_INFO,
+						seasonNumber: seasonID,
+						user_info: newResult,
+					});
+				} else {
+					toast.error("Ошибка загрузки сезона!");
+				}
+				dispatch({
+					type: actionTypes.SET_IS_LOADING_CONTENT_SHOW_SEASONS,
+					seasonNumber: seasonID,
+					isLoading: false,
+				});
+			});
+		}
 	};
 }
 
 export function requestShowEpisodeUserInfo(showID, seasonID, episodeID) {
 	return async (dispatch) => {
-		setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, true);
-		showRequests.getShowEpisodeUserInfo(localStorage.getItem("token"), showID, seasonID, episodeID).then((result) => {
-			if (result != null) {
-				let newResult = { ...result.user_info, user_watched_show: result.user_watched_show, friends_info: result.friends_info };
-				dispatch({
-					type: actionTypes.SET_CONTENT_SHOW_USER_INFO,
-					user_info: newResult,
-				});
-			} else {
-				toast.error("Ошибка загрузки логов!");
-			}
-			setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, false);
-		});
+		if (await dispatch(checkAuthorization())) {
+			setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, true);
+			showRequests.getShowEpisodeUserInfo(localStorage.getItem("token"), showID, seasonID, episodeID).then((result) => {
+				if (result != null) {
+					let newResult = { ...result.user_info, user_watched_show: result.user_watched_show, friends_info: result.friends_info };
+					dispatch({
+						type: actionTypes.SET_CONTENT_SHOW_USER_INFO,
+						user_info: newResult,
+					});
+				} else {
+					toast.error("Ошибка загрузки логов!");
+				}
+				setLoading(dispatch, actionTypes.SET_IS_LOADING_CONTENT_SHOW_USER_INFO, false);
+			});
+		}
 	};
 }
 
@@ -381,6 +397,7 @@ export function setGameStatus(user_info) {
 
 export function requestUserPageContent(username) {
 	return async (dispatch) => {
+		await dispatch(checkAuthorization());
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_CONTENT, true);
 		setError(dispatch, actionTypes.USER_PAGE_ERROR, false);
 		userRequests.getUserInfo(localStorage.getItem("token"), username).then((result) => {
@@ -400,6 +417,7 @@ export function requestUserPageContent(username) {
 
 export function requestUserPageLogs(userID, page, resultsOnPage) {
 	return async (dispatch) => {
+		await dispatch(checkAuthorization());
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_LOGS, true);
 		userRequests.getUserLog(localStorage.getItem("token"), userID, page, resultsOnPage).then((result) => {
 			if (result != null) {
@@ -417,6 +435,7 @@ export function requestUserPageLogs(userID, page, resultsOnPage) {
 
 export function requestUserPageFriendsLogs(userID, page, resultsOnPage) {
 	return async (dispatch) => {
+		await dispatch(checkAuthorization());
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_FRIENDS_LOGS, true);
 		userRequests.getUserFriendsLog(localStorage.getItem("token"), userID, page, resultsOnPage).then((result) => {
 			if (result != null) {
@@ -434,18 +453,20 @@ export function requestUserPageFriendsLogs(userID, page, resultsOnPage) {
 
 export function requestUserPageCalendar() {
 	return async (dispatch) => {
-		setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_CALENDAR, true);
-		userRequests.getUserCalendar(localStorage.getItem("token")).then((result) => {
-			if (result != null) {
-				dispatch({
-					type: actionTypes.SET_USER_PAGE_CALENDAR,
-					data: result,
-				});
-			} else {
-				toast.error("Ошибка загрузки календаря!");
-			}
-			setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_CALENDAR, false);
-		});
+		if (await dispatch(checkAuthorization())) {
+			setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_CALENDAR, true);
+			userRequests.getUserCalendar(localStorage.getItem("token")).then((result) => {
+				if (result != null) {
+					dispatch({
+						type: actionTypes.SET_USER_PAGE_CALENDAR,
+						data: result,
+					});
+				} else {
+					toast.error("Ошибка загрузки календаря!");
+				}
+				setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_CALENDAR, false);
+			});
+		}
 	};
 }
 

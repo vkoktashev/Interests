@@ -39,6 +39,8 @@ input.form-control:-webkit-autofill {
 }
 
 .passwordResetLabel {
+	display: block;
+	margin-top: 15px;
 	color: rgb(207, 207, 207);
 }
 

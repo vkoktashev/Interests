@@ -108,12 +108,16 @@ function EpisodePage({ requestShowEpisode, showEpisode, showEpisodeIsLoading, se
 								</a>
 							</div>
 							<div hidden={!loggedIn | !showUserInfo?.user_watched_show}>
-								<LoadingOverlay active={showUserInfoIsLoading} spinner text='Загрузка...'>
+								<LoadingOverlay active={showUserInfoIsLoading & !showEpisodeIsLoading} spinner text='Загрузка...'>
 									<Rating
 										start={-1}
 										stop={10}
-										emptySymbol={[<MDBIcon icon='eye-slash' />].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />))}
-										fullSymbol={[<MDBIcon icon='eye' />].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <MDBIcon icon='star' size='1x' style={{ fontSize: "25px" }} title={n} />))}
+										emptySymbol={[<MDBIcon icon='eye-slash' />].concat(
+											[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />)
+										)}
+										fullSymbol={[<MDBIcon icon='eye' />].concat(
+											[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <MDBIcon icon='star' size='1x' style={{ fontSize: "25px" }} title={n} />)
+										)}
 										initialRating={userRate}
 										onChange={(score) => {
 											if (!loggedIn) {

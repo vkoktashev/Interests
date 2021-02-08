@@ -138,7 +138,7 @@ function MoviePage({ requestMovie, movie, movieIsLoading, setMovieStatus, reques
 								<p>В ролях: {cast}</p>
 								<p>Режиссер: {director}</p>
 							</div>
-							<LoadingOverlay active={movieUserInfoIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={movieUserInfoIsLoading & !movieIsLoading} spinner text='Загрузка...'>
 								<Rating
 									stop={10}
 									emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
@@ -185,7 +185,7 @@ function MoviePage({ requestMovie, movie, movieIsLoading, setMovieStatus, reques
 						</div>
 						<div className='movieReviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
-							<LoadingOverlay active={movieUserInfoIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={movieUserInfoIsLoading & !movieIsLoading} spinner text='Загрузка...'>
 								<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
 								<button
 									className={"savePreviewButton"}
