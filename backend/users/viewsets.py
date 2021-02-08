@@ -541,7 +541,7 @@ def get_logs(user_query, page_size, page_number):
         .prefetch_related('season__tmdb_show') \
         .filter(user__in=user_query)
     episode_logs = EpisodeLog.objects.select_related('user') \
-        .prefetch_related('episode').prefetch_related('episode__tmdb_show') \
+        .prefetch_related('episode').prefetch_related('episode__tmdb_season') \
         .filter(user__in=user_query)
     user_logs = UserLog.objects.select_related('user').select_related('followed_user').filter(user__in=user_query)
 
