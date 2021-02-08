@@ -24,7 +24,7 @@ from games.models import UserGame, GameLog, Game
 from games.serializers import GameStatsSerializer, GameLogSerializer, GameSerializer
 from movies.models import UserMovie, MovieLog, Movie
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer, MovieSerializer
-from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, Show, Episode
+from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, Show, Episode, Season
 from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogSerializer, EpisodeLogSerializer, \
     EpisodeSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer
@@ -302,9 +302,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .exclude(usershow__status=UserShow.STATUS_NOT_WATCHED) \
             .exclude(usershow__status=UserShow.STATUS_STOPPED)
 
-        episodes = Episode.objects.select_related('tmdb_show').filter(tmdb_show__in=shows,
-                                                                      tmdb_release_date__gte=today_date)
-
+        episodes = Episode.objects.select_related('tmdb_season').filter(tmdb_season__tmdb_show__in=shows,
+                                                                        tmdb_release_date__gte=today_date)
         for episode in episodes:
             tmdb_release_date_str = str(episode.tmdb_release_date)
             release_date = calendar_dict[tmdb_release_date_str]
@@ -421,9 +420,9 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         user_shows = user_shows.exclude(status=UserShow.STATUS_NOT_WATCHED) \
             .filter(user=user) \
             .order_by('-updated_at') \
-            .annotate(watched_episodes_count=Count('show__episode',
-                                                   filter=Q(show__episode__userepisode__user=user) &
-                                                          ~Q(show__episode__userepisode__score=-1))) \
+            .annotate(watched_episodes_count=Count('show__season__episode',
+                                                   filter=Q(show__season__episode__userepisode__user=user) &
+                                                          ~Q(show__season__episode__userepisode__score=-1))) \
             .annotate(spent_time=ExpressionWrapper(
             Round(1.0 * F('show__tmdb_episode_run_time') * F('watched_episodes_count') / MINUTES_IN_HOUR),
             output_field=DecimalField()))
@@ -434,11 +433,11 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         watched_episodes = UserEpisode.objects.exclude(score=-1).filter(user=user)
         if watched_episodes.exists():
             shows_total_spent_time = watched_episodes.aggregate(
-                total_spent_time=Sum('episode__tmdb_show__tmdb_episode_run_time'))['total_spent_time']
+                total_spent_time=Sum('episode__tmdb_season__tmdb_show__tmdb_episode_run_time'))['total_spent_time']
 
             shows_genres_spent_time = watched_episodes. \
-                values(name=F('episode__tmdb_show__showgenre__genre__tmdb_name')) \
-                .annotate(spent_time_percent=Sum('episode__tmdb_show__tmdb_episode_run_time'))
+                values(name=F('episode__tmdb_season__tmdb_show__showgenre__genre__tmdb_name')) \
+                .annotate(spent_time_percent=Sum('episode__tmdb_season__tmdb_show__tmdb_episode_run_time'))
 
             for genre in shows_genres_spent_time:
                 genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 /
