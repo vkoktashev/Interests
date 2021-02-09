@@ -14,30 +14,46 @@ services:
     ports:
       - "5454:5432"
 
-  
+
   back:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    build: ./backend
+    command: python manage.py runserver
     ports:
       - "8001:8001"
-    links:
-      - db2:db2
     depends_on:
       - db2
     restart: always
-      
+
   front:
-    build:
-      context: ./frontend
-      dockerfile: DockerFile
+    build: ./frontend
     ports:
       - "80:80"
-    links:
-      - back:back
     depends_on:
       - back
     restart: always
-      
+
+  celery_worker:
+    build: ./backend
+    command: celery -A config worker -l info #--logfile=/logs/celery_worker.log
+    environment:
+      CELERY_BROKER_URL: 'redis://redis:6379'
+      CELERY_RESULT_BACKEND: 'redis://redis:6379'
+    depends_on:
+      - back
+      - redis
+
+  celery_beat:
+    build: ./backend
+    command: celery -A config beat -l debug #--logfile=/logs/celery_beat.log
+    environment:
+      CELERY_BROKER_URL: 'redis://redis:6379'
+      CELERY_RESULT_BACKEND: 'redis://redis:6379'
+    depends_on:
+      - back
+      - redis
+
+  redis:
+    image: redis:6-alpine
+
 volumes:
   postgres_data_interests:
