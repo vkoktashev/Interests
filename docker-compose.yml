@@ -34,7 +34,7 @@ services:
 
   celery_worker:
     build: ./backend
-    command: celery -A config worker -l info #--logfile=/logs/celery_worker.log
+    command: celery -A config worker -l info --logfile=/logs/celery_worker.log
     environment:
       CELERY_BROKER_URL: 'redis://redis:6379'
       CELERY_RESULT_BACKEND: 'redis://redis:6379'
@@ -44,7 +44,7 @@ services:
 
   celery_beat:
     build: ./backend
-    command: celery -A config beat -l debug #--logfile=/logs/celery_beat.log
+    command: celery -A config beat -l debug --logfile=/logs/celery_beat.log
     environment:
       CELERY_BROKER_URL: 'redis://redis:6379'
       CELERY_RESULT_BACKEND: 'redis://redis:6379'
