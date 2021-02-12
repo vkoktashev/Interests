@@ -3,7 +3,7 @@ from datetime import datetime
 import tmdbsimple as tmdb
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import F
+from django.db.models import F, Q
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
@@ -17,7 +17,7 @@ from movies.models import Genre
 from shows.models import UserShow, Show, UserSeason, Season, UserEpisode, Episode, ShowGenre, EpisodeLog, ShowLog
 from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpisodeSerializer, \
     FollowedUserShowSerializer, FollowedUserSeasonSerializer, FollowedUserEpisodeSerializer, \
-    UserEpisodeInSeasonSerializer
+    UserEpisodeInSeasonSerializer, EpisodeSerializer
 from users.models import UserFollow
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
     SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE
@@ -326,11 +326,18 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def upcoming_releases(self, request, *args, **kwargs):
         today_date = datetime.today().date()
-        shows = Show.objects.filter(usershow__user=request.user).exclude(usershow__status=UserShow.STATUS_NOT_WATCHED)
-        episodes = Episode.objects.select_related('tmdb_show').filter(tmdb_show__in=shows,
-                                                                      tmdb_release_date__gt=today_date)
 
-        return Response()
+        shows = Show.objects.filter(usershow__user=request.user) \
+            .filter(Q(usershow__status=UserShow.STATUS_WATCHING) | Q(usershow__status=UserShow.STATUS_WATCHED))
+
+        episodes = Episode.objects.select_related('tmdb_season', 'tmdb_season__tmdb_show') \
+            .filter(tmdb_season__tmdb_show__in=shows, tmdb_release_date__lte=today_date) \
+            .exclude(tmdb_season__tmdb_season_number=0) \
+            .exclude(userepisode__score__gt=-1)
+
+        serializer = EpisodeSerializer(episodes, many=True)
+
+        return Response(serializer.data)
 
 
 class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
