@@ -101,6 +101,12 @@ class UserLogSerializer(serializers.ModelSerializer):
         exclude = ('followed_user',)
 
 
+class UserNotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('receive_games_releases', 'receive_movies_releases', 'receive_episodes_releases')
+
+
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
