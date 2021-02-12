@@ -32,3 +32,4 @@ def update_upcoming_games_dates():
         cache.set(key, rawg_game, CACHE_TIMEOUT)
         update_fields_if_needed(game,
                                 {'rawg_release_date': rawg_game.get('released'), 'rawg_tba': rawg_game.get('tba')}, )
+        print(game.rawg_name)
