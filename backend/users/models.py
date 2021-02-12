@@ -29,6 +29,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(default=timezone.now)
     is_staff = models.BooleanField(_('staff status'), default=False)
     last_activity = models.DateTimeField(default=timezone.now)
+    receive_game_release_email = models.BooleanField(default=False)
+    receive_movie_release_email = models.BooleanField(default=False)
+    receive_episodes_release_email = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
