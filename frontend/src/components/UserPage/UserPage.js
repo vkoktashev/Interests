@@ -17,6 +17,7 @@ import MovieBlock from "./MovieBlock";
 import UserLogBlock from "./UserLogBlock";
 import CategoriesTab from "../Common/CategoriesTab";
 import ShowBlock from "./ShowBlock";
+import SettingsBlock from "./SettingsBlock";
 
 const LOG_ROWS_COUNT = 20;
 
@@ -49,7 +50,7 @@ function UserPage({
 	useEffect(
 		() => {
 			getUserInfo(userID);
-			if (section !== "Календарь") {
+			if (section !== "Календарь" && section !== "Друзья") {
 				getUserLogs(userID, 1, LOG_ROWS_COUNT);
 			}
 		},
@@ -76,7 +77,7 @@ function UserPage({
 			}
 		},
 		// eslint-disable-next-line
-		[loggedIn, userID, section]
+		[loggedIn, userID, section, currentUserInfo.id]
 	);
 
 	useEffect(() => {
@@ -115,7 +116,7 @@ function UserPage({
 								{userInfo.is_followed ? "Отписаться" : "Подписаться"}
 							</button>
 							<CategoriesTab
-								categories={["Профиль", "Игры", "Фильмы", "Сериалы", "Друзья", currentUserInfo.username === userInfo.username ? "Календарь" : undefined]}
+								categories={["Профиль", "Игры", "Фильмы", "Сериалы", "Друзья"].concat(currentUserInfo.username === userInfo.username ? ["Календарь", "Настройки"] : undefined)}
 								activeColor='#7654de'
 								activeCategory={activeCategory}
 								onChangeCategory={(category) => {
@@ -163,6 +164,9 @@ function UserPage({
 							</div>
 							<div hidden={activeCategory !== "Календарь"}>
 								<CalendarBlock calendar={userCalendar} />
+							</div>
+							<div hidden={activeCategory !== "Настройки"}>
+								<SettingsBlock />
 							</div>
 						</MDBCol>
 						<MDBCol md='0.5'></MDBCol>
