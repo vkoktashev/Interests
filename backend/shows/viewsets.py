@@ -390,8 +390,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         new_fields = {
             'tmdb_season_number': tmdb_season.get('season_number'),
-            'tmdb_name': tmdb_season.get('name'),
-            'tmdb_show_id': kwargs.get('show_tmdb_id')
+            'tmdb_name': tmdb_season.get('name')
         }
 
         with transaction.atomic():
@@ -402,19 +401,16 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         with transaction.atomic():
             episodes = tmdb_season.get('episodes')
-            existed_episodes = Episode.objects.select_for_update().filter(
-                tmdb_id__in=[episode.get('id') for episode in episodes])
+            existed_episodes = Episode.objects.select_related('tmdb_season') \
+                .select_for_update().filter(tmdb_season=season)
             episodes_to_create = []
-
             for episode in episodes:
                 exists = False
-
                 for existed_episode in existed_episodes:
-                    if episode['id'] == existed_episode.tmdb_id:
+                    if episode['episode_number'] == existed_episode.tmdb_episode_number:
                         exists = True
                         new_fields = {
                             'tmdb_id': episode.get('id'),
-                            'tmdb_episode_number': episode.get('episode_number'),
                             'tmdb_season': season,
                             'tmdb_name': episode.get('name'),
                             'tmdb_release_date': episode.get('air_date') if episode.get('air_date') != "" else None
@@ -426,6 +422,8 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                     episodes_to_create.append(Episode(tmdb_id=episode.get('id'),
                                                       tmdb_episode_number=episode.get('episode_number'),
                                                       tmdb_season=season,
+                                                      tmdb_release_date=episode.get('air_date')
+                                                      if episode.get('air_date') != "" else None,
                                                       tmdb_name=episode.get('name')))
 
             Episode.objects.bulk_create(episodes_to_create)
