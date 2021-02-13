@@ -7,7 +7,7 @@ from users.models import UserScore, UserLogAbstract
 
 
 class Show(models.Model):
-    tmdb_id = models.IntegerField(unique=True, primary_key=True)
+    tmdb_id = models.IntegerField(unique=True)
     tmdb_original_name = models.CharField(max_length=200)
     tmdb_name = models.CharField(max_length=200)
     tmdb_episode_run_time = models.IntegerField()
@@ -16,7 +16,7 @@ class Show(models.Model):
 
 
 class Season(models.Model):
-    tmdb_id = models.IntegerField(unique=True, primary_key=True)
+    tmdb_id = models.IntegerField(unique=True)
     tmdb_season_number = models.IntegerField()
     tmdb_name = models.CharField(max_length=200)
     tmdb_show = models.ForeignKey(Show, on_delete=models.CASCADE)
@@ -26,7 +26,7 @@ class Season(models.Model):
 
 
 class Episode(models.Model):
-    tmdb_id = models.IntegerField(unique=True, primary_key=True)
+    tmdb_id = models.IntegerField(unique=True)
     tmdb_episode_number = models.IntegerField()
     tmdb_season = models.ForeignKey(Season, on_delete=models.CASCADE)
     tmdb_name = models.CharField(max_length=200)
