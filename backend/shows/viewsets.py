@@ -391,7 +391,8 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         new_fields = {
             'tmdb_season_number': tmdb_season.get('season_number'),
-            'tmdb_name': tmdb_season.get('name')
+            'tmdb_name': tmdb_season.get('name'),
+            'tmdb_show_id': tmdb_season.get('show_pk')
         }
 
         with transaction.atomic():
@@ -630,11 +631,13 @@ def user_watched_show(show_id, user):
     return False
 
 
+# todo написать сериалайзер вместо метода?
 def get_show_info(show_id):
     show = Show.objects.get(tmdb_id=show_id)
 
     return {'show_name': show.tmdb_name,
             'show_id': show.tmdb_id,
+            'show_pk': show.pk,
             'show_original_name': show.tmdb_original_name,
             'backdrop_path': show.tmdb_backdrop_path}
 
