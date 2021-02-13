@@ -216,7 +216,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=True, methods=['get'])
     def log(self, request, *args, **kwargs):
         try:
-            user = get_user_by_id(kwargs.get('pk'))
+            user = get_user_by_id(kwargs.get('pk'), request.user)
         except ValueError:
             return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
@@ -250,7 +250,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_log(self, request, *args, **kwargs):
         try:
-            user = get_user_by_id(kwargs.get('pk'))
+            user = get_user_by_id(kwargs.get('pk'), request.user)
         except ValueError:
             return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
@@ -303,8 +303,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .exclude(usershow__status=UserShow.STATUS_NOT_WATCHED) \
             .exclude(usershow__status=UserShow.STATUS_STOPPED)
 
-        episodes = Episode.objects.select_related('tmdb_season').filter(tmdb_season__tmdb_show__in=shows,
-                                                                        tmdb_release_date__gte=today_date)
+        episodes = Episode.objects.select_related('tmdb_season', 'tmdb_season__tmdb_show') \
+            .filter(tmdb_season__tmdb_show__in=shows, tmdb_release_date__gte=today_date)
         for episode in episodes:
             tmdb_release_date_str = str(episode.tmdb_release_date)
             release_date = calendar_dict[tmdb_release_date_str]
@@ -342,7 +342,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         })
     def retrieve(self, request, *args, **kwargs):
         try:
-            user = get_user_by_id(kwargs.get('pk'))
+            user = get_user_by_id(kwargs.get('pk'), request.user)
         except ValueError:
             return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
@@ -573,11 +573,14 @@ def get_logs(user_query, page_size, page_number):
     return results, paginator_page.has_next()
 
 
-def get_user_by_id(user_id):
+def get_user_by_id(user_id, current_user):
     try:
         user_id = int(user_id)
     except ValueError:
         raise ValueError()
+
+    if current_user.pk == user_id:
+        return current_user
 
     try:
         user = User.objects.get(pk=user_id)
