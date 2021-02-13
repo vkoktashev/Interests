@@ -1,8 +1,24 @@
+.calendarPage {
+	width: 80rem;
+	max-width: 100%;
+	margin-left: auto;
+	margin-right: auto;
+	color: rgb(207, 207, 207);
+	margin-top: 4rem;
+	margin-bottom: 2em;
+	padding: 0px;
+}
+
 .calendarBlock {
 	padding: 1rem;
 	width: 100%;
 	display: inline-block;
 	vertical-align: top;
+	background-color: rgb(30, 30, 30);
+}
+
+.calendarHeader {
+	margin-bottom: 2rem;
 }
 
 .timelineEvent {
