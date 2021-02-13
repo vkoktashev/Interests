@@ -29,14 +29,14 @@ def send_release_emails():
     today_movies = Movie.objects.filter(tmdb_release_date=today_date)
     today_episodes = Episode.objects.filter(tmdb_release_date=today_date)
 
-    for user in User.objects.filter(Q(receive_episodes_release_email=True) |
-                                    Q(receive_game_release_email=True) |
-                                    Q(receive_movie_release_email=True)):
+    for user in User.objects.filter(Q(receive_episodes_releases=True) |
+                                    Q(receive_games_releases=True) |
+                                    Q(receive_movies_releases=True)):
         games_message = ''
         movies_message = ''
         episodes_message = ''
 
-        if user.receive_game_release_email:
+        if user.receive_games_releases:
             games = today_games.filter(usergame__user=user) \
                 .exclude(usergame__status=UserGame.STATUS_NOT_PLAYED) \
                 .exclude(usergame__status=UserGame.STATUS_STOPPED)
@@ -48,7 +48,7 @@ def send_release_emails():
                                      f'{game.rawg_name}</a><br>'
                 games_message += '<br>'
 
-        if user.receive_movie_release_email:
+        if user.receive_movies_releases:
             movies = today_movies.filter(usermovie__user=user) \
                 .exclude(usermovie__status=UserMovie.STATUS_NOT_WATCHED) \
                 .exclude(usermovie__status=UserMovie.STATUS_STOPPED)
@@ -60,7 +60,7 @@ def send_release_emails():
                                       f'{movie.tmdb_name}</a><br>'
                 movies_message += '<br>'
 
-        if user.receive_episodes_release_email:
+        if user.receive_episodes_releases:
             shows = Show.objects.filter(usershow__user=user) \
                 .exclude(usershow__status=UserShow.STATUS_NOT_WATCHED) \
                 .exclude(usershow__status=UserShow.STATUS_STOPPED)
