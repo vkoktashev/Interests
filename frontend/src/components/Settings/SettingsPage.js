@@ -14,7 +14,7 @@ function SettingsPage({ loggedIn, settings, getUserSettings, saveSettings, setti
 
 	useEffect(
 		() => {
-			getUserSettings();
+			if (loggedIn) getUserSettings();
 		},
 		// eslint-disable-next-line
 		[loggedIn]
@@ -28,6 +28,14 @@ function SettingsPage({ loggedIn, settings, getUserSettings, saveSettings, setti
 		},
 		// eslint-disable-next-line
 		[settings]
+	);
+
+	useEffect(
+		() => {
+			console.log(settingsIsLoading);
+		},
+		// eslint-disable-next-line
+		[settingsIsLoading]
 	);
 
 	return (
