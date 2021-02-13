@@ -4,12 +4,13 @@ import * as selectors from "../../store/reducers";
 import * as actions from "../../store/actions";
 
 import Calendar from "react-calendar";
+import LoadingOverlay from "react-loading-overlay";
 import "react-calendar/dist/Calendar.css";
 import DayInfo from "./DayInfo";
 import ReleasesList from "./ReleasesList";
 import "./style.css";
 
-function CalendarPage({ loggedIn, calendar, getUserCalendar }) {
+function CalendarPage({ loggedIn, calendar, getUserCalendar, calendarIsLoading }) {
 	const [value, onChange] = useState(new Date());
 	const [currentDay, setCurrentDay] = useState({});
 
@@ -52,10 +53,12 @@ function CalendarPage({ loggedIn, calendar, getUserCalendar }) {
 			<div className='calendarPage'>
 				<div className='calendarBlock'>
 					<h1 className='calendarHeader'>Календарь релизов</h1>
-					{/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? <DayInfo day={currentDay} date={value} /> : ""}
-					<Calendar className='calendar' onChange={onChange} value={value} defaultView='month' minDetail='decade' locale='ru-RU' minDate={new Date()} tileContent={dateToTile} />
-					{/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? "" : <DayInfo day={currentDay} date={value} />}
-					<ReleasesList calendar={Object.entries(calendar)} />
+					<LoadingOverlay active={calendarIsLoading} spinner text='Загрузка...'>
+						{/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? <DayInfo day={currentDay} date={value} /> : ""}
+						<Calendar className='calendar' onChange={onChange} value={value} defaultView='month' minDetail='decade' locale='ru-RU' minDate={new Date()} tileContent={dateToTile} />
+						{/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? "" : <DayInfo day={currentDay} date={value} />}
+						<ReleasesList calendar={Object.entries(calendar)} />
+					</LoadingOverlay>
 				</div>
 			</div>
 		</div>
@@ -64,13 +67,14 @@ function CalendarPage({ loggedIn, calendar, getUserCalendar }) {
 
 const mapStateToProps = (state) => ({
 	loggedIn: selectors.getLoggedIn(state),
-	calendar: selectors.getUserPageCalendar(state),
+	calendar: selectors.getUserCalendar(state),
+	calendarIsLoading: selectors.getIsLoadingUserCalendar(state),
 });
 
 const mapDispatchToProps = (dispatch) => {
 	return {
 		getUserCalendar: () => {
-			dispatch(actions.requestUserPageCalendar());
+			dispatch(actions.requestUserCalendar());
 		},
 	};
 };

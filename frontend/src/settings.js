@@ -15,7 +15,7 @@ export const RESET_PASSWORD_URL = BACKEND_URL + "users/auth/password_reset/";
 /**Адрес подтверждения сброса пароля */
 export const CONFIRM_PASSWORD_URL = BACKEND_URL + "users/auth/confirm_password_reset/";
 /**Адрес сохранения настроек */
-export const USER_SETTINGS_URL = BACKEND_URL + "users/user/notification_preferences/";
+export const USER_SETTINGS_URL = BACKEND_URL + "users/user/user_settings/";
 /**Адрес запроса игры */
 export const GET_GAME_URL = BACKEND_URL + "games/game/";
 /**Адрес поиска игр */

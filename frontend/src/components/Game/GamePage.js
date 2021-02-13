@@ -127,9 +127,9 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 		if (game.hltb) {
 			return (
 				<datalist id='timesList'>
-					<option value={strToFloat(game.hltb?.gameplay_main_extra)} key={game.hltb?.gameplay_main_extra} className='testil' />
-					<option value={strToFloat(game.hltb?.gameplay_main)} key={game.hltb?.gameplay_main} />
-					<option value={strToFloat(game.hltb?.gameplay_completionist)} key={game.hltb?.gameplay_completionist} />
+					<option value={strToFloat(game.hltb?.gameplay_main_extra)} className='testil' />
+					<option value={strToFloat(game.hltb?.gameplay_main)} />
+					<option value={strToFloat(game.hltb?.gameplay_completionist)} />
 				</datalist>
 			);
 		} else if (game.rawg.playtime) {
@@ -143,8 +143,9 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 	}
 
 	function strToFloat(str) {
-		if (str.indexOf("½") + 1) return parseFloat(str) + 0.5;
-		else return parseFloat(str);
+		if (str & (str !== -1))
+			if (str.indexOf("½") + 1) return parseFloat(str) + 0.5;
+			else return parseFloat(str);
 	}
 
 	return (
@@ -165,7 +166,7 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 								<p>Платформы: {platforms}</p>
 								<TimeToBeat hltbInfo={hltbInfo} />
 							</div>
-							<LoadingOverlay active={gameUserInfoIsLoading & !gameIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={gameUserInfoIsLoading && !gameIsLoading} spinner text='Загрузка...'>
 								<Rating
 									stop={10}
 									emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
@@ -214,7 +215,7 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 						</div>
 						<div className='gameReviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
-							<LoadingOverlay active={gameUserInfoIsLoading & !gameIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={gameUserInfoIsLoading && !gameIsLoading} spinner text='Загрузка...'>
 								<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
 								<MDBInput
 									type='number'

@@ -451,20 +451,39 @@ export function requestUserPageFriendsLogs(userID, page, resultsOnPage) {
 	};
 }
 
-export function requestUserPageCalendar() {
+export function requestUserCalendar() {
 	return async (dispatch) => {
 		if (await dispatch(checkAuthorization())) {
-			setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_CALENDAR, true);
+			setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_CALENDAR, true);
 			userRequests.getUserCalendar(localStorage.getItem("token")).then((result) => {
 				if (result != null) {
 					dispatch({
-						type: actionTypes.SET_USER_PAGE_CALENDAR,
+						type: actionTypes.SET_USER_CALENDAR,
 						data: result,
 					});
 				} else {
 					toast.error("Ошибка загрузки календаря!");
 				}
-				setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_CALENDAR, false);
+				setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_CALENDAR, false);
+			});
+		}
+	};
+}
+
+export function requestUserSettings() {
+	return async (dispatch) => {
+		if (await dispatch(checkAuthorization())) {
+			setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_SETTINGS, true);
+			userRequests.getUserSettings(localStorage.getItem("token")).then((result) => {
+				if (result != null) {
+					dispatch({
+						type: actionTypes.SET_USER_SETTINGS,
+						data: result,
+					});
+				} else {
+					toast.error("Ошибка загрузки настроек!");
+				}
+				setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_SETTINGS, false);
 			});
 		}
 	};
@@ -672,7 +691,7 @@ export function confirmPassword(token, password) {
 export function patchUserSettings(settings) {
 	return async (dispatch, getState) => {
 		if (await dispatch(checkAuthorization())) {
-			setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_SETTINGS, true);
+			setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_SETTINGS, true);
 			userRequests.patchUserSettings(localStorage.getItem("token"), settings).then((result) => {
 				if (!result) {
 					toast.error("Ошибка сохренения настроек");
@@ -683,7 +702,7 @@ export function patchUserSettings(settings) {
                         user_info: result
                     });*/
 				}
-				setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_SETTINGS, false);
+				setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_SETTINGS, false);
 			});
 		}
 	};

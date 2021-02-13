@@ -159,7 +159,6 @@ const mapStateToProps = (state) => ({
 	userFriendsLogs: selectors.getUserPageFriendsLogs(state),
 	userFriendsLogsIsLoading: selectors.getIsLoadingUserPageFriendsLogs(state),
 	currentUserInfo: selectors.getUser(state),
-	userCalendar: selectors.getUserPageCalendar(state),
 });
 
 const mapDispatchToProps = (dispatch) => {

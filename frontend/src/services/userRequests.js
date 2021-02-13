@@ -121,6 +121,22 @@ export async function getUserCalendar(token) {
 }
 
 /**
+ * Запрос к бд, получающий настройки пользователя
+ */
+export async function getUserSettings(token) {
+	let data;
+	try {
+		var AuthStr = "Bearer " + token;
+		const res = await axios.get(USER_SETTINGS_URL, { headers: { Authorization: AuthStr } });
+		data = res.data;
+		return data;
+	} catch (e) {
+		console.log("AXIOS ERROR: ", e);
+		return null;
+	}
+}
+
+/**
  * Запрос к бд, изменяющий настройки пользователя
  */
 export async function patchUserSettings(token, settings) {

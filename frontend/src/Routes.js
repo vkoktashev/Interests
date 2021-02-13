@@ -45,7 +45,7 @@ class Routes extends React.Component {
 						}}
 					/>
 				</Switch>
-				<ToastContainer position='top-center' hideProgressBar newestOnTop closeOnClick />
+				<ToastContainer position='top-center' hideProgressBar newestOnTop closeOnClick autoClose={1500} />
 				<LoginForm />
 				<RegistrationForm />
 				<ResetPasswordForm />
