@@ -101,7 +101,7 @@ class UserLogSerializer(serializers.ModelSerializer):
         exclude = ('followed_user',)
 
 
-class UserNotificationSerializer(serializers.ModelSerializer):
+class SettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('receive_games_releases', 'receive_movies_releases', 'receive_episodes_releases')
