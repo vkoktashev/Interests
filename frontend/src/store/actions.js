@@ -669,6 +669,26 @@ export function confirmPassword(token, password) {
 	};
 }
 
+export function patchUserSettings(settings) {
+	return async (dispatch, getState) => {
+		if (await dispatch(checkAuthorization())) {
+			setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_SETTINGS, true);
+			userRequests.patchUserSettings(localStorage.getItem("token"), settings).then((result) => {
+				if (!result) {
+					toast.error("Ошибка сохренения настроек");
+				} else {
+					toast.success("Настройки сохранены!");
+					/*dispatch({
+                        type: actionTypes.SET_CONTENT_MOVIE_USERINFO,
+                        user_info: result
+                    });*/
+				}
+				setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_PAGE_SETTINGS, false);
+			});
+		}
+	};
+}
+
 export function setUser(user) {
 	return { type: actionTypes.SET_USER, user: user };
 }

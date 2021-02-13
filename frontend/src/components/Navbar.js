@@ -90,11 +90,11 @@ function Navbar({ loggedIn, onLoginClick, onLogoutClick, onRegistrationClick, us
 								</MDBDropdownItem>
 								<MDBDropdownItem>
 									<a
-										href={`/user/${user.id}/Календарь`}
+										href={`/calendar`}
 										className='navDropdownItem'
 										onClick={(event) => {
 											event.preventDefault();
-											history.push(`/user/${user.id}/Календарь`);
+											history.push(`/calendar`);
 											return false;
 										}}>
 										<MDBIcon icon='calendar-day' /> Календарь
@@ -102,14 +102,14 @@ function Navbar({ loggedIn, onLoginClick, onLogoutClick, onRegistrationClick, us
 								</MDBDropdownItem>
 								<MDBDropdownItem>
 									<a
-										href={`/user/${user.id}/Друзья`}
+										href={`/settings`}
 										className='navDropdownItem'
 										onClick={(event) => {
 											event.preventDefault();
-											history.push(`/user/${user.id}/Друзья`);
+											history.push(`/settings`);
 											return false;
 										}}>
-										<MDBIcon icon='user-friends' /> Друзья
+										<MDBIcon icon='cog' /> Настройки
 									</a>
 								</MDBDropdownItem>
 								<MDBDropdownItem onClick={onLogoutClick}>

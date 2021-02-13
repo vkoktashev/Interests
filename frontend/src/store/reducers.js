@@ -37,6 +37,7 @@ const initialState = Map({
 		userPageLogs: false,
 		userPageFriendsLogs: false,
 		userPageCalendar: false,
+		userPageSettings: false,
 		searchGames: false,
 		searchMovies: false,
 		searchShows: false,
@@ -157,6 +158,8 @@ export default function reducer(state = initialState, action) {
 			return state.setIn(["isLoading", "userPageFriendsLogs"], action.isLoading);
 		case types.SET_IS_LOADING_USER_PAGE_CALENDAR:
 			return state.setIn(["isLoading", "userPageCalendar"], action.isLoading);
+		case types.SET_IS_LOADING_USER_PAGE_SETTINGS:
+			return state.setIn(["isLoading", "userPageSettings"], action.isLoading);
 		default:
 			return state;
 	}
@@ -312,4 +315,7 @@ export function getIsLoadingUserPageFriendsLogs(state) {
 }
 export function getIsLoadingUserPageCalendar(state) {
 	return state.get("isLoading").userPageCalendar;
+}
+export function getIsLoadingUserPageSettings(state) {
+	return state.get("isLoading").userPageSettings;
 }
