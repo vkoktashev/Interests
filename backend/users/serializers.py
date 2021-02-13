@@ -107,6 +107,12 @@ class UserNotificationSerializer(serializers.ModelSerializer):
         fields = ('receive_games_releases', 'receive_movies_releases', 'receive_episodes_releases')
 
 
+class UserInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'last_activity')
+
+
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):

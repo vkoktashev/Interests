@@ -28,7 +28,7 @@ from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, 
 from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogSerializer, EpisodeLogSerializer, \
     EpisodeSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer, \
-    UserNotificationSerializer
+    UserNotificationSerializer, UserInfoSerializer
 from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
     USER_NOT_FOUND, EMAIL_ERROR, MINUTES_IN_HOUR, SITE_URL
 from utils.documentation import USER_SIGNUP_201_EXAMPLE, USER_SIGNUP_400_EXAMPLE, USER_LOG_200_EXAMPLE, \
@@ -460,9 +460,13 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                              .filter(user=user, is_following=True).values('followed_user')) \
             .values('id', 'username')
 
-        return Response({'id': user.id, 'username': user.username, 'is_followed': user_is_followed,
-                         'followed_users': followed_users, 'last_activity': user.last_activity,
-                         'games': games, 'movies': movies, 'shows': shows, 'stats': stats})
+        response_data = {'is_followed': user_is_followed, 'followed_users': followed_users,
+                         'games': games, 'movies': movies, 'shows': shows, 'stats': stats}
+
+        serializer = UserInfoSerializer(user)
+        response_data.update(serializer.data)
+
+        return Response(response_data)
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -517,6 +521,11 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def notification_preferences(self, request):
+        serializer = UserNotificationSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
