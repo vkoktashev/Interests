@@ -10,7 +10,6 @@ import * as selectors from "../../store/reducers";
 import * as actions from "../../store/actions";
 
 import LoadingOverlay from "react-loading-overlay";
-import CalendarBlock from "./Calendar/CalendarBlock";
 import GameBlock from "./GameBlock";
 import FriendBlock from "./FriendBlock";
 import MovieBlock from "./MovieBlock";
@@ -19,8 +18,6 @@ import CategoriesTab from "../Common/CategoriesTab";
 import ShowBlock from "./ShowBlock";
 
 const LOG_ROWS_COUNT = 20;
-
-//const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#FA8542'];
 
 /**
  * Основная страница приложения
@@ -38,45 +35,29 @@ function UserPage({
 	getUserFriendsLogs,
 	userFriendsLogs,
 	userFriendsLogsIsLoading,
-	getUserCalendar,
-	userCalendar,
 }) {
-	let { userID, section } = useParams();
-	const [activeCategory, setActiveCategory] = useState("");
+	let { userID } = useParams();
+	const [activeCategory, setActiveCategory] = useState("Профиль");
 	const [lastActivity, setLastActivity] = useState("");
 	const [chartData, setChartData] = useState([]);
 
 	useEffect(
 		() => {
 			getUserInfo(userID);
-			if (section !== "Календарь") {
-				getUserLogs(userID, 1, LOG_ROWS_COUNT);
-			}
+			getUserLogs(userID, 1, LOG_ROWS_COUNT);
 		},
 		// eslint-disable-next-line
-		[userID, getUserInfo, getUserLogs, getUserFriendsLogs, section]
-	);
-
-	useEffect(
-		() => {
-			if (section) setActiveCategory(section);
-			else setActiveCategory("Профиль");
-		},
-		// eslint-disable-next-line
-		[section]
+		[userID, getUserInfo, getUserLogs]
 	);
 
 	useEffect(
 		() => {
 			if (loggedIn) {
-				if (section !== "Календарь") getUserFriendsLogs(userID, 1, LOG_ROWS_COUNT);
-				if (String(currentUserInfo.id) === userID) {
-					getUserCalendar();
-				}
+				getUserFriendsLogs(userID, 1, LOG_ROWS_COUNT);
 			}
 		},
 		// eslint-disable-next-line
-		[loggedIn, userID, section]
+		[loggedIn, userID]
 	);
 
 	useEffect(() => {
@@ -115,13 +96,12 @@ function UserPage({
 								{userInfo.is_followed ? "Отписаться" : "Подписаться"}
 							</button>
 							<CategoriesTab
-								categories={["Профиль", "Игры", "Фильмы", "Сериалы", "Друзья", currentUserInfo.username === userInfo.username ? "Календарь" : undefined]}
+								categories={["Профиль", "Игры", "Фильмы", "Сериалы", "Друзья"]}
 								activeColor='#7654de'
 								activeCategory={activeCategory}
 								onChangeCategory={(category) => {
 									setActiveCategory(category);
 								}}
-								hidden={section}
 							/>
 
 							<div hidden={activeCategory !== "Профиль"}>
@@ -161,9 +141,6 @@ function UserPage({
 									<UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => getUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true} />
 								</LoadingOverlay>
 							</div>
-							<div hidden={activeCategory !== "Календарь"}>
-								<CalendarBlock calendar={userCalendar} />
-							</div>
 						</MDBCol>
 						<MDBCol md='0.5'></MDBCol>
 					</MDBRow>
@@ -182,7 +159,6 @@ const mapStateToProps = (state) => ({
 	userFriendsLogs: selectors.getUserPageFriendsLogs(state),
 	userFriendsLogsIsLoading: selectors.getIsLoadingUserPageFriendsLogs(state),
 	currentUserInfo: selectors.getUser(state),
-	userCalendar: selectors.getUserPageCalendar(state),
 });
 
 const mapDispatchToProps = (dispatch) => {
@@ -201,9 +177,6 @@ const mapDispatchToProps = (dispatch) => {
 		},
 		getUserFriendsLogs: (userID, page, resultsOnPage) => {
 			dispatch(actions.requestUserPageFriendsLogs(userID, page, resultsOnPage));
-		},
-		getUserCalendar: () => {
-			dispatch(actions.requestUserPageCalendar());
 		},
 	};
 };

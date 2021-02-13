@@ -16,13 +16,12 @@ const initialState = Map({
 	},
 	searchContent: { games: [], movies: [], shows: [], users: [] },
 	userPageContent: {
-		user: {
-			stats: {},
-		},
+		user: { stats: {} },
 		userLogs: { log: [] },
 		userFriendsLogs: { log: [] },
-		calendar: {},
 	},
+	userCalendar: {},
+	userSettings: {},
 	openedPages: { LoginForm: false, RegistrateForm: false, ResetPasswordForm: false },
 	errors: { auth: false, registrate: false, gameRequest: false, movieRequest: false, userPage: false, resetPassword: false, confirmPassword: false },
 	isLoading: {
@@ -36,7 +35,8 @@ const initialState = Map({
 		userPageContent: false,
 		userPageLogs: false,
 		userPageFriendsLogs: false,
-		userPageCalendar: false,
+		userCalendar: false,
+		userSettings: false,
 		searchGames: false,
 		searchMovies: false,
 		searchShows: false,
@@ -97,8 +97,10 @@ export default function reducer(state = initialState, action) {
 			return state.setIn(["userPageContent", "userLogs"], action.logs);
 		case types.SET_USER_PAGE_FRIENDS_LOGS:
 			return state.setIn(["userPageContent", "userFriendsLogs"], action.logs);
-		case types.SET_USER_PAGE_CALENDAR:
-			return state.setIn(["userPageContent", "calendar"], action.data);
+		case types.SET_USER_CALENDAR:
+			return state.setIn(["userCalendar"], action.data);
+		case types.SET_USER_SETTINGS:
+			return state.setIn(["userSettings"], action.data);
 
 		//Редьюсеры состояния всплывающих окон
 		case types.SET_LOGINFORM:
@@ -155,8 +157,10 @@ export default function reducer(state = initialState, action) {
 			return state.setIn(["isLoading", "userPageLogs"], action.isLoading);
 		case types.SET_IS_LOADING_USER_PAGE_FRIENDS_LOGS:
 			return state.setIn(["isLoading", "userPageFriendsLogs"], action.isLoading);
-		case types.SET_IS_LOADING_USER_PAGE_CALENDAR:
-			return state.setIn(["isLoading", "userPageCalendar"], action.isLoading);
+		case types.SET_IS_LOADING_USER_CALENDAR:
+			return state.setIn(["isLoading", "userCalendar"], action.isLoading);
+		case types.SET_IS_LOADING_USER_SETTINGS:
+			return state.setIn(["isLoading", "userSettings"], action.isLoading);
 		default:
 			return state;
 	}
@@ -171,6 +175,12 @@ export function getAuth(state) {
 }
 export function getUser(state) {
 	return state.get("user");
+}
+export function getUserCalendar(state) {
+	return state.get("userCalendar");
+}
+export function getUserSettings(state) {
+	return state.get("userSettings");
 }
 
 //Селекторы информации о контенте
@@ -222,9 +232,6 @@ export function getUserPageLogs(state) {
 }
 export function getUserPageFriendsLogs(state) {
 	return state.get("userPageContent").userFriendsLogs;
-}
-export function getUserPageCalendar(state) {
-	return state.get("userPageContent").calendar;
 }
 
 //Селекторы ошибок
@@ -310,6 +317,9 @@ export function getIsLoadingUserPageLogs(state) {
 export function getIsLoadingUserPageFriendsLogs(state) {
 	return state.get("isLoading").userPageFriendsLogs;
 }
-export function getIsLoadingUserPageCalendar(state) {
+export function getIsLoadingUserCalendar(state) {
 	return state.get("isLoading").userPageCalendar;
+}
+export function getIsLoadingUserSettings(state) {
+	return state.get("isLoading").userPageSettings;
 }

@@ -20,7 +20,7 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 	let { id } = useParams();
 	const [genres, setGenres] = useState("");
 	const [review, setReview] = useState("");
-	const [spentTime, setSpentTime] = useState(0);
+	const [spentTime, setSpentTime] = useState("");
 	const [userStatus, setUserStatus] = useState("Не играл");
 	const [userRate, setUserRate] = useState(0);
 	const [developers, setDevelopers] = useState("");
@@ -118,9 +118,34 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 
 	function setClearUI() {
 		setReview("");
-		setSpentTime(0);
+		setSpentTime("");
 		setUserStatus("Не играл");
 		setUserRate(0);
+	}
+
+	function getTimeToBeatDatalist() {
+		if (game.hltb) {
+			return (
+				<datalist id='timesList'>
+					<option value={strToFloat(game.hltb?.gameplay_main_extra)} className='testil' />
+					<option value={strToFloat(game.hltb?.gameplay_main)} />
+					<option value={strToFloat(game.hltb?.gameplay_completionist)} />
+				</datalist>
+			);
+		} else if (game.rawg.playtime) {
+			return (
+				<datalist id='timesList'>
+					<option value={strToFloat(game.rawg.playtime)} />
+				</datalist>
+			);
+		}
+		return null;
+	}
+
+	function strToFloat(str) {
+		if (str & (str !== -1))
+			if (str.indexOf("½") + 1) return parseFloat(str) + 0.5;
+			else return parseFloat(str);
 	}
 
 	return (
@@ -141,7 +166,7 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 								<p>Платформы: {platforms}</p>
 								<TimeToBeat hltbInfo={hltbInfo} />
 							</div>
-							<LoadingOverlay active={gameUserInfoIsLoading & !gameIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={gameUserInfoIsLoading && !gameIsLoading} spinner text='Загрузка...'>
 								<Rating
 									stop={10}
 									emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
@@ -190,9 +215,17 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 						</div>
 						<div className='gameReviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
-							<LoadingOverlay active={gameUserInfoIsLoading & !gameIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={gameUserInfoIsLoading && !gameIsLoading} spinner text='Загрузка...'>
 								<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
-								<MDBInput type='number' id='spentTimeInput' label='Время прохождения (часы)' value={spentTime} onChange={(event) => setSpentTime(event.target.value)} />
+								<MDBInput
+									type='number'
+									id='spentTimeInput'
+									label='Время прохождения (часы)'
+									list='timesList'
+									value={spentTime}
+									onChange={(event) => setSpentTime(event.target.value)}
+								/>
+								{getTimeToBeatDatalist()}
 								<button
 									className={"savePreviewButton"}
 									disabled={!loggedIn | (userStatus === "Не играл")}

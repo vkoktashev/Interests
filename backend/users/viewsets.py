@@ -28,7 +28,7 @@ from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, 
 from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogSerializer, EpisodeLogSerializer, \
     EpisodeSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer, \
-    UserNotificationSerializer
+    UserInfoSerializer, SettingsSerializer
 from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
     USER_NOT_FOUND, EMAIL_ERROR, MINUTES_IN_HOUR, SITE_URL
 from utils.documentation import USER_SIGNUP_201_EXAMPLE, USER_SIGNUP_400_EXAMPLE, USER_LOG_200_EXAMPLE, \
@@ -216,7 +216,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=True, methods=['get'])
     def log(self, request, *args, **kwargs):
         try:
-            user = get_user_by_id(kwargs.get('pk'))
+            user = get_user_by_id(kwargs.get('pk'), request.user)
         except ValueError:
             return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
@@ -250,7 +250,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_log(self, request, *args, **kwargs):
         try:
-            user = get_user_by_id(kwargs.get('pk'))
+            user = get_user_by_id(kwargs.get('pk'), request.user)
         except ValueError:
             return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
@@ -303,8 +303,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .exclude(usershow__status=UserShow.STATUS_NOT_WATCHED) \
             .exclude(usershow__status=UserShow.STATUS_STOPPED)
 
-        episodes = Episode.objects.select_related('tmdb_season').filter(tmdb_season__tmdb_show__in=shows,
-                                                                        tmdb_release_date__gte=today_date)
+        episodes = Episode.objects.select_related('tmdb_season', 'tmdb_season__tmdb_show') \
+            .filter(tmdb_season__tmdb_show__in=shows, tmdb_release_date__gte=today_date)
         for episode in episodes:
             tmdb_release_date_str = str(episode.tmdb_release_date)
             release_date = calendar_dict[tmdb_release_date_str]
@@ -342,7 +342,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         })
     def retrieve(self, request, *args, **kwargs):
         try:
-            user = get_user_by_id(kwargs.get('pk'))
+            user = get_user_by_id(kwargs.get('pk'), request.user)
         except ValueError:
             return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
@@ -460,9 +460,13 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                              .filter(user=user, is_following=True).values('followed_user')) \
             .values('id', 'username')
 
-        return Response({'id': user.id, 'username': user.username, 'is_followed': user_is_followed,
-                         'followed_users': followed_users, 'last_activity': user.last_activity,
-                         'games': games, 'movies': movies, 'shows': shows, 'stats': stats})
+        response_data = {'is_followed': user_is_followed, 'followed_users': followed_users,
+                         'games': games, 'movies': movies, 'shows': shows, 'stats': stats}
+
+        serializer = UserInfoSerializer(user)
+        response_data.update(serializer.data)
+
+        return Response(response_data)
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -511,13 +515,17 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['patch'])
-    def notification_preferences(self, request):
-        serializer = UserNotificationSerializer(request.user, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+    @action(detail=False, methods=['get', 'patch'], permission_classes=[IsAuthenticated])
+    def user_settings(self, request):
+        if request.method == 'get':
+            serializer = SettingsSerializer(request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            serializer = SettingsSerializer(request.user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 def serialize_logs(logs):
@@ -564,11 +572,14 @@ def get_logs(user_query, page_size, page_number):
     return results, paginator_page.has_next()
 
 
-def get_user_by_id(user_id):
+def get_user_by_id(user_id, current_user):
     try:
         user_id = int(user_id)
     except ValueError:
         raise ValueError()
+
+    if current_user.pk == user_id:
+        return current_user
 
     try:
         user = User.objects.get(pk=user_id)

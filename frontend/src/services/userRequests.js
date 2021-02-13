@@ -1,5 +1,5 @@
 import axios from "axios";
-import { USER_INFO_URL, SEARCH_USERS_URL, USER_CALENDAR_URL } from "../settings";
+import { USER_INFO_URL, SEARCH_USERS_URL, USER_CALENDAR_URL, USER_SETTINGS_URL } from "../settings";
 
 axios.defaults.headers.common = {
 	"Content-Type": "application/json;charset=UTF-8",
@@ -114,48 +114,38 @@ export async function getUserCalendar(token) {
 		const res = await axios.get(USER_CALENDAR_URL, { headers: { Authorization: AuthStr } });
 		data = res.data;
 		return data;
-		/*return {
-			"2021-02-01": {
-				games: [
-					{
-						id: 572,
-						rawg_name: "В тылу врага 2: Братья по оружию",
-						rawg_slug: "2-28",
-						rawg_id: 37986,
-						hltb_name: "",
-						hltb_id: null,
-					},
-					{
-						id: 572,
-						rawg_name: "Minecraft: Dungeons",
-						rawg_slug: "minecraft-dungeons",
-						rawg_id: 257195,
-						hltb_name: "",
-						hltb_id: null,
-					},
-				],
-				movies: [
-					{
-						id: 309,
-						imdb_id: "tt1630029",
-						tmdb_id: 76600,
-						tmdb_original_name: "Avatar 2",
-						tmdb_name: "Аватар 2",
-						tmdb_runtime: 0,
-					},
-				],
-				episodes: [
-					{
-						show_name: "Теория  большого взрыва",
-						show_id: 1418,
-						season_number: 0,
-						episode_number: 1,
-						id: 64739,
-						name: "Эпизод 1",
-					},
-				],
-			},
-		};*/
+	} catch (e) {
+		console.log("AXIOS ERROR: ", e);
+		return null;
+	}
+}
+
+/**
+ * Запрос к бд, получающий настройки пользователя
+ */
+export async function getUserSettings(token) {
+	let data;
+	try {
+		var AuthStr = "Bearer " + token;
+		const res = await axios.get(USER_SETTINGS_URL, { headers: { Authorization: AuthStr } });
+		data = res.data;
+		return data;
+	} catch (e) {
+		console.log("AXIOS ERROR: ", e);
+		return null;
+	}
+}
+
+/**
+ * Запрос к бд, изменяющий настройки пользователя
+ */
+export async function patchUserSettings(token, settings) {
+	let data;
+	try {
+		var AuthStr = "Bearer " + token;
+		const res = await axios.patch(USER_SETTINGS_URL, settings, { headers: { Authorization: AuthStr } });
+		data = res.data;
+		return data;
 	} catch (e) {
 		console.log("AXIOS ERROR: ", e);
 		return null;

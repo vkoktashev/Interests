@@ -17,6 +17,8 @@ import ConfirmPage from "./components/ConfirmPage";
 import ConfirmPasswordPage from "./components/ConfirmPasswordPage";
 import UserPage from "./components/UserPage/UserPage";
 import Navbar from "./components/Navbar";
+import CalendarPage from "./components/Calendar/CalendarPage";
+import SettingsPage from "./components/Settings/SettingsPage";
 
 class Routes extends React.Component {
 	render() {
@@ -35,14 +37,15 @@ class Routes extends React.Component {
 					<Route exact path='/confirm/' component={ConfirmPage} />
 					<Route exact path='/confirm_password/' component={ConfirmPasswordPage} />
 					<Route exact path='/user/:userID' component={UserPage} />
-					<Route exact path='/user/:userID/:section' component={UserPage} />
+					<Route exact path='/calendar' component={CalendarPage} />
+					<Route exact path='/settings' component={SettingsPage} />
 					<Route
 						render={function () {
 							return <h1>Not Found</h1>;
 						}}
 					/>
 				</Switch>
-				<ToastContainer position='top-center' hideProgressBar newestOnTop closeOnClick />
+				<ToastContainer position='top-center' hideProgressBar newestOnTop closeOnClick autoClose={1500} />
 				<LoginForm />
 				<RegistrationForm />
 				<ResetPasswordForm />

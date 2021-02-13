@@ -73,7 +73,6 @@ function ReleasesList({ calendar }) {
 	}
 
 	function getIconForDay(day) {
-		console.log(!(day.movies?.length > 0));
 		if ((day.games?.length > 0) & !(day.movies?.length > 0) & !(day.episodes?.length > 0)) return <MDBIcon icon='gamepad' />;
 		else if ((day.movies?.length > 0) & !(day.games?.length > 0) & !(day.episodes?.length > 0)) return <MDBIcon icon='film' />;
 		else if ((day.episodes?.length > 0) & !(day.movies?.length > 0) & !(day.games?.length > 0)) return <MDBIcon icon='tv' />;
