@@ -318,8 +318,8 @@ export function getIsLoadingUserPageFriendsLogs(state) {
 	return state.get("isLoading").userPageFriendsLogs;
 }
 export function getIsLoadingUserCalendar(state) {
-	return state.get("isLoading").userPageCalendar;
+	return state.get("isLoading").userCalendar;
 }
 export function getIsLoadingUserSettings(state) {
-	return state.get("isLoading").userPageSettings;
+	return state.get("isLoading").userSettings;
 }

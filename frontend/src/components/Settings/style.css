@@ -12,7 +12,6 @@
 .settingsBlock {
 	padding: 1rem;
 	background-color: rgb(30, 30, 30);
-	cursor: pointer;
 }
 
 .settingsCheckbox {
@@ -21,6 +20,7 @@
 
 .settingsRow {
 	font-size: 1.5em;
+	cursor: pointer;
 }
 
 .saveSettingsButton {
