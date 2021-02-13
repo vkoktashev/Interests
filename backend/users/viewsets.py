@@ -526,6 +526,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def notification_preferences(self, request):
         serializer = UserNotificationSerializer(request.user)
+        serializer = UserNotificationSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
