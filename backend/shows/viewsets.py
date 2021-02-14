@@ -17,7 +17,7 @@ from movies.models import Genre
 from shows.models import UserShow, Show, UserSeason, Season, UserEpisode, Episode, ShowGenre, EpisodeLog, ShowLog
 from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpisodeSerializer, \
     FollowedUserShowSerializer, FollowedUserSeasonSerializer, FollowedUserEpisodeSerializer, \
-    UserEpisodeInSeasonSerializer, EpisodeSerializer, ShowSerializer
+    UserEpisodeInSeasonSerializer, EpisodeSerializer, ShowSerializer, SeasonSerializer
 from users.models import UserFollow
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
     SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE
@@ -341,21 +341,37 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         shows_info = []
 
         for episode in episodes:
-            show = ShowSerializer(episode.tmdb_season.tmdb_show).data
-            index = -1
+            show = episode.tmdb_season.tmdb_show
+            show_index = -1
 
-            found = False
+            season = episode.tmdb_season
+            season_index = -1
+
+            show_found = False
             for element in shows_info:
-                if show['id'] == element['id']:
-                    found = True
-                    index = shows_info.index(element)
+                if show.id == element['id']:
+                    show_found = True
+                    show_index = shows_info.index(element)
                     break
 
-            if not found:
-                show.update({'episodes': []})
-                shows_info.append(show)
+            if not show_found:
+                show_data = ShowSerializer(show).data
+                show_data.update({'seasons': []})
+                shows_info.append(show_data)
 
-            show_episodes = shows_info[index]['episodes']
+            season_found = False
+            for element in shows_info[show_index]['seasons']:
+                if season.id == element['id']:
+                    season_found = True
+                    season_index = shows_info[show_index]['seasons'].index(element)
+                    break
+
+            if not season_found:
+                season_data = SeasonSerializer(season).data
+                season_data.update({'episodes': []})
+                shows_info[show_index]['seasons'].append(season_data)
+
+            show_episodes = shows_info[show_index]['seasons'][season_index]['episodes']
             show_episodes.append(EpisodeSerializer(episode).data)
 
         return Response(shows_info)
