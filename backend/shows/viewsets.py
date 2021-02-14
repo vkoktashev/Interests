@@ -337,7 +337,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .filter(tmdb_season__tmdb_show__in=shows, tmdb_release_date__lte=today_date) \
             .exclude(tmdb_season__tmdb_season_number=0) \
             .exclude(userepisode__score__gt=-1) \
-            .order_by('-tmdb_episode_number')
+            .order_by('tmdb_season__tmdb_season_number', 'tmdb_episode_number')
 
         shows_info = []
 

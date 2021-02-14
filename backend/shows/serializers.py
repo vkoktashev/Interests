@@ -217,12 +217,6 @@ class EpisodeShowSerializer(serializers.ModelSerializer):
 
 
 class EpisodeSerializer(serializers.ModelSerializer):
-    tmdb_season_number = serializers.SerializerMethodField('get_season_number')
-
-    @staticmethod
-    def get_season_number(episode):
-        return episode.tmdb_season.tmdb_season_number
-
     class Meta:
         model = Episode
         exclude = ('tmdb_season',)
