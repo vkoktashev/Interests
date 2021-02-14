@@ -17,7 +17,7 @@ from movies.models import Genre
 from shows.models import UserShow, Show, UserSeason, Season, UserEpisode, Episode, ShowGenre, EpisodeLog, ShowLog
 from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpisodeSerializer, \
     FollowedUserShowSerializer, FollowedUserSeasonSerializer, FollowedUserEpisodeSerializer, \
-    UserEpisodeInSeasonSerializer, EpisodeSerializer
+    UserEpisodeInSeasonSerializer, EpisodeSerializer, ShowSerializer
 from users.models import UserFollow
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
     SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE
@@ -325,20 +325,39 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response(status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-    def upcoming_releases(self, request, *args, **kwargs):
+    def unwatched_episodes(self, request, *args, **kwargs):
         today_date = datetime.today().date()
 
-        shows = Show.objects.filter(usershow__user=request.user) \
-            .filter(Q(usershow__status=UserShow.STATUS_WATCHING) | Q(usershow__status=UserShow.STATUS_WATCHED))
+        shows = Show.objects.filter(Q(usershow__user=request.user) &
+                                    (Q(usershow__status=UserShow.STATUS_WATCHING) |
+                                     Q(usershow__status=UserShow.STATUS_WATCHED)))
 
         episodes = Episode.objects.select_related('tmdb_season', 'tmdb_season__tmdb_show') \
             .filter(tmdb_season__tmdb_show__in=shows, tmdb_release_date__lte=today_date) \
             .exclude(tmdb_season__tmdb_season_number=0) \
             .exclude(userepisode__score__gt=-1)
 
-        serializer = EpisodeSerializer(episodes, many=True)
+        shows_info = []
 
-        return Response(serializer.data)
+        for episode in episodes:
+            show = ShowSerializer(episode.tmdb_season.tmdb_show).data
+            index = -1
+
+            found = False
+            for element in shows_info:
+                if show['id'] == element['id']:
+                    found = True
+                    index = shows_info.index(element)
+                    break
+
+            if not found:
+                show.update({'episodes': []})
+                shows_info.append(show)
+
+            show_episodes = shows_info[index]['episodes']
+            show_episodes.append(EpisodeSerializer(episode).data)
+
+        return Response(shows_info)
 
 
 class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -493,8 +512,8 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         season_number = kwargs.get('number')
 
         try:
-            season = Season.objects.get(tmdb_show=show_id, tmdb_season_number=season_number)
-
+            show = Show.objects.get(tmdb_id=show_id)
+            season = Season.objects.get(tmdb_show=show, tmdb_season_number=season_number)
             # user_info
             try:
                 user_season = UserSeason.objects.get(user=request.user, season=season)
@@ -512,12 +531,12 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 .exclude(score=UserSeason._meta.get_field('score').get_default())
             serializer = FollowedUserSeasonSerializer(followed_user_seasons, many=True)
             friends_info = serializer.data
-
             episodes = Episode.objects.filter(tmdb_season=season)
             user_episodes = UserEpisode.objects.prefetch_related('episode').filter(user=request.user,
                                                                                    episode__in=episodes)
             episodes_user_info = UserEpisodeInSeasonSerializer(user_episodes, many=True).data
-        except (Season.DoesNotExist, ValueError):
+        except (Show.DoesNotExist, Season.DoesNotExist, ValueError):
+            show = None
             user_info = None
             friends_info = ()
             episodes_user_info = ()
@@ -525,7 +544,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response({'user_info': user_info,
                          'episodes_user_info': episodes_user_info,
                          'friends_info': friends_info,
-                         'user_watched_show': user_watched_show(show_id, request.user)})
+                         'user_watched_show': user_watched_show(show, request.user)})
 
 
 class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -587,7 +606,8 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         episode_number = kwargs.get('number')
 
         try:
-            season = Season.objects.get(tmdb_show=show_id,
+            show = Show.objects.get(tmdb_id=show_id)
+            season = Season.objects.get(tmdb_show=show,
                                         tmdb_season_number=season_number)
             episode = Episode.objects.get(tmdb_season=season,
                                           tmdb_episode_number=episode_number)
@@ -609,19 +629,18 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 .exclude(score=EPISODE_NOT_WATCHED_SCORE)
             serializer = FollowedUserEpisodeSerializer(followed_user_episodes, many=True)
             friends_info = serializer.data
-        except (Season.DoesNotExist, Episode.DoesNotExist, ValueError):
+        except (Show.DoesNotExist, Season.DoesNotExist, Episode.DoesNotExist, ValueError):
+            show = None
             user_info = None
             friends_info = ()
 
         return Response({'user_info': user_info,
                          'friends_info': friends_info,
-                         'user_watched_show': user_watched_show(show_id, request.user)})
+                         'user_watched_show': user_watched_show(show, request.user)})
 
 
-def user_watched_show(show_id, user):
-    try:
-        show = Show.objects.get(tmdb_id=show_id)
-    except Show.DoesNotExist:
+def user_watched_show(show, user):
+    if show is None:
         return False
 
     user_show = UserShow.objects.filter(user=user, show=show).first()

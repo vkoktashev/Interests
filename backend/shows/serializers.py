@@ -193,13 +193,25 @@ class ShowSerializer(serializers.ModelSerializer):
 
 
 # todo возможно переделать с depth=2
-class EpisodeSerializer(serializers.ModelSerializer):
+class EpisodeShowSerializer(serializers.ModelSerializer):
     tmdb_show = serializers.SerializerMethodField('get_tmdb_show')
     tmdb_season_number = serializers.SerializerMethodField('get_season_number')
 
     @staticmethod
     def get_tmdb_show(episode):
         return ShowSerializer(episode.tmdb_season.tmdb_show).data
+
+    @staticmethod
+    def get_season_number(episode):
+        return episode.tmdb_season.tmdb_season_number
+
+    class Meta:
+        model = Episode
+        exclude = ('tmdb_season',)
+
+
+class EpisodeSerializer(serializers.ModelSerializer):
+    tmdb_season_number = serializers.SerializerMethodField('get_season_number')
 
     @staticmethod
     def get_season_number(episode):
