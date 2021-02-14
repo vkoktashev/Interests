@@ -325,7 +325,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response(status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-    def upcoming_releases(self, request, *args, **kwargs):
+    def unwatched_episodes(self, request, *args, **kwargs):
         today_date = datetime.today().date()
 
         shows = Show.objects.filter(usershow__user=request.user) \
@@ -493,8 +493,8 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         season_number = kwargs.get('number')
 
         try:
-            season = Season.objects.get(tmdb_show=show_id, tmdb_season_number=season_number)
-
+            show = Show.objects.get(tmdb_id=show_id)
+            season = Season.objects.get(tmdb_show=show, tmdb_season_number=season_number)
             # user_info
             try:
                 user_season = UserSeason.objects.get(user=request.user, season=season)
@@ -512,12 +512,12 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 .exclude(score=UserSeason._meta.get_field('score').get_default())
             serializer = FollowedUserSeasonSerializer(followed_user_seasons, many=True)
             friends_info = serializer.data
-
             episodes = Episode.objects.filter(tmdb_season=season)
             user_episodes = UserEpisode.objects.prefetch_related('episode').filter(user=request.user,
                                                                                    episode__in=episodes)
             episodes_user_info = UserEpisodeInSeasonSerializer(user_episodes, many=True).data
-        except (Season.DoesNotExist, ValueError):
+        except (Show.DoesNotExist, Season.DoesNotExist, ValueError):
+            show = None
             user_info = None
             friends_info = ()
             episodes_user_info = ()
@@ -525,7 +525,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response({'user_info': user_info,
                          'episodes_user_info': episodes_user_info,
                          'friends_info': friends_info,
-                         'user_watched_show': user_watched_show(show_id, request.user)})
+                         'user_watched_show': user_watched_show(show, request.user)})
 
 
 class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -587,7 +587,8 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         episode_number = kwargs.get('number')
 
         try:
-            season = Season.objects.get(tmdb_show=show_id,
+            show = Show.objects.get(tmdb_id=show_id)
+            season = Season.objects.get(tmdb_show=show,
                                         tmdb_season_number=season_number)
             episode = Episode.objects.get(tmdb_season=season,
                                           tmdb_episode_number=episode_number)
@@ -609,19 +610,18 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 .exclude(score=EPISODE_NOT_WATCHED_SCORE)
             serializer = FollowedUserEpisodeSerializer(followed_user_episodes, many=True)
             friends_info = serializer.data
-        except (Season.DoesNotExist, Episode.DoesNotExist, ValueError):
+        except (Show.DoesNotExist, Season.DoesNotExist, Episode.DoesNotExist, ValueError):
+            show = None
             user_info = None
             friends_info = ()
 
         return Response({'user_info': user_info,
                          'friends_info': friends_info,
-                         'user_watched_show': user_watched_show(show_id, request.user)})
+                         'user_watched_show': user_watched_show(show, request.user)})
 
 
-def user_watched_show(show_id, user):
-    try:
-        show = Show.objects.get(tmdb_id=show_id)
-    except Show.DoesNotExist:
+def user_watched_show(show, user):
+    if show is None:
         return False
 
     user_show = UserShow.objects.filter(user=user, show=show).first()
