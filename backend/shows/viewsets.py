@@ -255,11 +255,12 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         for data in episodes:
             try:
                 # todo возможно изменить структуру получаемых данных, чтобы не использовать сезон
-                season = Season.objects.get(tmdb_show=kwargs.get('tmdb_id'),
+                show = Show.objects.get(tmdb_id=kwargs.get('tmdb_id'))
+                season = Season.objects.get(tmdb_show=show,
                                             tmdb_season_number=data['season_number'])
                 episode = Episode.objects.get(tmdb_season=season,
                                               tmdb_episode_number=data['episode_number'])
-            except (Season.DoesNotExist, Episode.DoesNotExist):
+            except (Show.DoesNotExist, Season.DoesNotExist, Episode.DoesNotExist):
                 return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
             data = data.copy()
