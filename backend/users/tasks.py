@@ -35,6 +35,7 @@ def send_release_emails():
         games_message = ''
         movies_message = ''
         episodes_message = ''
+        message_empty = True
 
         if user.receive_games_releases:
             games = today_games.filter(usergame__user=user) \
@@ -47,6 +48,7 @@ def send_release_emails():
                     games_message += f'<a href="http://{SITE_URL}/game/{game.rawg_slug}/">' \
                                      f'{game.rawg_name}</a><br>'
                 games_message += '<br>'
+                message_empty = False
 
         if user.receive_movies_releases:
             movies = today_movies.filter(usermovie__user=user) \
@@ -59,6 +61,7 @@ def send_release_emails():
                     movies_message += f'<a href="http://{SITE_URL}/movie/{movie.tmdb_id}/">' \
                                       f'{movie.tmdb_name}</a><br>'
                 movies_message += '<br>'
+                message_empty = False
 
         if user.receive_episodes_releases:
             shows = Show.objects.filter(usershow__user=user) \
@@ -77,24 +80,26 @@ def send_release_emails():
                         f'/episode/{episode.tmdb_episode_number}/">' \
                         f'{episode.tmdb_episode_number} эпизод</a> ' \
                         f'<a href="http://{SITE_URL}/show/{episode.tmdb_season.tmdb_show.tmdb_id}' \
-                        f'/season/{episode.tmdb_season.tmdb_season_number}">' \
+                        f'/season/{episode.tmdb_season.tmdb_season_number}/">' \
                         f'{episode.tmdb_season.tmdb_season_number} сезона</a> ' \
                         f'сериала ' \
                         f'<a href="http://{SITE_URL}/show/{episode.tmdb_season.tmdb_show.tmdb_id}/">' \
                         f'{episode.tmdb_season.tmdb_show.tmdb_name}</a><br>'
                 episodes_message += '<br>'
+                message_empty = False
 
-        introduction_message = f'Привет, {user.username}!' \
-                               f'<br>' \
-                               f'Напоминаем о сегодняшних релизах.' \
-                               f'<br><br>'
+        if not message_empty:
+            introduction_message = f'Привет, {user.username}!' \
+                                   f'<br>' \
+                                   f'Напоминаем о сегодняшних релизах.' \
+                                   f'<br><br>'
 
-        preferences_message = f'<a href="https://bit.ly/3jJofky"><font size="2">' \
-                              f'Изменить настройки оповещений</font></a>'
+            preferences_message = f'<a href="http://{SITE_URL}/settings/"><font size="2">' \
+                                  f'Изменить настройки оповещений</font></a>'
 
-        mail_subject = 'Новые релизы!'
+            mail_subject = 'Новые релизы!'
 
-        message = introduction_message + games_message + movies_message + episodes_message + preferences_message
-        email = EmailMultiAlternatives(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
-        email.content_subtype = 'html'
-        email.send()
+            message = introduction_message + games_message + movies_message + episodes_message + preferences_message
+            email = EmailMultiAlternatives(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
+            email.content_subtype = 'html'
+            email.send()
