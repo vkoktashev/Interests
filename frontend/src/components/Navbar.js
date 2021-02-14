@@ -102,6 +102,18 @@ function Navbar({ loggedIn, onLoginClick, onLogoutClick, onRegistrationClick, us
 								</MDBDropdownItem>
 								<MDBDropdownItem>
 									<a
+										href={`/unwatched`}
+										className='navDropdownItem'
+										onClick={(event) => {
+											event.preventDefault();
+											history.push(`/unwatched`);
+											return false;
+										}}>
+										<MDBIcon icon='tv' /> Непросмотренное
+									</a>
+								</MDBDropdownItem>
+								<MDBDropdownItem>
+									<a
 										href={`/settings`}
 										className='navDropdownItem'
 										onClick={(event) => {

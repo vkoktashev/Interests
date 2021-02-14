@@ -489,6 +489,25 @@ export function requestUserSettings() {
 	};
 }
 
+export function requestUserUnwatched() {
+	return async (dispatch) => {
+		if (await dispatch(checkAuthorization())) {
+			setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_UNWATCHED, true);
+			showRequests.getUnwatchedEpisodes(localStorage.getItem("token")).then((result) => {
+				if (result != null) {
+					dispatch({
+						type: actionTypes.SET_USER_UNWATCHED,
+						data: result,
+					});
+				} else {
+					toast.error("Ошибка загрузки списка серий!");
+				}
+				setLoading(dispatch, actionTypes.SET_IS_LOADING_USER_UNWATCHED, false);
+			});
+		}
+	};
+}
+
 export function searchGames(query, page, gamesCount) {
 	return async (dispatch) => {
 		setLoading(dispatch, actionTypes.SET_IS_LOADING_SEARCH_GAMES, true);

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from shows.models import UserShow, UserSeason, UserEpisode, ShowLog, SeasonLog, EpisodeLog, Episode, Show
+from shows.models import UserShow, UserSeason, UserEpisode, ShowLog, SeasonLog, EpisodeLog, Episode, Show, Season
 from users.serializers import FollowedUserSerializer
 from utils.serializers import ChoicesField
 
@@ -192,6 +192,12 @@ class ShowSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class SeasonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Season
+        fields = '__all__'
+
+
 # todo возможно переделать с depth=2
 class EpisodeShowSerializer(serializers.ModelSerializer):
     tmdb_show = serializers.SerializerMethodField('get_tmdb_show')
@@ -211,12 +217,6 @@ class EpisodeShowSerializer(serializers.ModelSerializer):
 
 
 class EpisodeSerializer(serializers.ModelSerializer):
-    tmdb_season_number = serializers.SerializerMethodField('get_season_number')
-
-    @staticmethod
-    def get_season_number(episode):
-        return episode.tmdb_season.tmdb_season_number
-
     class Meta:
         model = Episode
         exclude = ('tmdb_season',)

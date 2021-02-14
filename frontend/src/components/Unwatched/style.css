@@ -1,0 +1,85 @@
+.unwatchedPage {
+	width: 80rem;
+	max-width: 100%;
+	margin-left: auto;
+	margin-right: auto;
+	color: rgb(207, 207, 207);
+	margin-top: 4rem;
+	margin-bottom: 2em;
+	padding: 0px;
+}
+
+.unwatchedBlock {
+	padding: 1rem;
+	background-color: rgb(30, 30, 30);
+}
+
+.episodeRowRate {
+	display: inline-block;
+	margin-right: 1rem;
+}
+
+.episodeRowDate {
+	margin-bottom: 0px;
+	margin-left: 0.5rem;
+	display: inline-block;
+}
+
+.episodeRowCheckDate {
+	display: inline-block;
+	width: 7rem;
+	max-width: 40%;
+}
+
+.episodeRows {
+	display: inline-block;
+	margin-bottom: 0px;
+	margin-top: 0px;
+	width: 100%;
+}
+
+.episodeRow {
+	margin-bottom: 0px;
+	margin-top: 0px;
+	padding-top: 3px;
+	padding-bottom: 3px;
+	padding-left: 4px;
+	font-size: 1rem;
+	display: inline-block;
+	max-width: 100%;
+}
+
+.episodeRowName {
+	margin-bottom: 0px;
+	display: inline-block;
+}
+
+.detailRow {
+	font-size: 1rem;
+}
+
+.episodeRowName.detailRow {
+	overflow: hidden; /* Обрезаем все, что не помещается в область */
+	text-overflow: ellipsis;
+}
+
+.unwatchedShowBlock {
+	margin-bottom: 1rem;
+}
+
+.unwatchedSeasonBlock {
+	margin-bottom: 0.5rem;
+}
+
+ul {
+	list-style-type: none;
+	margin-left: -35px;
+}
+
+li.episode:nth-child(odd) {
+	background-color: rgb(30, 30, 30);
+}
+li.episode:nth-child(even) {
+	background-color: rgb(40, 40, 40);
+	border-radius: 5px;
+}
