@@ -1,7 +1,10 @@
 import React, { useEffect } from "react";
 import EpisodeRow from "./EpisodeRow";
+import { useHistory } from "react-router-dom";
 
 function ShowBlock({ loggedIn, show, setShowEpisodeUserStatus }) {
+	let history = useHistory();
+
 	useEffect(
 		() => {},
 		// eslint-disable-next-line
@@ -10,7 +13,15 @@ function ShowBlock({ loggedIn, show, setShowEpisodeUserStatus }) {
 
 	return (
 		<div className='unwatchedShowBlock'>
-			<h4>{show?.tmdb_name}</h4>
+			<a
+				href={window.location.origin + "/show/" + show.tmdb_id}
+				onClick={(e) => {
+					history.push("/show/" + show.tmdb_id);
+					e.preventDefault();
+				}}>
+				<h4>{show?.tmdb_name}</h4>
+			</a>
+
 			{show?.seasons.map((season, counter) => {
 				return (
 					<details open={true} className='unwatchedSeasonBlock' key={counter}>
