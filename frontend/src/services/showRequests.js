@@ -1,5 +1,5 @@
 import axios from "axios";
-import { SEARCH_SHOWS_URL, GET_SHOW_URL } from "../settings";
+import { SEARCH_SHOWS_URL, GET_SHOW_URL, GET_UNWATCHED_EPISODES_URL } from "../settings";
 
 axios.defaults.headers.common = {
 	"Content-Type": "application/json;charset=UTF-8",
@@ -193,6 +193,24 @@ export async function getShowEpisodeUserInfo(token, showID, seasonID, episodeID)
 	try {
 		var AuthStr = "Bearer " + token;
 		const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonID + "/episode/" + episodeID + "/user_info/", { headers: { Authorization: AuthStr } });
+		data = res.data;
+		return data;
+	} catch (e) {
+		console.log("AXIOS ERROR: ", e);
+		return null;
+	}
+}
+
+/**
+ * Запрос к бд, получающий информацию о сериале
+ * @param {string} token Токен доступа
+ * @returns {Array} Список эпизодов
+ */
+export async function getUnwatchedEpisodes(token) {
+	let data;
+	try {
+		var AuthStr = "Bearer " + token;
+		const res = await axios.get(GET_UNWATCHED_EPISODES_URL, { headers: { Authorization: AuthStr } });
 		data = res.data;
 		return data;
 	} catch (e) {

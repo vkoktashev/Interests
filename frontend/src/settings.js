@@ -28,6 +28,8 @@ export const SEARCH_MOVIES_URL = BACKEND_URL + "movies/search/";
 export const GET_SHOW_URL = BACKEND_URL + "shows/show/";
 /**Адрес поиска сериалов */
 export const SEARCH_SHOWS_URL = BACKEND_URL + "shows/search/";
+/**Адрес запроса непросмотренных серий */
+export const GET_UNWATCHED_EPISODES_URL = BACKEND_URL + "shows/show/unwatched_episodes/";
 /**Адрес получения информации о пользователе */
 export const USER_INFO_URL = BACKEND_URL + "users/user/";
 /**Адрес получения календаря релизов пользователя */

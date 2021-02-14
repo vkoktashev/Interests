@@ -22,6 +22,7 @@ const initialState = Map({
 	},
 	userCalendar: {},
 	userSettings: {},
+	userUnwatched: [],
 	openedPages: { LoginForm: false, RegistrateForm: false, ResetPasswordForm: false },
 	errors: { auth: false, registrate: false, gameRequest: false, movieRequest: false, userPage: false, resetPassword: false, confirmPassword: false },
 	isLoading: {
@@ -37,6 +38,7 @@ const initialState = Map({
 		userPageFriendsLogs: false,
 		userCalendar: false,
 		userSettings: false,
+		userUnwatched: false,
 		searchGames: false,
 		searchMovies: false,
 		searchShows: false,
@@ -51,6 +53,12 @@ export default function reducer(state = initialState, action) {
 			return state.setIn(["user"], action.user);
 		case types.SET_AUTH:
 			return state.setIn(["auth"], action.auth);
+		case types.SET_USER_CALENDAR:
+			return state.setIn(["userCalendar"], action.data);
+		case types.SET_USER_SETTINGS:
+			return state.setIn(["userSettings"], action.data);
+		case types.SET_USER_UNWATCHED:
+			return state.setIn(["userUnwatched"], action.data);
 
 		//Редьюсеры информации об игре
 		case types.SET_CONTENT_GAME:
@@ -97,10 +105,6 @@ export default function reducer(state = initialState, action) {
 			return state.setIn(["userPageContent", "userLogs"], action.logs);
 		case types.SET_USER_PAGE_FRIENDS_LOGS:
 			return state.setIn(["userPageContent", "userFriendsLogs"], action.logs);
-		case types.SET_USER_CALENDAR:
-			return state.setIn(["userCalendar"], action.data);
-		case types.SET_USER_SETTINGS:
-			return state.setIn(["userSettings"], action.data);
 
 		//Редьюсеры состояния всплывающих окон
 		case types.SET_LOGINFORM:
@@ -161,6 +165,8 @@ export default function reducer(state = initialState, action) {
 			return state.setIn(["isLoading", "userCalendar"], action.isLoading);
 		case types.SET_IS_LOADING_USER_SETTINGS:
 			return state.setIn(["isLoading", "userSettings"], action.isLoading);
+		case types.SET_IS_LOADING_USER_UNWATCHED:
+			return state.setIn(["isLoading", "userUnwatched"], action.isLoading);
 		default:
 			return state;
 	}
@@ -181,6 +187,9 @@ export function getUserCalendar(state) {
 }
 export function getUserSettings(state) {
 	return state.get("userSettings");
+}
+export function getUserUnwatched(state) {
+	return state.get("userUnwatched");
 }
 
 //Селекторы информации о контенте
@@ -322,4 +331,7 @@ export function getIsLoadingUserCalendar(state) {
 }
 export function getIsLoadingUserSettings(state) {
 	return state.get("isLoading").userSettings;
+}
+export function getIsLoadingUserUnwatched(state) {
+	return state.get("isLoading").userUnwatched;
 }

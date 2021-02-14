@@ -20,13 +20,13 @@ function EpisodePage({ requestShowEpisode, showEpisode, showEpisodeIsLoading, se
 	let { show_id, season_number, episode_number } = useParams();
 	const [date, setDate] = useState("");
 	const [review, setReview] = useState("");
-	const [userRate, setUserRate] = useState(0);
+	const [userRate, setUserRate] = useState(-1);
 
 	useEffect(
 		() => {
 			setClear();
 			setReview("");
-			setUserRate(0);
+			setUserRate(-1);
 			requestShowEpisode(show_id, season_number, episode_number);
 		},
 		// eslint-disable-next-line
@@ -38,7 +38,7 @@ function EpisodePage({ requestShowEpisode, showEpisode, showEpisodeIsLoading, se
 			if (loggedIn) requestShowEpisodeUserInfo(show_id, season_number, episode_number);
 			else {
 				setReview("");
-				setUserRate(0);
+				setUserRate(-1);
 			}
 		},
 		// eslint-disable-next-line
@@ -62,7 +62,7 @@ function EpisodePage({ requestShowEpisode, showEpisode, showEpisodeIsLoading, se
 			else setReview("");
 
 			if (showUserInfo?.score) setUserRate(showUserInfo.score);
-			else setUserRate(0);
+			else setUserRate(-1);
 		},
 		// eslint-disable-next-line
 		[showUserInfo]
