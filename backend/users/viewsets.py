@@ -26,7 +26,7 @@ from movies.models import UserMovie, MovieLog, Movie
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer, MovieSerializer
 from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, Show, Episode
 from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogSerializer, EpisodeLogSerializer, \
-    EpisodeSerializer
+    EpisodeShowSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer, \
     UserInfoSerializer, SettingsSerializer
 from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
@@ -313,7 +313,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 release_date = collections.defaultdict(list)
                 calendar_dict[tmdb_release_date_str] = release_date
 
-            release_date['episodes'].append(EpisodeSerializer(episode).data)
+            release_date['episodes'].append(EpisodeShowSerializer(episode).data)
 
         calendar_dict = dict(sorted(calendar_dict.items()))
 

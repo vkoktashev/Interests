@@ -17,7 +17,7 @@ from movies.models import Genre
 from shows.models import UserShow, Show, UserSeason, Season, UserEpisode, Episode, ShowGenre, EpisodeLog, ShowLog
 from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpisodeSerializer, \
     FollowedUserShowSerializer, FollowedUserSeasonSerializer, FollowedUserEpisodeSerializer, \
-    UserEpisodeInSeasonSerializer, EpisodeSerializer
+    UserEpisodeInSeasonSerializer, EpisodeSerializer, ShowSerializer
 from users.models import UserFollow
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
     SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE
@@ -328,17 +328,36 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     def unwatched_episodes(self, request, *args, **kwargs):
         today_date = datetime.today().date()
 
-        shows = Show.objects.filter(usershow__user=request.user) \
-            .filter(Q(usershow__status=UserShow.STATUS_WATCHING) | Q(usershow__status=UserShow.STATUS_WATCHED))
+        shows = Show.objects.filter(Q(usershow__user=request.user) &
+                                    (Q(usershow__status=UserShow.STATUS_WATCHING) |
+                                     Q(usershow__status=UserShow.STATUS_WATCHED)))
 
         episodes = Episode.objects.select_related('tmdb_season', 'tmdb_season__tmdb_show') \
             .filter(tmdb_season__tmdb_show__in=shows, tmdb_release_date__lte=today_date) \
             .exclude(tmdb_season__tmdb_season_number=0) \
             .exclude(userepisode__score__gt=-1)
 
-        serializer = EpisodeSerializer(episodes, many=True)
+        shows_info = []
 
-        return Response(serializer.data)
+        for episode in episodes:
+            show = ShowSerializer(episode.tmdb_season.tmdb_show).data
+            index = -1
+
+            found = False
+            for element in shows_info:
+                if show['id'] == element['id']:
+                    found = True
+                    index = shows_info.index(element)
+                    break
+
+            if not found:
+                show.update({'episodes': []})
+                shows_info.append(show)
+
+            show_episodes = shows_info[index]['episodes']
+            show_episodes.append(EpisodeSerializer(episode).data)
+
+        return Response(shows_info)
 
 
 class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
