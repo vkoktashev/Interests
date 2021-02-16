@@ -5,6 +5,7 @@ from django.db import transaction
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
+from requests.exceptions import ConnectionError
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -14,7 +15,7 @@ from rest_framework.viewsets import GenericViewSet
 from games.models import Game, UserGame, Genre, GameGenre
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer
 from users.models import UserFollow
-from utils.constants import RAWG_UNAVAILABLE, ERROR, HLTB_UNAVAILABLE, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, \
+from utils.constants import RAWG_UNAVAILABLE, ERROR, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, \
     GAME_NOT_FOUND, CACHE_TIMEOUT
 from utils.documentation import GAMES_SEARCH_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE
 from utils.functions import int_to_hours, get_page_size, int_to_minutes, update_fields_if_needed, get_rawg_game_key
@@ -86,12 +87,10 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             hltb_game = max(results, key=lambda element: element.similarity).__dict__
             hltb_game_name = hltb_game.get('game_name')
             hltb_game_id = hltb_game.get('game_id')
-        except ValueError:
+        except (ValueError, TypeError, ConnectionError):
             hltb_game = None
             hltb_game_name = ''
             hltb_game_id = None
-        except ConnectionError:
-            return Response({ERROR: HLTB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         new_fields = {
             'rawg_slug': rawg_game.get('slug'),
