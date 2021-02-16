@@ -30,14 +30,6 @@ function SettingsPage({ loggedIn, settings, getUserSettings, saveSettings, setti
 		[settings]
 	);
 
-	useEffect(
-		() => {
-			console.log(settingsIsLoading);
-		},
-		// eslint-disable-next-line
-		[settingsIsLoading]
-	);
-
 	return (
 		<div>
 			<div className='bg searchBG' />
