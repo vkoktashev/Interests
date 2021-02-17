@@ -339,8 +339,6 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .exclude(userepisode__score__gt=-1, userepisode__user=request.user) \
             .order_by('tmdb_season__tmdb_season_number', 'tmdb_episode_number')
 
-        print(len(episodes))
-
         shows_info = []
 
         for episode in episodes:
