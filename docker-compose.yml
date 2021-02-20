@@ -14,14 +14,16 @@ services:
     ports:
       - "5454:5432"
 
-
   back:
     build: ./backend
-    command: python manage.py runserver 0.0.0.0:8001
+    environment:
+      CELERY_BROKER_URL: 'redis://redis:6379'
+      CELERY_RESULT_BACKEND: 'redis://redis:6379'
     ports:
       - "8001:8001"
     depends_on:
       - db2
+      - redis
     restart: always
 
   front:
@@ -32,22 +34,6 @@ services:
       - back
     restart: always
 
-  celery_worker:
-    build: ./backend
-    command: celery -A config worker -l info --logfile=/logs/celery_worker.log
-    environment:
-      CELERY_BROKER_URL: 'redis://redis:6379'
-      CELERY_RESULT_BACKEND: 'redis://redis:6379'
-    depends_on:
-      - back
-      - redis
-
-  celery_beat:
-    build: ./backend
-    command: celery -A config beat -l debug --logfile=/logs/celery_beat.log
-    environment:
-      CELERY_BROKER_URL: 'redis://redis:6379'
-      CELERY_RESULT_BACKEND: 'redis://redis:6379'
     depends_on:
       - back
       - redis
