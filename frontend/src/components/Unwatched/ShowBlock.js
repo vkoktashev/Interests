@@ -11,6 +11,15 @@ function ShowBlock({ loggedIn, show, setShowEpisodeUserStatus }) {
 		[show]
 	);
 
+	function getUserSeasonOpen(showID, seasonNumber) {
+		let localData = localStorage.getItem(`${showID}_${seasonNumber}`);
+		return localData ? localData === "true" : true;
+	}
+
+	function setUserSeasonOpen(showID, seasonNumber, isOpen) {
+		localStorage.setItem(`${showID}_${seasonNumber}`, isOpen);
+	}
+
 	return (
 		<div className='unwatchedShowBlock'>
 			<a
@@ -24,7 +33,11 @@ function ShowBlock({ loggedIn, show, setShowEpisodeUserStatus }) {
 
 			{show?.seasons.map((season, counter) => {
 				return (
-					<details open={true} className='unwatchedSeasonBlock' key={counter}>
+					<details
+						open={getUserSeasonOpen(show.tmdb_id, season.tmdb_season_number)}
+						className='unwatchedSeasonBlock'
+						key={counter}
+						onToggle={(e) => setUserSeasonOpen(show.tmdb_id, season.tmdb_season_number, e.target.open)}>
 						<summary>{season.tmdb_name}</summary>
 						<ul>
 							{season.episodes.map((episode, counter) => {
