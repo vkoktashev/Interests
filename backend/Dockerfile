@@ -8,4 +8,5 @@ WORKDIR /code
 COPY requirements.txt /code/
 RUN pip install -r requirements.txt
 COPY . /code/
-CMD sudo ./wrapper_script.sh
+RUN chmod +x ./wrapper_script.sh
+CMD ./wrapper_script.sh
