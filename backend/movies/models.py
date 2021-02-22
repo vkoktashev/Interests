@@ -6,12 +6,13 @@ from users.models import UserLog, UserScore, UserLogAbstract
 
 
 class Movie(models.Model):
-    imdb_id = models.CharField(unique=True, max_length=20, null=True)
+    imdb_id = models.CharField(max_length=20, blank=True)
     tmdb_id = models.IntegerField(unique=True)
     tmdb_original_name = models.CharField(max_length=200)
     tmdb_name = models.CharField(max_length=200)
     tmdb_runtime = models.IntegerField(validators=[MinValueValidator(0)])
     tmdb_release_date = models.DateField(null=True)
+    tmdb_backdrop_path = models.CharField(max_length=200, blank=True)
 
 
 class UserMovie(UserScore):

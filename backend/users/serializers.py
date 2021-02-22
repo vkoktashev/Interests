@@ -3,8 +3,12 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from games.models import Game
+from movies.models import Movie
+from shows.models import Show
 from users.models import User, UserFollow, UserLog
-from utils.constants import USER_USERNAME_EXISTS, USER_EMAIL_EXISTS, USERNAME_CONTAINS_ILLEGAL_CHARACTERS
+from utils.constants import USER_USERNAME_EXISTS, USER_EMAIL_EXISTS, USERNAME_CONTAINS_ILLEGAL_CHARACTERS, \
+    WRONG_BACKDROP_PATH
 
 TYPE_USER = 'user'
 
@@ -102,15 +106,23 @@ class UserLogSerializer(serializers.ModelSerializer):
 
 
 class SettingsSerializer(serializers.ModelSerializer):
+    @staticmethod
+    def validate_backdrop_path(value):
+        if not (Game.objects.filter(rawg_backdrop_path=value).exists() or
+                Movie.objects.filter(tmdb_backdrop_path=value).exists() or
+                Show.objects.filter(tmdb_backdrop_path=value).exists()):
+            raise serializers.ValidationError(WRONG_BACKDROP_PATH)
+        return value
+
     class Meta:
         model = User
-        fields = ('receive_games_releases', 'receive_movies_releases', 'receive_episodes_releases')
+        fields = ('receive_games_releases', 'receive_movies_releases', 'receive_episodes_releases', 'backdrop_path')
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'last_activity')
+        fields = ('id', 'username', 'last_activity', 'backdrop_path')
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):

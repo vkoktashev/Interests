@@ -8,7 +8,7 @@ from requests import HTTPError
 
 from config.celery import app
 from shows.models import Show, Episode
-from utils.constants import LANGUAGE, CACHE_TIMEOUT, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
+from utils.constants import LANGUAGE, CACHE_TIMEOUT, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE, TMDB_BACKDROP_PATH
 from utils.functions import get_tmdb_show_key, update_fields_if_needed, get_tmdb_season_key
 
 
@@ -25,7 +25,7 @@ def setup_periodic_tasks(sender, **kwargs):
 
 
 @app.task
-def update_upcoming_shows_dates():
+def update_upcoming_shows():
     today_date = datetime.today().date()
 
     shows = Show.objects \
@@ -36,14 +36,19 @@ def update_upcoming_shows_dates():
         key = get_tmdb_show_key(tmdb_id)
         tmdb_show = tmdb.TV(tmdb_id).info(language=LANGUAGE)
         cache.set(key, tmdb_show, CACHE_TIMEOUT)
-        update_fields_if_needed(show, {
-            'tmdb_release_date': tmdb_show.get('first_air_date') if tmdb_show.get('first_air_date') != "" else None
-        })
+        new_fields = {
+            'tmdb_original_name': tmdb_show['original_name'],
+            'tmdb_name': tmdb_show['name'],
+            'tmdb_episode_run_time': tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0,
+            'tmdb_backdrop_path': TMDB_BACKDROP_PATH + tmdb_show['backdrop_path'],
+            'tmdb_release_date': tmdb_show['first_air_date'] if tmdb_show['first_air_date'] != "" else None
+        }
+        update_fields_if_needed(show, new_fields)
         print(show.tmdb_name)
 
 
 @app.task
-def update_upcoming_episodes_dates():
+def update_upcoming_episodes():
     today_date = datetime.today().date()
 
     seasons_to_check = Episode.objects.select_related('tmdb_season') \

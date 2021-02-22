@@ -11,7 +11,7 @@ class Show(models.Model):
     tmdb_original_name = models.CharField(max_length=200)
     tmdb_name = models.CharField(max_length=200)
     tmdb_episode_run_time = models.IntegerField()
-    tmdb_backdrop_path = models.CharField(max_length=200, null=True)
+    tmdb_backdrop_path = models.CharField(max_length=200, blank=True)
     tmdb_release_date = models.DateField(null=True)
 
 

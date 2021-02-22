@@ -20,7 +20,7 @@ from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpis
     UserEpisodeInSeasonSerializer, EpisodeSerializer, ShowSerializer, SeasonSerializer
 from users.models import UserFollow
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
-    SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE
+    SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE, TMDB_BACKDROP_PATH
 from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
     SEASON_RETRIEVE_200_EXAMPLE
 from utils.functions import update_fields_if_needed, get_tmdb_show_key, get_tmdb_episode_key, get_tmdb_season_key
@@ -94,7 +94,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'tmdb_original_name': tmdb_show['original_name'],
             'tmdb_name': tmdb_show['name'],
             'tmdb_episode_run_time': episode_run_time,
-            'tmdb_backdrop_path': tmdb_show['backdrop_path'],
+            'tmdb_backdrop_path': TMDB_BACKDROP_PATH + tmdb_show['backdrop_path'],
             'tmdb_release_date': tmdb_show['first_air_date'] if tmdb_show['first_air_date'] != "" else None
         }
 
@@ -338,8 +338,6 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .exclude(tmdb_season__tmdb_season_number=0) \
             .exclude(userepisode__score__gt=-1, userepisode__user=request.user) \
             .order_by('tmdb_season__tmdb_season_number', 'tmdb_episode_number')
-
-        print(len(episodes))
 
         shows_info = []
 

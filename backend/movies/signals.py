@@ -27,11 +27,5 @@ def create_log(instance, **kwargs):
 
 
 @receiver(pre_save, sender=UserMovie)
-def update_datetime_if_needed(instance, **kwargs):
-    try:
-        old_status = UserMovie.objects.get(user=instance.user, movie=instance.movie).status
-    except UserMovie.DoesNotExist:
-        old_status = None
-
-    if instance.status != old_status and old_status == UserMovie.STATUS_NOT_WATCHED:
-        instance.updated_at = timezone.now()
+def update_datetime(instance, **kwargs):
+    instance.updated_at = timezone.now()

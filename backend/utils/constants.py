@@ -12,6 +12,7 @@ SITE_URL = 'localhost:3000'
 CACHE_TIMEOUT = 60 * 60 * 10
 LAST_ACTIVITY_INTERVAL_SECS = 60 * 10
 
+TMDB_BACKDROP_PATH = 'http://image.tmdb.org/t/p/w1920_and_h800_multi_faces'
 EPISODE_NOT_WATCHED_SCORE = -1
 EPISODE_WATCHED_SCORE = 0
 MINUTES_IN_HOUR = 60
@@ -36,3 +37,4 @@ SHOW_NOT_FOUND = "Сериал не найден."
 SEASON_NOT_FOUND = 'Сезон не найден.'
 EPISODE_NOT_FOUND = 'Эпизод не найден.'
 EMAIL_ERROR = 'Возникла проблема с отправкой письма, попробуйте позже.'
+WRONG_BACKDROP_PATH = 'Недопустимый фон профиля.'
