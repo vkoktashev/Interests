@@ -97,6 +97,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'rawg_name': rawg_game.get('name'),
             'rawg_release_date': rawg_game.get('released'),
             'rawg_tba': rawg_game.get('tba'),
+            'rawg_backdrop_path': rawg_game.get('background_image'),
             'hltb_name': hltb_game_name,
             'hltb_id': hltb_game_id
         }
