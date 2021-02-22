@@ -27,11 +27,5 @@ def create_log(instance, **kwargs):
 
 
 @receiver(pre_save, sender=UserGame)
-def update_datetime_if_needed(instance, **kwargs):
-    try:
-        old_status = UserGame.objects.get(user=instance.user, game=instance.game).status
-    except UserGame.DoesNotExist:
-        old_status = None
-
-    if instance.status != old_status and old_status == UserGame.STATUS_NOT_PLAYED:
-        instance.updated_at = timezone.now()
+def update_datetime(instance, **kwargs):
+    instance.updated_at = timezone.now()
