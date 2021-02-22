@@ -37,3 +37,4 @@ SHOW_NOT_FOUND = "Сериал не найден."
 SEASON_NOT_FOUND = 'Сезон не найден.'
 EPISODE_NOT_FOUND = 'Эпизод не найден.'
 EMAIL_ERROR = 'Возникла проблема с отправкой письма, попробуйте позже.'
+WRONG_BACKDROP_PATH = 'Недопустимый фон профиля.'

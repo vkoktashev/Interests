@@ -32,6 +32,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     receive_games_releases = models.BooleanField(default=False)
     receive_movies_releases = models.BooleanField(default=False)
     receive_episodes_releases = models.BooleanField(default=False)
+    backdrop_path = models.CharField(max_length=200, null=True)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
