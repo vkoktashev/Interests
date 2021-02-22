@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from "react";
-
-import { connect } from "react-redux";
-import * as selectors from "../../store/reducers";
-import * as actions from "../../store/actions";
+import { observer } from "mobx-react";
+import AuthStore from "../../store/AuthStore";
+import CurrentUserStore from "../../store/CurrentUserStore";
 
 import LoadingOverlay from "react-loading-overlay";
 import "./style.css";
 
-function SettingsPage({ loggedIn, settings, getUserSettings, saveSettings, settingsIsLoading, user }) {
+const SettingsPage = observer((props) => {
+	const { loggedIn, user } = AuthStore;
+	const { settings, requestSettings, patchSettings, settingsIsLoading } = CurrentUserStore;
+
 	const [gameNotifInput, setGameNotifInput] = useState(false);
 	const [movieNotifInput, setMovieNotifInput] = useState(false);
 	const [showNotifInput, setShowNotifInput] = useState(false);
 
 	useEffect(
 		() => {
-			if (loggedIn) getUserSettings();
+			if (loggedIn) requestSettings();
 		},
 		// eslint-disable-next-line
 		[loggedIn]
@@ -54,7 +56,7 @@ function SettingsPage({ loggedIn, settings, getUserSettings, saveSettings, setti
 							className='saveSettingsButton'
 							disabled={!loggedIn}
 							onClick={() => {
-								saveSettings({ receive_games_releases: gameNotifInput, receive_movies_releases: movieNotifInput, receive_episodes_releases: showNotifInput });
+								patchSettings({ receive_games_releases: gameNotifInput, receive_movies_releases: movieNotifInput, receive_episodes_releases: showNotifInput });
 							}}>
 							Сохранить
 						</button>
@@ -64,24 +66,6 @@ function SettingsPage({ loggedIn, settings, getUserSettings, saveSettings, setti
 			</div>
 		</div>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	loggedIn: selectors.getLoggedIn(state),
-	user: selectors.getUser(state),
-	settings: selectors.getUserSettings(state),
-	settingsIsLoading: selectors.getIsLoadingUserSettings(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		getUserSettings: () => {
-			dispatch(actions.requestUserSettings());
-		},
-		saveSettings: (settings) => {
-			dispatch(actions.patchUserSettings(settings));
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(SettingsPage);
+export default SettingsPage;

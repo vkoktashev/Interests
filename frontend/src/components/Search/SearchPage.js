@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useHistory } from "react-router-dom";
+import { observer } from "mobx-react";
+import SearchStore from "../../store/SearchStore";
+
 import { MDBRow, MDBCol, MDBContainer, MDBIcon, MDBFormInline } from "mdbreact";
 import "./style.css";
 
@@ -11,14 +14,12 @@ import CardShow from "./CardShow";
 import CardUser from "../Common/CardUser";
 import CategoriesTab from "../Common/CategoriesTab";
 
-import { connect } from "react-redux";
-import * as selectors from "../../store/reducers";
-import * as actions from "../../store/actions";
-
 /**
  * Основная страница приложения
  */
-function SearchPage({ loggedIn, gamesIsLoading, moviesIsLoading, showsIsLoading, usersIsLoading, searchGame, games, searchMovie, movies, searchShow, shows, searchUsers, users }) {
+const SearchPage = observer((props) => {
+	const { gamesIsLoading, searchGames, games, moviesIsLoading, searchMovies, movies, showsIsLoading, searchShows, shows, usersIsLoading, searchUsers, users } = SearchStore;
+
 	let history = useHistory();
 	let { query } = useParams();
 	const [queryText, setQueryText] = useState("");
@@ -33,16 +34,16 @@ function SearchPage({ loggedIn, gamesIsLoading, moviesIsLoading, showsIsLoading,
 	const [activeCategory, setActiveCategory] = useState("Всё");
 
 	useEffect(() => {
-		searchGame(query, 1, 6);
-		searchMovie(query, 1);
-		searchShow(query, 1);
+		searchGames(query, 1, 6);
+		searchMovies(query, 1);
+		searchShows(query, 1);
 		searchUsers(query);
 		setQueryText(query);
 		document.title = "Поиск";
 		setGamesPage(1);
 		setMoviesPage(1);
 		setShowsPage(1);
-	}, [query, searchGame, searchMovie, searchUsers, searchShow]);
+	}, [query, searchGames, searchMovies, searchUsers, searchShows]);
 
 	useEffect(() => {
 		setGamesCards(
@@ -129,7 +130,7 @@ function SearchPage({ loggedIn, gamesIsLoading, moviesIsLoading, showsIsLoading,
 										className='paginationButton'
 										disabled={gamesPage === 1}
 										onClick={() => {
-											searchGame(query, gamesPage - 1, 6);
+											searchGames(query, gamesPage - 1, 6);
 											setGamesPage(gamesPage - 1);
 										}}>
 										&lt;
@@ -139,7 +140,7 @@ function SearchPage({ loggedIn, gamesIsLoading, moviesIsLoading, showsIsLoading,
 										className='paginationButton'
 										disabled={games.length < 6}
 										onClick={() => {
-											searchGame(query, gamesPage + 1, 6);
+											searchGames(query, gamesPage + 1, 6);
 											setGamesPage(gamesPage + 1);
 										}}>
 										&gt;
@@ -156,7 +157,7 @@ function SearchPage({ loggedIn, gamesIsLoading, moviesIsLoading, showsIsLoading,
 										className='paginationButton'
 										disabled={moviesPage === 1}
 										onClick={() => {
-											searchMovie(query, moviesPage - 1);
+											searchMovies(query, moviesPage - 1);
 											setMoviesPage(moviesPage - 1);
 										}}>
 										&lt;
@@ -166,7 +167,7 @@ function SearchPage({ loggedIn, gamesIsLoading, moviesIsLoading, showsIsLoading,
 										className='paginationButton'
 										disabled={movies.length < 20}
 										onClick={() => {
-											searchMovie(query, moviesPage + 1);
+											searchMovies(query, moviesPage + 1);
 											setMoviesPage(moviesPage + 1);
 										}}>
 										&gt;
@@ -183,7 +184,7 @@ function SearchPage({ loggedIn, gamesIsLoading, moviesIsLoading, showsIsLoading,
 										className='paginationButton'
 										disabled={showsPage === 1}
 										onClick={() => {
-											searchShow(query, showsPage - 1);
+											searchShows(query, showsPage - 1);
 											setShowsPage(showsPage - 1);
 										}}>
 										&lt;
@@ -193,7 +194,7 @@ function SearchPage({ loggedIn, gamesIsLoading, moviesIsLoading, showsIsLoading,
 										className='paginationButton'
 										disabled={shows.length < 20}
 										onClick={() => {
-											searchShow(query, showsPage + 1);
+											searchShows(query, showsPage + 1);
 											setShowsPage(showsPage + 1);
 										}}>
 										&gt;
@@ -214,35 +215,6 @@ function SearchPage({ loggedIn, gamesIsLoading, moviesIsLoading, showsIsLoading,
 			</MDBContainer>
 		</div>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	loggedIn: selectors.getLoggedIn(state),
-	gamesIsLoading: selectors.getIsLoadingSearchGames(state),
-	moviesIsLoading: selectors.getIsLoadingSearchMovies(state),
-	showsIsLoading: selectors.getIsLoadingSearchShows(state),
-	usersIsLoading: selectors.getIsLoadingSearchUsers(state),
-	games: selectors.getSearchContentGames(state),
-	movies: selectors.getSearchContentMovies(state),
-	shows: selectors.getSearchContentShows(state),
-	users: selectors.getSearchContentUsers(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		searchGame: (query, page, gamesCount) => {
-			dispatch(actions.searchGames(query, page, gamesCount));
-		},
-		searchMovie: (query, page) => {
-			dispatch(actions.searchMovies(query, page));
-		},
-		searchShow: (query, page) => {
-			dispatch(actions.searchShows(query, page));
-		},
-		searchUsers: (query) => {
-			dispatch(actions.searchUsers(query));
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(SearchPage);
+export default SearchPage;

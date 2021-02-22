@@ -22,16 +22,7 @@ function SeasonsBlock({ showID, seasons, setShowEpisodeUserStatus, userWatchedSh
 		<div>
 			{seasons
 				?.map((season) => (
-					<SeasonBlock
-						showID={showID}
-						seasonNumber={season.season_number}
-						onChangeEpisodes={(episodes) => {
-							console.log(episodes);
-						}}
-						key={season.season_number}
-						onChangeStatus={(status) => updateEpisodes(status)}
-						userWatchedShow={userWatchedShow}
-					/>
+					<SeasonBlock showID={showID} seasonNumber={season.season_number} key={season.season_number} onChangeStatus={(status) => updateEpisodes(status)} userWatchedShow={userWatchedShow} />
 				))
 				.reverse()}
 			<div className='saveEpisodesHeader' hidden={!needHeader}>

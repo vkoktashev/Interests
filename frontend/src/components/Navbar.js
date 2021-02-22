@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
+import { observer } from "mobx-react";
+import AuthStore from "../store/AuthStore";
+import PagesStore from "../store/PagesStore";
 
 import {
 	MDBNavbar,
@@ -17,11 +20,10 @@ import {
 	MDBCollapse,
 } from "mdbreact";
 
-import { connect } from "react-redux";
-import * as selectors from "../store/reducers";
-import * as actions from "../store/actions";
+const Navbar = observer((props) => {
+	const { loggedIn, user, resetAuthorization } = AuthStore;
+	const { openLoginForm, openRegistrateForm } = PagesStore;
 
-function Navbar({ loggedIn, onLoginClick, onLogoutClick, onRegistrationClick, user }) {
 	let history = useHistory();
 	const [collapseID, setCollapseID] = useState("");
 
@@ -61,12 +63,12 @@ function Navbar({ loggedIn, onLoginClick, onLogoutClick, onRegistrationClick, us
 					</MDBNavItem>
 
 					<MDBNavItem className='font-weight-bold' hidden={loggedIn}>
-						<MDBNavLink to='#' onClick={onLoginClick}>
+						<MDBNavLink to='#' onClick={openLoginForm}>
 							<MDBIcon icon='sign-in-alt' /> Войти
 						</MDBNavLink>
 					</MDBNavItem>
 					<MDBNavItem className='font-weight-bold' hidden={loggedIn}>
-						<MDBNavLink to='#' onClick={onRegistrationClick}>
+						<MDBNavLink to='#' onClick={openRegistrateForm}>
 							<MDBIcon icon='user-plus' /> Зарегистрироваться
 						</MDBNavLink>
 					</MDBNavItem>
@@ -124,7 +126,7 @@ function Navbar({ loggedIn, onLoginClick, onLogoutClick, onRegistrationClick, us
 										<MDBIcon icon='cog' /> Настройки
 									</a>
 								</MDBDropdownItem>
-								<MDBDropdownItem onClick={onLogoutClick}>
+								<MDBDropdownItem onClick={resetAuthorization}>
 									<a className='navDropdownItem' href='/' onClick={(event) => event.preventDefault()}>
 										<MDBIcon icon='sign-out-alt' /> Выйти
 									</a>
@@ -136,25 +138,6 @@ function Navbar({ loggedIn, onLoginClick, onLogoutClick, onRegistrationClick, us
 			</MDBCollapse>
 		</MDBNavbar>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	loggedIn: selectors.getLoggedIn(state),
-	user: selectors.getUser(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		onLoginClick: () => {
-			dispatch(actions.openLoginForm());
-		},
-		onLogoutClick: () => {
-			dispatch(actions.resetAuthorization());
-		},
-		onRegistrationClick: () => {
-			dispatch(actions.openRegistrateForm());
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Navbar);
+export default Navbar;

@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { observer } from "mobx-react";
+import GameStore from "../../store/GameStore";
+import AuthStore from "../../store/AuthStore";
+import PagesStore from "../../store/PagesStore";
+
 import { MDBIcon, MDBInput } from "mdbreact";
 import "./style.css";
 import LoadingOverlay from "react-loading-overlay";
 
 import Rating from "react-rating";
-import { connect } from "react-redux";
-import * as selectors from "../../store/reducers";
-import * as actions from "../../store/actions";
 import StatusButtonGroup from "../Common/StatusButtonGroup";
 import FriendsActivity from "../Common/FriendsActivity";
 import TimeToBeat from "./TimeToBeat";
@@ -16,7 +18,11 @@ import ScoreBlock from "../Common/ScoreBlock";
 /**
  * Основная страница приложения
  */
-function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserInfo, loggedIn, game, gameIsLoading, gameUserInfo, gameUserInfoIsLoading }) {
+const GamePage = observer((props) => {
+	const { game, gameIsLoading, requestGame, setGameStatus, userInfo, friendsInfo, userInfoIsLoading, requestUserInfo } = GameStore;
+	const { loggedIn } = AuthStore;
+	const { openLoginForm } = PagesStore;
+
 	let { id } = useParams();
 	const [genres, setGenres] = useState("");
 	const [review, setReview] = useState("");
@@ -40,7 +46,7 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 
 	useEffect(
 		() => {
-			if (loggedIn) requestGameUserInfo(id);
+			if (loggedIn) requestUserInfo(id);
 			else {
 				setClearUI();
 			}
@@ -95,17 +101,17 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 
 	useEffect(
 		() => {
-			if (gameUserInfo?.status) {
-				setReview(gameUserInfo.review);
-				setSpentTime(gameUserInfo.spent_time);
-				setUserStatus(gameUserInfo.status);
-				setUserRate(gameUserInfo.score);
+			if (userInfo?.status) {
+				setReview(userInfo.review);
+				setSpentTime(userInfo.spent_time);
+				setUserStatus(userInfo.status);
+				setUserRate(userInfo.score);
 			} else {
 				setClearUI();
 			}
 		},
 		// eslint-disable-next-line
-		[gameUserInfo]
+		[userInfo]
 	);
 
 	function setClear() {
@@ -166,7 +172,7 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 								<p>Платформы: {platforms}</p>
 								<TimeToBeat hltbInfo={hltbInfo} />
 							</div>
-							<LoadingOverlay active={gameUserInfoIsLoading && !gameIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={userInfoIsLoading && !gameIsLoading} spinner text='Загрузка...'>
 								<Rating
 									stop={10}
 									emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
@@ -215,7 +221,7 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 						</div>
 						<div className='gameReviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
-							<LoadingOverlay active={gameUserInfoIsLoading && !gameIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={userInfoIsLoading && !gameIsLoading} spinner text='Загрузка...'>
 								<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
 								<MDBInput
 									type='number'
@@ -240,41 +246,15 @@ function GamePage({ requestGame, openLoginForm, setGameStatus, requestGameUserIn
 								</button>
 							</LoadingOverlay>
 						</div>
-						<div className='gameFriendsBlock' hidden={!loggedIn | (gameUserInfo?.friends_info?.length < 1)}>
+						<div className='gameFriendsBlock' hidden={!loggedIn | (friendsInfo?.length < 1)}>
 							<h4>Отзывы друзей</h4>
-							<FriendsActivity info={gameUserInfo?.friends_info} />
+							<FriendsActivity info={friendsInfo} />
 						</div>
 					</div>
 				</div>
 			</LoadingOverlay>
 		</div>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	loggedIn: selectors.getLoggedIn(state),
-	requestError: selectors.getGameRequestError(state),
-	game: selectors.getContentGame(state),
-	gameIsLoading: selectors.getIsLoadingContentGame(state),
-	gameUserInfo: selectors.getContentGameUserInfo(state),
-	gameUserInfoIsLoading: selectors.getIsLoadingContentGameUserInfo(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		requestGame: (id) => {
-			dispatch(actions.requestGame(id));
-		},
-		requestGameUserInfo: (slug) => {
-			dispatch(actions.requestGameUserInfo(slug));
-		},
-		openLoginForm: () => {
-			dispatch(actions.openLoginForm());
-		},
-		setGameStatus: (status) => {
-			dispatch(actions.setGameStatus(status));
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(GamePage);
+export default GamePage;

@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { observer } from "mobx-react";
+import AuthStore from "../../store/AuthStore";
+import PagesStore from "../../store/PagesStore";
+import ShowStore from "../../store/ShowStore";
+
 import { MDBIcon, MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
 import "./style.css";
 
 import Rating from "react-rating";
-import { connect } from "react-redux";
-import * as selectors from "../../store/reducers";
-import * as actions from "../../store/actions";
 import StatusButtonGroup from "../Common/StatusButtonGroup";
 import FriendsActivity from "../Common/FriendsActivity";
 import SeasonsBlock from "./SeasonsBlock";
@@ -16,11 +18,15 @@ import ScoreBlock from "../Common/ScoreBlock";
 /**
  * Основная страница приложения
  */
-function ShowPage({ requestShow, show, showIsLoading, setShowUserStatus, setShowEpisodeUserStatus, requestShowUserInfo, showUserInfo, showUserInfoIsLoading, loggedIn, openLoginForm }) {
+const ShowPage = observer((props) => {
+	const { loggedIn } = AuthStore;
+	const { openLoginForm } = PagesStore;
+	const { requestShow, show, showIsLoading, setShowStatus, setShowEpisodesStatus, requestShowUserInfo, userInfo, friendsInfo, userInfoIsLoading } = ShowStore;
+
 	let { id } = useParams();
 	const [genres, setGenres] = useState("");
 	const [companies, setCompanies] = useState("");
-	const [showStatus, setShowStatus] = useState("");
+	const [showProductionStatus, setShowProductionStatus] = useState("");
 	const [firstDate, setFirstDate] = useState("");
 	const [lastDate, setLastDate] = useState("");
 	const [review, setReview] = useState("");
@@ -74,25 +80,25 @@ function ShowPage({ requestShow, show, showIsLoading, setShowUserStatus, setShow
 
 		switch (show.tmdb.status) {
 			case "Ended":
-				setShowStatus("Окончен");
+				setShowProductionStatus("Окончен");
 				break;
 			case "Returning Series":
-				setShowStatus("Продолжается");
+				setShowProductionStatus("Продолжается");
 				break;
 			case "Pilot":
-				setShowStatus("Пилот");
+				setShowProductionStatus("Пилот");
 				break;
 			case "Canceled":
-				setShowStatus("Отменен");
+				setShowProductionStatus("Отменен");
 				break;
 			case "In Production":
-				setShowStatus("В производстве");
+				setShowProductionStatus("В производстве");
 				break;
 			case "Planned":
-				setShowStatus("Запланирован");
+				setShowProductionStatus("Запланирован");
 				break;
 			default:
-				setShowStatus(show.tmdb.status);
+				setShowProductionStatus(show.tmdb.status);
 		}
 
 		if (show.tmdb.first_air_date) {
@@ -112,10 +118,10 @@ function ShowPage({ requestShow, show, showIsLoading, setShowUserStatus, setShow
 
 	useEffect(
 		() => {
-			if (showUserInfo?.status) {
-				setReview(showUserInfo.review);
-				setUserStatus(showUserInfo.status);
-				setUserRate(showUserInfo.score);
+			if (userInfo?.status) {
+				setReview(userInfo.review);
+				setUserStatus(userInfo.status);
+				setUserRate(userInfo.score);
 			} else {
 				setReview("");
 				setUserRate(0);
@@ -123,13 +129,13 @@ function ShowPage({ requestShow, show, showIsLoading, setShowUserStatus, setShow
 			}
 		},
 		// eslint-disable-next-line
-		[showUserInfo]
+		[userInfo]
 	);
 
 	function setClear() {
 		setLastDate("");
 		setFirstDate("");
-		setShowStatus("");
+		setShowProductionStatus("");
 		setCompanies("");
 		setGenres("");
 	}
@@ -154,9 +160,9 @@ function ShowPage({ requestShow, show, showIsLoading, setShowUserStatus, setShow
 								<p hidden={show.tmdb.episode_run_time ? false : true}>Продолжительность (мин): {show.tmdb.episode_run_time ? show.tmdb.episode_run_time[0] : 0}</p>
 								<p>Количество сезонов: {show.tmdb.number_of_seasons}</p>
 								<p>Количество серий: {show.tmdb.number_of_episodes}</p>
-								<p>Статус: {showStatus}</p>
+								<p>Статус: {showProductionStatus}</p>
 							</div>
-							<LoadingOverlay active={showUserInfoIsLoading & !showIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={userInfoIsLoading && !showIsLoading} spinner text='Загрузка...'>
 								<Rating
 									stop={10}
 									emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
@@ -170,7 +176,7 @@ function ShowPage({ requestShow, show, showIsLoading, setShowUserStatus, setShow
 											openLoginForm();
 										} else {
 											setUserRate(score);
-											setShowUserStatus({ score: score });
+											setShowStatus({ score: score });
 										}
 									}}
 								/>{" "}
@@ -185,7 +191,7 @@ function ShowPage({ requestShow, show, showIsLoading, setShowUserStatus, setShow
 											openLoginForm();
 										} else {
 											setUserStatus(status);
-											setShowUserStatus({ status: status });
+											setShowStatus({ status: status });
 											if (status === "Не смотрел") {
 												setReview("");
 												setUserRate(0);
@@ -204,11 +210,11 @@ function ShowPage({ requestShow, show, showIsLoading, setShowUserStatus, setShow
 						</div>
 						<div className='showSeasonsBody'>
 							<h3 style={{ paddingTop: "15px" }}>Список серий</h3>
-							<SeasonsBlock showID={show.tmdb.id} seasons={show.tmdb.seasons} setShowEpisodeUserStatus={setShowEpisodeUserStatus} userWatchedShow={userStatus !== "Не смотрел"} />
+							<SeasonsBlock showID={show.tmdb.id} seasons={show.tmdb.seasons} setShowEpisodeUserStatus={setShowEpisodesStatus} userWatchedShow={userStatus !== "Не смотрел"} />
 						</div>
 						<div className='showReviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
-							<LoadingOverlay active={showUserInfoIsLoading & !showIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={userInfoIsLoading && !showIsLoading} spinner text='Загрузка...'>
 								<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
 								<button
 									className={"savePreviewButton"}
@@ -217,51 +223,22 @@ function ShowPage({ requestShow, show, showIsLoading, setShowUserStatus, setShow
 										if (!loggedIn) {
 											openLoginForm();
 										} else {
-											setShowUserStatus({ review: document.getElementById("reviewInput").value });
+											setShowStatus({ review: document.getElementById("reviewInput").value });
 										}
 									}}>
 									Сохранить
 								</button>
 							</LoadingOverlay>
 						</div>
-						<div className='showFriendsBlock' hidden={showUserInfo.friends_info.length < 1}>
+						<div className='showFriendsBlock' hidden={friendsInfo.length < 1}>
 							<h4>Отзывы друзей</h4>
-							<FriendsActivity info={showUserInfo.friends_info} />
+							<FriendsActivity info={friendsInfo} />
 						</div>
 					</div>
 				</div>
 			</LoadingOverlay>
 		</div>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	loggedIn: selectors.getLoggedIn(state),
-	requestError: selectors.getShowRequestError(state),
-	show: selectors.getContentShow(state),
-	showIsLoading: selectors.getIsLoadingContentShow(state),
-	showUserInfo: selectors.getContentShowUserInfo(state),
-	showUserInfoIsLoading: selectors.getIsLoadingContentShowUserInfo(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		requestShow: (id) => {
-			dispatch(actions.requestShow(id));
-		},
-		setShowUserStatus: (status) => {
-			dispatch(actions.setShowStatus(status));
-		},
-		openLoginForm: () => {
-			dispatch(actions.openLoginForm());
-		},
-		requestShowUserInfo: (id) => {
-			dispatch(actions.requestShowUserInfo(id));
-		},
-		setShowEpisodeUserStatus: (status, showID) => {
-			dispatch(actions.setShowEpisodesStatus(status, showID, true));
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(ShowPage);
+export default ShowPage;
