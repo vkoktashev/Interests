@@ -198,7 +198,6 @@ class SeasonSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# todo возможно переделать с depth=2
 class EpisodeShowSerializer(serializers.ModelSerializer):
     tmdb_show = serializers.SerializerMethodField('get_tmdb_show')
     tmdb_season_number = serializers.SerializerMethodField('get_season_number')
