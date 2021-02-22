@@ -1,4 +1,5 @@
 import { makeAutoObservable } from "mobx";
+import remotedev from "mobx-remotedev";
 import AuthStore from "./AuthStore";
 import * as gameRequests from "../services/gameRequests";
 
@@ -58,4 +59,4 @@ class Game {
 }
 
 const GameStore = new Game();
-export default GameStore;
+export default remotedev(GameStore);

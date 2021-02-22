@@ -13,6 +13,7 @@
     "mobx": "^6.1.7",
     "mobx-devtools-mst": "^0.9.30",
     "mobx-react": "^7.1.0",
+    "mobx-remotedev": "^0.3.6",
     "mobx-state-tree": "^5.0.1",
     "react": "^16.14.0",
     "react-calendar": "^3.3.1",

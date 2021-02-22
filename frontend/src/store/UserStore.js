@@ -1,4 +1,5 @@
 import { makeAutoObservable } from "mobx";
+import remotedev from "mobx-remotedev";
 import AuthStore from "./AuthStore";
 import * as userRequests from "../services/userRequests";
 
@@ -73,4 +74,4 @@ class User {
 }
 
 const UserStore = new User();
-export default UserStore;
+export default remotedev(UserStore);

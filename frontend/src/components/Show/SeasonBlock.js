@@ -15,10 +15,10 @@ import Rating from "react-rating";
 const SeasonBlock = observer(({ showID, seasonNumber, onChangeStatus, userWatchedShow }) => {
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
-	const { requestShowSeason, requestShowSeasonUserInfo, setShowEpisodesStatus, setShowSeasonStatus } = ShowStore;
+	const { requestShowSeasons, requestShowSeasonsUserInfo, setShowEpisodesStatus, setShowSeasonStatus } = ShowStore;
 	const showSeason = computed(() => ShowStore.getShowSeason(seasonNumber)).get();
 	const showSeasonIsLoading = computed(() => ShowStore.getShowSeasonIsLoading(seasonNumber)).get();
-	const showUserInfo = computed(() => ShowStore.showSeasonsUserInfo(seasonNumber)).get();
+	const showUserInfo = computed(() => ShowStore.getShowSeasonUserInfo(seasonNumber)).get();
 
 	let history = useHistory();
 	const [isChecked, setIsChecked] = useState(0);
@@ -28,17 +28,17 @@ const SeasonBlock = observer(({ showID, seasonNumber, onChangeStatus, userWatche
 		() => {
 			setIsChecked(0);
 			setUserRate(0);
-			requestShowSeason(showID, seasonNumber);
+			requestShowSeasons(showID, seasonNumber);
 		},
 		// eslint-disable-next-line
-		[showID, seasonNumber, requestShowSeason]
+		[showID, seasonNumber, requestShowSeasons]
 	);
 
 	useEffect(
 		() => {
 			setIsChecked(0);
 			setUserRate(0);
-			if (loggedIn) requestShowSeasonUserInfo(showID, seasonNumber);
+			if (loggedIn) requestShowSeasonsUserInfo(showID, seasonNumber);
 		},
 		// eslint-disable-next-line
 		[loggedIn, showID, seasonNumber]

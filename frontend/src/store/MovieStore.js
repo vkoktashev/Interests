@@ -1,4 +1,5 @@
 import { makeAutoObservable } from "mobx";
+import remotedev from "mobx-remotedev";
 import AuthStore from "./AuthStore";
 import * as movieRequests from "../services/movieRequests";
 
@@ -55,4 +56,4 @@ class Movie {
 }
 
 const MovieStore = new Movie();
-export default MovieStore;
+export default remotedev(MovieStore);

@@ -1,5 +1,5 @@
 import { makeAutoObservable } from "mobx";
-import makeInspectable from "mobx-devtools-mst";
+import remotedev from "mobx-remotedev";
 import * as auth from "../services/jwtAuth";
 import jwt_decode from "jwt-decode";
 import { TOKEN_LIFETIME } from "../settings";
@@ -116,5 +116,5 @@ class Auth {
 	};
 }
 
-const AuthStore = makeInspectable(new Auth());
-export default AuthStore;
+const AuthStore = new Auth();
+export default remotedev(AuthStore);

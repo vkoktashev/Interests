@@ -1,4 +1,5 @@
 import { makeAutoObservable } from "mobx";
+import remotedev from "mobx-remotedev";
 
 class Pages {
 	LoginFormIsOpen = false;
@@ -35,4 +36,4 @@ class Pages {
 }
 
 const PagesStore = new Pages();
-export default PagesStore;
+export default remotedev(PagesStore);

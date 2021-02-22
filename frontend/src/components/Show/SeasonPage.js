@@ -19,19 +19,17 @@ import DetailedEpisodeRow from "./DetailedEpisodeRow";
  */
 const ShowPage = observer((props) => {
 	const { loggedIn } = AuthStore;
-	const { requestShowSeason, show, showIsLoading, setShowSeasonStatus, setShowEpisodesStatus, requestShowSeasonUserInfo, userInfo, userInfoIsLoading } = ShowStore;
+	const { requestShowSeason, show, showIsLoading, setShowSeasonStatus, setShowEpisodesStatus, requestShowSeasonUserInfo, userInfo, userInfoIsLoading, friendsInfo } = ShowStore;
 	const { openLoginForm } = PagesStore;
 
 	let history = useHistory();
 	let { show_id, number } = useParams();
-	const [date, setDate] = useState("");
 	const [review, setReview] = useState("");
 	const [userRate, setUserRate] = useState(0);
 	const [chartData, setChartData] = useState([]);
 
 	useEffect(
 		() => {
-			setClear();
 			setReview("");
 			setUserRate(0);
 			requestShowSeason(show_id, number);
@@ -53,23 +51,16 @@ const ShowPage = observer((props) => {
 	);
 
 	useEffect(() => {
-		setClear();
-		if (show.tmdb.air_date) {
-			let mas = show.tmdb.air_date.split("-");
-			let newDate = mas[2] + "." + mas[1] + "." + mas[0];
-			setDate(newDate);
-		}
-
-		document.title = show.tmdb.show_name + " - " + show.tmdb.name;
+		document.title = show.showName + " - " + show.name;
 	}, [show]);
 
 	useEffect(() => {
 		setChartData([]);
-		if (show.tmdb.episodes)
-			if (show.tmdb.episodes.length > 0) {
+		if (show.episodes)
+			if (show.episodes.length > 0) {
 				let newData = [];
-				for (let episode in show.tmdb.episodes) {
-					if (show.tmdb.episodes[episode].vote_average > 0) newData.push({ name: "Ep " + show.tmdb.episodes[episode].episode_number, Оценка: show.tmdb.episodes[episode].vote_average });
+				for (let episode in show.episodes) {
+					if (show.episodes[episode].vote_average > 0) newData.push({ name: "Ep " + show.episodes[episode].episode_number, Оценка: show.episodes[episode].vote_average });
 				}
 				setChartData(newData);
 			}
@@ -87,22 +78,18 @@ const ShowPage = observer((props) => {
 		[userInfo]
 	);
 
-	function setClear() {
-		setDate("");
-	}
-
 	function getEpisodeByNumber(episodes, number) {
 		for (let episode in episodes) if (episodes[episode].episode_number === number) return episodes[episode];
 	}
 
 	return (
 		<div>
-			<div className='bg' style={{ backgroundImage: `url(${"http://image.tmdb.org/t/p/w1920_and_h800_multi_faces" + show.tmdb.backdrop_path})` }} />
+			<div className='bg' style={{ backgroundImage: `url(${show.background})` }} />
 			<LoadingOverlay active={showIsLoading} spinner text='Загрузка...'>
 				<div className='showContentPage'>
 					<div className='showContentHeader'>
 						<div className='showPosterBlock'>
-							<img src={"http://image.tmdb.org/t/p/w600_and_h900_bestv2" + show.tmdb.poster_path} className='img-fluid' alt='' />
+							<img src={show.poster} className='img-fluid' alt='' />
 						</div>
 						<div className='showInfoBlock'>
 							<h1 className='header'>
@@ -112,17 +99,17 @@ const ShowPage = observer((props) => {
 										history.push("/show/" + show_id);
 										e.preventDefault();
 									}}>
-									{show.tmdb.show_name}
+									{show.showName}
 								</a>
-								{" - " + show.tmdb.name}
+								{" - " + show.name}
 							</h1>
-							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{show.tmdb.show_original_name + " - Season " + show.tmdb.season_number}</h5>
+							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{show.showOriginalName + " - Season " + show.seasonNumber}</h5>
 							<div className='mainInfo'>
-								<p hidden={date === ""}>Дата выхода: {date}</p>
-								<p>Количество серий: {show.tmdb.episodes ? show.tmdb.episodes.length : 0}</p>
+								<p hidden={show.date === ""}>Дата выхода: {show.date}</p>
+								<p>Количество серий: {show.episodesCount}</p>
 							</div>
 							<div hidden={!loggedIn | !userInfo?.user_watched_show}>
-								<LoadingOverlay active={userInfoIsLoading & !showIsLoading} spinner text='Загрузка...'>
+								<LoadingOverlay active={userInfoIsLoading && !showIsLoading} spinner text='Загрузка...'>
 									<Rating
 										stop={10}
 										emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
@@ -135,7 +122,7 @@ const ShowPage = observer((props) => {
 												openLoginForm();
 											} else {
 												setUserRate(score);
-												setShowSeasonStatus({ score: score }, show_id, show.tmdb.season_number);
+												setShowSeasonStatus({ score: score }, show_id, show.seasonNumber);
 											}
 										}}
 									/>
@@ -147,7 +134,7 @@ const ShowPage = observer((props) => {
 											if (!loggedIn) {
 												openLoginForm();
 											} else {
-												setShowSeasonStatus({ review: document.getElementById("reviewSeasonInput").value }, show_id, show.tmdb.season_number);
+												setShowSeasonStatus({ review: document.getElementById("reviewSeasonInput").value }, show_id, show.seasonNumber);
 											}
 										}}>
 										Сохранить
@@ -158,16 +145,16 @@ const ShowPage = observer((props) => {
 						<div className='showContentBody'>
 							<div>
 								<h3 style={{ paddingTop: "15px" }}>Описание</h3>
-								<div dangerouslySetInnerHTML={{ __html: show.tmdb.overview }} />
+								<div dangerouslySetInnerHTML={{ __html: show.overview }} />
 							</div>
 							<div className='showSeasonsBody'>
 								<h3 style={{ paddingTop: "15px" }}>Список серий</h3>
 								<details open={false} className='episodeRows' style={{ marginBottom: "15px" }}>
 									<summary>Развернуть</summary>
 									<ul>
-										{show.tmdb.episodes
-											? show.tmdb.episodes.map((episode) => (
-													<li className='episode' key={show.tmdb.id + episode.episode_number}>
+										{show.episodes
+											? show.episodes.map((episode) => (
+													<li className='episode' key={show.id + episode.episode_number}>
 														<DetailedEpisodeRow
 															episode={episode}
 															showID={show_id}
@@ -215,9 +202,9 @@ const ShowPage = observer((props) => {
 									)}
 								</div>
 							</div>
-							<div className='movieFriendsBlock' hidden={userInfo.friends_info.length < 1}>
+							<div className='movieFriendsBlock' hidden={friendsInfo.length < 1}>
 								<h4>Отзывы друзей</h4>
-								<FriendsActivity info={userInfo.friends_info} />
+								<FriendsActivity info={friendsInfo} />
 							</div>
 						</div>
 					</div>

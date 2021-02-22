@@ -1,5 +1,5 @@
 import { makeAutoObservable } from "mobx";
-import makeInspectable from "mobx-devtools-mst";
+import remotedev from "mobx-remotedev";
 import AuthStore from "./AuthStore";
 import * as userRequests from "../services/userRequests";
 import * as showRequests from "../services/showRequests";
@@ -81,5 +81,5 @@ class CurrentUser {
 	};
 }
 
-const CurrentUserStore = makeInspectable(new CurrentUser());
-export default CurrentUserStore;
+const CurrentUserStore = new CurrentUser();
+export default remotedev(CurrentUserStore);

@@ -24,13 +24,11 @@ const EpisodePage = observer((props) => {
 
 	let history = useHistory();
 	let { show_id, season_number, episode_number } = useParams();
-	const [date, setDate] = useState("");
 	const [review, setReview] = useState("");
 	const [userRate, setUserRate] = useState(-1);
 
 	useEffect(
 		() => {
-			setClear();
 			setReview("");
 			setUserRate(-1);
 			requestShowEpisode(show_id, season_number, episode_number);
@@ -52,14 +50,7 @@ const EpisodePage = observer((props) => {
 	);
 
 	useEffect(() => {
-		setClear();
-		if (show.tmdb.air_date) {
-			let mas = show.tmdb.air_date.split("-");
-			let newDate = mas[2] + "." + mas[1] + "." + mas[0];
-			setDate(newDate);
-		}
-
-		document.title = show.tmdb.show_name + " - " + show.tmdb.name;
+		document.title = show.showName + " - " + show.name;
 	}, [show]);
 
 	useEffect(
@@ -74,18 +65,14 @@ const EpisodePage = observer((props) => {
 		[userInfo]
 	);
 
-	function setClear() {
-		setDate("");
-	}
-
 	return (
 		<div>
-			<div className='bg' style={{ backgroundImage: `url(${"http://image.tmdb.org/t/p/w1920_and_h800_multi_faces" + show.tmdb.backdrop_path})` }} />
+			<div className='bg' style={{ backgroundImage: `url(${show.background})` }} />
 			<LoadingOverlay active={showIsLoading} spinner text='Загрузка...'>
 				<div className='showContentPage'>
 					<div className='showContentHeader'>
 						<div className='showPosterBlock'>
-							<img src={"http://image.tmdb.org/t/p/w600_and_h900_bestv2" + show.tmdb.still_path} className='img-fluid' alt='' />
+							<img src={show.poster} className='img-fluid' alt='' />
 						</div>
 						<div className='showInfoBlock'>
 							<h1 className='header'>
@@ -95,26 +82,24 @@ const EpisodePage = observer((props) => {
 										history.push("/show/" + show_id);
 										e.preventDefault();
 									}}>
-									{show.tmdb.show_name}
+									{show.showName}
 								</a>
-								{" - " + show.tmdb.name}
+								{" - " + show.name}
 							</h1>
-							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>
-								{show.tmdb.show_original_name + " - Season " + show.tmdb.season_number + " - Episode " + show.tmdb.episode_number}{" "}
-							</h5>
+							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{show.showOriginalName + " - Season " + show.seasonNumber + " - Episode " + show.episodeNumber}</h5>
 							<div className='mainInfo'>
-								<p hidden={date === ""}>Дата выхода: {date}</p>
+								<p hidden={!show.date}>Дата выхода: {show.date}</p>
 								<a
 									href={window.location.origin + "/show/" + show_id + "/season/" + season_number}
 									onClick={(e) => {
 										history.push("/show/" + show_id + "/season/" + season_number);
 										e.preventDefault();
 									}}>
-									Сезон: {show.tmdb.season_number}
+									Сезон: {show.seasonNumber}
 								</a>
 							</div>
 							<div hidden={!loggedIn | !userInfo?.user_watched_show}>
-								<LoadingOverlay active={userInfoIsLoading & !showIsLoading} spinner text='Загрузка...'>
+								<LoadingOverlay active={userInfoIsLoading && !showIsLoading} spinner text='Загрузка...'>
 									<Rating
 										start={-1}
 										stop={10}
@@ -160,13 +145,13 @@ const EpisodePage = observer((props) => {
 									</button>
 								</LoadingOverlay>
 							</div>
-							<ScoreBlock score={show.tmdb.vote_average * 10} text='TMDB score' className='scoreBlock' />
+							<ScoreBlock score={show.tmdbScore} text='TMDB score' className='scoreBlock' />
 						</div>
 					</div>
 					<div className='showContentBody'>
 						<div>
 							<h3 style={{ paddingTop: "15px" }}>Описание</h3>
-							<div dangerouslySetInnerHTML={{ __html: show.tmdb.overview }} />
+							<div dangerouslySetInnerHTML={{ __html: show.overview }} />
 						</div>
 						<div className='movieFriendsBlock' hidden={friendsInfo.length < 1}>
 							<h4>Отзывы друзей</h4>

@@ -1,9 +1,10 @@
 import { makeAutoObservable } from "mobx";
+import remotedev from "mobx-remotedev";
 import AuthStore from "./AuthStore";
 import * as showRequests from "../services/showRequests";
 
 class Show {
-	show = { tmdb: { title: "", poster_path: "", developers: [{}], episode_run_time: [] } };
+	show = {};
 	showSeasons = {};
 	showIsLoading = false;
 	showSeasonsIsLoading = {};
@@ -27,7 +28,7 @@ class Show {
 		this.showIsLoading = true;
 		this.showError = "";
 		showRequests.getShow(localStorage.getItem("token"), id).then((result) => {
-			if (result != null) this.show = result;
+			if (result != null) this.show = parseShow(result);
 			else this.showError = "Сериал не найден!";
 			this.showIsLoading = false;
 		});
@@ -38,7 +39,7 @@ class Show {
 		this.showIsLoading = true;
 		this.showError = "";
 		showRequests.getShowSeason(localStorage.getItem("token"), showID, seasonNumber).then((result) => {
-			if (result != null) this.show = result;
+			if (result != null) this.show = parseSeason(result);
 			else this.showError = "Сериал не найден!";
 			this.showIsLoading = false;
 		});
@@ -48,6 +49,7 @@ class Show {
 		await AuthStore.checkAuthorization();
 		this.showSeasonsIsLoading[seasonNumber] = true;
 		this.showSeasonsError = "";
+		this.showSeasons[seasonNumber] = {};
 		showRequests.getShowSeason(localStorage.getItem("token"), showID, seasonNumber).then((result) => {
 			if (result != null) this.showSeasons[seasonNumber] = result;
 			else this.showSeasonsError = "Ошибка загрузки сезона!";
@@ -61,7 +63,7 @@ class Show {
 		this.showIsLoading = true;
 		this.showError = "";
 		showRequests.getShowEpisode(localStorage.getItem("token"), showID, seasonNumber, episodeNumber).then((result) => {
-			if (result != null) this.show = result;
+			if (result != null) this.show = parseEpisode(result);
 			else this.showError = "Серия не найдена!";
 			this.showIsLoading = false;
 		});
@@ -102,6 +104,7 @@ class Show {
 	requestShowSeasonsUserInfo = async (showID, seasonID) => {
 		if (await AuthStore.checkAuthorization()) {
 			this.showSeasonsUserInfoIsLoading[seasonID] = true;
+			this.showSeasonsUserInfo[seasonID] = {};
 			this.showSeasonsUserInfoError = "";
 			showRequests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then((result) => {
 				if (result != null) {
@@ -182,4 +185,120 @@ class Show {
 }
 
 const ShowStore = new Show();
-export default ShowStore;
+export default remotedev(ShowStore);
+
+function parseShow(show) {
+	let newShow = {
+		background: show.tmdb?.backdrop_path ? "http://image.tmdb.org/t/p/w1920_and_h800_multi_faces" + show.tmdb?.backdrop_path : "",
+		poster: show.tmdb?.poster_path ? "http://image.tmdb.org/t/p/w600_and_h900_bestv2" + show.tmdb?.poster_path : "",
+		name: show.tmdb.name,
+		originalName: show.tmdb.original_name,
+		episodeRuntime: show.tmdb.episode_run_time.length > 0 ? show.tmdb.episode_run_time : null,
+		seasonsCount: show.tmdb.number_of_seasons,
+		episodesCount: show.tmdb.number_of_episodes,
+		tmdbScore: show.tmdb.vote_average ? show.tmdb.vote_average * 10 : null,
+		overview: show.tmdb.overview,
+		id: show.tmdb.id,
+		seasons: show.tmdb.seasons,
+	};
+
+	if (show.tmdb.genres) {
+		let newGenres = "";
+		for (let i = 0; i < show.tmdb.genres.length; i++) {
+			newGenres += show.tmdb.genres[i].name;
+			if (i !== show.tmdb.genres.length - 1) newGenres += ", ";
+		}
+		newShow.genres = newGenres;
+	}
+
+	if (show.tmdb.production_companies) {
+		let newCompanies = "";
+		for (let i = 0; i < show.tmdb.production_companies.length; i++) {
+			newCompanies += show.tmdb.production_companies[i].name;
+			if (i !== show.tmdb.production_companies.length - 1) newCompanies += ", ";
+		}
+		newShow.companies = newCompanies;
+	}
+
+	switch (show.tmdb.status) {
+		case "Ended":
+			newShow.showStatus = "Окончен";
+			break;
+		case "Returning Series":
+			newShow.showStatus = "Продолжается";
+			break;
+		case "Pilot":
+			newShow.showStatus = "Пилот";
+			break;
+		case "Canceled":
+			newShow.showStatus = "Отменен";
+			break;
+		case "In Production":
+			newShow.showStatus = "В производстве";
+			break;
+		case "Planned":
+			newShow.showStatus = "Запланирован";
+			break;
+		default:
+			newShow.showStatus = show.tmdb.status;
+	}
+
+	if (show.tmdb.first_air_date) {
+		let mas = show.tmdb.first_air_date.split("-");
+		let newDate = mas[2] + "." + mas[1] + "." + mas[0];
+		newShow.firstDate = newDate;
+	}
+
+	if (show.tmdb.last_air_date) {
+		let mas = show.tmdb.last_air_date.split("-");
+		let newDate = mas[2] + "." + mas[1] + "." + mas[0];
+		newShow.lastDate = newDate;
+	}
+	return newShow;
+}
+
+function parseSeason(show) {
+	let newShow = {
+		background: show.tmdb?.backdrop_path ? "http://image.tmdb.org/t/p/w1920_and_h800_multi_faces" + show.tmdb?.backdrop_path : "",
+		poster: show.tmdb?.poster_path ? "http://image.tmdb.org/t/p/w600_and_h900_bestv2" + show.tmdb?.poster_path : "",
+		showName: show.tmdb.show.tmdb_name,
+		showOriginalName: show.tmdb.show.tmdb_original_name,
+		name: show.tmdb.name,
+		seasonNumber: show.tmdb.season_number,
+		overview: show.tmdb.overview,
+		id: show.tmdb.id,
+		tmdbScore: show.tmdb.vote_average ? show.tmdb.vote_average * 10 : null,
+	};
+
+	if (show.tmdb.air_date) {
+		let mas = show.tmdb.air_date.split("-");
+		let newDate = mas[2] + "." + mas[1] + "." + mas[0];
+		show.date = newDate;
+	}
+
+	return newShow;
+}
+
+function parseEpisode(show) {
+	let newShow = {
+		background: show.tmdb?.backdrop_path ? "http://image.tmdb.org/t/p/w1920_and_h800_multi_faces" + show.tmdb?.backdrop_path : "",
+		poster: show.tmdb?.still_path ? "http://image.tmdb.org/t/p/w600_and_h900_bestv2" + show.tmdb?.still_path : "",
+		showName: show.tmdb.show.tmdb_name,
+		showOriginalName: show.tmdb.show.tmdb_original_name,
+		name: show.tmdb.name,
+		seasonNumber: show.tmdb.season_number,
+		episodeNumber: show.tmdb.episode_number,
+		episodesCount: show.tmdb.episodes ? show.tmdb.episodes.length : 0,
+		overview: show.tmdb.overview,
+		id: show.tmdb.id,
+		episodes: show.tmdb.episodes,
+	};
+
+	if (show.tmdb.air_date) {
+		let mas = show.tmdb.air_date.split("-");
+		let newDate = mas[2] + "." + mas[1] + "." + mas[0];
+		newShow.date = newDate;
+	}
+
+	return newShow;
+}
