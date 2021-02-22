@@ -94,7 +94,8 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'tmdb_original_name': tmdb_show['original_name'],
             'tmdb_name': tmdb_show['name'],
             'tmdb_episode_run_time': episode_run_time,
-            'tmdb_backdrop_path': TMDB_BACKDROP_PATH + tmdb_show['backdrop_path'],
+            'tmdb_backdrop_path': TMDB_BACKDROP_PATH + tmdb_show['backdrop_path']
+            if tmdb_show['backdrop_path'] else '',
             'tmdb_release_date': tmdb_show['first_air_date'] if tmdb_show['first_air_date'] != "" else None
         }
 
@@ -254,13 +255,8 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         for data in episodes:
             try:
-                # todo возможно изменить структуру получаемых данных, чтобы не использовать сезон
-                show = Show.objects.get(tmdb_id=kwargs.get('tmdb_id'))
-                season = Season.objects.get(tmdb_show=show,
-                                            tmdb_season_number=data['season_number'])
-                episode = Episode.objects.get(tmdb_season=season,
-                                              tmdb_episode_number=data['episode_number'])
-            except (Show.DoesNotExist, Season.DoesNotExist, Episode.DoesNotExist):
+                episode = Episode.objects.get(tmdb_id=data['tmdb_id'])
+            except Episode.DoesNotExist:
                 return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
             data = data.copy()
@@ -429,7 +425,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         new_fields = {
             'tmdb_season_number': tmdb_season.get('season_number'),
             'tmdb_name': tmdb_season.get('name'),
-            'tmdb_show_id': tmdb_season.get('show_pk')
+            'tmdb_show_id': tmdb_season.get('show').get('id')
         }
 
         with transaction.atomic():
@@ -668,15 +664,10 @@ def user_watched_show(show, user):
     return False
 
 
-# todo написать сериалайзер вместо метода?
 def get_show_info(show_id):
     show = Show.objects.get(tmdb_id=show_id)
-
-    return {'show_name': show.tmdb_name,
-            'show_id': show.tmdb_id,
-            'show_pk': show.pk,
-            'show_original_name': show.tmdb_original_name,
-            'backdrop_path': show.tmdb_backdrop_path}
+    show_data = ShowSerializer(show).data
+    return {'show': show_data}
 
 
 def get_show_search_results(query, page):
