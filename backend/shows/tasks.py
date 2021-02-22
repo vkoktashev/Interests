@@ -40,7 +40,8 @@ def update_upcoming_shows():
             'tmdb_original_name': tmdb_show['original_name'],
             'tmdb_name': tmdb_show['name'],
             'tmdb_episode_run_time': tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0,
-            'tmdb_backdrop_path': TMDB_BACKDROP_PATH + tmdb_show['backdrop_path'],
+            'tmdb_backdrop_path': TMDB_BACKDROP_PATH + tmdb_show['backdrop_path']
+            if tmdb_show['backdrop_path'] else '',
             'tmdb_release_date': tmdb_show['first_air_date'] if tmdb_show['first_air_date'] != "" else None
         }
         update_fields_if_needed(show, new_fields)
