@@ -30,6 +30,11 @@ def update_upcoming_games_dates():
         key = get_rawg_game_key(slug)
         rawg_game = rawg.get_game(slug).json
         cache.set(key, rawg_game, CACHE_TIMEOUT)
-        update_fields_if_needed(game,
-                                {'rawg_release_date': rawg_game.get('released'), 'rawg_tba': rawg_game.get('tba')}, )
+        new_fields = {
+            'rawg_slug': rawg_game.get('slug'),
+            'rawg_name': rawg_game.get('name'),
+            'rawg_release_date': rawg_game.get('released'),
+            'rawg_tba': rawg_game.get('tba')
+        }
+        update_fields_if_needed(game, new_fields)
         print(game.rawg_name)

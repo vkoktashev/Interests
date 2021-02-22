@@ -31,7 +31,12 @@ def update_upcoming_movies_dates():
         key = get_tmdb_movie_key(tmdb_id)
         tmdb_movie = tmdb.Movies(tmdb_id).info(language=LANGUAGE)
         cache.set(key, tmdb_movie, CACHE_TIMEOUT)
-        update_fields_if_needed(movie, {
+        new_fields = {
+            'imdb_id': tmdb_movie.get('imdb_id'),
+            'tmdb_original_name': tmdb_movie.get('original_title'),
+            'tmdb_name': tmdb_movie.get('title'),
+            'tmdb_runtime': tmdb_movie.get('runtime'),
             'tmdb_release_date': tmdb_movie.get('release_date') if tmdb_movie.get('release_date') != "" else None
-        })
+        }
+        update_fields_if_needed(movie, new_fields)
         print(movie.tmdb_name)
