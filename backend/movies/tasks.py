@@ -15,12 +15,12 @@ from utils.functions import get_tmdb_movie_key, update_fields_if_needed
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
         crontab(hour=UPDATE_DATES_HOUR, minute=UPDATE_DATES_MINUTE),
-        update_upcoming_movies_dates.s(),
+        update_upcoming_movies.s(),
     )
 
 
 @app.task
-def update_upcoming_movies_dates():
+def update_upcoming_movies():
     today_date = datetime.today().date()
 
     movies = Movie.objects \

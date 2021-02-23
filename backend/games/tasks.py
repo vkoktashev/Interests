@@ -14,12 +14,12 @@ from utils.functions import get_rawg_game_key, update_fields_if_needed
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
         crontab(hour=UPDATE_DATES_HOUR, minute=UPDATE_DATES_MINUTE),
-        update_upcoming_games_dates.s(),
+        update_upcoming_games.s(),
     )
 
 
 @app.task
-def update_upcoming_games_dates():
+def update_upcoming_games():
     today_date = datetime.today().date()
 
     games = Game.objects \

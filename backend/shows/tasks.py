@@ -16,11 +16,11 @@ from utils.functions import get_tmdb_show_key, update_fields_if_needed, get_tmdb
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
         crontab(hour=UPDATE_DATES_HOUR, minute=UPDATE_DATES_MINUTE),
-        update_upcoming_shows_dates.s(),
+        update_upcoming_shows.s(),
     )
     sender.add_periodic_task(
         crontab(hour=UPDATE_DATES_HOUR, minute=UPDATE_DATES_MINUTE),
-        update_upcoming_episodes_dates.s(),
+        update_upcoming_episodes.s(),
     )
 
 
