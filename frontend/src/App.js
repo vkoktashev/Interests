@@ -1,14 +1,17 @@
 import React, { useEffect } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
-import { connect } from "react-redux";
+import { observer } from "mobx-react";
+import AuthStore from "./store/AuthStore";
+
 import Routes from "./Routes";
-import * as actions from "./store/actions";
 import "react-toastify/dist/ReactToastify.css";
 
-function App({ onLoad }) {
+const App = observer((props) => {
+	const { checkAuthorization } = AuthStore;
+
 	useEffect(
 		() => {
-			onLoad();
+			checkAuthorization();
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[]
@@ -23,14 +26,6 @@ function App({ onLoad }) {
 			</div>
 		</Router>
 	);
-}
+});
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		onLoad: () => {
-			dispatch(actions.checkAuthorization());
-		},
-	};
-};
-
-export default connect(null, mapDispatchToProps)(App);
+export default App;

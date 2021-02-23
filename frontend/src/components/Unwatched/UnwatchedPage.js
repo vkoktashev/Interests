@@ -1,17 +1,21 @@
 import React, { useEffect } from "react";
-
-import { connect } from "react-redux";
-import * as selectors from "../../store/reducers";
-import * as actions from "../../store/actions";
+import { observer } from "mobx-react";
+import AuthStore from "../../store/AuthStore";
+import CurrentUserStore from "../../store/CurrentUserStore";
+import ShowStore from "../../store/ShowStore";
 
 import LoadingOverlay from "react-loading-overlay";
 import "./style.css";
 import ShowBlock from "./ShowBlock";
 
-function UnwatchedPage({ loggedIn, episodes, getEpisodes, episodesIsLoading, setShowEpisodeUserStatus }) {
+const UnwatchedPage = observer((props) => {
+	const { loggedIn } = AuthStore;
+	const { unwatched, requestUnwatched, unwatchedIsLoading } = CurrentUserStore;
+	const { setShowEpisodesStatus } = ShowStore;
+
 	useEffect(
 		() => {
-			if (loggedIn) getEpisodes();
+			if (loggedIn) requestUnwatched();
 		},
 		// eslint-disable-next-line
 		[loggedIn]
@@ -23,32 +27,15 @@ function UnwatchedPage({ loggedIn, episodes, getEpisodes, episodesIsLoading, set
 			<div className='unwatchedPage'>
 				<div className='unwatchedBlock'>
 					<h1>Непросмотренные серии</h1>
-					<LoadingOverlay active={episodesIsLoading} spinner text='Загрузка...'>
-						{episodes.map((show) => (
-							<ShowBlock show={show} setShowEpisodeUserStatus={setShowEpisodeUserStatus} loggedIn={loggedIn} key={show.id} />
+					<LoadingOverlay active={unwatchedIsLoading} spinner text='Загрузка...'>
+						{unwatched.map((show) => (
+							<ShowBlock show={show} setShowEpisodeUserStatus={setShowEpisodesStatus} loggedIn={loggedIn} key={show.id} />
 						))}
 					</LoadingOverlay>
 				</div>
 			</div>
 		</div>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	loggedIn: selectors.getLoggedIn(state),
-	episodes: selectors.getUserUnwatched(state),
-	episodesIsLoading: selectors.getIsLoadingUserUnwatched(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		getEpisodes: () => {
-			dispatch(actions.requestUserUnwatched());
-		},
-		setShowEpisodeUserStatus: (status, showID) => {
-			dispatch(actions.setShowEpisodesStatus(status, showID));
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(UnwatchedPage);
+export default UnwatchedPage;

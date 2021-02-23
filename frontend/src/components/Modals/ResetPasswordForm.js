@@ -1,19 +1,23 @@
 import React, { useState } from "react";
+import { observer } from "mobx-react";
+import AuthStore from "../../store/AuthStore";
+import PagesStore from "../../store/PagesStore";
+
 import { MDBModal, MDBModalBody, MDBContainer, MDBRow, MDBCol, MDBBtn } from "mdbreact";
 import "./style.css";
-import { connect } from "react-redux";
-import * as actions from "../../store/actions";
-import * as selectors from "../../store/reducers";
 
 /**
  * КОмпонент формы сброса пароля
  * @param {number} Параметр, при изменении которого компонент открывается
  */
-function ResetPasswordForm({ isOpen, closeForm, resetPassword, resetPasswordError }) {
+const ResetPasswordForm = observer((props) => {
+	const { resetPassword, resetPasswordStatus } = AuthStore;
+	const { ResetPasswordFormIsOpen, closeResetPasswordForm } = PagesStore;
+
 	const [email, setEmail] = useState("");
 
 	return (
-		<MDBModal isOpen={isOpen} toggle={closeForm} size='sm' centered>
+		<MDBModal isOpen={ResetPasswordFormIsOpen} toggle={closeResetPasswordForm} size='sm' centered>
 			<MDBModalBody className='loginBody'>
 				<MDBContainer>
 					<MDBRow>
@@ -24,10 +28,10 @@ function ResetPasswordForm({ isOpen, closeForm, resetPassword, resetPasswordErro
 									resetPassword(email);
 								}}>
 								<p className='h4 text-center mb-4'>Сбросить пароль</p>
-								<p className='note note-danger' hidden={!resetPasswordError | (resetPasswordError === "ok")}>
-									{resetPasswordError}
+								<p className='note note-danger' hidden={!resetPasswordStatus | (resetPasswordStatus === "ok")}>
+									{resetPasswordStatus}
 								</p>
-								<p className='note note-success' hidden={resetPasswordError !== "ok"}>
+								<p className='note note-success' hidden={resetPasswordStatus !== "ok"}>
 									На вашу почту отправлено письмо
 								</p>
 
@@ -48,22 +52,6 @@ function ResetPasswordForm({ isOpen, closeForm, resetPassword, resetPasswordErro
 			</MDBModalBody>
 		</MDBModal>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	isOpen: selectors.getResetPasswordForm(state),
-	resetPasswordError: selectors.getResetPasswordError(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		closeForm: () => {
-			dispatch(actions.closeResetPasswordForm());
-		},
-		resetPassword: (email) => {
-			dispatch(actions.resetPassword(email));
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(ResetPasswordForm);
+export default ResetPasswordForm;

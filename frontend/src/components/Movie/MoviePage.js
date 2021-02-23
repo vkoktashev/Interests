@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { observer } from "mobx-react";
+import MovieStore from "../../store/MovieStore";
+import AuthStore from "../../store/AuthStore";
+import PagesStore from "../../store/PagesStore";
+
 import { MDBIcon, MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
 import "./style.css";
 
 import Rating from "react-rating";
-import { connect } from "react-redux";
-import * as selectors from "../../store/reducers";
-import * as actions from "../../store/actions";
 import StatusButtonGroup from "../Common/StatusButtonGroup";
 import FriendsActivity from "../Common/FriendsActivity";
 import ScoreBlock from "../Common/ScoreBlock";
@@ -15,7 +17,11 @@ import ScoreBlock from "../Common/ScoreBlock";
 /**
  * Основная страница приложения
  */
-function MoviePage({ requestMovie, movie, movieIsLoading, setMovieStatus, requestMovieUserInfo, movieUserInfo, movieUserInfoIsLoading, loggedIn, openLoginForm }) {
+const MoviePage = observer((props) => {
+	const { movie, movieIsLoading, requestMovie, setMovieStatus, userInfo, friendsInfo, userInfoIsLoading, requestUserInfo } = MovieStore;
+	const { loggedIn } = AuthStore;
+	const { openLoginForm } = PagesStore;
+
 	let { id } = useParams();
 	const [genres, setGenres] = useState("");
 	const [companies, setCompanies] = useState("");
@@ -39,7 +45,7 @@ function MoviePage({ requestMovie, movie, movieIsLoading, setMovieStatus, reques
 
 	useEffect(
 		() => {
-			if (loggedIn) requestMovieUserInfo(id);
+			if (loggedIn) requestUserInfo(id);
 			else {
 				setReview("");
 				setUserRate(0);
@@ -96,10 +102,10 @@ function MoviePage({ requestMovie, movie, movieIsLoading, setMovieStatus, reques
 
 	useEffect(
 		() => {
-			if (movieUserInfo?.status) {
-				setReview(movieUserInfo.review);
-				setUserStatus(movieUserInfo.status);
-				setUserRate(movieUserInfo.score);
+			if (userInfo?.status) {
+				setReview(userInfo.review);
+				setUserStatus(userInfo.status);
+				setUserRate(userInfo.score);
 			} else {
 				setReview("");
 				setUserRate(0);
@@ -107,7 +113,7 @@ function MoviePage({ requestMovie, movie, movieIsLoading, setMovieStatus, reques
 			}
 		},
 		// eslint-disable-next-line
-		[movieUserInfo]
+		[userInfo]
 	);
 
 	function setClear() {
@@ -138,7 +144,7 @@ function MoviePage({ requestMovie, movie, movieIsLoading, setMovieStatus, reques
 								<p>В ролях: {cast}</p>
 								<p>Режиссер: {director}</p>
 							</div>
-							<LoadingOverlay active={movieUserInfoIsLoading & !movieIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={userInfoIsLoading & !movieIsLoading} spinner text='Загрузка...'>
 								<Rating
 									stop={10}
 									emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
@@ -185,7 +191,7 @@ function MoviePage({ requestMovie, movie, movieIsLoading, setMovieStatus, reques
 						</div>
 						<div className='movieReviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
-							<LoadingOverlay active={movieUserInfoIsLoading & !movieIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={userInfoIsLoading & !movieIsLoading} spinner text='Загрузка...'>
 								<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
 								<button
 									className={"savePreviewButton"}
@@ -201,41 +207,15 @@ function MoviePage({ requestMovie, movie, movieIsLoading, setMovieStatus, reques
 								</button>
 							</LoadingOverlay>
 						</div>
-						<div className='movieFriendsBlock' hidden={!loggedIn | (movieUserInfo?.friends_info?.length < 1)}>
+						<div className='movieFriendsBlock' hidden={!loggedIn | (friendsInfo?.length < 1)}>
 							<h4>Отзывы друзей</h4>
-							<FriendsActivity info={movieUserInfo?.friends_info} />
+							<FriendsActivity info={friendsInfo} />
 						</div>
 					</div>
 				</div>
 			</LoadingOverlay>
 		</div>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	loggedIn: selectors.getLoggedIn(state),
-	requestError: selectors.getMovieRequestError(state),
-	movie: selectors.getContentMovie(state),
-	movieIsLoading: selectors.getIsLoadingContentMovie(state),
-	movieUserInfo: selectors.getContentMovieUserInfo(state),
-	movieUserInfoIsLoading: selectors.getIsLoadingContentMovieUserInfo(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		requestMovie: (id) => {
-			dispatch(actions.requestMovie(id));
-		},
-		openLoginForm: () => {
-			dispatch(actions.openLoginForm());
-		},
-		setMovieStatus: (status) => {
-			dispatch(actions.setMovieStatus(status));
-		},
-		requestMovieUserInfo: (id) => {
-			dispatch(actions.requestMovieUserInfo(id));
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(MoviePage);
+export default MoviePage;

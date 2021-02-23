@@ -1,29 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
+import { observer } from "mobx-react";
+import { computed } from "mobx";
+import AuthStore from "../../store/AuthStore";
+import ShowStore from "../../store/ShowStore";
+import PagesStore from "../../store/PagesStore";
+
 import { MDBIcon } from "mdbreact";
 import "./style.css";
-import { connect } from "react-redux";
 import LoadingOverlay from "react-loading-overlay";
-import * as selectors from "../../store/reducers";
-import * as actions from "../../store/actions";
 import DetailedEpisodeRow from "./DetailedEpisodeRow";
 import Rating from "react-rating";
 
-function SeasonBlock({
-	showID,
-	seasonNumber,
-	loggedIn,
-	openLoginForm,
-	showSeason,
-	showSeasonIsLoading,
-	showUserInfo,
-	requestShowSeason,
-	requestShowSeasonUserInfo,
-	setShowEpisodeUserStatus,
-	onChangeStatus,
-	setShowSeasonUserStatus,
-	userWatchedShow,
-}) {
+const SeasonBlock = observer(({ showID, seasonNumber, onChangeStatus, userWatchedShow }) => {
+	const { loggedIn } = AuthStore;
+	const { openLoginForm } = PagesStore;
+	const { requestShowSeasons, requestShowSeasonsUserInfo, setShowEpisodesStatus, setShowSeasonStatus } = ShowStore;
+	const showSeason = computed(() => ShowStore.getShowSeason(seasonNumber)).get();
+	const showSeasonIsLoading = computed(() => ShowStore.getShowSeasonIsLoading(seasonNumber)).get();
+	const showUserInfo = computed(() => ShowStore.getShowSeasonUserInfo(seasonNumber)).get();
+
 	let history = useHistory();
 	const [isChecked, setIsChecked] = useState(0);
 	const [userRate, setUserRate] = useState(0);
@@ -32,17 +28,17 @@ function SeasonBlock({
 		() => {
 			setIsChecked(0);
 			setUserRate(0);
-			requestShowSeason(showID, seasonNumber);
+			requestShowSeasons(showID, seasonNumber);
 		},
 		// eslint-disable-next-line
-		[showID, seasonNumber, requestShowSeason]
+		[showID, seasonNumber, requestShowSeasons]
 	);
 
 	useEffect(
 		() => {
 			setIsChecked(0);
 			setUserRate(0);
-			if (loggedIn) requestShowSeasonUserInfo(showID, seasonNumber);
+			if (loggedIn) requestShowSeasonsUserInfo(showID, seasonNumber);
 		},
 		// eslint-disable-next-line
 		[loggedIn, showID, seasonNumber]
@@ -89,7 +85,7 @@ function SeasonBlock({
 								openLoginForm();
 							} else {
 								setUserRate(score);
-								setShowSeasonUserStatus({ score: score }, showID, seasonNumber);
+								setShowSeasonStatus({ score: score }, showID, seasonNumber);
 							}
 						}}
 					/>
@@ -116,7 +112,7 @@ function SeasonBlock({
 										showID={showID}
 										loggedIn={loggedIn}
 										userInfo={getEpisodeByNumber(showUserInfo?.episodes, episode?.episode_number)}
-										setShowEpisodeUserStatus={setShowEpisodeUserStatus}
+										setShowEpisodeUserStatus={setShowEpisodesStatus}
 										onChangeStatus={(status) => onChangeStatus(status)}
 										checkAll={isChecked}
 										userWatchedShow={userWatchedShow}
@@ -129,33 +125,6 @@ function SeasonBlock({
 			</div>
 		</LoadingOverlay>
 	);
-}
-
-const mapStateToProps = (state, ownProps) => ({
-	loggedIn: selectors.getLoggedIn(state),
-	showSeason: selectors.getContentShowSeasons(state, ownProps.seasonNumber),
-	showSeasonIsLoading: selectors.getIsLoadingContentShowSeasons(state, ownProps.seasonNumber),
-	showUserInfo: selectors.getContentShowSeasonsUserInfo(state, ownProps.seasonNumber),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		requestShowSeason: (showID, seasonNumber) => {
-			dispatch(actions.requestShowSeasons(showID, seasonNumber));
-		},
-		requestShowSeasonUserInfo: (showID, seasonNumber) => {
-			dispatch(actions.requestShowSeasonsUserInfo(showID, seasonNumber));
-		},
-		setShowSeasonUserStatus: (status, showID, seasonNumber) => {
-			dispatch(actions.setShowSeasonStatus(status, showID, seasonNumber));
-		},
-		setShowEpisodeUserStatus: (status, showID) => {
-			dispatch(actions.setShowEpisodesStatus(status, showID));
-		},
-		openLoginForm: () => {
-			dispatch(actions.openLoginForm());
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(SeasonBlock);
+export default SeasonBlock;

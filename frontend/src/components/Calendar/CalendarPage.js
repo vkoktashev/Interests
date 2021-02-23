@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { connect } from "react-redux";
-import * as selectors from "../../store/reducers";
-import * as actions from "../../store/actions";
+import { observer } from "mobx-react";
+import CurrentUserStore from "../../store/CurrentUserStore";
+import AuthStore from "../../store/AuthStore";
 
 import Calendar from "react-calendar";
 import LoadingOverlay from "react-loading-overlay";
@@ -10,15 +10,18 @@ import DayInfo from "./DayInfo";
 import ReleasesList from "./ReleasesList";
 import "./style.css";
 
-function CalendarPage({ loggedIn, calendar, getUserCalendar, calendarIsLoading }) {
+const CalendarPage = observer((props) => {
+	const { loggedIn } = AuthStore;
+	const { calendar, calendarIsLoading, requestCalendar } = CurrentUserStore;
+
 	const [value, onChange] = useState(new Date());
 	const [currentDay, setCurrentDay] = useState({});
 
 	useEffect(() => {
 		if (loggedIn) {
-			getUserCalendar();
+			requestCalendar();
 		}
-	}, [loggedIn, getUserCalendar]);
+	}, [loggedIn, requestCalendar]);
 
 	useEffect(() => {
 		if (calendar) {
@@ -63,23 +66,9 @@ function CalendarPage({ loggedIn, calendar, getUserCalendar, calendarIsLoading }
 			</div>
 		</div>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	loggedIn: selectors.getLoggedIn(state),
-	calendar: selectors.getUserCalendar(state),
-	calendarIsLoading: selectors.getIsLoadingUserCalendar(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		getUserCalendar: () => {
-			dispatch(actions.requestUserCalendar());
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(CalendarPage);
+export default CalendarPage;
 
 function pad(number) {
 	if (number < 10) {

@@ -1,29 +1,35 @@
 import React, { useState } from "react";
+import { observer } from "mobx-react";
+import AuthStore from "../../store/AuthStore";
+import PagesStore from "../../store/PagesStore";
+
 import { MDBModal, MDBModalBody, MDBContainer, MDBRow, MDBCol, MDBBtn } from "mdbreact";
 import "./style.css";
-import { connect } from "react-redux";
-import * as actions from "../../store/actions";
-import * as selectors from "../../store/reducers";
 
 /**
  * КОмпонент формы авторизации
  * @param {number} Параметр, при изменении которого компонент открывается
  */
-function RegistrationForm({ isOpen, closeForm, registrate, registrateArror, user }) {
+const RegistrationForm = observer((props) => {
+	const { register, registrateErrors, user } = AuthStore;
+	const { RegistrateFormIsOpen, closeRegistrateForm } = PagesStore;
+
 	const [passwordConfirm, setPasswordConfirm] = useState("");
 	const [password, setPassword] = useState("");
 	const [email, setEmail] = useState("");
 	const [login, setLogin] = useState("");
 
 	return (
-		<MDBModal isOpen={isOpen} toggle={closeForm} size='sm' centered>
+		<MDBModal isOpen={RegistrateFormIsOpen} toggle={closeRegistrateForm} size='sm' centered>
 			<MDBModalBody className='registrationBody'>
 				<MDBContainer>
 					<MDBRow>
 						<MDBCol>
 							<form>
-								<p className='note note-danger' hidden={!registrateArror}>
-									Ошибка регистрации!
+								<p className='note note-danger' hidden={registrateErrors.length < 1}>
+									{registrateErrors.map((error) => (
+										<div>{error}</div>
+									))}
 								</p>
 								<p className='note note-success' hidden={user.email === ""}>
 									{user.login}, добро пожаловать! Осталось только подтвердить вашу почту
@@ -54,7 +60,7 @@ function RegistrationForm({ isOpen, closeForm, registrate, registrateArror, user
 										type='button'
 										className='confirmButton'
 										disabled={password !== passwordConfirm || login.length < 1 || email.length < 1 || password.length < 1}
-										onClick={() => registrate(login, email, password)}>
+										onClick={() => register(login, email, password)}>
 										Зарегистрироваться
 									</MDBBtn>
 								</div>
@@ -65,23 +71,6 @@ function RegistrationForm({ isOpen, closeForm, registrate, registrateArror, user
 			</MDBModalBody>
 		</MDBModal>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	isOpen: selectors.getRegistrateForm(state),
-	registrateArror: selectors.getRegistrateError(state),
-	user: selectors.getUser(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		closeForm: () => {
-			dispatch(actions.closeRegistrateForm());
-		},
-		registrate: (login, email, password) => {
-			dispatch(actions.registrationRequest(login, email, password));
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(RegistrationForm);
+export default RegistrationForm;

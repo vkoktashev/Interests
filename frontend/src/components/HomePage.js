@@ -1,11 +1,13 @@
 import React from "react";
-import { connect } from "react-redux";
-import * as selectors from "../store/reducers";
+import { observer } from "mobx-react";
+import AuthStore from "../store/AuthStore";
 
 /**
  * Основная страница приложения
  */
-function HomePage({ user }) {
+const HomePage = observer((props) => {
+	const { user } = AuthStore;
+
 	return (
 		<div className='bg'>
 			<h2 style={{ marginTop: "70px", marginLeft: "30px" }}>Добро пожаловать на Interests!</h2>
@@ -23,14 +25,6 @@ function HomePage({ user }) {
 			<img src='images/logo192.png' style={{ marginLeft: "20px" }} alt='Картинка' />
 		</div>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	user: selectors.getUser(state),
 });
 
-const mapDispatchToProps = () => {
-	return {};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(HomePage);
+export default HomePage;

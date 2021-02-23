@@ -1,12 +1,13 @@
 import React, { useEffect } from "react";
-import { connect } from "react-redux";
-import * as selectors from "../store/reducers";
-import * as actions from "../store/actions";
+import { observer } from "mobx-react";
+import AuthStore from "../store/AuthStore";
 
 /**
  * Основная страница приложения
  */
-function ConfirmPage({ confirmEmailRequest }) {
+const ConfirmPage = observer((props) => {
+	const { confirmEmailRequest } = AuthStore;
+
 	let search = window.location.search;
 	let params = new URLSearchParams(search);
 	let uid64 = params.get("uid64");
@@ -21,18 +22,6 @@ function ConfirmPage({ confirmEmailRequest }) {
 	);
 
 	return <div className='bg'></div>;
-}
-
-const mapStateToProps = (state) => ({
-	loggedIn: selectors.getLoggedIn(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		confirmEmailRequest: (uid64, token) => {
-			dispatch(actions.confirmEmailRequest(uid64, token));
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(ConfirmPage);
+export default ConfirmPage;

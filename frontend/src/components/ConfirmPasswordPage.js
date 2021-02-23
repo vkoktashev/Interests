@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import "./style.css";
-import { connect } from "react-redux";
-import * as actions from "../store/actions";
-import * as selectors from "../store/reducers";
+import { observer } from "mobx-react";
+import AuthStore from "../store/AuthStore";
 
 /**
  * Основная страница приложения
  */
-function ConfirmPasswordPage({ confirmPassword, confirmPasswordError }) {
+const ConfirmPasswordPage = observer((props) => {
+	const { confirmPassword, confirmPasswordStatus } = AuthStore;
+
 	const [password, setPassword] = useState("");
 	const [passwordConfirm, setPasswordConfirm] = useState("");
 
@@ -24,10 +25,10 @@ function ConfirmPasswordPage({ confirmPassword, confirmPasswordError }) {
 				}}
 				className='confirmPasswordForm'>
 				<p className='h4'>Обновить пароль</p>
-				<p className='note note-danger' hidden={!confirmPasswordError | (confirmPasswordError === "ok")}>
-					{confirmPasswordError}
+				<p className='note note-danger' hidden={!confirmPasswordStatus | (confirmPasswordStatus === "ok")}>
+					{confirmPasswordStatus}
 				</p>
-				<p className='note note-success' hidden={confirmPasswordError !== "ok"}>
+				<p className='note note-success' hidden={confirmPasswordStatus !== "ok"}>
 					Пароль обновлен!
 				</p>
 
@@ -51,18 +52,6 @@ function ConfirmPasswordPage({ confirmPassword, confirmPasswordError }) {
 			</form>
 		</div>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	confirmPasswordError: selectors.getConfirmPasswordError(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		confirmPassword: (token, password) => {
-			dispatch(actions.confirmPassword(token, password));
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(ConfirmPasswordPage);
+export default ConfirmPasswordPage;
