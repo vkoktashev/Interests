@@ -21,7 +21,7 @@ import ScoreBlock from "../Common/ScoreBlock";
 const ShowPage = observer((props) => {
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
-	const { requestShow, show, showIsLoading, setShowStatus, setShowEpisodesStatus, requestShowUserInfo, userInfo, friendsInfo, userInfoIsLoading } = ShowStore;
+	const { requestShow, show, showState, setShowStatus, setEpisodesStatus, requestShowUserInfo, userInfo, friendsInfo, userInfoState } = ShowStore;
 
 	let { id } = useParams();
 	const [review, setReview] = useState("");
@@ -75,7 +75,7 @@ const ShowPage = observer((props) => {
 	return (
 		<div>
 			<div className='bg' style={{ backgroundImage: `url(${show.background})` }} />
-			<LoadingOverlay active={showIsLoading} spinner text='Загрузка...'>
+			<LoadingOverlay active={showState === "pending"} spinner text='Загрузка...'>
 				<div className='showContentPage'>
 					<div className='showContentHeader'>
 						<div className='showPosterBlock'>
@@ -94,7 +94,7 @@ const ShowPage = observer((props) => {
 								<p>Количество серий: {show.episodesCount}</p>
 								<p hidden={!show.showStatus}>Статус: {show.showStatus}</p>
 							</div>
-							<LoadingOverlay active={userInfoIsLoading && !showIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={userInfoState === "pending" && !showState === "pending"} spinner text='Загрузка...'>
 								<Rating
 									stop={10}
 									emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
@@ -142,11 +142,11 @@ const ShowPage = observer((props) => {
 						</div>
 						<div className='showSeasonsBody'>
 							<h3 style={{ paddingTop: "15px" }}>Список серий</h3>
-							<SeasonsBlock showID={show.id} seasons={show.seasons} setShowEpisodeUserStatus={setShowEpisodesStatus} userWatchedShow={userStatus !== "Не смотрел"} />
+							<SeasonsBlock showID={show.id} seasons={show.seasons} setShowEpisodeUserStatus={setEpisodesStatus} userWatchedShow={userStatus !== "Не смотрел"} />
 						</div>
 						<div className='showReviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
-							<LoadingOverlay active={userInfoIsLoading && !showIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={userInfoState === "pending" && !showState === "pending"} spinner text='Загрузка...'>
 								<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
 								<button
 									className={"savePreviewButton"}

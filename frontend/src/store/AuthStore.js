@@ -1,13 +1,8 @@
 import { makeAutoObservable } from "mobx";
-import remotedev from "mobx-remotedev";
+//import remotedev from "mobx-remotedev";
 import * as auth from "../services/jwtAuth";
 import jwt_decode from "jwt-decode";
 import { TOKEN_LIFETIME } from "../settings";
-import { configure } from "mobx";
-
-configure({
-	enforceActions: "never",
-});
 
 class Auth {
 	loggedIn = false;
@@ -114,7 +109,12 @@ class Auth {
 			}
 		});
 	};
+
+	get currentUser() {
+		return this.user;
+	}
 }
 
 const AuthStore = new Auth();
-export default remotedev(AuthStore);
+//export default remotedev(AuthStore, { name: "Auth" });
+export default AuthStore;

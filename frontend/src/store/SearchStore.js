@@ -1,5 +1,5 @@
 import { makeAutoObservable } from "mobx";
-import remotedev from "mobx-remotedev";
+//import remotedev from "mobx-remotedev";
 import * as userRequests from "../services/userRequests";
 import * as gameRequests from "../services/gameRequests";
 import * as movieRequests from "../services/movieRequests";
@@ -78,4 +78,5 @@ class Search {
 }
 
 const SearchStore = new Search();
-export default remotedev(SearchStore);
+//export default remotedev(SearchStore, { name: "Search" });
+export default SearchStore;

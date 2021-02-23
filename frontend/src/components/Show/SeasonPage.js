@@ -19,7 +19,7 @@ import DetailedEpisodeRow from "./DetailedEpisodeRow";
  */
 const ShowPage = observer((props) => {
 	const { loggedIn } = AuthStore;
-	const { requestShowSeason, show, showIsLoading, setShowSeasonStatus, setShowEpisodesStatus, requestShowSeasonUserInfo, userInfo, userInfoIsLoading, friendsInfo } = ShowStore;
+	const { requestSeason, show, showState, setSeasonStatus, setEpisodesStatus, requestSeasonUserInfo, userInfo, userInfoState, friendsInfo } = ShowStore;
 	const { openLoginForm } = PagesStore;
 
 	let history = useHistory();
@@ -32,15 +32,15 @@ const ShowPage = observer((props) => {
 		() => {
 			setReview("");
 			setUserRate(0);
-			requestShowSeason(show_id, number);
+			requestSeason(show_id, number);
 		},
 		// eslint-disable-next-line
-		[show_id, number, requestShowSeason]
+		[show_id, number, requestSeason]
 	);
 
 	useEffect(
 		() => {
-			if (loggedIn) requestShowSeasonUserInfo(show_id, number);
+			if (loggedIn) requestSeasonUserInfo(show_id, number);
 			else {
 				setReview("");
 				setUserRate(0);
@@ -85,7 +85,7 @@ const ShowPage = observer((props) => {
 	return (
 		<div>
 			<div className='bg' style={{ backgroundImage: `url(${show.background})` }} />
-			<LoadingOverlay active={showIsLoading} spinner text='Загрузка...'>
+			<LoadingOverlay active={showState === "pending"} spinner text='Загрузка...'>
 				<div className='showContentPage'>
 					<div className='showContentHeader'>
 						<div className='showPosterBlock'>
@@ -109,7 +109,7 @@ const ShowPage = observer((props) => {
 								<p>Количество серий: {show.episodesCount}</p>
 							</div>
 							<div hidden={!loggedIn | !userInfo?.user_watched_show}>
-								<LoadingOverlay active={userInfoIsLoading && !showIsLoading} spinner text='Загрузка...'>
+								<LoadingOverlay active={userInfoState === "pending" && !showState === "pending"} spinner text='Загрузка...'>
 									<Rating
 										stop={10}
 										emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
@@ -122,7 +122,7 @@ const ShowPage = observer((props) => {
 												openLoginForm();
 											} else {
 												setUserRate(score);
-												setShowSeasonStatus({ score: score }, show_id, show.seasonNumber);
+												setSeasonStatus({ score: score }, show_id, show.seasonNumber);
 											}
 										}}
 									/>
@@ -134,7 +134,7 @@ const ShowPage = observer((props) => {
 											if (!loggedIn) {
 												openLoginForm();
 											} else {
-												setShowSeasonStatus({ review: document.getElementById("reviewSeasonInput").value }, show_id, show.seasonNumber);
+												setSeasonStatus({ review: document.getElementById("reviewSeasonInput").value }, show_id, show.seasonNumber);
 											}
 										}}>
 										Сохранить
@@ -160,7 +160,7 @@ const ShowPage = observer((props) => {
 															showID={show_id}
 															loggedIn={loggedIn}
 															userInfo={getEpisodeByNumber(userInfo.episodes, episode.episode_number)}
-															setShowEpisodeUserStatus={setShowEpisodesStatus}
+															setEpisodeUserStatus={setEpisodesStatus}
 															userWatchedShow={userInfo?.user_watched_show}
 														/>
 													</li>

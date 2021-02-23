@@ -1,5 +1,5 @@
 import { makeAutoObservable } from "mobx";
-import remotedev from "mobx-remotedev";
+//import remotedev from "mobx-remotedev";
 import AuthStore from "./AuthStore";
 import * as userRequests from "../services/userRequests";
 import * as showRequests from "../services/showRequests";
@@ -82,4 +82,5 @@ class CurrentUser {
 }
 
 const CurrentUserStore = new CurrentUser();
-export default remotedev(CurrentUserStore);
+//export default remotedev(CurrentUserStore, { name: "CurrentUser" });
+export default CurrentUserStore;

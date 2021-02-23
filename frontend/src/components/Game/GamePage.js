@@ -24,19 +24,13 @@ const GamePage = observer((props) => {
 	const { openLoginForm } = PagesStore;
 
 	let { id } = useParams();
-	const [genres, setGenres] = useState("");
 	const [review, setReview] = useState("");
 	const [spentTime, setSpentTime] = useState("");
 	const [userStatus, setUserStatus] = useState("Не играл");
 	const [userRate, setUserRate] = useState(0);
-	const [developers, setDevelopers] = useState("");
-	const [platforms, setPlatforms] = useState("");
-	const [date, setDate] = useState("");
-	const [hltbInfo, setHtlbInfo] = useState({ gameplay_main_extra: -1, gameplay_main: -1, gameplay_comletionist: -1 });
 
 	useEffect(
 		() => {
-			setClear();
 			setClearUI();
 			requestGame(id);
 		},
@@ -56,47 +50,7 @@ const GamePage = observer((props) => {
 	);
 
 	useEffect(() => {
-		setClear();
-		if (game.rawg.genres) {
-			let newGenres = "";
-			for (let i = 0; i < game.rawg.genres.length; i++) {
-				newGenres += game.rawg.genres[i].name;
-				if (i !== game.rawg.genres.length - 1) newGenres += ", ";
-			}
-			setGenres(newGenres);
-		}
-
-		if (game.hltb) {
-			setHtlbInfo(game.hltb);
-		} else if (game.rawg.playtime) {
-			setHtlbInfo({ gameplay_main_extra: game.rawg.playtime, gameplay_main: -1, gameplay_completionist: -1 });
-		}
-
-		if (game.rawg.developers) {
-			let newDevelopers = "";
-			for (let i = 0; i < game.rawg.developers.length; i++) {
-				newDevelopers += game.rawg.developers[i].name;
-				if (i !== game.rawg.developers.length - 1) newDevelopers += ", ";
-			}
-			setDevelopers(newDevelopers);
-		}
-
-		if (game.rawg.platforms) {
-			let newPlatforms = "";
-			for (let i = 0; i < game.rawg.platforms.length; i++) {
-				newPlatforms += game.rawg.platforms[i].platform.name;
-				if (i !== game.rawg.platforms.length - 1) newPlatforms += ", ";
-			}
-			setPlatforms(newPlatforms);
-		}
-
-		if (game.rawg.released) {
-			let mas = game.rawg.released.split("-");
-			let newDate = mas[2] + "." + mas[1] + "." + mas[0];
-			setDate(newDate);
-		}
-
-		document.title = game.rawg.name;
+		document.title = game.name;
 	}, [game]);
 
 	useEffect(
@@ -114,14 +68,6 @@ const GamePage = observer((props) => {
 		[userInfo]
 	);
 
-	function setClear() {
-		setGenres("");
-		setHtlbInfo({ gameplay_main_extra: -1, gameplay_main: -1, gameplay_completionist: -1 });
-		setDevelopers("");
-		setPlatforms("");
-		setDate("");
-	}
-
 	function setClearUI() {
 		setReview("");
 		setSpentTime("");
@@ -138,12 +84,6 @@ const GamePage = observer((props) => {
 					<option value={strToFloat(game.hltb?.gameplay_completionist)} />
 				</datalist>
 			);
-		} else if (game.rawg.playtime) {
-			return (
-				<datalist id='timesList'>
-					<option value={strToFloat(game.rawg.playtime)} />
-				</datalist>
-			);
 		}
 		return null;
 	}
@@ -156,21 +96,21 @@ const GamePage = observer((props) => {
 
 	return (
 		<div>
-			<div className='bg' style={{ backgroundImage: `url(${game.rawg.background_image_additional ? game.rawg.background_image_additional : game.rawg.background_image})` }} />
+			<div className='bg' style={{ backgroundImage: `url(${game.background})` }} />
 			<LoadingOverlay active={gameIsLoading} spinner text='Загрузка...'>
 				<div className='gameContentPage'>
 					<div className='gameContentHeader'>
 						<div className='posterBlock'>
-							<img src={game.rawg.background_image} className='img-fluid' alt='' />
+							<img src={game.poster} className='img-fluid' alt='' />
 						</div>
 						<div className='gameInfoBlock'>
-							<h1 className='header'>{game.rawg.name}</h1>
+							<h1 className='header'>{game.name}</h1>
 							<div className='mainInfo'>
-								<p>Разработчики: {developers}</p>
-								<p>Дата релиза: {date}</p>
-								<p>Жанр: {genres}</p>
-								<p>Платформы: {platforms}</p>
-								<TimeToBeat hltbInfo={hltbInfo} />
+								<p>Разработчики: {game.developers}</p>
+								<p>Дата релиза: {game.date}</p>
+								<p>Жанр: {game.genres}</p>
+								<p>Платформы: {game.platforms}</p>
+								<TimeToBeat hltbInfo={game.hltb} />
 							</div>
 							<LoadingOverlay active={userInfoIsLoading && !gameIsLoading} spinner text='Загрузка...'>
 								<Rating
@@ -210,14 +150,14 @@ const GamePage = observer((props) => {
 									}}
 								/>
 							</LoadingOverlay>
-							<ScoreBlock score={game?.rawg?.metacritic} text='Metascore' className='scoreBlock' />
+							<ScoreBlock score={game.metacritic} text='Metascore' className='scoreBlock' />
 						</div>
 					</div>
 					<div className='gameContentBody'>
 						<div>
 							{/* <video width='800' height='450' controls='controls' poster={game.rawg?.clip?.preview} src={game.rawg?.clip?.clip} type='video' /> */}
 							<h3 style={{ paddingTop: "15px" }}>Описание</h3>
-							<div dangerouslySetInnerHTML={{ __html: game.rawg.description }} />
+							<div dangerouslySetInnerHTML={{ __html: game.overview }} />
 						</div>
 						<div className='gameReviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>

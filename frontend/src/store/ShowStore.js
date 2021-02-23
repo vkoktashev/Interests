@@ -1,173 +1,177 @@
 import { makeAutoObservable } from "mobx";
-import remotedev from "mobx-remotedev";
+//import remotedev from "mobx-remotedev";
 import AuthStore from "./AuthStore";
 import * as showRequests from "../services/showRequests";
 
 class Show {
 	show = {};
-	showSeasons = {};
-	showIsLoading = false;
-	showSeasonsIsLoading = {};
-	showError = "";
-	showSeasonsError = "";
-
+	showState = "done";
 	userInfo = { status: null, review: "", score: 0 };
-	showSeasonsUserInfo = {};
 	friendsInfo = [];
-	userInfoIsLoading = false;
-	userInfoError = "";
-	showSeasonsUserInfoIsLoading = {};
-	showSeasonsUserInfoError = "";
+	userInfoState = "done";
+
+	showSeasons = {};
+	showSeasonsState = {};
+	showSeasonsUserInfo = {};
+	showSeasonsUserInfoState = {};
+
+	setStatusState = "done";
 
 	constructor() {
 		makeAutoObservable(this);
 	}
 
 	requestShow = async (id) => {
+		this.showState = "pending";
 		await AuthStore.checkAuthorization();
-		this.showIsLoading = true;
-		this.showError = "";
-		showRequests.getShow(localStorage.getItem("token"), id).then((result) => {
-			if (result != null) this.show = parseShow(result);
-			else this.showError = "Сериал не найден!";
-			this.showIsLoading = false;
-		});
+		showRequests.getShow(localStorage.getItem("token"), id).then(this.requestShowSuccess, this.requestShowFailure);
+	};
+	requestShowSuccess = (result) => {
+		this.show = parseShow(result);
+		this.showState = "done";
+	};
+	requestShowFailure = (error) => {
+		this.showState = "error";
 	};
 
-	requestShowSeason = async (showID, seasonNumber) => {
+	requestSeason = async (showID, seasonNumber) => {
+		this.showState = "pending";
 		await AuthStore.checkAuthorization();
-		this.showIsLoading = true;
-		this.showError = "";
-		showRequests.getShowSeason(localStorage.getItem("token"), showID, seasonNumber).then((result) => {
-			if (result != null) this.show = parseSeason(result);
-			else this.showError = "Сериал не найден!";
-			this.showIsLoading = false;
-		});
+		showRequests.getShowSeason(localStorage.getItem("token"), showID, seasonNumber).then(this.requestSeasonSuccess, this.requestSeasonFailure);
+	};
+	requestSeasonSuccess = (result) => {
+		this.show = parseSeason(result);
+		this.showState = "done";
+	};
+	requestSeasonFailure = (error) => {
+		this.showState = "error";
 	};
 
-	requestShowSeasons = async (showID, seasonNumber) => {
-		await AuthStore.checkAuthorization();
-		this.showSeasonsIsLoading[seasonNumber] = true;
-		this.showSeasonsError = "";
+	requestSeasons = async (showID, seasonNumber) => {
+		this.showSeasonsState[seasonNumber] = "pending";
 		this.showSeasons[seasonNumber] = {};
-		showRequests.getShowSeason(localStorage.getItem("token"), showID, seasonNumber).then((result) => {
-			if (result != null) this.showSeasons[seasonNumber] = result;
-			else this.showSeasonsError = "Ошибка загрузки сезона!";
-
-			this.showSeasonsIsLoading[seasonNumber] = false;
-		});
+		await AuthStore.checkAuthorization();
+		showRequests.getShowSeason(localStorage.getItem("token"), showID, seasonNumber).then(
+			(res) => this.requestSeasonsSuccess(res, seasonNumber),
+			(res) => this.requestSeasonsFailure(res, seasonNumber)
+		);
+	};
+	requestSeasonsSuccess = (result, seasonNumber) => {
+		this.showSeasons[seasonNumber] = result;
+		this.showSeasonsState[seasonNumber] = "done";
+	};
+	requestSeasonsFailure = (error, seasonNumber) => {
+		this.showSeasonsState[seasonNumber] = "error";
 	};
 
-	requestShowEpisode = async (showID, seasonNumber, episodeNumber) => {
+	requestEpisode = async (showID, seasonNumber, episodeNumber) => {
+		this.showState = "pending";
 		await AuthStore.checkAuthorization();
-		this.showIsLoading = true;
-		this.showError = "";
-		showRequests.getShowEpisode(localStorage.getItem("token"), showID, seasonNumber, episodeNumber).then((result) => {
-			if (result != null) this.show = parseEpisode(result);
-			else this.showError = "Серия не найдена!";
-			this.showIsLoading = false;
-		});
+		showRequests.getShowEpisode(localStorage.getItem("token"), showID, seasonNumber, episodeNumber).then(this.requestEpisodeSuccess, this.requestEpisodeFailure);
+	};
+	requestEpisodeSuccess = (result) => {
+		this.show = parseEpisode(result);
+		this.showState = "done";
+	};
+	requestEpisodeFailure = (error) => {
+		this.showState = "error";
 	};
 
 	requestShowUserInfo = async (id) => {
 		if (await AuthStore.checkAuthorization()) {
-			this.userInfoIsLoading = true;
-			this.userInfoError = "";
-			showRequests.getShowUserInfo(localStorage.getItem("token"), id).then((result) => {
-				if (result != null) {
-					this.userInfo = result.user_info;
-					this.friendsInfo = result.friends_info;
-				} else {
-					this.userInfoError = "Ошибка загрузки логов!";
-				}
-				this.userInfoIsLoading = false;
-			});
+			this.userInfoState = "pending";
+			showRequests.getShowUserInfo(localStorage.getItem("token"), id).then(this.requestShowUserInfoSuccess, this.requestShowUserInfoFailure);
 		}
 	};
-
-	requestShowSeasonUserInfo = async (showID, seasonID) => {
-		if (await AuthStore.checkAuthorization()) {
-			this.userInfoIsLoading = true;
-			this.userInfoError = "";
-			showRequests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then((result) => {
-				if (result != null) {
-					this.userInfo = { ...result.user_info, user_watched_show: result.user_watched_show, episodes: result.episodes_user_info };
-					this.friendsInfo = result.friends_info;
-				} else {
-					this.userInfoError = "Ошибка загрузки логов!";
-				}
-				this.userInfoIsLoading = false;
-			});
-		}
+	requestShowUserInfoSuccess = (result) => {
+		this.userInfo = result.user_info;
+		this.friendsInfo = result.friends_info;
+		this.userInfoState = "done";
+	};
+	requestShowUserInfoFailure = (error) => {
+		this.userInfoState = "error";
 	};
 
-	requestShowSeasonsUserInfo = async (showID, seasonID) => {
+	requestSeasonUserInfo = async (showID, seasonID) => {
 		if (await AuthStore.checkAuthorization()) {
-			this.showSeasonsUserInfoIsLoading[seasonID] = true;
-			this.showSeasonsUserInfo[seasonID] = {};
-			this.showSeasonsUserInfoError = "";
-			showRequests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then((result) => {
-				if (result != null) {
-					this.showSeasonsUserInfo[seasonID] = { ...result.user_info, user_watched_show: result.user_watched_show, episodes: result.episodes_user_info, friends_info: result.friends_info };
-				} else {
-					this.showSeasonsUserInfoError = "Ошибка загрузки сезона!";
-				}
-				this.showSeasonsUserInfoIsLoading[seasonID] = false;
-			});
+			this.userInfoState = "pending";
+			showRequests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then(this.requestSeasonUserInfoSuccess, this.requestSeasonUserInfoFailure);
 		}
 	};
+	requestSeasonUserInfoSuccess = (result) => {
+		this.userInfo = { ...result.user_info, user_watched_show: result.user_watched_show, episodes: result.episodes_user_info };
+		this.friendsInfo = result.friends_info;
+		this.userInfoState = "done";
+	};
+	requestSeasonUserInfoFailure = (error) => {
+		this.userInfoState = "error";
+	};
 
-	requestShowEpisodeUserInfo = async (showID, seasonID, episodeID) => {
+	requestSeasonsUserInfo = async (showID, seasonID) => {
+		this.showSeasonsUserInfo[seasonID] = {};
 		if (await AuthStore.checkAuthorization()) {
-			this.userInfoIsLoading = true;
-			this.userInfoError = "";
-			showRequests.getShowEpisodeUserInfo(localStorage.getItem("token"), showID, seasonID, episodeID).then((result) => {
-				if (result != null) {
-					this.userInfo = { ...result.user_info, user_watched_show: result.user_watched_show };
-					this.friendsInfo = result.friends_info;
-				} else {
-					this.userInfoError = "Ошибка загрузки логов!";
-				}
-				this.userInfoIsLoading = false;
-			});
+			this.showSeasonsUserInfoState[seasonID] = "pending";
+			showRequests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then(
+				(res) => this.requestSeasonsUserInfoSuccess(res, seasonID),
+				(res) => this.requestSeasonsUserInfoFailure(res, seasonID)
+			);
 		}
+	};
+	requestSeasonsUserInfoSuccess = (result, seasonID) => {
+		this.showSeasonsUserInfoState[seasonID] = "done";
+		this.showSeasonsUserInfo[seasonID] = { ...result.user_info, user_watched_show: result.user_watched_show, episodes: result.episodes_user_info, friends_info: result.friends_info };
+	};
+	requestSeasonsUserInfoFailure = (error, seasonID) => {
+		this.showSeasonsUserInfoState[seasonID] = "error";
+	};
+
+	requestEpisodeUserInfo = async (showID, seasonID, episodeID) => {
+		if (await AuthStore.checkAuthorization()) {
+			this.userInfoState = "pending";
+			showRequests.getShowEpisodeUserInfo(localStorage.getItem("token"), showID, seasonID, episodeID).then(this.requestEpisodeUserInfoSuccess, this.requestEpisodeUserInfoFailure);
+		}
+	};
+	requestEpisodeUserInfoSuccess = (result) => {
+		this.userInfoState = "done";
+		this.userInfo = { ...result.user_info, user_watched_show: result.user_watched_show };
+		this.friendsInfo = result.friends_info;
+	};
+	requestEpisodeUserInfoFailure = (error) => {
+		this.userInfoState = "error";
 	};
 
 	setShowStatus = async (userInfo) => {
 		if (await AuthStore.checkAuthorization()) {
-			this.showError = "";
-			showRequests.setShowStatus(localStorage.getItem("token"), this.show.tmdb.id, userInfo).then((result) => {
-				if (!result) {
-					this.showError = "Ошибка обновления статуса";
-				}
-			});
+			this.setStatusState = "pending";
+			showRequests.setShowStatus(localStorage.getItem("token"), this.show.id, userInfo).then(this.setShowStatusSuccess, this.setShowStatusFailure);
+		}
+	};
+	setShowStatusSuccess = (result) => {
+		this.setStatusState = "done";
+	};
+	setShowStatusFailure = (error) => {
+		this.setStatusState = "error";
+	};
+
+	setSeasonStatus = async (userInfo, showID, seasonNumber) => {
+		if (await AuthStore.checkAuthorization()) {
+			this.setStatusState = "pending";
+			showRequests.setShowSeasonStatus(localStorage.getItem("token"), showID, seasonNumber, userInfo).then(this.setShowStatusSuccess, this.setShowStatusFailure);
 		}
 	};
 
-	setShowSeasonStatus = async (userInfo, showID, seasonNumber) => {
+	setEpisodesStatus = async (episodesList, showID, needUpdate = false) => {
 		if (await AuthStore.checkAuthorization()) {
-			this.showError = "";
-			showRequests.setShowSeasonStatus(localStorage.getItem("token"), showID, seasonNumber, userInfo).then((result) => {
-				if (!result) this.showError = "Ошибка обновления статуса";
-			});
-		}
-	};
-
-	setShowEpisodesStatus = async (episodesList, showID, needUpdate = false) => {
-		if (await AuthStore.checkAuthorization()) {
-			this.showError = "";
+			this.setStatusState = "pending";
 			showRequests.setShowEpisodesStatus(localStorage.getItem("token"), showID, episodesList).then((result) => {
-				if ((result.status !== 204) & (result.status !== 200) & (result.status !== 201)) {
-					this.showError = "Ошибка обновления статуса";
-				} else {
-					if (needUpdate) {
-						let seasons = [];
-						for (let episode in episodesList.episodes) if (seasons.indexOf(episodesList.episodes[episode].season_number) === -1) seasons.push(episodesList.episodes[episode].season_number);
+				if (needUpdate) {
+					let seasons = [];
+					for (let episode in episodesList.episodes) if (seasons.indexOf(episodesList.episodes[episode].season_number) === -1) seasons.push(episodesList.episodes[episode].season_number);
 
-						for (let season in seasons) this.requestShowSeasonsUserInfo(showID, seasons[season]);
-					}
+					for (let season in seasons) this.requestShowSeasonsUserInfo(showID, seasons[season]);
 				}
-			});
+				this.setShowStatusSuccess();
+			}, this.setShowStatusFailure);
 		}
 	};
 
@@ -175,8 +179,8 @@ class Show {
 		return this.showSeasons[seasonNumber];
 	};
 
-	getShowSeasonIsLoading = (seasonNumber) => {
-		return this.showSeasonsIsLoading[seasonNumber];
+	getShowSeasonState = (seasonNumber) => {
+		return this.showSeasonsState[seasonNumber];
 	};
 
 	getShowSeasonUserInfo = (seasonNumber) => {
@@ -185,7 +189,8 @@ class Show {
 }
 
 const ShowStore = new Show();
-export default remotedev(ShowStore);
+//export default remotedev(ShowStore, { name: "Show" });
+export default ShowStore;
 
 function parseShow(show) {
 	let newShow = {
@@ -259,13 +264,15 @@ function parseShow(show) {
 
 function parseSeason(show) {
 	let newShow = {
-		background: show.tmdb?.backdrop_path ? "http://image.tmdb.org/t/p/w1920_and_h800_multi_faces" + show.tmdb?.backdrop_path : "",
+		background: show.tmdb?.show?.tmdb_backdrop_path,
 		poster: show.tmdb?.poster_path ? "http://image.tmdb.org/t/p/w600_and_h900_bestv2" + show.tmdb?.poster_path : "",
 		showName: show.tmdb.show.tmdb_name,
 		showOriginalName: show.tmdb.show.tmdb_original_name,
 		name: show.tmdb.name,
 		seasonNumber: show.tmdb.season_number,
 		overview: show.tmdb.overview,
+		episodes: show.tmdb.episodes,
+		episodesCount: show.tmdb.episodes ? show.tmdb.episodes.length : 0,
 		id: show.tmdb.id,
 		tmdbScore: show.tmdb.vote_average ? show.tmdb.vote_average * 10 : null,
 	};
@@ -273,15 +280,15 @@ function parseSeason(show) {
 	if (show.tmdb.air_date) {
 		let mas = show.tmdb.air_date.split("-");
 		let newDate = mas[2] + "." + mas[1] + "." + mas[0];
-		show.date = newDate;
+		newShow.date = newDate;
 	}
-
+	console.log(newShow);
 	return newShow;
 }
 
 function parseEpisode(show) {
 	let newShow = {
-		background: show.tmdb?.backdrop_path ? "http://image.tmdb.org/t/p/w1920_and_h800_multi_faces" + show.tmdb?.backdrop_path : "",
+		background: show.tmdb?.show?.tmdb_backdrop_path,
 		poster: show.tmdb?.still_path ? "http://image.tmdb.org/t/p/w600_and_h900_bestv2" + show.tmdb?.still_path : "",
 		showName: show.tmdb.show.tmdb_name,
 		showOriginalName: show.tmdb.show.tmdb_original_name,
@@ -291,7 +298,6 @@ function parseEpisode(show) {
 		episodesCount: show.tmdb.episodes ? show.tmdb.episodes.length : 0,
 		overview: show.tmdb.overview,
 		id: show.tmdb.id,
-		episodes: show.tmdb.episodes,
 	};
 
 	if (show.tmdb.air_date) {
@@ -299,6 +305,6 @@ function parseEpisode(show) {
 		let newDate = mas[2] + "." + mas[1] + "." + mas[0];
 		newShow.date = newDate;
 	}
-
+	console.log(show);
 	return newShow;
 }

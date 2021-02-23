@@ -18,22 +18,17 @@ import ScoreBlock from "../Common/ScoreBlock";
  * Основная страница приложения
  */
 const MoviePage = observer((props) => {
-	const { movie, movieIsLoading, requestMovie, setMovieStatus, userInfo, friendsInfo, userInfoIsLoading, requestUserInfo } = MovieStore;
+	const { movie, movieState, requestMovie, setMovieStatus, userInfo, friendsInfo, userInfoState, requestUserInfo } = MovieStore;
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
 
 	let { id } = useParams();
-	const [genres, setGenres] = useState("");
-	const [companies, setCompanies] = useState("");
-	const [cast, setCast] = useState("");
-	const [director, setDirector] = useState("");
 	const [review, setReview] = useState("");
 	const [userStatus, setUserStatus] = useState("Не смотрел");
 	const [userRate, setUserRate] = useState(0);
 
 	useEffect(
 		() => {
-			setClear();
 			setReview("");
 			setUserStatus("Не смотрел");
 			setUserRate(0);
@@ -57,47 +52,7 @@ const MoviePage = observer((props) => {
 	);
 
 	useEffect(() => {
-		setClear();
-		if (movie.tmdb.genres) {
-			let newGenres = "";
-			for (let i = 0; i < movie.tmdb.genres.length; i++) {
-				newGenres += movie.tmdb.genres[i].name;
-				if (i !== movie.tmdb.genres.length - 1) newGenres += ", ";
-			}
-			setGenres(newGenres);
-		}
-
-		if (movie.tmdb.production_companies) {
-			let newCompanies = "";
-			for (let i = 0; i < movie.tmdb.production_companies.length; i++) {
-				newCompanies += movie.tmdb.production_companies[i].name;
-				if (i !== movie.tmdb.production_companies.length - 1) newCompanies += ", ";
-			}
-			setCompanies(newCompanies);
-		}
-
-		if (movie.tmdb.cast) {
-			let newCast = "";
-			let length = movie.tmdb.cast.length > 5 ? 5 : movie.tmdb.cast.length;
-			for (let i = 0; i < length; i++) {
-				newCast += movie.tmdb.cast[i].name;
-				if (i !== length - 1) newCast += ", ";
-			}
-			setCast(newCast);
-		}
-
-		if (movie.tmdb.crew) {
-			let newDirector = "";
-			for (let i = 0; i < movie.tmdb.crew.length; i++) {
-				if (movie.tmdb.crew[i].job === "Director") {
-					newDirector = movie.tmdb.crew[i].name;
-					break;
-				}
-			}
-			setDirector(newDirector);
-		}
-
-		document.title = movie.tmdb.title;
+		document.title = movie.name;
 	}, [movie]);
 
 	useEffect(
@@ -116,35 +71,28 @@ const MoviePage = observer((props) => {
 		[userInfo]
 	);
 
-	function setClear() {
-		setDirector("");
-		setCast("");
-		setCompanies("");
-		setGenres("");
-	}
-
 	return (
 		<div>
-			<div className='bg' style={{ backgroundImage: `url(${"http://image.tmdb.org/t/p/w1920_and_h800_multi_faces" + movie.tmdb.backdrop_path})` }} />
-			<LoadingOverlay active={movieIsLoading} spinner text='Загрузка...'>
+			<div className='bg' style={{ backgroundImage: `url(${movie.background})` }} />
+			<LoadingOverlay active={movieState === "pending"} spinner text='Загрузка...'>
 				<div className='movieContentPage'>
 					<div className='movieContentHeader'>
 						<div className='moviePosterBlock'>
-							<img src={"http://image.tmdb.org/t/p/w600_and_h900_bestv2" + movie.tmdb.poster_path} className='img-fluid' alt='' />
+							<img src={"http://image.tmdb.org/t/p/w600_and_h900_bestv2" + movie.poster} className='img-fluid' alt='' />
 						</div>
 						<div className='movieInfoBlock'>
-							<h1 className='header'>{movie.tmdb.title}</h1>
-							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{movie.tmdb.original_title}</h5>
+							<h1 className='header'>{movie.name}</h1>
+							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{movie.originalName}</h5>
 							<div className='mainInfo'>
-								<p>Дата релиза: {movie.tmdb.release_date}</p>
-								<p>Продолжительность (мин): {movie.tmdb.runtime}</p>
-								<p>Жанр: {genres}</p>
-								<p>Компания: {companies}</p>
-								<p>Слоган: {movie.tmdb.tagline}</p>
-								<p>В ролях: {cast}</p>
-								<p>Режиссер: {director}</p>
+								<p>Дата релиза: {movie.date}</p>
+								<p>Продолжительность (мин): {movie.runtime}</p>
+								<p>Жанр: {movie.genres}</p>
+								<p>Компания: {movie.companies}</p>
+								<p>Слоган: {movie.tagline}</p>
+								<p>В ролях: {movie.cast}</p>
+								<p>Режиссер: {movie.director}</p>
 							</div>
-							<LoadingOverlay active={userInfoIsLoading & !movieIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={userInfoState === "pending" && !movieState === "pending"} spinner text='Загрузка...'>
 								<Rating
 									stop={10}
 									emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
@@ -181,17 +129,17 @@ const MoviePage = observer((props) => {
 									}}
 								/>
 							</LoadingOverlay>
-							<ScoreBlock score={movie.tmdb.vote_average * 10} text='TMDB score' className='scoreBlock' />
+							<ScoreBlock score={movie.tmdbScore} text='TMDB score' className='scoreBlock' />
 						</div>
 					</div>
 					<div className='movieContentBody'>
 						<div>
 							<h3 style={{ paddingTop: "15px" }}>Описание</h3>
-							<div dangerouslySetInnerHTML={{ __html: movie.tmdb.overview }} />
+							<div dangerouslySetInnerHTML={{ __html: movie.overview }} />
 						</div>
 						<div className='movieReviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
-							<LoadingOverlay active={userInfoIsLoading & !movieIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={userInfoState === "pending" && !movieState === "pending"} spinner text='Загрузка...'>
 								<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
 								<button
 									className={"savePreviewButton"}
