@@ -20,7 +20,7 @@ from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpis
     UserEpisodeInSeasonSerializer, EpisodeSerializer, ShowSerializer, SeasonSerializer
 from users.models import UserFollow
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
-    SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE, TMDB_BACKDROP_PATH
+    SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE, TMDB_BACKDROP_PATH_PREFIX
 from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
     SEASON_RETRIEVE_200_EXAMPLE
 from utils.functions import update_fields_if_needed, get_tmdb_show_key, get_tmdb_episode_key, get_tmdb_season_key
@@ -94,7 +94,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'tmdb_original_name': tmdb_show['original_name'],
             'tmdb_name': tmdb_show['name'],
             'tmdb_episode_run_time': episode_run_time,
-            'tmdb_backdrop_path': TMDB_BACKDROP_PATH + tmdb_show['backdrop_path']
+            'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path']
             if tmdb_show['backdrop_path'] else '',
             'tmdb_release_date': tmdb_show['first_air_date'] if tmdb_show['first_air_date'] != "" else None
         }
@@ -253,9 +253,14 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         watched_episodes_count = 0
         not_watched_episodes_count = 0
 
+        try:
+            show = Show.objects.get(tmdb_id=kwargs.get('tmdb_id'))
+        except Show.DoesNotExist:
+            return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+
         for data in episodes:
             try:
-                episode = Episode.objects.get(tmdb_id=data['tmdb_id'])
+                episode = Episode.objects.get(tmdb_id=data['tmdb_id'], tmdb_season__tmdb_show=show)
             except Episode.DoesNotExist:
                 return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
@@ -308,13 +313,13 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                           action_type='score', action_result=serializer.validated_data.get('score'))
 
         if watched_episodes_count > 1:
-            ShowLog.objects.create(user=request.user, show_id=kwargs.get('tmdb_id'),
+            ShowLog.objects.create(user=request.user, show=show,
                                    action_type='episodes', action_result=watched_episodes_count)
         elif watched_episodes_count == 1 and first_watched_episode_log is not None:
             first_watched_episode_log.save()
 
         if not_watched_episodes_count > 1:
-            ShowLog.objects.create(user=request.user, show_id=kwargs.get('tmdb_id'),
+            ShowLog.objects.create(user=request.user, show=show,
                                    action_type='episodes', action_result=-not_watched_episodes_count)
         elif not_watched_episodes_count == 1 and first_not_watched_episode_log is not None:
             first_not_watched_episode_log.save()
@@ -500,7 +505,10 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     )
     def update(self, request, *args, **kwargs):
         try:
-            season = Season.objects.get(tmdb_show=kwargs.get('show_tmdb_id'), tmdb_season_number=kwargs.get('number'))
+            show = Show.objects.get(tmdb_id=kwargs.get('show_tmdb_id'))
+            season = Season.objects.get(tmdb_show=show, tmdb_season_number=kwargs.get('number'))
+        except Show.DoesNotExist:
+            return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
         except Season.DoesNotExist:
             return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
