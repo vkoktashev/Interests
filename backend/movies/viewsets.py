@@ -13,7 +13,8 @@ from rest_framework.viewsets import GenericViewSet
 from movies.models import Movie, UserMovie, Genre, MovieGenre
 from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer
 from users.models import UserFollow
-from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, CACHE_TIMEOUT, TMDB_BACKDROP_PATH
+from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, CACHE_TIMEOUT, \
+    TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX
 from utils.documentation import MOVIES_SEARCH_200_EXAMPLE, MOVIE_RETRIEVE_200_EXAMPLE
 from utils.functions import update_fields_if_needed, get_tmdb_movie_key
 from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER
@@ -75,6 +76,10 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             tmdb_cast_crew = get_cast_crew(kwargs.get('tmdb_id'))
             tmdb_movie['cast'] = tmdb_cast_crew.get('cast')
             tmdb_movie['crew'] = tmdb_cast_crew.get('crew')
+            if tmdb_movie['backdrop_path']:
+                tmdb_movie['backdrop_path'] = TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path']
+            if tmdb_movie['poster_path']:
+                tmdb_movie['poster_path'] = TMDB_POSTER_PATH_PREFIX + tmdb_movie['poster_path']
         except HTTPError as e:
             error_code = int(e.args[0].split(' ', 1)[0])
             if error_code == 404:
@@ -89,8 +94,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'tmdb_name': tmdb_movie.get('title'),
             'tmdb_runtime': tmdb_movie.get('runtime'),
             'tmdb_release_date': tmdb_movie.get('release_date') if tmdb_movie.get('release_date') != "" else None,
-            'tmdb_backdrop_path': TMDB_BACKDROP_PATH + tmdb_movie.get('backdrop_path')
-            if tmdb_movie.get('backdrop_path') else ''
+            'tmdb_backdrop_path': tmdb_movie.get('backdrop_path') if tmdb_movie.get('backdrop_path') else ''
         }
 
         with transaction.atomic():

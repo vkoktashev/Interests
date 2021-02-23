@@ -7,7 +7,7 @@ from django.db.models import Q
 
 from config.celery import app
 from movies.models import Movie
-from utils.constants import CACHE_TIMEOUT, LANGUAGE, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE, TMDB_BACKDROP_PATH
+from utils.constants import CACHE_TIMEOUT, LANGUAGE, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE, TMDB_BACKDROP_PATH_PREFIX
 from utils.functions import get_tmdb_movie_key, update_fields_if_needed
 
 
@@ -15,12 +15,12 @@ from utils.functions import get_tmdb_movie_key, update_fields_if_needed
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
         crontab(hour=UPDATE_DATES_HOUR, minute=UPDATE_DATES_MINUTE),
-        update_upcoming_movies_dates.s(),
+        update_upcoming_movies.s(),
     )
 
 
 @app.task
-def update_upcoming_movies_dates():
+def update_upcoming_movies():
     today_date = datetime.today().date()
 
     movies = Movie.objects \
@@ -37,7 +37,7 @@ def update_upcoming_movies_dates():
             'tmdb_name': tmdb_movie.get('title'),
             'tmdb_runtime': tmdb_movie.get('runtime'),
             'tmdb_release_date': tmdb_movie.get('release_date') if tmdb_movie.get('release_date') != "" else None,
-            'tmdb_backdrop_path': TMDB_BACKDROP_PATH + tmdb_movie.get('backdrop_path')
+            'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_movie.get('backdrop_path')
             if tmdb_movie.get('backdrop_path') else ''
         }
         update_fields_if_needed(movie, new_fields)

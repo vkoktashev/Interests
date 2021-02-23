@@ -8,7 +8,7 @@ from requests import HTTPError
 
 from config.celery import app
 from shows.models import Show, Episode
-from utils.constants import LANGUAGE, CACHE_TIMEOUT, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE, TMDB_BACKDROP_PATH
+from utils.constants import LANGUAGE, CACHE_TIMEOUT, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE, TMDB_BACKDROP_PATH_PREFIX
 from utils.functions import get_tmdb_show_key, update_fields_if_needed, get_tmdb_season_key
 
 
@@ -16,11 +16,11 @@ from utils.functions import get_tmdb_show_key, update_fields_if_needed, get_tmdb
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
         crontab(hour=UPDATE_DATES_HOUR, minute=UPDATE_DATES_MINUTE),
-        update_upcoming_shows_dates.s(),
+        update_upcoming_shows.s(),
     )
     sender.add_periodic_task(
         crontab(hour=UPDATE_DATES_HOUR, minute=UPDATE_DATES_MINUTE),
-        update_upcoming_episodes_dates.s(),
+        update_upcoming_episodes.s(),
     )
 
 
@@ -40,7 +40,7 @@ def update_upcoming_shows():
             'tmdb_original_name': tmdb_show['original_name'],
             'tmdb_name': tmdb_show['name'],
             'tmdb_episode_run_time': tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0,
-            'tmdb_backdrop_path': TMDB_BACKDROP_PATH + tmdb_show['backdrop_path']
+            'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path']
             if tmdb_show['backdrop_path'] else '',
             'tmdb_release_date': tmdb_show['first_air_date'] if tmdb_show['first_air_date'] != "" else None
         }
