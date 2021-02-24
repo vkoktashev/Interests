@@ -8,6 +8,7 @@ import ShowStore from "../../store/ShowStore";
 import { MDBIcon, MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
 import "./style.css";
+import { toast } from "react-toastify";
 
 import Rating from "react-rating";
 import StatusButtonGroup from "../Common/StatusButtonGroup";
@@ -21,7 +22,7 @@ import ScoreBlock from "../Common/ScoreBlock";
 const ShowPage = observer((props) => {
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
-	const { requestShow, show, showState, setShowStatus, setEpisodesStatus, requestShowUserInfo, userInfo, friendsInfo, userInfoState } = ShowStore;
+	const { requestShow, show, showState, setShowStatus, setEpisodesStatus, requestShowUserInfo, userInfo, friendsInfo, userInfoState, setStatusState } = ShowStore;
 
 	let { id } = useParams();
 	const [review, setReview] = useState("");
@@ -71,6 +72,16 @@ const ShowPage = observer((props) => {
 		// eslint-disable-next-line
 		[userInfo]
 	);
+
+	useEffect(() => {
+		if (showState.startsWith("error:")) toast.error(`Ошибка загрузки! ${showState}`);
+	}, [showState]);
+	useEffect(() => {
+		if (userInfoState.startsWith("error:")) toast.error(`Ошибка загрузки пользовательской информации! ${userInfoState}`);
+	}, [userInfoState]);
+	useEffect(() => {
+		if (setStatusState.startsWith("error:")) toast.error(`Ошибка сохранения! ${setStatusState}`);
+	}, [setStatusState]);
 
 	return (
 		<div>

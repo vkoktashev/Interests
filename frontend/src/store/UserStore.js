@@ -26,7 +26,7 @@ class User {
 		this.userState = "done";
 	};
 	requestUserFailure = (error) => {
-		this.userState = "error";
+		this.userState = "error: " + error;
 	};
 
 	requestUserLogs = async (userID, page, resultsOnPage) => {
@@ -39,7 +39,7 @@ class User {
 		this.userLogsState = "done";
 	};
 	requestLogsFailure = (error) => {
-		this.userLogsState = "error";
+		this.userLogsState = "error: " + error;
 	};
 
 	requestUserFriendsLogs = async (userID, page, resultsOnPage) => {
@@ -52,7 +52,7 @@ class User {
 		this.userFriendsLogsState = "done";
 	};
 	requestFriendsLogsFailure = (error) => {
-		this.userFriendsLogsState = "error";
+		this.userFriendsLogsState = "error: " + error;
 	};
 
 	setUserStatus = async (is_following, userID) => {
@@ -66,7 +66,7 @@ class User {
 		this.setUserStatusState = "done";
 	};
 	setUserStatusFailure = (error) => {
-		this.setUserStatusState = "error";
+		this.setUserStatusState = "error: " + error;
 	};
 }
 

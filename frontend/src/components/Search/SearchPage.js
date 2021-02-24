@@ -7,7 +7,7 @@ import { MDBRow, MDBCol, MDBContainer, MDBIcon, MDBFormInline } from "mdbreact";
 import "./style.css";
 
 import LoadingOverlay from "react-loading-overlay";
-
+import { toast } from "react-toastify";
 import CardGame from "./CardGame";
 import CardMovie from "./CardMovie";
 import CardShow from "./CardShow";
@@ -88,6 +88,19 @@ const SearchPage = observer((props) => {
 			</div>
 		);
 	}, [users]);
+
+	useEffect(() => {
+		if (gamesState.startsWith("error:")) toast.error(`Ошибка поиска игр! ${gamesState}`);
+	}, [gamesState]);
+	useEffect(() => {
+		if (moviesState.startsWith("error:")) toast.error(`Ошибка поиска фильмов! ${moviesState}`);
+	}, [moviesState]);
+	useEffect(() => {
+		if (showsState.startsWith("error:")) toast.error(`Ошибка поиска серилов! ${showsState}`);
+	}, [showsState]);
+	useEffect(() => {
+		if (usersState.startsWith("error:")) toast.error(`Ошибка поиска пользователей! ${usersState}`);
+	}, [usersState]);
 
 	return (
 		<div>

@@ -20,6 +20,7 @@ import Navbar from "./components/Navbar";
 import CalendarPage from "./components/Calendar/CalendarPage";
 import SettingsPage from "./components/Settings/SettingsPage";
 import UnwatchedPage from "./components/Unwatched/UnwatchedPage";
+import NotFoundPage from "./components/NotFoundPage";
 
 class Routes extends React.Component {
 	render() {
@@ -41,11 +42,7 @@ class Routes extends React.Component {
 					<Route exact path='/calendar' component={CalendarPage} />
 					<Route exact path='/settings' component={SettingsPage} />
 					<Route exact path='/unwatched' component={UnwatchedPage} />
-					<Route
-						render={function () {
-							return <h1>Not Found</h1>;
-						}}
-					/>
+					<Route component={NotFoundPage} />
 				</Switch>
 				<ToastContainer position='top-center' hideProgressBar newestOnTop closeOnClick autoClose={1500} />
 				<LoginForm />

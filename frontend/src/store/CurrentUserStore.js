@@ -8,13 +8,10 @@ class CurrentUser {
 	calendar = {};
 	settings = {};
 	unwatched = [];
-	calendarIsLoading = true;
-	settingsIsLoading = true;
-	unwatchedIsLoading = true;
-	calendarError = "";
-	settingsError = "";
-	unwatchedError = "";
-	saveSettingsStatus = "";
+	calendarState = "done";
+	settingsState = "done";
+	unwatchedState = "done";
+	saveSettingsState = "done";
 
 	constructor() {
 		makeAutoObservable(this);
@@ -22,62 +19,62 @@ class CurrentUser {
 
 	requestCalendar = async () => {
 		if (AuthStore.checkAuthorization()) {
-			this.calendarIsLoading = true;
-			this.calendarError = "";
-			userRequests.getUserCalendar(localStorage.getItem("token")).then((result) => {
-				if (result != null) {
-					this.calendar = result;
-				} else {
-					this.calendarError = "Ошибка загрузки календаря!";
-				}
-				this.calendarIsLoading = false;
-			});
+			this.calendarState = "pending";
+			userRequests.getUserCalendar(localStorage.getItem("token")).then(this.requestCalendarSuccess, this.requestCalendarFailure);
 		}
+	};
+	requestCalendarSuccess = (result) => {
+		this.calendar = result;
+		this.calendarState = "done";
+	};
+	requestCalendarFailure = (error) => {
+		this.calendarState = "error: " + error;
 	};
 
 	requestSettings = async () => {
 		if (AuthStore.checkAuthorization()) {
-			this.settingsIsLoading = true;
-			this.settingsError = "";
-			userRequests.getUserSettings(localStorage.getItem("token")).then((result) => {
-				if (result != null) {
-					this.settings = result;
-				} else {
-					this.settingsError = "Ошибка загрузки настроек!";
-				}
-				this.settingsIsLoading = false;
-			});
+			this.settingsState = "pending";
+			userRequests.getUserSettings(localStorage.getItem("token")).then(this.requestSettingsSuccess, this.requestSettingsFailure);
 		}
+	};
+	requestSettingsSuccess = (result) => {
+		this.settings = result;
+		this.settingsState = "done";
+	};
+	requestSettingsFailure = (error) => {
+		this.settingsState = "error: " + error;
 	};
 
 	requestUnwatched = async () => {
 		if (AuthStore.checkAuthorization()) {
-			this.unwatchedIsLoading = true;
-			this.unwatchedError = "";
-			showRequests.getUnwatchedEpisodes(localStorage.getItem("token")).then((result) => {
-				if (result != null) {
-					this.unwatched = result;
-				} else {
-					this.unwatchedError = "Ошибка загрузки списка серий!";
-				}
-				this.unwatchedIsLoading = false;
-			});
+			this.unwatchedState = "pending";
+			showRequests.getUnwatchedEpisodes(localStorage.getItem("token")).then(this.requestUnwatchedSuccess, this.requestUnwatchedFailure);
 		}
+	};
+	requestUnwatchedSuccess = (result) => {
+		this.unwatched = result;
+		this.unwatchedState = "done";
+	};
+	requestUnwatchedFailure = (error) => {
+		this.unwatchedState = "error: " + error;
 	};
 
 	patchSettings = async (settings) => {
 		if (AuthStore.checkAuthorization()) {
-			this.settingsIsLoading = true;
-			this.saveSettingsStatus = "";
-			userRequests.patchUserSettings(localStorage.getItem("token"), settings).then((result) => {
-				if (!result) {
-					this.saveSettingsStatus = "Ошибка сохренения настроек";
-				} else {
-					this.saveSettingsStatus = "Настройки сохранены!";
-				}
-				this.settingsIsLoading = false;
-			});
+			this.saveSettingsState = "pending";
+			userRequests.patchUserSettings(localStorage.getItem("token"), settings).then(this.patchSettingsSuccess, this.patchSettingsFailure);
 		}
+	};
+	patchSettingsReset = () => {
+		this.saveSettingsState = "done";
+	};
+	patchSettingsSuccess = (result) => {
+		this.unwatched = result;
+		this.saveSettingsState = "saved";
+		setTimeout(this.patchSettingsReset, 1000);
+	};
+	patchSettingsFailure = (error) => {
+		this.saveSettingsState = "error: " + error;
 	};
 }
 

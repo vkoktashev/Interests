@@ -27,7 +27,7 @@ class Game {
 		this.gameState = "done";
 	};
 	requestGameFailure = (error) => {
-		this.gameState = "error";
+		this.gameState = "error: " + error;
 	};
 
 	requestUserInfo = async (slug) => {
@@ -41,7 +41,7 @@ class Game {
 		this.userInfoState = "done";
 	};
 	requestUserInfoFailure = (error) => {
-		this.userInfoState = "error";
+		this.userInfoState = "error: " + error;
 	};
 
 	setGameStatus = async (userInfo) => {
@@ -54,7 +54,7 @@ class Game {
 		this.setStatusState = "done";
 	};
 	setGameStatusFailure = (error) => {
-		this.setStatusState = "error";
+		this.setStatusState = "error: " + error;
 	};
 }
 

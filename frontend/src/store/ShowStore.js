@@ -32,7 +32,7 @@ class Show {
 		this.showState = "done";
 	};
 	requestShowFailure = (error) => {
-		this.showState = "error";
+		this.showState = "error: " + error;
 	};
 
 	requestSeason = async (showID, seasonNumber) => {
@@ -45,7 +45,7 @@ class Show {
 		this.showState = "done";
 	};
 	requestSeasonFailure = (error) => {
-		this.showState = "error";
+		this.showState = "error: " + error;
 	};
 
 	requestSeasons = async (showID, seasonNumber) => {
@@ -62,7 +62,7 @@ class Show {
 		this.showSeasonsState[seasonNumber] = "done";
 	};
 	requestSeasonsFailure = (error, seasonNumber) => {
-		this.showSeasonsState[seasonNumber] = "error";
+		this.showSeasonsState[seasonNumber] = "error: " + error;
 	};
 
 	requestEpisode = async (showID, seasonNumber, episodeNumber) => {
@@ -75,7 +75,7 @@ class Show {
 		this.showState = "done";
 	};
 	requestEpisodeFailure = (error) => {
-		this.showState = "error";
+		this.showState = "error: " + error;
 	};
 
 	requestShowUserInfo = async (id) => {
@@ -90,7 +90,7 @@ class Show {
 		this.userInfoState = "done";
 	};
 	requestShowUserInfoFailure = (error) => {
-		this.userInfoState = "error";
+		this.userInfoState = "error: " + error;
 	};
 
 	requestSeasonUserInfo = async (showID, seasonID) => {
@@ -105,7 +105,7 @@ class Show {
 		this.userInfoState = "done";
 	};
 	requestSeasonUserInfoFailure = (error) => {
-		this.userInfoState = "error";
+		this.userInfoState = "error: " + error;
 	};
 
 	requestSeasonsUserInfo = async (showID, seasonID) => {
@@ -123,7 +123,7 @@ class Show {
 		this.showSeasonsUserInfo[seasonID] = { ...result.user_info, user_watched_show: result.user_watched_show, episodes: result.episodes_user_info, friends_info: result.friends_info };
 	};
 	requestSeasonsUserInfoFailure = (error, seasonID) => {
-		this.showSeasonsUserInfoState[seasonID] = "error";
+		this.showSeasonsUserInfoState[seasonID] = "error: " + error;
 	};
 
 	requestEpisodeUserInfo = async (showID, seasonID, episodeID) => {
@@ -138,7 +138,7 @@ class Show {
 		this.friendsInfo = result.friends_info;
 	};
 	requestEpisodeUserInfoFailure = (error) => {
-		this.userInfoState = "error";
+		this.userInfoState = "error: " + error;
 	};
 
 	setShowStatus = async (userInfo) => {
@@ -151,7 +151,7 @@ class Show {
 		this.setStatusState = "done";
 	};
 	setShowStatusFailure = (error) => {
-		this.setStatusState = "error";
+		this.setStatusState = "error: " + error;
 	};
 
 	setSeasonStatus = async (userInfo, showID, seasonNumber) => {

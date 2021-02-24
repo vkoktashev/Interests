@@ -28,7 +28,7 @@ class Search {
 		this.gamesState = "done";
 	};
 	searchGamesFailure = (error) => {
-		this.gamesState = "error";
+		this.gamesState = "error: " + error;
 	};
 
 	searchMovies = async (query, page) => {
@@ -40,7 +40,7 @@ class Search {
 		this.moviesState = "done";
 	};
 	searchMoviesFailure = (error) => {
-		this.moviesState = "error";
+		this.moviesState = "error: " + error;
 	};
 
 	searchShows = async (query, page) => {
@@ -52,7 +52,7 @@ class Search {
 		this.showsState = "done";
 	};
 	searchShowsFailure = (error) => {
-		this.showsState = "error";
+		this.showsState = "error: " + error;
 	};
 
 	searchUsers = async (query) => {
@@ -64,7 +64,7 @@ class Search {
 		this.usersState = "done";
 	};
 	searchUsersFailure = (error) => {
-		this.usersState = "error";
+		this.usersState = "error: " + error;
 	};
 }
 

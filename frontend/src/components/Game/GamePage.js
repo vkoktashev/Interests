@@ -8,6 +8,7 @@ import PagesStore from "../../store/PagesStore";
 import { MDBIcon, MDBInput } from "mdbreact";
 import "./style.css";
 import LoadingOverlay from "react-loading-overlay";
+import { toast } from "react-toastify";
 
 import Rating from "react-rating";
 import StatusButtonGroup from "../Common/StatusButtonGroup";
@@ -19,7 +20,7 @@ import ScoreBlock from "../Common/ScoreBlock";
  * Основная страница приложения
  */
 const GamePage = observer((props) => {
-	const { game, gameIsLoading, requestGame, setGameStatus, userInfo, friendsInfo, userInfoIsLoading, requestUserInfo } = GameStore;
+	const { game, gameState, requestGame, setGameStatus, userInfo, friendsInfo, userInfoState, requestUserInfo, setStatusState } = GameStore;
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
 
@@ -68,6 +69,16 @@ const GamePage = observer((props) => {
 		[userInfo]
 	);
 
+	useEffect(() => {
+		if (gameState.startsWith("error:")) toast.error(`Ошибка загрузки! ${gameState}`);
+	}, [gameState]);
+	useEffect(() => {
+		if (userInfoState.startsWith("error:")) toast.error(`Ошибка загрузки пользовательской информации! ${userInfoState}`);
+	}, [userInfoState]);
+	useEffect(() => {
+		if (setStatusState.startsWith("error:")) toast.error(`Ошибка сохранения! ${setStatusState}`);
+	}, [setStatusState]);
+
 	function setClearUI() {
 		setReview("");
 		setSpentTime("");
@@ -97,7 +108,7 @@ const GamePage = observer((props) => {
 	return (
 		<div>
 			<div className='bg' style={{ backgroundImage: `url(${game.background})` }} />
-			<LoadingOverlay active={gameIsLoading} spinner text='Загрузка...'>
+			<LoadingOverlay active={gameState === "pending"} spinner text='Загрузка...'>
 				<div className='gameContentPage'>
 					<div className='gameContentHeader'>
 						<div className='posterBlock'>
@@ -112,7 +123,7 @@ const GamePage = observer((props) => {
 								<p>Платформы: {game.platforms}</p>
 								<TimeToBeat hltbInfo={game.hltb} />
 							</div>
-							<LoadingOverlay active={userInfoIsLoading && !gameIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={userInfoState === "pending" && gameState !== "pending"} spinner text='Загрузка...'>
 								<Rating
 									stop={10}
 									emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
@@ -161,7 +172,7 @@ const GamePage = observer((props) => {
 						</div>
 						<div className='gameReviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
-							<LoadingOverlay active={userInfoIsLoading && !gameIsLoading} spinner text='Загрузка...'>
+							<LoadingOverlay active={userInfoState === "pending" && gameState !== "pending"} spinner text='Загрузка...'>
 								<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
 								<MDBInput
 									type='number'

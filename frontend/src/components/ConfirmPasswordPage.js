@@ -7,7 +7,7 @@ import AuthStore from "../store/AuthStore";
  * Основная страница приложения
  */
 const ConfirmPasswordPage = observer((props) => {
-	const { confirmPassword, confirmPasswordStatus } = AuthStore;
+	const { confirmPassword, confirmPasswordState } = AuthStore;
 
 	const [password, setPassword] = useState("");
 	const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -25,10 +25,10 @@ const ConfirmPasswordPage = observer((props) => {
 				}}
 				className='confirmPasswordForm'>
 				<p className='h4'>Обновить пароль</p>
-				<p className='note note-danger' hidden={!confirmPasswordStatus | (confirmPasswordStatus === "ok")}>
-					{confirmPasswordStatus}
+				<p className='note note-danger' hidden={!confirmPasswordState.startsWith("error:")}>
+					{confirmPasswordState}
 				</p>
-				<p className='note note-success' hidden={confirmPasswordStatus !== "ok"}>
+				<p className='note note-success' hidden={confirmPasswordState !== "done"}>
 					Пароль обновлен!
 				</p>
 

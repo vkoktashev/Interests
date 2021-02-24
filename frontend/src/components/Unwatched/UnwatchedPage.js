@@ -4,14 +4,19 @@ import AuthStore from "../../store/AuthStore";
 import CurrentUserStore from "../../store/CurrentUserStore";
 import ShowStore from "../../store/ShowStore";
 
+import { toast } from "react-toastify";
 import LoadingOverlay from "react-loading-overlay";
 import "./style.css";
 import ShowBlock from "./ShowBlock";
 
 const UnwatchedPage = observer((props) => {
 	const { loggedIn } = AuthStore;
-	const { unwatched, requestUnwatched, unwatchedIsLoading } = CurrentUserStore;
+	const { unwatched, requestUnwatched, unwatchedState } = CurrentUserStore;
 	const { setShowEpisodesStatus } = ShowStore;
+
+	useEffect(() => {
+		if (unwatchedState.startsWith("error:")) toast.error(`Ошибка загрузки! ${unwatchedState}`);
+	}, [unwatchedState]);
 
 	useEffect(
 		() => {
@@ -27,7 +32,7 @@ const UnwatchedPage = observer((props) => {
 			<div className='unwatchedPage'>
 				<div className='unwatchedBlock'>
 					<h1>Непросмотренные серии</h1>
-					<LoadingOverlay active={unwatchedIsLoading} spinner text='Загрузка...'>
+					<LoadingOverlay active={unwatchedState === "pending"} spinner text='Загрузка...'>
 						{unwatched.map((show) => (
 							<ShowBlock show={show} setShowEpisodeUserStatus={setShowEpisodesStatus} loggedIn={loggedIn} key={show.id} />
 						))}
