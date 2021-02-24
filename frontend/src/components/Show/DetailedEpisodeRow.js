@@ -4,7 +4,7 @@ import "./style.css";
 import Rating from "react-rating";
 import { MDBIcon } from "mdbreact";
 
-function DetailedEpisodeRow({ episode, showID, setShowEpisodeUserStatus, loggedIn, userInfo, onChangeStatus, checkAll, userWatchedShow }) {
+function DetailedEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, userInfo, onChangeStatus, checkAll, userWatchedShow }) {
 	let history = useHistory();
 	const [userRate, setUserRate] = useState(0);
 	const [isChecked, setIsChecked] = useState(false);
@@ -21,8 +21,7 @@ function DetailedEpisodeRow({ episode, showID, setShowEpisodeUserStatus, loggedI
 				onChangeStatus({
 					addEpisode: userRate > -1,
 					episode: {
-						season_number: episode.season_number,
-						episode_number: episode.episode_number,
+						tmdb_id: episode.id,
 						score: -1,
 					},
 				});
@@ -31,8 +30,7 @@ function DetailedEpisodeRow({ episode, showID, setShowEpisodeUserStatus, loggedI
 				onChangeStatus({
 					addEpisode: !(userRate > -1),
 					episode: {
-						season_number: episode.season_number,
-						episode_number: episode.episode_number,
+						tmdb_id: episode.id,
 						score: 0,
 					},
 				});
@@ -80,27 +78,7 @@ function DetailedEpisodeRow({ episode, showID, setShowEpisodeUserStatus, loggedI
 					onChange={(score) => {
 						setUserRate(score);
 						setIsChecked(score > -1);
-						/*if (typeof onChangeStatus!=='undefined')
-                                onChangeStatus({
-                                    addEpisode: (score>-1) !== (userRate > -1),
-                                    episode: {
-                                        season_number: episode.season_number,
-                                        episode_number: episode.episode_number,
-                                        score: (score>-1)?0:-1
-                                    } 
-                                });*/
-						setShowEpisodeUserStatus(
-							{
-								episodes: [
-									{
-										season_number: episode.season_number,
-										episode_number: episode.episode_number,
-										score: score,
-									},
-								],
-							},
-							showID
-						);
+						setEpisodeUserStatus({ episodes: [{ tmdb_id: episode.id, score: score }] }, showID);
 					}}
 				/>
 			</div>

@@ -1,5 +1,5 @@
 import { makeAutoObservable } from "mobx";
-import remotedev from "mobx-remotedev";
+//import remotedev from "mobx-remotedev";
 import AuthStore from "./AuthStore";
 import * as userRequests from "../services/userRequests";
 
@@ -7,57 +7,51 @@ class User {
 	user = { stats: {} };
 	userLogs = { log: [] };
 	userFriendsLogs = { log: [] };
-	userIsLoading = false;
-	userLogsIsLoading = false;
-	userFriendsLogsIsLoading = false;
-	userError = "";
-	userLogsError = "";
-	userFriendsLogsError = "";
+	userState = "done";
+	userLogsState = "done";
+	userFriendsLogsState = "done";
 
 	constructor() {
 		makeAutoObservable(this);
 	}
 
 	requestUser = async (username) => {
+		this.userState = "pending";
 		await AuthStore.checkAuthorization();
-		this.userIsLoading = true;
-		this.userError = "";
-		userRequests.getUserInfo(localStorage.getItem("token"), username).then((result) => {
-			if (result != null) {
-				this.user = result;
-			} else {
-				this.userError = "Профиль не найден!";
-			}
-			this.userIsLoading = false;
-		});
+		userRequests.getUserInfo(localStorage.getItem("token"), username).then(this.requestUserSuccess, this.requestUserFailure);
+	};
+	requestUserSuccess = (result) => {
+		this.user = result;
+		this.userState = "done";
+	};
+	requestUserFailure = (error) => {
+		this.userState = "error";
 	};
 
 	requestUserLogs = async (userID, page, resultsOnPage) => {
+		this.userLogsState = "pending";
 		await AuthStore.checkAuthorization();
-		this.userLogsIsLoading = true;
-		this.userLogsError = "";
-		userRequests.getUserLog(localStorage.getItem("token"), userID, page, resultsOnPage).then((result) => {
-			if (result != null) {
-				this.userLogs = result;
-			} else {
-				this.userLogsError = "Ошибка загрузки логов!";
-			}
-			this.userLogsIsLoading = false;
-		});
+		userRequests.getUserLog(localStorage.getItem("token"), userID, page, resultsOnPage).then(this.requestLogsSuccess, this.requestLogsFailure);
+	};
+	requestLogsSuccess = (result) => {
+		this.userLogs = result;
+		this.userLogsState = "done";
+	};
+	requestLogsFailure = (error) => {
+		this.userLogsState = "error";
 	};
 
 	requestUserFriendsLogs = async (userID, page, resultsOnPage) => {
+		this.userFriendsLogsState = "pending";
 		await AuthStore.checkAuthorization();
-		this.userFriendsLogsIsLoading = true;
-		this.userFriendsLogsError = "";
-		userRequests.getUserFriendsLog(localStorage.getItem("token"), userID, page, resultsOnPage).then((result) => {
-			if (result != null) {
-				this.userFriendsLogs = result;
-			} else {
-				this.userFriendsLogsError = "Ошибка загрузки активности друзей!";
-			}
-			this.userFriendsLogsIsLoading = false;
-		});
+		userRequests.getUserFriendsLog(localStorage.getItem("token"), userID, page, resultsOnPage).then(this.requestFriendsLogsSuccess, this.requestFriendsLogsFailure);
+	};
+	requestFriendsLogsSuccess = (result) => {
+		this.userFriendsLogs = result;
+		this.userFriendsLogsState = "done";
+	};
+	requestFriendsLogsFailure = (error) => {
+		this.userFriendsLogsState = "error";
 	};
 
 	setUserStatus = async (is_following, userID) => {
@@ -74,4 +68,5 @@ class User {
 }
 
 const UserStore = new User();
-export default remotedev(UserStore);
+//export default remotedev(UserStore, { name: "User" });
+export default UserStore;

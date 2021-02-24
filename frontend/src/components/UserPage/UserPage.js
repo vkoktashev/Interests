@@ -5,8 +5,7 @@ import AuthStore from "../../store/AuthStore";
 import UserStore from "../../store/UserStore";
 
 import { MDBRow, MDBCol, MDBContainer } from "mdbreact";
-import { PieChart, Pie, Legend, Cell, Tooltip } from "recharts";
-import { COLORS } from "./Colors";
+
 import "./style.css";
 
 import LoadingOverlay from "react-loading-overlay";
@@ -16,6 +15,7 @@ import MovieBlock from "./MovieBlock";
 import UserLogBlock from "./UserLogBlock";
 import CategoriesTab from "../Common/CategoriesTab";
 import ShowBlock from "./ShowBlock";
+import ChartBlock from "./ChartBlock";
 
 const LOG_ROWS_COUNT = 20;
 
@@ -23,13 +23,12 @@ const LOG_ROWS_COUNT = 20;
  * Основная страница приложения
  */
 const UserPage = observer((props) => {
-	const auth = AuthStore;
-	const { user, userIsLoading, requestUser, setUserStatus, requestUserLogs, userLogs, userLogsIsLoading, requestUserFriendsLogs, userFriendsLogs, userFriendsLogsIsLoading } = UserStore;
+	const { loggedIn, currentUser } = AuthStore;
+	const { user, userState, requestUser, setUserStatus, requestUserLogs, userLogs, userLogsState, requestUserFriendsLogs, userFriendsLogs, userFriendsLogsState } = UserStore;
 
 	let { userID } = useParams();
 	const [activeCategory, setActiveCategory] = useState("Профиль");
 	const [lastActivity, setLastActivity] = useState("");
-	const [chartData, setChartData] = useState([]);
 
 	useEffect(
 		() => {
@@ -42,24 +41,16 @@ const UserPage = observer((props) => {
 
 	useEffect(
 		() => {
-			if (auth.loggedIn) {
+			if (loggedIn) {
 				requestUserFriendsLogs(userID, 1, LOG_ROWS_COUNT);
 			}
 		},
 		// eslint-disable-next-line
-		[auth.loggedIn, userID]
+		[loggedIn, userID]
 	);
 
 	useEffect(() => {
-		setChartData([]);
 		document.title = "Профиль " + user.username;
-		if (user.stats.games) {
-			let newData = [];
-			if (user.stats.games.total_spent_time > 0) newData.push({ name: "Часов в играх", value: user.stats.games.total_spent_time });
-			if (user.stats.movies.total_spent_time > 0) newData.push({ name: "Часов в фильмах", value: user.stats.movies.total_spent_time });
-			if (user.stats.episodes.total_spent_time > 0) newData.push({ name: "Часов в сериалах", value: user.stats.episodes.total_spent_time });
-			setChartData(newData);
-		}
 		if (user.last_activity) {
 			let date = new Date(user.last_activity);
 			Date.now();
@@ -70,7 +61,7 @@ const UserPage = observer((props) => {
 	return (
 		<div>
 			<div className='bg searchBG' />
-			<LoadingOverlay active={userIsLoading} spinner text='Загрузка...'>
+			<LoadingOverlay active={userState === "pending"} spinner text='Загрузка...'>
 				<MDBContainer>
 					<MDBRow>
 						<MDBCol md='0.5'></MDBCol>
@@ -78,7 +69,7 @@ const UserPage = observer((props) => {
 							<h1>Информация о пользователе {user.username}</h1>
 							<p>Последняя активность {lastActivity}</p>
 							<button
-								hidden={auth.user.username === user.username}
+								hidden={currentUser.username === user.username}
 								className='addFriendButton'
 								onClick={() => {
 									setUserStatus({ is_following: user.is_followed ? false : true }, user.id);
@@ -96,22 +87,8 @@ const UserPage = observer((props) => {
 
 							<div hidden={activeCategory !== "Профиль"}>
 								<h4>Моя активность: </h4>
-								<LoadingOverlay active={userLogsIsLoading && !userIsLoading} spinner text='Загрузка активности...'>
-									<div hidden={chartData.length < 1}>
-										<PieChart width={350} height={250} hidden={chartData.length < 1}>
-											<Pie dataKey='value' data={chartData} cx='50%' cy='50%' outerRadius={80} fill='#8884d8' labelLine={true} label minAngle={5}>
-												{chartData.map((entry, index) => (
-													<Cell fill={COLORS[index]} key={index} />
-												))}
-											</Pie>
-											<Tooltip
-												itemStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }}
-												contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)", borderRadius: "10px" }}
-												cursor={false}
-											/>
-											<Legend verticalAlign='bottom' horizontalAlign='center' />
-										</PieChart>
-									</div>
+								<LoadingOverlay active={userLogsState === "pending" && !userState === "pending"} spinner text='Загрузка активности...'>
+									<ChartBlock stats={user.stats} />
 									<UserLogBlock logs={userLogs} onChangePage={(pageNumber) => requestUserLogs(userID, pageNumber, LOG_ROWS_COUNT)} />
 								</LoadingOverlay>
 							</div>
@@ -127,7 +104,7 @@ const UserPage = observer((props) => {
 							<div hidden={activeCategory !== "Друзья"}>
 								<FriendBlock users={user.followed_users ? user.followed_users : []} />
 								<h4>Активность друзей: </h4>
-								<LoadingOverlay active={userFriendsLogsIsLoading && !userIsLoading} spinner text='Загрузка активности...'>
+								<LoadingOverlay active={userFriendsLogsState === "pending" && !userState === "pending"} spinner text='Загрузка активности...'>
 									<UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => requestUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true} />
 								</LoadingOverlay>
 							</div>

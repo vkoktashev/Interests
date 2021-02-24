@@ -15,9 +15,9 @@ import Rating from "react-rating";
 const SeasonBlock = observer(({ showID, seasonNumber, onChangeStatus, userWatchedShow }) => {
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
-	const { requestShowSeasons, requestShowSeasonsUserInfo, setShowEpisodesStatus, setShowSeasonStatus } = ShowStore;
+	const { requestSeasons, requestSeasonsUserInfo, setEpisodesStatus, setSeasonStatus } = ShowStore;
 	const showSeason = computed(() => ShowStore.getShowSeason(seasonNumber)).get();
-	const showSeasonIsLoading = computed(() => ShowStore.getShowSeasonIsLoading(seasonNumber)).get();
+	const showSeasonState = computed(() => ShowStore.getShowSeasonState(seasonNumber)).get();
 	const showUserInfo = computed(() => ShowStore.getShowSeasonUserInfo(seasonNumber)).get();
 
 	let history = useHistory();
@@ -28,17 +28,17 @@ const SeasonBlock = observer(({ showID, seasonNumber, onChangeStatus, userWatche
 		() => {
 			setIsChecked(0);
 			setUserRate(0);
-			requestShowSeasons(showID, seasonNumber);
+			requestSeasons(showID, seasonNumber);
 		},
 		// eslint-disable-next-line
-		[showID, seasonNumber, requestShowSeasons]
+		[showID, seasonNumber, requestSeasons]
 	);
 
 	useEffect(
 		() => {
 			setIsChecked(0);
 			setUserRate(0);
-			if (loggedIn) requestShowSeasonsUserInfo(showID, seasonNumber);
+			if (loggedIn) requestSeasonsUserInfo(showID, seasonNumber);
 		},
 		// eslint-disable-next-line
 		[loggedIn, showID, seasonNumber]
@@ -61,7 +61,7 @@ const SeasonBlock = observer(({ showID, seasonNumber, onChangeStatus, userWatche
 	}
 
 	return (
-		<LoadingOverlay active={showSeasonIsLoading} spinner text='Загрузка...'>
+		<LoadingOverlay active={showSeasonState === "pending"} spinner text='Загрузка...'>
 			<div key={showSeason?.tmdb?.id} className='seasonBlock'>
 				<a
 					href={window.location.origin + "/show/" + showID + "/season/" + seasonNumber}
@@ -85,7 +85,7 @@ const SeasonBlock = observer(({ showID, seasonNumber, onChangeStatus, userWatche
 								openLoginForm();
 							} else {
 								setUserRate(score);
-								setShowSeasonStatus({ score: score }, showID, seasonNumber);
+								setSeasonStatus({ score: score }, showID, seasonNumber);
 							}
 						}}
 					/>
@@ -112,7 +112,7 @@ const SeasonBlock = observer(({ showID, seasonNumber, onChangeStatus, userWatche
 										showID={showID}
 										loggedIn={loggedIn}
 										userInfo={getEpisodeByNumber(showUserInfo?.episodes, episode?.episode_number)}
-										setShowEpisodeUserStatus={setShowEpisodesStatus}
+										setEpisodeUserStatus={setEpisodesStatus}
 										onChangeStatus={(status) => onChangeStatus(status)}
 										checkAll={isChecked}
 										userWatchedShow={userWatchedShow}

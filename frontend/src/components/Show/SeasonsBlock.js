@@ -15,7 +15,6 @@ function SeasonsBlock({ showID, seasons, setShowEpisodeUserStatus, userWatchedSh
 		}
 		setNeedHeader(newChangedEpisodes.length > 0);
 		setChangedEpisodes(newChangedEpisodes);
-		console.log(newChangedEpisodes);
 	}
 
 	return (

@@ -20,7 +20,7 @@ import ScoreBlock from "../Common/ScoreBlock";
 const EpisodePage = observer((props) => {
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
-	const { requestShowEpisode, show, showIsLoading, setShowEpisodesStatus, requestShowEpisodeUserInfo, userInfo, userInfoIsLoading, friendsInfo } = ShowStore;
+	const { requestEpisode, show, showState, setEpisodesStatus, requestEpisodeUserInfo, userInfo, userInfoState, friendsInfo } = ShowStore;
 
 	let history = useHistory();
 	let { show_id, season_number, episode_number } = useParams();
@@ -31,15 +31,15 @@ const EpisodePage = observer((props) => {
 		() => {
 			setReview("");
 			setUserRate(-1);
-			requestShowEpisode(show_id, season_number, episode_number);
+			requestEpisode(show_id, season_number, episode_number);
 		},
 		// eslint-disable-next-line
-		[show_id, season_number, episode_number, requestShowEpisode]
+		[show_id, season_number, episode_number, requestEpisode]
 	);
 
 	useEffect(
 		() => {
-			if (loggedIn) requestShowEpisodeUserInfo(show_id, season_number, episode_number);
+			if (loggedIn) requestEpisodeUserInfo(show_id, season_number, episode_number);
 			else {
 				setReview("");
 				setUserRate(-1);
@@ -68,7 +68,7 @@ const EpisodePage = observer((props) => {
 	return (
 		<div>
 			<div className='bg' style={{ backgroundImage: `url(${show.background})` }} />
-			<LoadingOverlay active={showIsLoading} spinner text='Загрузка...'>
+			<LoadingOverlay active={showState === "pending"} spinner text='Загрузка...'>
 				<div className='showContentPage'>
 					<div className='showContentHeader'>
 						<div className='showPosterBlock'>
@@ -99,7 +99,7 @@ const EpisodePage = observer((props) => {
 								</a>
 							</div>
 							<div hidden={!loggedIn | !userInfo?.user_watched_show}>
-								<LoadingOverlay active={userInfoIsLoading && !showIsLoading} spinner text='Загрузка...'>
+								<LoadingOverlay active={userInfoState === "pending" && !showState === "pending"} spinner text='Загрузка...'>
 									<Rating
 										start={-1}
 										stop={10}
@@ -115,7 +115,7 @@ const EpisodePage = observer((props) => {
 												openLoginForm();
 											} else {
 												setUserRate(score);
-												setShowEpisodesStatus({ episodes: [{ season_number: season_number, episode_number: episode_number, score: score }] }, show_id);
+												setEpisodesStatus({ episodes: [{ tmdb_id: show.id, score: score }] }, show_id);
 											}
 										}}
 									/>
@@ -127,18 +127,7 @@ const EpisodePage = observer((props) => {
 											if (!loggedIn) {
 												openLoginForm();
 											} else {
-												setShowEpisodesStatus(
-													{
-														episodes: [
-															{
-																season_number: season_number,
-																episode_number: episode_number,
-																review: document.getElementById("reviewSeasonInput").value,
-															},
-														],
-													},
-													show_id
-												);
+												setEpisodesStatus({ episodes: [{ tmdb_id: show.id, review: review }] }, show_id);
 											}
 										}}>
 										Сохранить
