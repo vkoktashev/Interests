@@ -168,7 +168,7 @@ class Show {
 					let seasons = [];
 					for (let episode in episodesList.episodes) if (seasons.indexOf(episodesList.episodes[episode].season_number) === -1) seasons.push(episodesList.episodes[episode].season_number);
 
-					for (let season in seasons) this.requestShowSeasonsUserInfo(showID, seasons[season]);
+					for (let season in seasons) this.requestSeasonsUserInfo(showID, seasons[season]);
 				}
 				this.setShowStatusSuccess();
 			}, this.setShowStatusFailure);
