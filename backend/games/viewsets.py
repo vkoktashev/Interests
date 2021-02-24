@@ -276,6 +276,7 @@ def parse_game(rawg_game):
         'background': rawg_game.get('background_image_additional')
         if rawg_game.get('background_image_additional')
         else rawg_game.get('background_image'),
+        'poster': rawg_game.get('background_image'),
         'release_date': '.'.join(reversed(rawg_game['released'].split('-')))
         if rawg_game.get('released') != "" else None,
     }
