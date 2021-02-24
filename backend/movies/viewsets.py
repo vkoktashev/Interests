@@ -228,6 +228,7 @@ def parse_movie(tmdb_movie):
             directors.append(i)
 
     new_movie = {
+        'id': tmdb_movie.get('id'),
         'name': tmdb_movie.get('title'),
         'original_name': tmdb_movie.get('original_title'),
         'overview': tmdb_movie.get('overview'),
