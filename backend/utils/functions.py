@@ -125,3 +125,7 @@ def get_tmdb_season_key(show_tmdb_id, season_number):
 
 def get_tmdb_episode_key(show_tmdb_id, season_number, episode_number):
     return f'show_{show_tmdb_id}_season_{season_number}_episode_{episode_number}'
+
+
+def objects_to_str(objects):
+    return ', '.join(obj['name'] for obj in objects)
