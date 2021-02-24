@@ -228,16 +228,16 @@ def parse_movie(tmdb_movie):
             directors.append(i)
 
     new_movie = {
-        'name': tmdb_movie['title'],
-        'original_name': tmdb_movie['original_title'],
-        'overview': tmdb_movie['overview'],
-        'runtime': tmdb_movie['runtime'],
+        'name': tmdb_movie.get('title'),
+        'original_name': tmdb_movie.get('original_title'),
+        'overview': tmdb_movie.get('overview'),
+        'runtime': tmdb_movie.get('runtime'),
         'release_date': '.'.join(reversed(tmdb_movie['release_date'].split('-')))
         if tmdb_movie.get('air_date') != "" else None,
-        'score': int(tmdb_movie['vote_average'] * 10) if tmdb_movie['vote_average'] else None,
-        'tagline': tmdb_movie['tagline'],
-        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path'] if tmdb_movie['backdrop_path'] else '',
-        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_movie['poster_path'] if tmdb_movie['poster_path'] else '',
+        'score': int(tmdb_movie['vote_average'] * 10) if tmdb_movie.get('vote_average') else None,
+        'tagline': tmdb_movie.get('tagline'),
+        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path'] if tmdb_movie.get('backdrop_path') else '',
+        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_movie['poster_path'] if tmdb_movie.get('poster_path') else '',
         'genres': objects_to_str(tmdb_movie['genres']),
         'production_companies': objects_to_str(tmdb_movie['production_companies']),
         'cast': objects_to_str(tmdb_movie['cast'][:5]),

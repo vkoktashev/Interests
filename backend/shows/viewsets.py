@@ -735,16 +735,16 @@ def translate_tmdb_status(tmdb_status):
 
 def parse_show(tmdb_show):
     new_show = {
-        'id': tmdb_show['id'],
-        'name': tmdb_show['name'],
-        'original_name': tmdb_show['original_name'],
-        'overview': tmdb_show['overview'],
+        'id': tmdb_show.get('id'),
+        'name': tmdb_show.get('name'),
+        'original_name': tmdb_show.get('original_name'),
+        'overview': tmdb_show.get('overview'),
         'episode_run_time': tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0,
-        'seasons_count': tmdb_show['number_of_seasons'],
-        'episodes_count': tmdb_show['number_of_episodes'],
+        'seasons_count': tmdb_show.get('number_of_seasons'),
+        'episodes_count': tmdb_show.get('number_of_episodes'),
         'score': int(tmdb_show['vote_average'] * 10) if tmdb_show['vote_average'] else None,
-        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path'] if tmdb_show['backdrop_path'] else '',
-        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_show['poster_path'] if tmdb_show['poster_path'] else '',
+        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path'] if tmdb_show.get('backdrop_path') else '',
+        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_show['poster_path'] if tmdb_show.get('poster_path') else '',
         'genres': objects_to_str(tmdb_show['genres']),
         'production_companies': objects_to_str(tmdb_show['production_companies']),
         'status': translate_tmdb_status(tmdb_show['status']),
@@ -760,14 +760,14 @@ def parse_show(tmdb_show):
 
 def parse_season(tmdb_season):
     new_season = {
-        'id': tmdb_season['id'],
-        'name': tmdb_season['name'],
-        'overview': tmdb_season['overview'],
-        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_season['poster_path'] if tmdb_season['poster_path'] else '',
+        'id': tmdb_season.get('id'),
+        'name': tmdb_season.get('name'),
+        'overview': tmdb_season.get('overview'),
+        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_season['poster_path'] if tmdb_season.get('poster_path') else '',
         'air_date': '.'.join(reversed(tmdb_season['air_date'].split('-')))
         if tmdb_season.get('air_date') != "" else None,
-        'season_number': tmdb_season['season_number'],
-        'show': tmdb_season['show'],
+        'season_number': tmdb_season.get('season_number'),
+        'show': tmdb_season.get('show'),
     }
 
     return new_season
@@ -775,15 +775,15 @@ def parse_season(tmdb_season):
 
 def parse_episode(tmdb_episode):
     new_episode = {
-        'id': tmdb_episode['id'],
-        'name': tmdb_episode['name'],
-        'overview': tmdb_episode['overview'],
-        'still_path': TMDB_POSTER_PATH_PREFIX + tmdb_episode['still_path'] if tmdb_episode['still_path'] else '',
+        'id': tmdb_episode.get('id'),
+        'name': tmdb_episode.get('name'),
+        'overview': tmdb_episode.get('overview'),
+        'still_path': TMDB_POSTER_PATH_PREFIX + tmdb_episode['still_path'] if tmdb_episode.get('still_path') else '',
         'air_date': '.'.join(reversed(tmdb_episode['air_date'].split('-')))
         if tmdb_episode.get('air_date') != "" else None,
-        'season_number': tmdb_episode['season_number'],
-        'episode_number': tmdb_episode['episode_number'],
-        'show': tmdb_episode['show'],
+        'season_number': tmdb_episode.get('season_number'),
+        'episode_number': tmdb_episode.get('episode_number'),
+        'show': tmdb_episode.get('show'),
     }
 
     return new_episode

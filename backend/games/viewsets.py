@@ -266,16 +266,16 @@ def parse_game(rawg_game):
     platforms = [obj['platform'] for obj in rawg_game['platforms']]
 
     new_game = {
-        'name': rawg_game['name'],
-        'slug': rawg_game['slug'],
-        'overview': rawg_game['description'],
-        'metacritic': rawg_game['metacritic'],
+        'name': rawg_game.get('name'),
+        'slug': rawg_game.get('slug'),
+        'overview': rawg_game.get('description'),
+        'metacritic': rawg_game.get('metacritic'),
         'genres': objects_to_str(rawg_game['genres']),
         'developers': objects_to_str(rawg_game['developers']),
         'platforms': objects_to_str(platforms),
-        'background': rawg_game['background_image_additional']
+        'background': rawg_game.get('background_image_additional')
         if rawg_game.get('background_image_additional')
-        else rawg_game['background_image'],
+        else rawg_game.get('background_image'),
         'release_date': '.'.join(reversed(rawg_game['released'].split('-')))
         if rawg_game.get('released') != "" else None,
     }
