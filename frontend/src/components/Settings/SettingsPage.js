@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 
 import LoadingOverlay from "react-loading-overlay";
 import "./style.css";
+import SettingsCheckbox from "./SettingsCheckbox";
 
 const SettingsPage = observer((props) => {
 	const { loggedIn, user } = AuthStore;
@@ -49,18 +50,9 @@ const SettingsPage = observer((props) => {
 					<h1 className='calendarHeader'>Настройки</h1>
 					<h3>Подписка на почтовые уведомления:</h3>
 					<LoadingOverlay active={settingsState === "pending" || saveSettingsState === "pending"} spinner text='Загрузка...'>
-						<div className='settingsRow' onClick={() => setGameNotifInput(!gameNotifInput)}>
-							<input type='checkbox' className='settingsCheckbox' id='gameNotificationsInput' checked={gameNotifInput} onChange={(event) => setGameNotifInput(event.target.checked)} />{" "}
-							релиз новых игр
-						</div>
-						<div className='settingsRow' onClick={() => setMovieNotifInput(!movieNotifInput)}>
-							<input type='checkbox' className='settingsCheckbox' id='movieNotificationsInput' checked={movieNotifInput} onChange={(event) => setMovieNotifInput(event.target.checked)} />{" "}
-							релиз новых фильмов
-						</div>
-						<div className='settingsRow' onClick={() => setShowNotifInput(!showNotifInput)}>
-							<input type='checkbox' className='settingsCheckbox' id='episodeNotificationsInput' checked={showNotifInput} onChange={(event) => setShowNotifInput(event.target.checked)} />{" "}
-							релиз новых серий сериалов
-						</div>
+						<SettingsCheckbox text={" релиз новых игр"} checked={gameNotifInput} onChange={(checked) => setGameNotifInput(checked)} />
+						<SettingsCheckbox text={" релиз новых фильмов"} checked={movieNotifInput} onChange={(checked) => setMovieNotifInput(checked)} />
+						<SettingsCheckbox text={" релиз новых серий сериалов"} checked={showNotifInput} onChange={(checked) => setShowNotifInput(checked)} />
 						<button
 							className='saveSettingsButton'
 							disabled={!loggedIn}

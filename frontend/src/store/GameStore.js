@@ -18,8 +18,8 @@ class Game {
 	}
 
 	requestGame = async (id) => {
-		await AuthStore.checkAuthorization();
 		this.gameState = "pending";
+		await AuthStore.checkAuthorization();
 		gameRequests.getGame(localStorage.getItem("token"), id).then(this.requestGameSuccess, this.requestGameFailure);
 	};
 	requestGameSuccess = (result) => {
@@ -27,12 +27,13 @@ class Game {
 		this.gameState = "done";
 	};
 	requestGameFailure = (error) => {
-		this.gameState = "error: " + error;
+		console.log(error.response.statusText);
+		this.gameState = "error: " + error.response.statusText;
 	};
 
 	requestUserInfo = async (slug) => {
-		await AuthStore.checkAuthorization();
 		this.userInfoState = "pending";
+		await AuthStore.checkAuthorization();
 		gameRequests.getGameUserInfo(localStorage.getItem("token"), slug).then(this.requestUserInfoSuccess, this.requestUserInfoFailure);
 	};
 	requestUserInfoSuccess = (result) => {

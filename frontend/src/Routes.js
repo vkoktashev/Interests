@@ -44,7 +44,7 @@ class Routes extends React.Component {
 					<Route exact path='/unwatched' component={UnwatchedPage} />
 					<Route component={NotFoundPage} />
 				</Switch>
-				<ToastContainer position='top-center' hideProgressBar newestOnTop closeOnClick autoClose={1500} />
+				<ToastContainer position='top-center' hideProgressBar newestOnTop closeOnClick autoClose={3000} />
 				<LoginForm />
 				<RegistrationForm />
 				<ResetPasswordForm />

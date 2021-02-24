@@ -84,24 +84,24 @@ const MoviePage = observer((props) => {
 
 	return (
 		<div>
-			<div className='bg' style={{ backgroundImage: `url(${movie.background})` }} />
+			<div className='bg' style={{ backgroundImage: `url(${movie.backdrop_path})` }} />
 			<LoadingOverlay active={movieState === "pending"} spinner text='Загрузка...'>
 				<div className='movieContentPage'>
 					<div className='movieContentHeader'>
 						<div className='moviePosterBlock'>
-							<img src={"http://image.tmdb.org/t/p/w600_and_h900_bestv2" + movie.poster} className='img-fluid' alt='' />
+							<img src={movie.poster_path} className='img-fluid' alt='' />
 						</div>
 						<div className='movieInfoBlock'>
 							<h1 className='header'>{movie.name}</h1>
-							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{movie.originalName}</h5>
+							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{movie.original_name}</h5>
 							<div className='mainInfo'>
-								<p>Дата релиза: {movie.date}</p>
+								<p>Дата релиза: {movie.release_date}</p>
 								<p>Продолжительность (мин): {movie.runtime}</p>
 								<p>Жанр: {movie.genres}</p>
-								<p>Компания: {movie.companies}</p>
+								<p>Компания: {movie.production_companies}</p>
 								<p>Слоган: {movie.tagline}</p>
 								<p>В ролях: {movie.cast}</p>
-								<p>Режиссер: {movie.director}</p>
+								<p>Режиссер: {movie.directors}</p>
 							</div>
 							<LoadingOverlay active={userInfoState === "pending" && !movieState === "pending"} spinner text='Загрузка...'>
 								<Rating
@@ -140,7 +140,7 @@ const MoviePage = observer((props) => {
 									}}
 								/>
 							</LoadingOverlay>
-							<ScoreBlock score={movie.tmdbScore} text='TMDB score' className='scoreBlock' />
+							<ScoreBlock score={movie.score} text='TMDB score' className='scoreBlock' />
 						</div>
 					</div>
 					<div className='movieContentBody'>
@@ -156,11 +156,7 @@ const MoviePage = observer((props) => {
 									className={"savePreviewButton"}
 									disabled={!loggedIn | (userStatus === "Не смотрел")}
 									onClick={() => {
-										if (!loggedIn) {
-											openLoginForm();
-										} else {
-											setMovieStatus({ review: document.getElementById("reviewInput").value });
-										}
+										setMovieStatus({ review: review });
 									}}>
 									Сохранить
 								</button>

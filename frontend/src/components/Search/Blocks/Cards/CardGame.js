@@ -15,9 +15,7 @@ function CardGame({ game }) {
 
 	return (
 		<div className='searchCardGame'>
-			<div className='searchCardGameImage' style={{ backgroundImage: `url(${game.background_image})` }}>
-				{" "}
-			</div>
+			<div className='searchCardGameImage' style={{ backgroundImage: `url(${game.background_image})` }} />
 			<div className='searchCardGameText'>
 				<div className='searchCardGameName'>
 					<a

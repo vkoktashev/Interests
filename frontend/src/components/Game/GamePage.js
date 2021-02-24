@@ -5,16 +5,16 @@ import GameStore from "../../store/GameStore";
 import AuthStore from "../../store/AuthStore";
 import PagesStore from "../../store/PagesStore";
 
-import { MDBIcon, MDBInput } from "mdbreact";
+import { MDBInput } from "mdbreact";
 import "./style.css";
 import LoadingOverlay from "react-loading-overlay";
 import { toast } from "react-toastify";
 
-import Rating from "react-rating";
 import StatusButtonGroup from "../Common/StatusButtonGroup";
 import FriendsActivity from "../Common/FriendsActivity";
 import TimeToBeat from "./TimeToBeat";
 import ScoreBlock from "../Common/ScoreBlock";
+import Rating from "../Common/Rating";
 
 /**
  * Основная страница приложения
@@ -118,31 +118,21 @@ const GamePage = observer((props) => {
 							<h1 className='header'>{game.name}</h1>
 							<div className='mainInfo'>
 								<p>Разработчики: {game.developers}</p>
-								<p>Дата релиза: {game.date}</p>
+								<p>Дата релиза: {game.release_date}</p>
 								<p>Жанр: {game.genres}</p>
 								<p>Платформы: {game.platforms}</p>
 								<TimeToBeat hltbInfo={game.hltb} />
 							</div>
 							<LoadingOverlay active={userInfoState === "pending" && gameState !== "pending"} spinner text='Загрузка...'>
 								<Rating
-									stop={10}
-									emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
-									fullSymbol={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-										<MDBIcon icon='star' size='1x' style={{ fontSize: "25px" }} title={n} />
-									))}
 									initialRating={userRate}
 									readonly={!loggedIn | (userStatus === "Не играл")}
 									onChange={(score) => {
-										if (!loggedIn) {
-											openLoginForm();
-										} else {
-											setUserRate(score);
-											setGameStatus({ score: score });
-										}
+										setUserRate(score);
+										setGameStatus({ score: score });
 									}}
-									style={{ marginBottom: "10px" }}
-								/>{" "}
-								<br />
+									size='1.5rem'
+								/>
 								<StatusButtonGroup
 									statuses={["Не играл", "Буду играть", "Играю", "Дропнул", "Прошел"]}
 									activeColor='#4527a0'
@@ -190,7 +180,7 @@ const GamePage = observer((props) => {
 										if (!loggedIn) {
 											openLoginForm();
 										} else {
-											setGameStatus({ review: document.getElementById("reviewInput").value, spent_time: document.getElementById("spentTimeInput").value });
+											setGameStatus({ review: review, spent_time: spentTime });
 										}
 									}}>
 									Сохранить

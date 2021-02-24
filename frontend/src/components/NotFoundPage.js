@@ -8,7 +8,7 @@ function NotFoundPage() {
 
 	useEffect(
 		() => {
-			setTimeout(() => setAngle(angle + 1), 150);
+			setTimeout(() => setAngle(angle + 1), 100);
 		},
 		// eslint-disable-next-line
 		[angle]
@@ -16,9 +16,11 @@ function NotFoundPage() {
 
 	return (
 		<div className='bg'>
-			<div className='notFound' style={{ transform: `rotate(${angle}deg)` }}>
+			<div className='notFound'>
 				<p style={{ fontSize: "3rem" }}>Страница не найдена!</p>
-				<img src='images/wrongPage.png' alt='Картинка' style={{ width: "500px" }} />
+				<div style={{ transform: `rotate(${angle}deg)` }}>
+					<img src='images/wrongPage.png' alt='Картинка' style={{ width: "500px", maxWidth: "80%" }} />
+				</div>
 			</div>
 		</div>
 	);
