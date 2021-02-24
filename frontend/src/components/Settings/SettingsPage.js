@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import { observer } from "mobx-react";
 import AuthStore from "../../store/AuthStore";
 import CurrentUserStore from "../../store/CurrentUserStore";
+import { toast } from "react-toastify";
 
 import LoadingOverlay from "react-loading-overlay";
 import "./style.css";
 
 const SettingsPage = observer((props) => {
 	const { loggedIn, user } = AuthStore;
-	const { settings, requestSettings, patchSettings, settingsIsLoading } = CurrentUserStore;
+	const { settings, requestSettings, patchSettings, settingsState, saveSettingsState } = CurrentUserStore;
 
 	const [gameNotifInput, setGameNotifInput] = useState(false);
 	const [movieNotifInput, setMovieNotifInput] = useState(false);
@@ -21,6 +22,14 @@ const SettingsPage = observer((props) => {
 		// eslint-disable-next-line
 		[loggedIn]
 	);
+
+	useEffect(() => {
+		if (saveSettingsState === "saved") toast.success("Настройки сохранены!");
+		if (saveSettingsState.startsWith("error:")) toast.error(`Ошибка сохранения! ${saveSettingsState}`);
+	}, [saveSettingsState]);
+	useEffect(() => {
+		if (settingsState.startsWith("error:")) toast.error(`Ошибка загрузки! ${settingsState}`);
+	}, [settingsState]);
 
 	useEffect(
 		() => {
@@ -39,7 +48,7 @@ const SettingsPage = observer((props) => {
 				<div className='settingsBlock'>
 					<h1 className='calendarHeader'>Настройки</h1>
 					<h3>Подписка на почтовые уведомления:</h3>
-					<LoadingOverlay active={settingsIsLoading} spinner text='Загрузка...'>
+					<LoadingOverlay active={settingsState === "pending" || saveSettingsState === "pending"} spinner text='Загрузка...'>
 						<div className='settingsRow' onClick={() => setGameNotifInput(!gameNotifInput)}>
 							<input type='checkbox' className='settingsCheckbox' id='gameNotificationsInput' checked={gameNotifInput} onChange={(event) => setGameNotifInput(event.target.checked)} />{" "}
 							релиз новых игр

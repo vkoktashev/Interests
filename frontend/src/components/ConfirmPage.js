@@ -1,12 +1,14 @@
 import React, { useEffect } from "react";
 import { observer } from "mobx-react";
+import { useHistory } from "react-router-dom";
 import AuthStore from "../store/AuthStore";
 
 /**
  * Основная страница приложения
  */
 const ConfirmPage = observer((props) => {
-	const { confirmEmailRequest } = AuthStore;
+	const { confirmEmail, confirmEmailState } = AuthStore;
+	let history = useHistory();
 
 	let search = window.location.search;
 	let params = new URLSearchParams(search);
@@ -15,13 +17,27 @@ const ConfirmPage = observer((props) => {
 
 	useEffect(
 		() => {
-			confirmEmailRequest(uid64, token);
+			confirmEmail(uid64, token);
 		},
 		// eslint-disable-next-line
 		[]
 	);
 
-	return <div className='bg'></div>;
+	useEffect(
+		() => {
+			if (confirmEmailState.startsWith("error")) history.push(`/404page`);
+		},
+		// eslint-disable-next-line
+		[confirmEmailState]
+	);
+
+	return (
+		<div className='bg'>
+			<div hidden={confirmEmailState !== "done"} className='confirmEmailSuccess'>
+				Ваша почта подтверждена!
+			</div>
+		</div>
+	);
 });
 
 export default ConfirmPage;

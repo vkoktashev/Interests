@@ -68,3 +68,18 @@
 	font-size: 1em !important;
 	font-weight: 400 !important;
 }
+
+.confirmEmailSuccess,
+.confirmEmailFailure {
+	margin-top: 3rem;
+	margin-left: 3rem;
+	font-size: 3rem;
+}
+
+.notFound {
+	position: absolute;
+	top: 20%;
+	left: 30%;
+	margin-right: -50%;
+	text-align: center;
+}

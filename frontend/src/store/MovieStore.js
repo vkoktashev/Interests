@@ -27,7 +27,7 @@ class Movie {
 		this.movieState = "done";
 	};
 	requestMovieFailure = (error) => {
-		this.movieState = "error";
+		this.movieState = "error: " + error;
 	};
 
 	requestUserInfo = async (id) => {
@@ -41,7 +41,7 @@ class Movie {
 		this.userInfoState = "done";
 	};
 	requestUserInfoFailure = (error) => {
-		this.userInfoState = "error";
+		this.userInfoState = "error: " + error;
 	};
 
 	setMovieStatus = async (userInfo) => {
@@ -54,7 +54,7 @@ class Movie {
 		this.setStatusState = "done";
 	};
 	setMovieStatusFailure = (error) => {
-		this.setStatusState = "error";
+		this.setStatusState = "error: " + error;
 	};
 }
 

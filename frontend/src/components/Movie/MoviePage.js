@@ -8,6 +8,7 @@ import PagesStore from "../../store/PagesStore";
 import { MDBIcon, MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
 import "./style.css";
+import { toast } from "react-toastify";
 
 import Rating from "react-rating";
 import StatusButtonGroup from "../Common/StatusButtonGroup";
@@ -18,7 +19,7 @@ import ScoreBlock from "../Common/ScoreBlock";
  * Основная страница приложения
  */
 const MoviePage = observer((props) => {
-	const { movie, movieState, requestMovie, setMovieStatus, userInfo, friendsInfo, userInfoState, requestUserInfo } = MovieStore;
+	const { movie, movieState, requestMovie, setMovieStatus, userInfo, friendsInfo, userInfoState, requestUserInfo, setStatusState } = MovieStore;
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
 
@@ -70,6 +71,16 @@ const MoviePage = observer((props) => {
 		// eslint-disable-next-line
 		[userInfo]
 	);
+
+	useEffect(() => {
+		if (movieState.startsWith("error:")) toast.error(`Ошибка загрузки! ${movieState}`);
+	}, [movieState]);
+	useEffect(() => {
+		if (userInfoState.startsWith("error:")) toast.error(`Ошибка загрузки пользовательской информации! ${userInfoState}`);
+	}, [userInfoState]);
+	useEffect(() => {
+		if (setStatusState.startsWith("error:")) toast.error(`Ошибка сохранения! ${setStatusState}`);
+	}, [setStatusState]);
 
 	return (
 		<div>

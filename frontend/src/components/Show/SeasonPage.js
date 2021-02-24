@@ -9,6 +9,7 @@ import { MDBIcon, MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
 import { AreaChart, linearGradient, XAxis, Tooltip, YAxis, Area, ResponsiveContainer } from "recharts";
 import "./style.css";
+import { toast } from "react-toastify";
 
 import Rating from "react-rating";
 import FriendsActivity from "../Common/FriendsActivity";
@@ -19,7 +20,7 @@ import DetailedEpisodeRow from "./DetailedEpisodeRow";
  */
 const ShowPage = observer((props) => {
 	const { loggedIn } = AuthStore;
-	const { requestSeason, show, showState, setSeasonStatus, setEpisodesStatus, requestSeasonUserInfo, userInfo, userInfoState, friendsInfo } = ShowStore;
+	const { requestSeason, show, showState, setSeasonStatus, setEpisodesStatus, requestSeasonUserInfo, userInfo, userInfoState, friendsInfo, setStatusState } = ShowStore;
 	const { openLoginForm } = PagesStore;
 
 	let history = useHistory();
@@ -51,7 +52,7 @@ const ShowPage = observer((props) => {
 	);
 
 	useEffect(() => {
-		document.title = show.showName + " - " + show.name;
+		document.title = show.show_name + " - " + show.name;
 	}, [show]);
 
 	useEffect(() => {
@@ -77,6 +78,16 @@ const ShowPage = observer((props) => {
 		// eslint-disable-next-line
 		[userInfo]
 	);
+
+	useEffect(() => {
+		if (showState.startsWith("error:")) toast.error(`Ошибка загрузки! ${showState}`);
+	}, [showState]);
+	useEffect(() => {
+		if (userInfoState.startsWith("error:")) toast.error(`Ошибка загрузки пользовательской информации! ${userInfoState}`);
+	}, [userInfoState]);
+	useEffect(() => {
+		if (setStatusState.startsWith("error:")) toast.error(`Ошибка сохранения! ${setStatusState}`);
+	}, [setStatusState]);
 
 	function getEpisodeByNumber(episodes, number) {
 		for (let episode in episodes) if (episodes[episode].episode_number === number) return episodes[episode];

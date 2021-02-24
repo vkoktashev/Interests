@@ -6,6 +6,7 @@ import AuthStore from "../../store/AuthStore";
 import ShowStore from "../../store/ShowStore";
 import PagesStore from "../../store/PagesStore";
 
+import { toast } from "react-toastify";
 import { MDBIcon, MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
 import "./style.css";
@@ -20,7 +21,7 @@ import ScoreBlock from "../Common/ScoreBlock";
 const EpisodePage = observer((props) => {
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
-	const { requestEpisode, show, showState, setEpisodesStatus, requestEpisodeUserInfo, userInfo, userInfoState, friendsInfo } = ShowStore;
+	const { requestEpisode, show, showState, setEpisodesStatus, requestEpisodeUserInfo, userInfo, userInfoState, friendsInfo, setStatusState } = ShowStore;
 
 	let history = useHistory();
 	let { show_id, season_number, episode_number } = useParams();
@@ -64,6 +65,16 @@ const EpisodePage = observer((props) => {
 		// eslint-disable-next-line
 		[userInfo]
 	);
+
+	useEffect(() => {
+		if (showState.startsWith("error:")) toast.error(`Ошибка загрузки! ${showState}`);
+	}, [showState]);
+	useEffect(() => {
+		if (userInfoState.startsWith("error:")) toast.error(`Ошибка загрузки пользовательской информации! ${userInfoState}`);
+	}, [userInfoState]);
+	useEffect(() => {
+		if (setStatusState.startsWith("error:")) toast.error(`Ошибка сохранения! ${setStatusState}`);
+	}, [setStatusState]);
 
 	return (
 		<div>

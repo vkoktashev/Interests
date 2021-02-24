@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { observer } from "mobx-react";
 import AuthStore from "../../store/AuthStore";
 import PagesStore from "../../store/PagesStore";
@@ -11,11 +11,15 @@ import "./style.css";
  * @param {number} Параметр, при изменении которого компонент открывается
  */
 const LoginForm = observer((props) => {
-	const { tryAuth, authError } = AuthStore;
+	const { tryAuth, authState } = AuthStore;
 	const { LoginFormIsOpen, closeLoginForm, openResetPasswordForm } = PagesStore;
 
 	const [password, setPassword] = useState("");
 	const [login, setLogin] = useState("");
+
+	useEffect(() => {
+		if (authState === "done") closeLoginForm();
+	}, [authState, closeLoginForm]);
 
 	return (
 		<MDBModal isOpen={LoginFormIsOpen} toggle={closeLoginForm} size='sm' centered>
@@ -26,13 +30,11 @@ const LoginForm = observer((props) => {
 							<form
 								onSubmit={(event) => {
 									event.preventDefault();
-									tryAuth(login, password).then((res) => {
-										if (res) closeLoginForm();
-									});
+									tryAuth(login, password);
 								}}>
 								<p className='h4 text-center mb-4'>Войти</p>
-								<p className='note note-danger' hidden={!authError}>
-									Неверный логин или пароль!
+								<p className='note note-danger' hidden={!authState.startsWith("error:")}>
+									{authState}
 								</p>
 
 								<label htmlFor='loginInput' className='grey-text'>

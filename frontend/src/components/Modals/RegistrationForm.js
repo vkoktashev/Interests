@@ -11,7 +11,7 @@ import "./style.css";
  * @param {number} Параметр, при изменении которого компонент открывается
  */
 const RegistrationForm = observer((props) => {
-	const { register, registrateErrors, user } = AuthStore;
+	const { register, registrateState, user } = AuthStore;
 	const { RegistrateFormIsOpen, closeRegistrateForm } = PagesStore;
 
 	const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -26,10 +26,8 @@ const RegistrationForm = observer((props) => {
 					<MDBRow>
 						<MDBCol>
 							<form>
-								<p className='note note-danger' hidden={registrateErrors.length < 1}>
-									{registrateErrors.map((error) => (
-										<div>{error}</div>
-									))}
+								<p className='note note-danger' hidden={!registrateState.startsWith("error:")}>
+									{registrateState}
 								</p>
 								<p className='note note-success' hidden={user.email === ""}>
 									{user.login}, добро пожаловать! Осталось только подтвердить вашу почту

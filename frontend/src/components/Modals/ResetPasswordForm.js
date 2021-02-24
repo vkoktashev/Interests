@@ -11,7 +11,7 @@ import "./style.css";
  * @param {number} Параметр, при изменении которого компонент открывается
  */
 const ResetPasswordForm = observer((props) => {
-	const { resetPassword, resetPasswordStatus } = AuthStore;
+	const { resetPassword, resetPasswordState } = AuthStore;
 	const { ResetPasswordFormIsOpen, closeResetPasswordForm } = PagesStore;
 
 	const [email, setEmail] = useState("");
@@ -28,10 +28,10 @@ const ResetPasswordForm = observer((props) => {
 									resetPassword(email);
 								}}>
 								<p className='h4 text-center mb-4'>Сбросить пароль</p>
-								<p className='note note-danger' hidden={!resetPasswordStatus | (resetPasswordStatus === "ok")}>
-									{resetPasswordStatus}
+								<p className='note note-danger' hidden={!resetPasswordState.startsWith("error:")}>
+									{resetPasswordState}
 								</p>
-								<p className='note note-success' hidden={resetPasswordStatus !== "ok"}>
+								<p className='note note-success' hidden={resetPasswordState !== "done"}>
 									На вашу почту отправлено письмо
 								</p>
 

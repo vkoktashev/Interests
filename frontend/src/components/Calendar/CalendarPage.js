@@ -3,6 +3,7 @@ import { observer } from "mobx-react";
 import CurrentUserStore from "../../store/CurrentUserStore";
 import AuthStore from "../../store/AuthStore";
 
+import { toast } from "react-toastify";
 import Calendar from "react-calendar";
 import LoadingOverlay from "react-loading-overlay";
 import "react-calendar/dist/Calendar.css";
@@ -12,7 +13,7 @@ import "./style.css";
 
 const CalendarPage = observer((props) => {
 	const { loggedIn } = AuthStore;
-	const { calendar, calendarIsLoading, requestCalendar } = CurrentUserStore;
+	const { calendar, calendarState, requestCalendar } = CurrentUserStore;
 
 	const [value, onChange] = useState(new Date());
 	const [currentDay, setCurrentDay] = useState({});
@@ -22,6 +23,10 @@ const CalendarPage = observer((props) => {
 			requestCalendar();
 		}
 	}, [loggedIn, requestCalendar]);
+
+	useEffect(() => {
+		if (calendarState.startsWith("error:")) toast.error(`Ошибка загрузки! ${calendarState}`);
+	}, [calendarState]);
 
 	useEffect(() => {
 		if (calendar) {
@@ -56,7 +61,7 @@ const CalendarPage = observer((props) => {
 			<div className='calendarPage'>
 				<div className='calendarBlock'>
 					<h1 className='calendarHeader'>Календарь релизов</h1>
-					<LoadingOverlay active={calendarIsLoading} spinner text='Загрузка...'>
+					<LoadingOverlay active={calendarState === "pending"} spinner text='Загрузка...'>
 						{/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? <DayInfo day={currentDay} date={value} /> : ""}
 						<Calendar className='calendar' onChange={onChange} value={value} defaultView='month' minDetail='decade' locale='ru-RU' minDate={new Date()} tileContent={dateToTile} />
 						{/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? "" : <DayInfo day={currentDay} date={value} />}
