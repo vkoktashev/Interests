@@ -8,10 +8,10 @@ import "./style.css";
 
 import LoadingOverlay from "react-loading-overlay";
 import { toast } from "react-toastify";
-import CardGame from "./CardGame";
-import CardMovie from "./CardMovie";
-import CardShow from "./CardShow";
-import CardUser from "../Common/CardUser";
+import GamesBlock from "./Blocks/GamesBlock";
+import MoviesBlock from "./Blocks/MoviesBlock";
+import ShowsBlock from "./Blocks/ShowsBlock";
+import UsersBlock from "./Blocks/UsersBlock";
 import CategoriesTab from "../Common/CategoriesTab";
 
 /**
@@ -23,10 +23,6 @@ const SearchPage = observer((props) => {
 	let history = useHistory();
 	let { query } = useParams();
 	const [queryText, setQueryText] = useState("");
-	const [gamesCards, setGamesCards] = useState("");
-	const [moviesCards, setMoviesCards] = useState("");
-	const [showsCards, setShowsCards] = useState("");
-	const [usersCards, setUsersCards] = useState("");
 	const [gamesPage, setGamesPage] = useState(1);
 	const [moviesPage, setMoviesPage] = useState(1);
 	const [showsPage, setShowsPage] = useState(1);
@@ -46,48 +42,8 @@ const SearchPage = observer((props) => {
 			setShowsPage(1);
 		},
 		// eslint-disable-next-line
-		[query, searchGames, searchMovies, searchUsers, searchShows]
+		[query, searchGames, searchMovies, searchUsers, searchShows, activeCategory]
 	);
-
-	useEffect(() => {
-		setGamesCards(
-			<div className='searchCardsGroup'>
-				{games.map((game) => (
-					<CardGame game={game} key={game.id} />
-				))}
-			</div>
-		);
-	}, [games]);
-
-	useEffect(() => {
-		setMoviesCards(
-			<div className='searchCardsGroup'>
-				{movies.map((movie) => (
-					<CardMovie movie={movie} key={movie.id} />
-				))}
-			</div>
-		);
-	}, [movies]);
-
-	useEffect(() => {
-		setShowsCards(
-			<div className='searchCardsGroup'>
-				{shows.map((show) => (
-					<CardShow show={show} key={show.id} />
-				))}
-			</div>
-		);
-	}, [shows]);
-
-	useEffect(() => {
-		setUsersCards(
-			<div className='searchCardsGroup'>
-				{users.map((user) => (
-					<CardUser user={user} key={user.username} />
-				))}
-			</div>
-		);
-	}, [users]);
 
 	useEffect(() => {
 		if (gamesState.startsWith("error:")) toast.error(`Ошибка поиска игр! ${gamesState}`);
@@ -140,91 +96,43 @@ const SearchPage = observer((props) => {
 						/>
 
 						<LoadingOverlay active={gamesState === "pending"} spinner text='Ищем игры...'>
-							<div hidden={activeCategory !== "Всё" && activeCategory !== "Игры"}>
-								<h3>Игры</h3>
-								<div className='reslutsBlock'>
-									<button
-										className='paginationButton'
-										disabled={gamesPage === 1}
-										onClick={() => {
-											searchGames(query, gamesPage - 1, 6);
-											setGamesPage(gamesPage - 1);
-										}}>
-										&lt;
-									</button>
-									{gamesCards}
-									<button
-										className='paginationButton'
-										disabled={games.length < 6}
-										onClick={() => {
-											searchGames(query, gamesPage + 1, 6);
-											setGamesPage(gamesPage + 1);
-										}}>
-										&gt;
-									</button>
-								</div>
-							</div>
+							<GamesBlock
+								games={games}
+								gamesPage={gamesPage}
+								onPaginate={(page) => {
+									setGamesPage(page);
+									searchGames(query, page, 6);
+								}}
+								hidden={activeCategory !== "Всё" && activeCategory !== "Игры"}
+							/>
 						</LoadingOverlay>
 
 						<LoadingOverlay active={moviesState === "pending"} spinner text='Ищем фильмы...'>
-							<div hidden={activeCategory !== "Всё" && activeCategory !== "Фильмы"}>
-								<h3>Фильмы</h3>
-								<div className='reslutsBlock'>
-									<button
-										className='paginationButton'
-										disabled={moviesPage === 1}
-										onClick={() => {
-											searchMovies(query, moviesPage - 1);
-											setMoviesPage(moviesPage - 1);
-										}}>
-										&lt;
-									</button>
-									{moviesCards}
-									<button
-										className='paginationButton'
-										disabled={movies.length < 20}
-										onClick={() => {
-											searchMovies(query, moviesPage + 1);
-											setMoviesPage(moviesPage + 1);
-										}}>
-										&gt;
-									</button>
-								</div>
-							</div>
+							<MoviesBlock
+								movies={movies}
+								moviesPage={moviesPage}
+								onPaginate={(page) => {
+									setMoviesPage(page);
+									searchMovies(query, page);
+								}}
+								hidden={activeCategory !== "Всё" && activeCategory !== "Фильмы"}
+							/>
 						</LoadingOverlay>
 
 						<LoadingOverlay active={showsState === "pending"} spinner text='Ищем сериалы...'>
-							<div hidden={activeCategory !== "Всё" && activeCategory !== "Сериалы"}>
-								<h3>Сериалы</h3>
-								<div className='reslutsBlock'>
-									<button
-										className='paginationButton'
-										disabled={showsPage === 1}
-										onClick={() => {
-											searchShows(query, showsPage - 1);
-											setShowsPage(showsPage - 1);
-										}}>
-										&lt;
-									</button>
-									{showsCards}
-									<button
-										className='paginationButton'
-										disabled={shows.length < 20}
-										onClick={() => {
-											searchShows(query, showsPage + 1);
-											setShowsPage(showsPage + 1);
-										}}>
-										&gt;
-									</button>
-								</div>
-							</div>
+							<ShowsBlock
+								shows={shows}
+								showsPage={showsPage}
+								onPaginate={(page) => {
+									setShowsPage(page);
+									searchShows(query, page);
+								}}
+								hidden={activeCategory !== "Всё" && activeCategory !== "Сериалы"}
+							/>
 						</LoadingOverlay>
 
 						<LoadingOverlay active={usersState === "pending"} spinner text='Ищем пользователей...'>
-							<div hidden={activeCategory !== "Всё" && activeCategory !== "Пользователи"}>
-								<h3>Пользователи</h3>
-								{usersCards}
-							</div>
+							<UsersBlock users={users} hidden={activeCategory !== "Всё" && activeCategory !== "Пользователи"} />
 						</LoadingOverlay>
 					</MDBCol>
 					<MDBCol md='0.5'></MDBCol>
