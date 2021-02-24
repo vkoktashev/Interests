@@ -20,10 +20,12 @@ from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpis
     UserEpisodeInSeasonSerializer, EpisodeSerializer, ShowSerializer, SeasonSerializer
 from users.models import UserFollow
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
-    SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE, TMDB_BACKDROP_PATH_PREFIX
+    SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE, TMDB_BACKDROP_PATH_PREFIX, \
+    TMDB_POSTER_PATH_PREFIX
 from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
     SEASON_RETRIEVE_200_EXAMPLE
-from utils.functions import update_fields_if_needed, get_tmdb_show_key, get_tmdb_episode_key, get_tmdb_season_key
+from utils.functions import update_fields_if_needed, get_tmdb_show_key, get_tmdb_episode_key, get_tmdb_season_key, \
+    objects_to_str
 from utils.openapi_params import query_param, page_param
 
 
@@ -88,12 +90,10 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except ConnectionError:
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        episode_run_time = tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0
-
         new_fields = {
             'tmdb_original_name': tmdb_show['original_name'],
             'tmdb_name': tmdb_show['name'],
-            'tmdb_episode_run_time': episode_run_time,
+            'tmdb_episode_run_time': tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0,
             'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path']
             if tmdb_show['backdrop_path'] else '',
             'tmdb_release_date': tmdb_show['first_air_date'] if tmdb_show['first_air_date'] != "" else None
@@ -113,6 +113,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                                                  })
                 ShowGenre.objects.get_or_create(genre=genre_obj, show=show)
 
+        tmdb_show = parse_show(tmdb_show)
         return Response({'tmdb': tmdb_show})
 
     @swagger_auto_schema(request_body=openapi.Schema(
@@ -260,13 +261,12 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         for data in episodes:
             try:
-                episode = Episode.objects.get(tmdb_id=data['tmdb_id'], tmdb_season__tmdb_show=show)
+                episode = Episode.objects.get(tmdb_id=data.get('tmdb_id'), tmdb_season__tmdb_show=show)
             except Episode.DoesNotExist:
                 return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
             data = data.copy()
             data.update({'user': request.user.pk,
-                         'show': kwargs.get('tmdb_id'),
                          'episode': episode.pk})
 
             try:
@@ -468,6 +468,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             Episode.objects.bulk_create(episodes_to_create)
 
+        tmdb_season = parse_season(tmdb_season)
         return Response({'tmdb': tmdb_season})
 
     @swagger_auto_schema(request_body=openapi.Schema(
@@ -617,7 +618,7 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         tmdb_episode.update(show_info)
-
+        tmdb_episode = parse_episode(tmdb_episode)
         return Response({'tmdb': tmdb_episode})
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserEpisodeSerializer(many=True)})
@@ -716,3 +717,76 @@ def get_episode(show_tmdb_id, season_number, episode_number):
         tmdb_episode = tmdb.TV_Episodes(show_tmdb_id, season_number, episode_number).info(language=LANGUAGE)
         cache.set(key, tmdb_episode, CACHE_TIMEOUT)
     return tmdb_episode
+
+
+def translate_tmdb_status(tmdb_status):
+    if tmdb_status == 'Ended':
+        return 'Окончен'
+    elif tmdb_status == 'Returning Series':
+        return 'Продолжается'
+    elif tmdb_status == 'Pilot':
+        return 'Пилот'
+    elif tmdb_status == 'Canceled':
+        return 'Отменен'
+    elif tmdb_status == 'In Production':
+        return 'В производстве'
+    elif tmdb_status == 'Planned':
+        return 'Запланирован'
+    else:
+        return tmdb_status
+
+
+def parse_show(tmdb_show):
+    new_show = {
+        'id': tmdb_show['id'],
+        'name': tmdb_show['name'],
+        'original_name': tmdb_show['original_name'],
+        'overview': tmdb_show['overview'],
+        'episode_run_time': tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0,
+        'seasons_count': tmdb_show['number_of_seasons'],
+        'episodes_count': tmdb_show['number_of_episodes'],
+        'score': int(tmdb_show['vote_average'] * 10) if tmdb_show['vote_average'] else None,
+        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path'] if tmdb_show['backdrop_path'] else '',
+        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_show['poster_path'] if tmdb_show['poster_path'] else '',
+        'genres': objects_to_str(tmdb_show['genres']),
+        'production_companies': objects_to_str(tmdb_show['production_companies']),
+        'status': translate_tmdb_status(tmdb_show['status']),
+        'first_air_date': '.'.join(reversed(tmdb_show['first_air_date'].split('-')))
+        if tmdb_show['first_air_date'] != "" else None,
+        'last_air_date': '.'.join(reversed(tmdb_show['last_air_date'].split('-')))
+        if tmdb_show['last_air_date'] != "" else None,
+        'seasons': tmdb_show['seasons'],
+    }
+
+    return new_show
+
+
+def parse_season(tmdb_season):
+    new_season = {
+        'id': tmdb_season['id'],
+        'name': tmdb_season['name'],
+        'overview': tmdb_season['overview'],
+        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_season['poster_path'] if tmdb_season['poster_path'] else '',
+        'air_date': '.'.join(reversed(tmdb_season['air_date'].split('-')))
+        if tmdb_season.get('air_date') != "" else None,
+        'season_number': tmdb_season['season_number'],
+        'show': tmdb_season['show'],
+    }
+
+    return new_season
+
+
+def parse_episode(tmdb_episode):
+    new_episode = {
+        'id': tmdb_episode['id'],
+        'name': tmdb_episode['name'],
+        'overview': tmdb_episode['overview'],
+        'still_path': TMDB_POSTER_PATH_PREFIX + tmdb_episode['still_path'] if tmdb_episode['still_path'] else '',
+        'air_date': '.'.join(reversed(tmdb_episode['air_date'].split('-')))
+        if tmdb_episode.get('air_date') != "" else None,
+        'season_number': tmdb_episode['season_number'],
+        'episode_number': tmdb_episode['episode_number'],
+        'show': tmdb_episode['show'],
+    }
+
+    return new_episode

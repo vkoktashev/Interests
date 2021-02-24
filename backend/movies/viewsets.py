@@ -16,7 +16,7 @@ from users.models import UserFollow
 from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, CACHE_TIMEOUT, \
     TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX
 from utils.documentation import MOVIES_SEARCH_200_EXAMPLE, MOVIE_RETRIEVE_200_EXAMPLE
-from utils.functions import update_fields_if_needed, get_tmdb_movie_key
+from utils.functions import update_fields_if_needed, get_tmdb_movie_key, objects_to_str
 from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER
 
 
@@ -76,10 +76,6 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             tmdb_cast_crew = get_cast_crew(kwargs.get('tmdb_id'))
             tmdb_movie['cast'] = tmdb_cast_crew.get('cast')
             tmdb_movie['crew'] = tmdb_cast_crew.get('crew')
-            if tmdb_movie['backdrop_path']:
-                tmdb_movie['backdrop_path'] = TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path']
-            if tmdb_movie['poster_path']:
-                tmdb_movie['poster_path'] = TMDB_POSTER_PATH_PREFIX + tmdb_movie['poster_path']
         except HTTPError as e:
             error_code = int(e.args[0].split(' ', 1)[0])
             if error_code == 404:
@@ -94,7 +90,8 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'tmdb_name': tmdb_movie.get('title'),
             'tmdb_runtime': tmdb_movie.get('runtime'),
             'tmdb_release_date': tmdb_movie.get('release_date') if tmdb_movie.get('release_date') != "" else None,
-            'tmdb_backdrop_path': tmdb_movie.get('backdrop_path') if tmdb_movie.get('backdrop_path') else ''
+            'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path']
+            if tmdb_movie.get('backdrop_path') else ''
         }
 
         with transaction.atomic():
@@ -111,6 +108,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                                                  })
                 MovieGenre.objects.get_or_create(genre=genre_obj, movie=movie)
 
+        tmdb_movie = parse_movie(tmdb_movie)
         return Response({'tmdb': tmdb_movie})
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserMovieSerializer(many=True)})
@@ -222,3 +220,29 @@ def get_cast_crew(tmdb_id):
         tmdb_cast_crew = tmdb.Movies(tmdb_id).credits(language=LANGUAGE)
         cache.set(key, tmdb_cast_crew, CACHE_TIMEOUT)
     return tmdb_cast_crew
+
+
+def parse_movie(tmdb_movie):
+    directors = []
+    for i in tmdb_movie['crew']:
+        if i['job'] == 'Director':
+            directors.append(i)
+
+    new_movie = {
+        'name': tmdb_movie['title'],
+        'original_name': tmdb_movie['original_title'],
+        'overview': tmdb_movie['overview'],
+        'runtime': tmdb_movie['runtime'],
+        'release_date': '.'.join(reversed(tmdb_movie['release_date'].split('-')))
+        if tmdb_movie.get('air_date') != "" else None,
+        'score': int(tmdb_movie['vote_average'] * 10) if tmdb_movie['vote_average'] else None,
+        'tagline': tmdb_movie['tagline'],
+        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path'] if tmdb_movie['backdrop_path'] else '',
+        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_movie['poster_path'] if tmdb_movie['poster_path'] else '',
+        'genres': objects_to_str(tmdb_movie['genres']),
+        'production_companies': objects_to_str(tmdb_movie['production_companies']),
+        'cast': objects_to_str(tmdb_movie['cast'][:5]),
+        'directors': objects_to_str(directors),
+    }
+
+    return new_movie
