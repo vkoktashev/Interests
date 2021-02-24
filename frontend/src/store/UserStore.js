@@ -10,6 +10,7 @@ class User {
 	userState = "done";
 	userLogsState = "done";
 	userFriendsLogsState = "done";
+	setUserStatusState = "done";
 
 	constructor() {
 		makeAutoObservable(this);
@@ -56,14 +57,16 @@ class User {
 
 	setUserStatus = async (is_following, userID) => {
 		if (await AuthStore.checkAuthorization()) {
-			userRequests.setUserStatus(localStorage.getItem("token"), is_following, userID).then((result) => {
-				if (!result) {
-					this.userError = "Ошибка обновления статуса";
-				} else {
-					this.user.is_followed = result.is_following;
-				}
-			});
+			this.setUserStatusState = "pending";
+			userRequests.setUserStatus(localStorage.getItem("token"), is_following, userID).then(this.setUserStatusSuccess, this.setUserStatusFailure);
 		}
+	};
+	setUserStatusSuccess = (result) => {
+		this.user.is_followed = result.is_following;
+		this.setUserStatusState = "done";
+	};
+	setUserStatusFailure = (error) => {
+		this.setUserStatusState = "error";
 	};
 }
 

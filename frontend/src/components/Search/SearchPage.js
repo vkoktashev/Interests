@@ -18,7 +18,7 @@ import CategoriesTab from "../Common/CategoriesTab";
  * Основная страница приложения
  */
 const SearchPage = observer((props) => {
-	const { gamesIsLoading, searchGames, games, moviesIsLoading, searchMovies, movies, showsIsLoading, searchShows, shows, usersIsLoading, searchUsers, users } = SearchStore;
+	const { gamesState, searchGames, games, moviesState, searchMovies, movies, showsState, searchShows, shows, usersState, searchUsers, users } = SearchStore;
 
 	let history = useHistory();
 	let { query } = useParams();
@@ -33,17 +33,21 @@ const SearchPage = observer((props) => {
 
 	const [activeCategory, setActiveCategory] = useState("Всё");
 
-	useEffect(() => {
-		searchGames(query, 1, 6);
-		searchMovies(query, 1);
-		searchShows(query, 1);
-		searchUsers(query);
-		setQueryText(query);
-		document.title = "Поиск";
-		setGamesPage(1);
-		setMoviesPage(1);
-		setShowsPage(1);
-	}, [query, searchGames, searchMovies, searchUsers, searchShows]);
+	useEffect(
+		() => {
+			if (activeCategory === "Всё" || activeCategory === "Игры") searchGames(query, 1, 6);
+			if (activeCategory === "Всё" || activeCategory === "Фильмы") searchMovies(query, 1);
+			if (activeCategory === "Всё" || activeCategory === "Сериалы") searchShows(query, 1);
+			if (activeCategory === "Всё" || activeCategory === "Пользователи") searchUsers(query);
+			setQueryText(query);
+			document.title = "Поиск";
+			setGamesPage(1);
+			setMoviesPage(1);
+			setShowsPage(1);
+		},
+		// eslint-disable-next-line
+		[query, searchGames, searchMovies, searchUsers, searchShows]
+	);
 
 	useEffect(() => {
 		setGamesCards(
@@ -122,7 +126,7 @@ const SearchPage = observer((props) => {
 							}}
 						/>
 
-						<LoadingOverlay active={gamesIsLoading} spinner text='Ищем игры...'>
+						<LoadingOverlay active={gamesState === "pending"} spinner text='Ищем игры...'>
 							<div hidden={activeCategory !== "Всё" && activeCategory !== "Игры"}>
 								<h3>Игры</h3>
 								<div className='reslutsBlock'>
@@ -149,7 +153,7 @@ const SearchPage = observer((props) => {
 							</div>
 						</LoadingOverlay>
 
-						<LoadingOverlay active={moviesIsLoading} spinner text='Ищем фильмы...'>
+						<LoadingOverlay active={moviesState === "pending"} spinner text='Ищем фильмы...'>
 							<div hidden={activeCategory !== "Всё" && activeCategory !== "Фильмы"}>
 								<h3>Фильмы</h3>
 								<div className='reslutsBlock'>
@@ -176,7 +180,7 @@ const SearchPage = observer((props) => {
 							</div>
 						</LoadingOverlay>
 
-						<LoadingOverlay active={showsIsLoading} spinner text='Ищем сериалы...'>
+						<LoadingOverlay active={showsState === "pending"} spinner text='Ищем сериалы...'>
 							<div hidden={activeCategory !== "Всё" && activeCategory !== "Сериалы"}>
 								<h3>Сериалы</h3>
 								<div className='reslutsBlock'>
@@ -203,7 +207,7 @@ const SearchPage = observer((props) => {
 							</div>
 						</LoadingOverlay>
 
-						<LoadingOverlay active={usersIsLoading} spinner text='Ищем пользователей...'>
+						<LoadingOverlay active={usersState === "pending"} spinner text='Ищем пользователей...'>
 							<div hidden={activeCategory !== "Всё" && activeCategory !== "Пользователи"}>
 								<h3>Пользователи</h3>
 								{usersCards}
