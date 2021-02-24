@@ -74,25 +74,25 @@ const ShowPage = observer((props) => {
 
 	return (
 		<div>
-			<div className='bg' style={{ backgroundImage: `url(${show.background})` }} />
+			<div className='bg' style={{ backgroundImage: `url(${show.backdrop_path})` }} />
 			<LoadingOverlay active={showState === "pending"} spinner text='Загрузка...'>
 				<div className='showContentPage'>
 					<div className='showContentHeader'>
 						<div className='showPosterBlock'>
-							<img src={show.poster} className='img-fluid' alt='' />
+							<img src={show.poster_path} className='img-fluid' alt='' />
 						</div>
 						<div className='showInfoBlock'>
 							<h1 className='header'>{show.name}</h1>
-							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{show.originalName}</h5>
+							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{show.original_name}</h5>
 							<div className='mainInfo'>
 								<p hidden={!show.genres}>Жанр: {show.genres}</p>
 								<p hidden={!show.companies}>Компания: {show.companies}</p>
-								<p hidden={!show.firstDate}>Дата выхода первой серии: {show.firstDate}</p>
-								<p hidden={!show.lastDate}>Дата выхода последней серии: {show.lastDate}</p>
-								<p hidden={show.episodeRuntime === null}>Продолжительность (мин): {show.episodeRuntime}</p>
-								<p>Количество сезонов: {show.seasonsCount}</p>
-								<p>Количество серий: {show.episodesCount}</p>
-								<p hidden={!show.showStatus}>Статус: {show.showStatus}</p>
+								<p hidden={!show.first_date}>Дата выхода первой серии: {show.first_date}</p>
+								<p hidden={!show.last_date}>Дата выхода последней серии: {show.last_date}</p>
+								<p hidden={show.episode_runtime === null}>Продолжительность (мин): {show.episode_run_time}</p>
+								<p>Количество сезонов: {show.seasons_count}</p>
+								<p>Количество серий: {show.episodes_count}</p>
+								<p hidden={!show.show_status}>Статус: {show.show_status}</p>
 							</div>
 							<LoadingOverlay active={userInfoState === "pending" && !showState === "pending"} spinner text='Загрузка...'>
 								<Rating
@@ -132,7 +132,7 @@ const ShowPage = observer((props) => {
 									}}
 								/>
 							</LoadingOverlay>
-							<ScoreBlock score={show.tmdbScore} text='TMDB score' className='scoreBlock' />
+							<ScoreBlock score={show.score} text='TMDB score' className='scoreBlock' />
 						</div>
 					</div>
 					<div className='showContentBody'>

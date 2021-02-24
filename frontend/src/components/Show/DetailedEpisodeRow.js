@@ -57,8 +57,7 @@ function DetailedEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, u
 							onChangeStatus({
 								addEpisode: res.target.checked === !(userRate > -1),
 								episode: {
-									season_number: episode.season_number,
-									episode_number: episode.episode_number,
+									tmdb_id: episode.id,
 									score: res.target.checked ? 0 : -1,
 								},
 							});

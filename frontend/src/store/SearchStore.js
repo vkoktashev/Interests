@@ -10,70 +10,61 @@ class Search {
 	movies = [];
 	shows = [];
 	users = [];
-	gamesIsLoading = false;
-	moviesIsLoading = false;
-	showsIsLoading = false;
-	usersIsLoading = false;
-	gamesError = "";
-	moviesError = "";
-	showsError = "";
-	usersError = "";
+	gamesState = "done";
+	moviesState = "done";
+	showsState = "done";
+	usersState = "done";
 
 	constructor() {
 		makeAutoObservable(this);
 	}
 
 	searchGames = async (query, page, gamesCount) => {
-		this.gamesIsLoading = true;
-		this.gamesError = "";
-		gameRequests.searchGames(query, page, gamesCount).then((result) => {
-			if (!result) {
-				this.gamesError = "Ошибка поиска игр";
-			} else {
-				this.games = result;
-			}
-			this.gamesIsLoading = false;
-		});
+		this.gamesState = "pending";
+		gameRequests.searchGames(query, page, gamesCount).then(this.searchGamesSuccess, this.searchGamesFailure);
+	};
+	searchGamesSuccess = (result) => {
+		this.games = result;
+		this.gamesState = "done";
+	};
+	searchGamesFailure = (error) => {
+		this.gamesState = "error";
 	};
 
 	searchMovies = async (query, page) => {
-		this.moviesIsLoading = true;
-		this.moviesError = "";
-		movieRequests.searchMovies(query, page).then((result) => {
-			if (!result) {
-				this.moviesError = "Ошибка поиска фильмов";
-			} else {
-				console.log(result);
-				this.movies = result.results;
-			}
-			this.moviesIsLoading = false;
-		});
+		this.moviesState = "pending";
+		movieRequests.searchMovies(query, page).then(this.searchMoviesSuccess, this.searchMoviesFailure);
+	};
+	searchMoviesSuccess = (result) => {
+		this.movies = result.results;
+		this.moviesState = "done";
+	};
+	searchMoviesFailure = (error) => {
+		this.moviesState = "error";
 	};
 
 	searchShows = async (query, page) => {
-		this.showsIsLoading = true;
-		this.showsError = "";
-		showRequests.searchShows(query, page).then((result) => {
-			if (!result) {
-				this.showsError = "Ошибка поиска сериалов";
-			} else {
-				this.shows = result.results;
-			}
-			this.showsIsLoading = false;
-		});
+		this.showsState = "pending";
+		showRequests.searchShows(query, page).then(this.searchShowsSuccess, this.searchShowsFailure);
+	};
+	searchShowsSuccess = (result) => {
+		this.shows = result.results;
+		this.showsState = "done";
+	};
+	searchShowsFailure = (error) => {
+		this.showsState = "error";
 	};
 
 	searchUsers = async (query) => {
-		this.usersIsLoading = true;
-		this.usersError = "";
-		userRequests.searchUsers(query).then((result) => {
-			if (!result) {
-				this.usersError = "Ошибка поиска";
-			} else {
-				this.users = result;
-			}
-			this.usersIsLoading = false;
-		});
+		this.usersState = "pending";
+		userRequests.searchUsers(query).then(this.searchUsersSuccess, this.searchUsersFailure);
+	};
+	searchUsersSuccess = (result) => {
+		this.users = result;
+		this.usersState = "done";
+	};
+	searchUsersFailure = (error) => {
+		this.usersState = "error";
 	};
 }
 

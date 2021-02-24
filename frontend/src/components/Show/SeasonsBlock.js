@@ -28,7 +28,7 @@ function SeasonsBlock({ showID, seasons, setShowEpisodeUserStatus, userWatchedSh
 				<button
 					className='saveEpisodesButton'
 					onClick={() => {
-						setShowEpisodeUserStatus({ episodes: changedEpisodes }, showID);
+						setShowEpisodeUserStatus({ episodes: changedEpisodes }, showID, true);
 						setNeedHeader(false);
 						setChangedEpisodes([]);
 					}}>
