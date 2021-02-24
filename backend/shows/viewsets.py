@@ -7,6 +7,7 @@ from django.db.models import F, Q
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
+from requests.exceptions import ConnectionError
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -743,7 +744,8 @@ def parse_show(tmdb_show):
         'seasons_count': tmdb_show.get('number_of_seasons'),
         'episodes_count': tmdb_show.get('number_of_episodes'),
         'score': int(tmdb_show['vote_average'] * 10) if tmdb_show['vote_average'] else None,
-        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path'] if tmdb_show.get('backdrop_path') else '',
+        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path'] if tmdb_show.get(
+            'backdrop_path') else '',
         'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_show['poster_path'] if tmdb_show.get('poster_path') else '',
         'genres': objects_to_str(tmdb_show['genres']),
         'production_companies': objects_to_str(tmdb_show['production_companies']),

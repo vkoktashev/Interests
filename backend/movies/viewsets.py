@@ -4,6 +4,7 @@ from django.db import transaction
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
+from requests.exceptions import ConnectionError
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -237,7 +238,8 @@ def parse_movie(tmdb_movie):
         if tmdb_movie.get('air_date') != "" else None,
         'score': int(tmdb_movie['vote_average'] * 10) if tmdb_movie.get('vote_average') else None,
         'tagline': tmdb_movie.get('tagline'),
-        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path'] if tmdb_movie.get('backdrop_path') else '',
+        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path'] if tmdb_movie.get(
+            'backdrop_path') else '',
         'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_movie['poster_path'] if tmdb_movie.get('poster_path') else '',
         'genres': objects_to_str(tmdb_movie['genres']),
         'production_companies': objects_to_str(tmdb_movie['production_companies']),
