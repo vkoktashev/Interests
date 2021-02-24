@@ -108,8 +108,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                                                  })
                 MovieGenre.objects.get_or_create(genre=genre_obj, movie=movie)
 
-        tmdb_movie = parse_movie(tmdb_movie)
-        return Response({'tmdb': tmdb_movie})
+        return Response(parse_movie(tmdb_movie))
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserMovieSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])

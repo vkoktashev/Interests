@@ -113,8 +113,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                                                  })
                 ShowGenre.objects.get_or_create(genre=genre_obj, show=show)
 
-        tmdb_show = parse_show(tmdb_show)
-        return Response({'tmdb': tmdb_show})
+        return Response(parse_show(tmdb_show))
 
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
@@ -468,8 +467,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             Episode.objects.bulk_create(episodes_to_create)
 
-        tmdb_season = parse_season(tmdb_season)
-        return Response({'tmdb': tmdb_season})
+        return Response(parse_season(tmdb_season))
 
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
@@ -618,8 +616,7 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         tmdb_episode.update(show_info)
-        tmdb_episode = parse_episode(tmdb_episode)
-        return Response({'tmdb': tmdb_episode})
+        return Response(parse_episode(tmdb_episode))
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserEpisodeSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])

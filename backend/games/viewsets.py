@@ -124,7 +124,9 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         translate_hltb_time(hltb_game, 'gameplay_completionist', 'gameplay_completionist_unit')
 
         rawg_game = parse_game(rawg_game)
-        return Response({'rawg': rawg_game, 'hltb': hltb_game})
+        if hltb_game:
+            rawg_game.update({'hltb': hltb_game})
+        return Response(rawg_game)
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserGameSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
@@ -243,8 +245,8 @@ def get_hltb_search_result(game_name):
     key = f'hltb_search_{game_name.replace(" ", "_")}'
     results = cache.get(key, None)
     if results is None:
-        results = HowLongToBeat(1.0).search(game_name.replace('’', '\''),
-                                            similarity_case_sensitive=False)
+        results = HowLongToBeat(1).search(game_name.replace('’', '\''),
+                                          similarity_case_sensitive=False)
         cache.set(key, results, CACHE_TIMEOUT)
     return results
 
