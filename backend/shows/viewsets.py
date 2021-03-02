@@ -770,6 +770,7 @@ def parse_season(tmdb_season):
         if tmdb_season.get('air_date') != "" else None,
         'season_number': tmdb_season.get('season_number'),
         'show': tmdb_season.get('show'),
+        'episodes': tmdb_season.get('episodes')
     }
 
     return new_season
