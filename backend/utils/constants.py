@@ -1,16 +1,8 @@
 import rawgpy
 import tmdbsimple as tmdb
-import requests
 
 rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
 tmdb.API_KEY = 'ebf9e8e8a2be6bba6aacfa5c4c76f698'
-address = '144.217.101.245:3129'
-proxies = {
-    'http': f'http://{address}',
-    'https': f'http://{address}',
-    'socks5': f'http://{address}'
-}
-tmdb.REQUESTS_SESSION = requests.session().proxies.update(proxies)
 LANGUAGE = 'ru'
 
 DEFAULT_PAGE_NUMBER = 1

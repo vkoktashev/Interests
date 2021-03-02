@@ -26,7 +26,7 @@ from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, D
 from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
     SEASON_RETRIEVE_200_EXAMPLE
 from utils.functions import update_fields_if_needed, get_tmdb_show_key, get_tmdb_episode_key, get_tmdb_season_key, \
-    objects_to_str
+    objects_to_str, update_fields_if_needed_without_save
 from utils.openapi_params import query_param, page_param
 
 
@@ -444,21 +444,31 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             existed_episodes = Episode.objects.select_related('tmdb_season') \
                 .select_for_update().filter(tmdb_season=season)
             episodes_to_create = []
-            for episode in episodes:
+            episodes_to_update = []
+            episodes_to_delete_pks = []
+            for existed_episode in existed_episodes:
                 exists = False
-                for existed_episode in existed_episodes:
-                    if episode['episode_number'] == existed_episode.tmdb_episode_number:
+                for episode in episodes:
+                    if episode['id'] == existed_episode.tmdb_id:
                         exists = True
+                        episode['exists'] = True
                         new_fields = {
-                            'tmdb_id': episode.get('id'),
+                            'tmdb_episode_number': episode.get('episode_number'),
                             'tmdb_season': season,
                             'tmdb_name': episode.get('name'),
                             'tmdb_release_date': episode.get('air_date') if episode.get('air_date') != "" else None
                         }
-                        update_fields_if_needed(existed_episode, new_fields)
+                        update_fields_if_needed_without_save(existed_episode, new_fields)
+                        episodes_to_update.append(existed_episode)
                         break
 
                 if not exists:
+                    episodes_to_delete_pks.append(existed_episode.pk)
+
+            for episode in episodes:
+                if episode.get('exists'):
+                    del episode['exists']
+                else:
                     episodes_to_create.append(Episode(tmdb_id=episode.get('id'),
                                                       tmdb_episode_number=episode.get('episode_number'),
                                                       tmdb_season=season,
@@ -466,6 +476,9 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                                       if episode.get('air_date') != "" else None,
                                                       tmdb_name=episode.get('name')))
 
+            Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
+            Episode.objects.bulk_update(episodes_to_update,
+                                        ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date'])
             Episode.objects.bulk_create(episodes_to_create)
 
         return Response(parse_season(tmdb_season))

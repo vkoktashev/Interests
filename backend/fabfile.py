@@ -13,7 +13,7 @@ def install():
     local("cd ../frontend && npm install")
 
 
-def update():
+def upgrade():
     local("python -m pip install -U pip")
     local("pip install --upgrade -r requirements.txt")
 
