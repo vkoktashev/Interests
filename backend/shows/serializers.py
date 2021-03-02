@@ -42,11 +42,11 @@ class UserEpisodeSerializer(serializers.ModelSerializer):
 
 
 class UserEpisodeInSeasonSerializer(UserEpisodeSerializer):
-    episode_number = serializers.SerializerMethodField('get_episode_number')
+    tmdb_id = serializers.SerializerMethodField('get_tmdb_id')
 
     @staticmethod
-    def get_episode_number(user_episode):
-        return user_episode.episode.tmdb_episode_number
+    def get_tmdb_id(user_episode):
+        return user_episode.episode.tmdb_id
 
 
 class ShowStatsSerializer(UserShowSerializer):
