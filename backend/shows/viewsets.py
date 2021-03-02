@@ -764,9 +764,9 @@ def parse_show(tmdb_show):
         'production_companies': objects_to_str(tmdb_show['production_companies']),
         'status': translate_tmdb_status(tmdb_show['status']),
         'first_air_date': '.'.join(reversed(tmdb_show['first_air_date'].split('-')))
-        if tmdb_show['first_air_date'] != "" else None,
+        if tmdb_show.get('first_air_date') is not None else None,
         'last_air_date': '.'.join(reversed(tmdb_show['last_air_date'].split('-')))
-        if tmdb_show['last_air_date'] != "" else None,
+        if tmdb_show.get('last_air_date') is not None else None,
         'seasons': tmdb_show['seasons'],
     }
 
