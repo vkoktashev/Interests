@@ -567,8 +567,8 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             serializer = FollowedUserSeasonSerializer(followed_user_seasons, many=True)
             friends_info = serializer.data
             episodes = Episode.objects.filter(tmdb_season=season)
-            user_episodes = UserEpisode.objects.prefetch_related('episode').filter(user=request.user,
-                                                                                   episode__in=episodes)
+            user_episodes = UserEpisode.objects.select_related('episode').filter(user=request.user,
+                                                                                 episode__in=episodes)
             episodes_user_info = UserEpisodeInSeasonSerializer(user_episodes, many=True).data
         except (Show.DoesNotExist, Season.DoesNotExist, ValueError):
             show = None
@@ -756,10 +756,11 @@ def parse_show(tmdb_show):
         'episode_run_time': tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0,
         'seasons_count': tmdb_show.get('number_of_seasons'),
         'episodes_count': tmdb_show.get('number_of_episodes'),
-        'score': int(tmdb_show['vote_average'] * 10) if tmdb_show['vote_average'] else None,
-        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path'] if tmdb_show.get(
-            'backdrop_path') else '',
-        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_show['poster_path'] if tmdb_show.get('poster_path') else '',
+        'score': int(tmdb_show['vote_average'] * 10) if tmdb_show.get('vote_average') is not None else None,
+        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path']
+        if tmdb_show.get('backdrop_path') is not None else '',
+        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_show['poster_path']
+        if tmdb_show.get('poster_path') is not None else '',
         'genres': objects_to_str(tmdb_show['genres']),
         'production_companies': objects_to_str(tmdb_show['production_companies']),
         'status': translate_tmdb_status(tmdb_show['status']),
@@ -778,7 +779,8 @@ def parse_season(tmdb_season):
         'id': tmdb_season.get('id'),
         'name': tmdb_season.get('name'),
         'overview': tmdb_season.get('overview'),
-        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_season['poster_path'] if tmdb_season.get('poster_path') else '',
+        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_season['poster_path']
+        if tmdb_season.get('poster_path') is not None else '',
         'air_date': '.'.join(reversed(tmdb_season['air_date'].split('-')))
         if tmdb_season.get('air_date') != "" else None,
         'season_number': tmdb_season.get('season_number'),
@@ -794,7 +796,9 @@ def parse_episode(tmdb_episode):
         'id': tmdb_episode.get('id'),
         'name': tmdb_episode.get('name'),
         'overview': tmdb_episode.get('overview'),
-        'still_path': TMDB_POSTER_PATH_PREFIX + tmdb_episode['still_path'] if tmdb_episode.get('still_path') else '',
+        'score': int(tmdb_episode['vote_average'] * 10) if tmdb_episode.get('vote_average') is not None else None,
+        'still_path': TMDB_POSTER_PATH_PREFIX + tmdb_episode['still_path']
+        if tmdb_episode.get('still_path') is not None else '',
         'air_date': '.'.join(reversed(tmdb_episode['air_date'].split('-')))
         if tmdb_episode.get('air_date') != "" else None,
         'season_number': tmdb_episode.get('season_number'),
