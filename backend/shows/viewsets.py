@@ -22,7 +22,7 @@ from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpis
 from users.models import UserFollow
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
     SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE, TMDB_BACKDROP_PATH_PREFIX, \
-    TMDB_POSTER_PATH_PREFIX
+    TMDB_POSTER_PATH_PREFIX, TMDB_STILL_PATH_PREFIX
 from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
     SEASON_RETRIEVE_200_EXAMPLE
 from utils.functions import update_fields_if_needed, get_tmdb_show_key, get_tmdb_episode_key, get_tmdb_season_key, \
@@ -797,7 +797,7 @@ def parse_episode(tmdb_episode):
         'name': tmdb_episode.get('name'),
         'overview': tmdb_episode.get('overview'),
         'score': int(tmdb_episode['vote_average'] * 10) if tmdb_episode.get('vote_average') is not None else None,
-        'still_path': TMDB_POSTER_PATH_PREFIX + tmdb_episode['still_path']
+        'still_path': TMDB_STILL_PATH_PREFIX + tmdb_episode['still_path']
         if tmdb_episode.get('still_path') is not None else '',
         'air_date': '.'.join(reversed(tmdb_episode['air_date'].split('-')))
         if tmdb_episode.get('air_date') != "" else None,
