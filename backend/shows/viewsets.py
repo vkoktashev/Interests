@@ -691,7 +691,7 @@ def get_show_info(show_id):
 
 
 def get_show_search_results(query, page):
-    key = f'tmdb_show_search_{query}_page_{page}'
+    key = f'tmdb_show_search_{query.replace(" ", "_")}_page_{page}'
     results = cache.get(key, None)
     if results is None:
         results = tmdb.Search().tv(query=query, page=page, language=LANGUAGE)

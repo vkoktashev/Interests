@@ -194,7 +194,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
 
 def get_movie_search_results(query, page):
-    key = f'tmdb_movie_search_{query}_page_{page}'
+    key = f'tmdb_movie_search_{query.replace(" ", "_")}_page_{page}'
     results = cache.get(key, None)
     if results is None:
         results = tmdb.Search().movie(query=query, page=page, language=LANGUAGE)
