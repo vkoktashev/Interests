@@ -5,7 +5,6 @@ import CurrentUserStore from "../../store/CurrentUserStore";
 import { toast } from "react-toastify";
 
 import LoadingOverlay from "react-loading-overlay";
-import "./style.css";
 import SettingsCheckbox from "./SettingsCheckbox";
 
 const SettingsPage = observer((props) => {

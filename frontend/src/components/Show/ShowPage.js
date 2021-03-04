@@ -7,7 +7,6 @@ import ShowStore from "../../store/ShowStore";
 
 import { MDBIcon, MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
-import "./style.css";
 import { toast } from "react-toastify";
 
 import Rating from "react-rating";
@@ -22,7 +21,7 @@ import ScoreBlock from "../Common/ScoreBlock";
 const ShowPage = observer((props) => {
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
-	const { requestShow, show, showState, setShowStatus, setEpisodesStatus, requestShowUserInfo, userInfo, friendsInfo, userInfoState, setStatusState } = ShowStore;
+	const { requestShow, show, showState, setShowStatus, requestShowUserInfo, userInfo, friendsInfo, userInfoState, setStatusState } = ShowStore;
 
 	let { id } = useParams();
 	const [review, setReview] = useState("");
@@ -153,7 +152,7 @@ const ShowPage = observer((props) => {
 						</div>
 						<div className='showSeasonsBody'>
 							<h3 style={{ paddingTop: "15px" }}>Список серий</h3>
-							<SeasonsBlock showID={show.id} seasons={show.seasons} setShowEpisodeUserStatus={setEpisodesStatus} userWatchedShow={userStatus !== "Не смотрел"} />
+							<SeasonsBlock showID={show.id} seasons={show.seasons} userWatchedShow={userStatus !== "Не смотрел"} />
 						</div>
 						<div className='showReviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>

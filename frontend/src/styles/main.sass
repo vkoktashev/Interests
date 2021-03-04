@@ -1,0 +1,41 @@
+@import "./_calendar"
+@import "./_colors"
+@import "./_common"
+@import "./_game"
+@import "./_movie"
+@import "./_modals"
+@import "./_search"
+@import "./_settings"
+@import "./_show"
+@import "./_unwatched"
+@import "./_user"
+@import "./_other"
+
+$font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif
+
+html
+    overflow-x: hidden
+
+body
+    margin: 0
+    font-family: $font-stack
+    -webkit-font-smoothing: antialiased
+    -moz-osx-font-smoothing: grayscale
+
+.navbar
+    margin-bottom: 30px
+
+.bg
+    background-color: $backgroundColor
+    color: $textColor
+    height: 100vh
+    width: 100vw
+    position: fixed
+    left: 0
+    top: 0
+    background-position: center
+    background-size: cover
+    z-index: -1000
+
+.hs
+    margin-left: 0.2em

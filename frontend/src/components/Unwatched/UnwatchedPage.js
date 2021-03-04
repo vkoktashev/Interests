@@ -6,7 +6,6 @@ import ShowStore from "../../store/ShowStore";
 
 import { toast } from "react-toastify";
 import LoadingOverlay from "react-loading-overlay";
-import "./style.css";
 import ShowBlock from "./ShowBlock";
 
 const UnwatchedPage = observer((props) => {

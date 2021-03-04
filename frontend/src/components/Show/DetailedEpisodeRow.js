@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import "./style.css";
 import Rating from "react-rating";
 import { MDBIcon } from "mdbreact";
 
-function DetailedEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, userInfo, onChangeStatus, checkAll, userWatchedShow }) {
+function DetailedEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, userInfo, checkAll, userWatchedShow, setSaveEpisodes }) {
 	let history = useHistory();
 	const [userRate, setUserRate] = useState(0);
 	const [isChecked, setIsChecked] = useState(false);
@@ -18,22 +17,8 @@ function DetailedEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, u
 		() => {
 			if (checkAll === -1) {
 				setIsChecked(false);
-				onChangeStatus({
-					addEpisode: userRate > -1,
-					episode: {
-						tmdb_id: episode.id,
-						score: -1,
-					},
-				});
 			} else if (checkAll === 1) {
 				setIsChecked(true);
-				onChangeStatus({
-					addEpisode: !(userRate > -1),
-					episode: {
-						tmdb_id: episode.id,
-						score: 0,
-					},
-				});
 			}
 		},
 		// eslint-disable-next-line
@@ -48,19 +33,14 @@ function DetailedEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, u
 	return (
 		<div className='episodeRow detailRow'>
 			<div className='episodeRowCheckDate'>
-				<div className='episodeRowCheck' hidden={!loggedIn || typeof onChangeStatus === "undefined" || !userWatchedShow}>
+				<div className='episodeRowCheck' hidden={!loggedIn || !userWatchedShow}>
 					<input
 						type='checkbox'
+						id={`cbEpisode${episode.id}`}
 						checked={isChecked}
 						onChange={(res) => {
+							setSaveEpisodes(true);
 							setIsChecked(res.target.checked);
-							onChangeStatus({
-								addEpisode: res.target.checked === !(userRate > -1),
-								episode: {
-									tmdb_id: episode.id,
-									score: res.target.checked ? 0 : -1,
-								},
-							});
 						}}
 					/>
 				</div>

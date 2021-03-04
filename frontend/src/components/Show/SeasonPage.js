@@ -8,7 +8,6 @@ import PagesStore from "../../store/PagesStore";
 import { MDBIcon, MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
 import { AreaChart, linearGradient, XAxis, Tooltip, YAxis, Area, ResponsiveContainer } from "recharts";
-import "./style.css";
 import { toast } from "react-toastify";
 
 import Rating from "react-rating";
@@ -18,16 +17,17 @@ import DetailedEpisodeRow from "./DetailedEpisodeRow";
 /**
  * Основная страница приложения
  */
-const ShowPage = observer((props) => {
+const SeasonPage = observer((props) => {
 	const { loggedIn } = AuthStore;
 	const { requestSeason, show, showState, setSeasonStatus, setEpisodesStatus, requestSeasonUserInfo, userInfo, userInfoState, friendsInfo, setStatusState } = ShowStore;
-	const { openLoginForm } = PagesStore;
+	const { openLoginForm, setSaveEpisodes, saveEpisodesBlockIsOpen } = PagesStore;
 
 	let history = useHistory();
 	let { show_id, number } = useParams();
 	const [review, setReview] = useState("");
 	const [userRate, setUserRate] = useState(0);
 	const [chartData, setChartData] = useState([]);
+	const [isChecked, setIsChecked] = useState(0);
 
 	useEffect(
 		() => {
@@ -52,7 +52,7 @@ const ShowPage = observer((props) => {
 	);
 
 	useEffect(() => {
-		document.title = show.show_name + " - " + show.name;
+		document.title = show.show?.tmdb_name + " - " + show.name;
 	}, [show]);
 
 	useEffect(() => {
@@ -89,35 +89,47 @@ const ShowPage = observer((props) => {
 		if (setStatusState.startsWith("error:")) toast.error(`Ошибка сохранения! ${setStatusState}`);
 	}, [setStatusState]);
 
-	function getEpisodeByNumber(episodes, number) {
-		for (let episode in episodes) if (episodes[episode].episode_number === number) return episodes[episode];
+	function getEpisodeByID(episodes, id) {
+		for (let episode in episodes) if (episodes[episode].tmdb_id === id) return episodes[episode];
+	}
+
+	function sendEpisodes() {
+		let episodes = [];
+		for (let episode in userInfo.episodes) {
+			let currentValue = userInfo.episodes[episode];
+			let cbValue = document.getElementById(`cbEpisode${currentValue.tmdb_id}`).checked;
+			if (cbValue === !(currentValue.score > -1)) episodes.push({ tmdb_id: currentValue.tmdb_id, score: cbValue ? 0 : -1 });
+		}
+		console.log(episodes);
+		setEpisodesStatus({ episodes }, show_id, [number]);
+		setSaveEpisodes(false);
 	}
 
 	return (
 		<div>
-			<div className='bg' style={{ backgroundImage: `url(${show.background})` }} />
+			<div className='bg' style={{ backgroundImage: `url(${show.show?.tmdb_backdrop_path})` }} />
 			<LoadingOverlay active={showState === "pending"} spinner text='Загрузка...'>
 				<div className='showContentPage'>
 					<div className='showContentHeader'>
 						<div className='showPosterBlock'>
-							<img src={show.poster} className='img-fluid' alt='' />
+							<img src={show.poster_path} className='img-fluid' alt='' />
 						</div>
 						<div className='showInfoBlock'>
 							<h1 className='header'>
 								<a
-									href={window.location.origin + "/show/" + show_id}
+									href={window.location.origin + "/show/" + show.show?.id}
 									onClick={(e) => {
-										history.push("/show/" + show_id);
+										history.push("/show/" + show.show?.id);
 										e.preventDefault();
 									}}>
-									{show.showName}
+									{show.show?.tmdb_name}
 								</a>
 								{" - " + show.name}
 							</h1>
-							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{show.showOriginalName + " - Season " + show.seasonNumber}</h5>
+							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{show.show?.tmdb_original_name + " - Season " + show.season_number}</h5>
 							<div className='mainInfo'>
-								<p hidden={show.date === ""}>Дата выхода: {show.date}</p>
-								<p>Количество серий: {show.episodesCount}</p>
+								<p hidden={!show.air_date}>Дата выхода: {show.air_date}</p>
+								<p hidden={!show.episodes}>Количество серий: {show.episodes?.length}</p>
 							</div>
 							<div hidden={!loggedIn | !userInfo?.user_watched_show}>
 								<LoadingOverlay active={userInfoState === "pending" && !showState === "pending"} spinner text='Загрузка...'>
@@ -133,7 +145,7 @@ const ShowPage = observer((props) => {
 												openLoginForm();
 											} else {
 												setUserRate(score);
-												setSeasonStatus({ score: score }, show_id, show.seasonNumber);
+												setSeasonStatus({ score: score }, show_id, show.season_number);
 											}
 										}}
 									/>
@@ -142,11 +154,7 @@ const ShowPage = observer((props) => {
 										className={"savePreviewButton"}
 										hidden={!loggedIn | !userInfo?.user_watched_show}
 										onClick={() => {
-											if (!loggedIn) {
-												openLoginForm();
-											} else {
-												setSeasonStatus({ review: document.getElementById("reviewSeasonInput").value }, show_id, show.seasonNumber);
-											}
+											setSeasonStatus({ review: document.getElementById("reviewSeasonInput").value }, show_id, show.season_number);
 										}}>
 										Сохранить
 									</button>
@@ -162,16 +170,28 @@ const ShowPage = observer((props) => {
 								<h3 style={{ paddingTop: "15px" }}>Список серий</h3>
 								<details open={false} className='episodeRows' style={{ marginBottom: "15px" }}>
 									<summary>Развернуть</summary>
+									<div style={{ marginLeft: "5px" }} hidden={!loggedIn || !userInfo?.user_watched_show}>
+										Выбрать все&nbsp;
+										<input
+											type='checkbox'
+											checked={isChecked > 0}
+											onChange={(res) => {
+												setSaveEpisodes(true);
+												setIsChecked(res.target.checked ? 1 : -1);
+											}}
+										/>
+									</div>
 									<ul>
 										{show.episodes
-											? show.episodes.map((episode) => (
-													<li className='episode' key={show.id + episode.episode_number}>
+											? show.episodes.map((episode, counter) => (
+													<li className='episode' key={counter}>
 														<DetailedEpisodeRow
 															episode={episode}
 															showID={show_id}
 															loggedIn={loggedIn}
-															userInfo={getEpisodeByNumber(userInfo.episodes, episode.episode_number)}
+															userInfo={getEpisodeByID(userInfo.episodes, episode.id)}
 															setEpisodeUserStatus={setEpisodesStatus}
+															checkAll={isChecked}
 															userWatchedShow={userInfo?.user_watched_show}
 														/>
 													</li>
@@ -221,8 +241,17 @@ const ShowPage = observer((props) => {
 					</div>
 				</div>
 			</LoadingOverlay>
+			<div className='saveEpisodesHeader' hidden={!saveEpisodesBlockIsOpen}>
+				<button
+					className='saveEpisodesButton'
+					onClick={() => {
+						sendEpisodes();
+					}}>
+					Сохранить
+				</button>
+			</div>
 		</div>
 	);
 });
 
-export default ShowPage;
+export default SeasonPage;

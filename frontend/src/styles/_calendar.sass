@@ -1,0 +1,121 @@
+@import "./_colors"
+
+.calendarPage
+    width: 80rem
+    max-width: 100%
+    margin-left: auto
+    margin-right: auto
+    color: $textColor
+    margin-top: 4rem
+    margin-bottom: 2em
+    padding: 0px
+
+.calendarBlock
+    padding: 1rem
+    width: 100%
+    display: inline-block
+    vertical-align: top
+    background-color: $backgroundColor
+
+.calendarHeader
+    margin-bottom: 2rem
+
+.timelineEvent
+    background-color: $backgroundColor !important
+
+.releasesList
+    margin-top: 1rem
+
+.dayInfo
+    display: inline-block
+
+    &.date
+        width: auto
+
+.dayInfoBlock
+    display: inline-block
+    white-space: pre-line
+    max-width: 100%
+
+.react-calendar
+    display: inline-block
+    vertical-align: top
+    width: 500px !important
+    max-width: 100% !important
+    background-color: $backgroundColor !important
+    border: 1px solid rgb(100, 100, 100) !important
+    border-radius: 10px
+    margin-right: 1rem
+
+.calendarDay
+    color: $textColor
+    padding: 0
+    height: auto
+    text-align: center
+    margin-top: 10px
+
+.calendarDayTile
+    display: inline-block
+    color: $textColor
+    padding: 0.25rem
+    height: auto
+    text-align: center
+
+.calendarDayTile.Games
+    background-color: $calendarGamesColor
+
+.calendarDayTile.Movies
+    background-color: $calendarMoviesColor
+
+.calendarDayTile.Episodes
+    background-color: $calendarEpisodesColor
+
+.dayInfoCategory
+    margin-bottom: 1rem
+
+.react-calendar__tile--active,
+.react-calendar__tile--hasActive
+    background: $activeBackgroundColor !important
+    border-radius: 10px
+
+.react-calendar button:disabled
+    background-color: $disabledBackgroundColor !important
+
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus,
+.react-calendar__tile--now,
+.react-calendar button
+    background-color: $backgroundColor
+    color: $textColor !important
+    border-radius: 10px
+
+.react-calendar button:active,
+.react-calendar button:focus
+    background-color: $activeBackgroundColor !important
+    border-radius: 10px
+
+.react-calendar__month-view__days__day--neighboringMonth
+    background-color: $disabledBackgroundColor !important
+
+.react-calendar button:hover
+    color: $hoverLinkColor !important
+    background-color: $activeBackgroundColor !important
+    border-radius: 10px
+
+.react-calendar button:disabled
+    background-color: $disabledBackgroundColor !important
+    border-radius: 10px
+
+.react-calendar__navigation__next2-button,
+.react-calendar__navigation__prev2-button
+    display: none
+
+a.dayInfoLink:link,
+a.dayInfoLink:visited,
+a.dayInfoLink:active
+    color: $textColor
+    font-weight: 500
+
+a.dayInfoLink:hover
+    color: $activeColor
+    font-weight: 500

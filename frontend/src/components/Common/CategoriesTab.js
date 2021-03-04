@@ -1,5 +1,4 @@
 import React from "react";
-import "./style.css";
 
 function CategoriesTab({ categories, activeColor, onChangeCategory, activeCategory, hidden }) {
 	return (

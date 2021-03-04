@@ -9,7 +9,6 @@ import PagesStore from "../../store/PagesStore";
 import { toast } from "react-toastify";
 import { MDBIcon, MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
-import "./style.css";
 
 import Rating from "react-rating";
 import FriendsActivity from "../Common/FriendsActivity";
@@ -51,7 +50,7 @@ const EpisodePage = observer((props) => {
 	);
 
 	useEffect(() => {
-		document.title = show.showName + " - " + show.name;
+		document.title = show.show?.tmdb_name + " - " + show.name;
 	}, [show]);
 
 	useEffect(
@@ -78,14 +77,14 @@ const EpisodePage = observer((props) => {
 
 	return (
 		<div>
-			<div className='bg' style={{ backgroundImage: `url(${show.background})` }} />
+			<div className='bg' style={{ backgroundImage: `url(${show.show?.tmdb_backdrop_path})` }} />
 			<LoadingOverlay active={showState === "pending"} spinner text='Загрузка...'>
 				<div className='showContentPage'>
 					<div className='showContentHeader'>
-						<div className='showPosterBlock'>
-							<img src={show.poster} className='img-fluid' alt='' />
+						<div className='showPosterBlock episode'>
+							<img src={show.still_path} className='img-fluid' alt='' />
 						</div>
-						<div className='showInfoBlock'>
+						<div className='showInfoBlock episode'>
 							<h1 className='header'>
 								<a
 									href={window.location.origin + "/show/" + show_id}
@@ -93,20 +92,20 @@ const EpisodePage = observer((props) => {
 										history.push("/show/" + show_id);
 										e.preventDefault();
 									}}>
-									{show.showName}
+									{show.show?.tmdb_name}
 								</a>
 								{" - " + show.name}
 							</h1>
-							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{show.showOriginalName + " - Season " + show.seasonNumber + " - Episode " + show.episodeNumber}</h5>
+							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{show.show?.tmdb_original_name + " - Season " + show.season_number + " - Episode " + show.episode_number}</h5>
 							<div className='mainInfo'>
-								<p hidden={!show.date}>Дата выхода: {show.date}</p>
+								<p hidden={!show.air_date}>Дата выхода: {show.air_date}</p>
 								<a
 									href={window.location.origin + "/show/" + show_id + "/season/" + season_number}
 									onClick={(e) => {
 										history.push("/show/" + show_id + "/season/" + season_number);
 										e.preventDefault();
 									}}>
-									Сезон: {show.seasonNumber}
+									Сезон: {show.season_number}
 								</a>
 							</div>
 							<div hidden={!loggedIn | !userInfo?.user_watched_show}>
@@ -145,7 +144,7 @@ const EpisodePage = observer((props) => {
 									</button>
 								</LoadingOverlay>
 							</div>
-							<ScoreBlock score={show.tmdbScore} text='TMDB score' className='scoreBlock' />
+							<ScoreBlock score={show.score} text='TMDB score' className='scoreBlock' />
 						</div>
 					</div>
 					<div className='showContentBody'>

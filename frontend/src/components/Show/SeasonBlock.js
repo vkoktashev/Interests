@@ -7,124 +7,131 @@ import ShowStore from "../../store/ShowStore";
 import PagesStore from "../../store/PagesStore";
 
 import { MDBIcon } from "mdbreact";
-import "./style.css";
 import LoadingOverlay from "react-loading-overlay";
 import DetailedEpisodeRow from "./DetailedEpisodeRow";
 import Rating from "react-rating";
 
-const SeasonBlock = observer(({ showID, seasonNumber, onChangeStatus, userWatchedShow }) => {
-	const { loggedIn } = AuthStore;
-	const { openLoginForm } = PagesStore;
-	const { requestSeasons, requestSeasonsUserInfo, setEpisodesStatus, setSeasonStatus } = ShowStore;
-	const showSeason = computed(() => ShowStore.getShowSeason(seasonNumber)).get();
-	const showSeasonState = computed(() => ShowStore.getShowSeasonState(seasonNumber)).get();
-	const showUserInfo = computed(() => ShowStore.getShowSeasonUserInfo(seasonNumber)).get();
+const SeasonBlock = observer(
+	({
+		showID,
+		seasonNumber,
+		//onChangeStatus,
+		userWatchedShow,
+	}) => {
+		const { loggedIn } = AuthStore;
+		const { openLoginForm, setSaveEpisodes } = PagesStore;
+		const { requestSeasons, requestSeasonsUserInfo, setEpisodesStatus, setSeasonStatus } = ShowStore;
+		const showSeason = computed(() => ShowStore.getShowSeason(seasonNumber)).get();
+		const showSeasonState = computed(() => ShowStore.getShowSeasonState(seasonNumber)).get();
+		const showUserInfo = computed(() => ShowStore.getShowSeasonUserInfo(seasonNumber)).get();
 
-	let history = useHistory();
-	const [isChecked, setIsChecked] = useState(0);
-	const [userRate, setUserRate] = useState(0);
+		let history = useHistory();
+		const [isChecked, setIsChecked] = useState(0);
+		const [userRate, setUserRate] = useState(0);
 
-	useEffect(
-		() => {
-			setIsChecked(0);
-			setUserRate(0);
-			requestSeasons(showID, seasonNumber);
-		},
-		// eslint-disable-next-line
-		[showID, seasonNumber, requestSeasons]
-	);
-
-	useEffect(
-		() => {
-			setIsChecked(0);
-			setUserRate(0);
-			if (loggedIn) requestSeasonsUserInfo(showID, seasonNumber);
-		},
-		// eslint-disable-next-line
-		[loggedIn, showID, seasonNumber]
-	);
-
-	useEffect(
-		() => {
-			if (showUserInfo?.score) {
-				setUserRate(showUserInfo.score);
-			} else {
+		useEffect(
+			() => {
+				setIsChecked(0);
 				setUserRate(0);
-			}
-		},
-		// eslint-disable-next-line
-		[showUserInfo]
-	);
+				requestSeasons(showID, seasonNumber);
+			},
+			// eslint-disable-next-line
+			[showID, seasonNumber, requestSeasons]
+		);
 
-	function getEpisodeByNumber(episodes, number) {
-		for (let episode in episodes) if (episodes[episode].episode_number === number) return episodes[episode];
-	}
+		useEffect(
+			() => {
+				setIsChecked(0);
+				setUserRate(0);
+				if (loggedIn) requestSeasonsUserInfo(showID, seasonNumber);
+			},
+			// eslint-disable-next-line
+			[loggedIn, showID, seasonNumber]
+		);
 
-	return (
-		<LoadingOverlay active={showSeasonState === "pending"} spinner text='Загрузка...'>
-			<div key={showSeason?.tmdb?.id} className='seasonBlock'>
-				<a
-					href={window.location.origin + "/show/" + showID + "/season/" + seasonNumber}
-					onClick={(e) => {
-						history.push("/show/" + showID + "/season/" + seasonNumber);
-						e.preventDefault();
-					}}
-					className='seasonBlockName'>
-					<h5> {showSeason?.tmdb?.name} </h5>
-				</a>
-				<div hidden={!loggedIn || !userWatchedShow} className='seasonBlockName'>
-					<Rating
-						stop={10}
-						emptySymbol={<MDBIcon far icon='star' size='1x' />}
-						fullSymbol={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-							<MDBIcon icon='star' size='1x' title={n} />
-						))}
-						initialRating={userRate}
-						onChange={(score) => {
-							if (!loggedIn) {
-								openLoginForm();
-							} else {
-								setUserRate(score);
-								setSeasonStatus({ score: score }, showID, seasonNumber);
-							}
+		useEffect(
+			() => {
+				if (showUserInfo?.score) {
+					setUserRate(showUserInfo.score);
+				} else {
+					setUserRate(0);
+				}
+			},
+			// eslint-disable-next-line
+			[showUserInfo]
+		);
+
+		function getEpisodeByID(episodes, id) {
+			for (let episode in episodes) if (episodes[episode].tmdb_id === id) return episodes[episode];
+		}
+
+		return (
+			<LoadingOverlay active={showSeasonState === "pending"} spinner text='Загрузка...'>
+				<div key={showSeason?.id} className='seasonBlock'>
+					<a
+						href={window.location.origin + "/show/" + showID + "/season/" + seasonNumber}
+						onClick={(e) => {
+							history.push("/show/" + showID + "/season/" + seasonNumber);
+							e.preventDefault();
 						}}
-					/>
-				</div>
-				<br />
-				<details open={true} className='episodeRows'>
-					<summary>Развернуть</summary>
-					<div style={{ marginLeft: "5px" }} hidden={!loggedIn || !userWatchedShow}>
-						Выбрать все&nbsp;
-						<input
-							type='checkbox'
-							checked={isChecked > 0}
-							onChange={(res) => {
-								setIsChecked(res.target.checked ? 1 : -1);
+						className='seasonBlockName'>
+						<h5> {showSeason?.name} </h5>
+					</a>
+					<div hidden={!loggedIn || !userWatchedShow} className='seasonBlockName'>
+						<Rating
+							stop={10}
+							emptySymbol={<MDBIcon far icon='star' size='1x' />}
+							fullSymbol={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+								<MDBIcon icon='star' size='1x' title={n} />
+							))}
+							initialRating={userRate}
+							onChange={(score) => {
+								if (!loggedIn) {
+									openLoginForm();
+								} else {
+									setUserRate(score);
+									setSeasonStatus({ score: score }, showID, seasonNumber);
+								}
 							}}
 						/>
 					</div>
-					<ul>
-						{showSeason?.tmdb?.episodes
-							?.map((episode, counter) => (
-								<li className='episode' key={counter}>
-									<DetailedEpisodeRow
-										episode={episode}
-										showID={showID}
-										loggedIn={loggedIn}
-										userInfo={getEpisodeByNumber(showUserInfo?.episodes, episode?.episode_number)}
-										setEpisodeUserStatus={setEpisodesStatus}
-										onChangeStatus={(status) => onChangeStatus(status)}
-										checkAll={isChecked}
-										userWatchedShow={userWatchedShow}
-									/>
-								</li>
-							))
-							.reverse()}
-					</ul>
-				</details>
-			</div>
-		</LoadingOverlay>
-	);
-});
+					<br />
+					<details open={true} className='episodeRows'>
+						<summary>Развернуть</summary>
+						<div style={{ marginLeft: "5px" }} hidden={!loggedIn || !userWatchedShow}>
+							Выбрать все&nbsp;
+							<input
+								type='checkbox'
+								checked={isChecked > 0}
+								onChange={(res) => {
+									setSaveEpisodes(true);
+									setIsChecked(res.target.checked ? 1 : -1);
+								}}
+							/>
+						</div>
+						<ul>
+							{showSeason?.episodes
+								?.map((episode, counter) => (
+									<li className='episode' key={counter}>
+										<DetailedEpisodeRow
+											episode={episode}
+											showID={showID}
+											loggedIn={loggedIn}
+											userInfo={getEpisodeByID(showUserInfo?.episodes, episode?.id)}
+											setEpisodeUserStatus={setEpisodesStatus}
+											checkAll={isChecked}
+											userWatchedShow={userWatchedShow}
+											setSaveEpisodes={setSaveEpisodes}
+										/>
+									</li>
+								))
+								.reverse()}
+						</ul>
+					</details>
+				</div>
+			</LoadingOverlay>
+		);
+	}
+);
 
 export default SeasonBlock;

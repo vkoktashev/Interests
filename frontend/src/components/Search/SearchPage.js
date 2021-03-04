@@ -4,7 +4,6 @@ import { observer } from "mobx-react";
 import SearchStore from "../../store/SearchStore";
 
 import { MDBRow, MDBCol, MDBContainer, MDBIcon, MDBFormInline } from "mdbreact";
-import "./style.css";
 
 import LoadingOverlay from "react-loading-overlay";
 import { toast } from "react-toastify";

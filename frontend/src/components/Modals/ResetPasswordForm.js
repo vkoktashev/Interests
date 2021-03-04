@@ -4,7 +4,6 @@ import AuthStore from "../../store/AuthStore";
 import PagesStore from "../../store/PagesStore";
 
 import { MDBModal, MDBModalBody, MDBContainer, MDBRow, MDBCol, MDBBtn } from "mdbreact";
-import "./style.css";
 
 /**
  * КОмпонент формы сброса пароля

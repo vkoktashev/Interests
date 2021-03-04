@@ -6,8 +6,6 @@ import UserStore from "../../store/UserStore";
 
 import { MDBRow, MDBCol, MDBContainer } from "mdbreact";
 
-import "./style.css";
-
 import LoadingOverlay from "react-loading-overlay";
 import GameBlock from "./GameBlock";
 import FriendBlock from "./FriendBlock";

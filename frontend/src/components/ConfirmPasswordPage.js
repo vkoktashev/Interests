@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import "./style.css";
 import { observer } from "mobx-react";
 import AuthStore from "../store/AuthStore";
 

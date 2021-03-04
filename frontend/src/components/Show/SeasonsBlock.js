@@ -1,42 +1,70 @@
-import React, { useState } from "react";
-import "./style.css";
+import React from "react";
+import { observer } from "mobx-react";
+import LoadingOverlay from "react-loading-overlay";
+import ShowStore from "../../store/ShowStore";
+import PagesStore from "../../store/PagesStore";
+import AuthStore from "../../store/AuthStore";
+
 import SeasonBlock from "./SeasonBlock";
 
-function SeasonsBlock({ showID, seasons, setShowEpisodeUserStatus, userWatchedShow }) {
-	const [needHeader, setNeedHeader] = useState(false);
-	const [changedEpisodes, setChangedEpisodes] = useState([]);
+const SeasonsBlock = observer(({ showID, seasons, userWatchedShow }) => {
+	const { showSeasonsUserInfo, showSeasons, setEpisodesStatus, setStatusState, anySeasonLoading } = ShowStore;
+	const { saveEpisodesBlockIsOpen, setSaveEpisodes } = PagesStore;
+	const { loggedIn } = AuthStore;
 
-	function updateEpisodes(episode) {
-		let newChangedEpisodes = changedEpisodes;
-		if (episode.addEpisode) newChangedEpisodes.push(episode.episode);
-		else {
-			const index = newChangedEpisodes.findIndex((i) => i.episode_number === episode.episode.episode_number && i.season_number === episode.episode.season_number);
-			if (index > -1) newChangedEpisodes.splice(index, 1);
+	function sendEpisodes() {
+		let episodes = [];
+		let seasons = [];
+		for (let season in showSeasons) {
+			for (let episode in showSeasons[season].episodes) {
+				let currentValue = showSeasonsUserInfo[season].episodes[episode];
+				let cbValue = document.getElementById(`cbEpisode${showSeasons[season].episodes[episode].id}`).checked;
+				if (cbValue === !(currentValue.score > -1)) {
+					episodes.push({ tmdb_id: currentValue.tmdb_id, score: cbValue ? 0 : -1 });
+					if (seasons.indexOf(season) === -1) seasons.push(season);
+				}
+			}
 		}
-		setNeedHeader(newChangedEpisodes.length > 0);
-		setChangedEpisodes(newChangedEpisodes);
+		setEpisodesStatus({ episodes }, showID, seasons);
+		setSaveEpisodes(false);
+	}
+
+	function sendAllEpisodes() {
+		let episodes = [];
+		let seasons = [];
+		for (let season in showSeasons) {
+			for (let episode in showSeasons[season].episodes) {
+				episodes.push({ tmdb_id: showSeasons[season].episodes[episode].id, score: 0 });
+				if (seasons.indexOf(season) === -1) seasons.push(season);
+			}
+		}
+		setEpisodesStatus({ episodes }, showID, seasons);
+		setSaveEpisodes(false);
 	}
 
 	return (
-		<div>
-			{seasons
-				?.map((season) => (
-					<SeasonBlock showID={showID} seasonNumber={season.season_number} key={season.season_number} onChangeStatus={(status) => updateEpisodes(status)} userWatchedShow={userWatchedShow} />
-				))
-				.reverse()}
-			<div className='saveEpisodesHeader' hidden={!needHeader}>
+		<LoadingOverlay active={setStatusState === "pending"} spinner text='Обновление...'>
+			<button
+				className={"checkAllEpisodesButton"}
+				hidden={!loggedIn | !userWatchedShow}
+				disabled={anySeasonLoading}
+				onClick={() => {
+					sendAllEpisodes();
+				}}>
+				Посмотрел весь сериал
+			</button>
+			{seasons?.map((season) => <SeasonBlock showID={showID} seasonNumber={season.season_number} key={season.season_number} userWatchedShow={userWatchedShow} />).reverse()}
+			<div className='saveEpisodesHeader' hidden={!saveEpisodesBlockIsOpen}>
 				<button
 					className='saveEpisodesButton'
 					onClick={() => {
-						setShowEpisodeUserStatus({ episodes: changedEpisodes }, showID, true);
-						setNeedHeader(false);
-						setChangedEpisodes([]);
+						sendEpisodes();
 					}}>
 					Сохранить
 				</button>
 			</div>
-		</div>
+		</LoadingOverlay>
 	);
-}
+});
 
 export default SeasonsBlock;

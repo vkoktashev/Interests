@@ -1,0 +1,43 @@
+@import "./_colors"
+
+.registrationBody
+    background-color: $backgroundColor
+    color: $textColor
+    text-align: center
+
+.loginBody
+    background-color: $backgroundColor
+    color: $textColor
+    text-align: center
+
+input.form-control
+    background-color: $backgroundColor
+    color: $textColor
+    margin-bottom: 10px
+    outline: none
+
+input.form-control:focus
+    background-color: $backgroundColor
+    color: $textColor
+
+input.form-control:-webkit-autofill
+    box-shadow: inset 0 0 0 50px $backgroundColor !important
+    -webkit-box-shadow: inset 0 0 0 50px $backgroundColor !important
+    -webkit-text-fill-color: $textColor !important
+    color: $textColor !important
+
+.confirmButton
+    background-color: $activeColor !important
+    color: $headerTextColor
+
+.note
+    color: black
+
+.passwordResetLabel
+    display: block
+    margin-top: 15px
+    color: $textColor
+
+.passwordResetLabel:hover
+    color: #7654de
+    cursor: pointer

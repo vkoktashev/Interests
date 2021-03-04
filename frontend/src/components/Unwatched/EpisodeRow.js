@@ -1,6 +1,5 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
-import "./style.css";
 import Rating from "react-rating";
 import { MDBIcon } from "mdbreact";
 

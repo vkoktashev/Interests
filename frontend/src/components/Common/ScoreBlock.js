@@ -4,13 +4,13 @@ function ScoreBlock({ score, text, className }) {
 	function getColor(score) {
 		switch (true) {
 			case score >= 80:
-				return "metacriticGreen";
+				return "green";
 			case score >= 60 && score < 80:
-				return "metacriticYellow";
+				return "yellow";
 			case score < 60:
-				return "metacriticRed";
+				return "red";
 			default:
-				return "metacriticGreen";
+				return "green";
 		}
 	}
 

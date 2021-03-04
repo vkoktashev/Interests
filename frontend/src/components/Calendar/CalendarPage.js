@@ -9,7 +9,6 @@ import LoadingOverlay from "react-loading-overlay";
 import "react-calendar/dist/Calendar.css";
 import DayInfo from "./DayInfo";
 import ReleasesList from "./ReleasesList";
-import "./style.css";
 
 const CalendarPage = observer((props) => {
 	const { loggedIn } = AuthStore;

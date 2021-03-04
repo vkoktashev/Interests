@@ -1,4 +1,4 @@
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 //import remotedev from "mobx-remotedev";
 import AuthStore from "./AuthStore";
 import * as showRequests from "../services/showRequests";
@@ -28,7 +28,6 @@ class Show {
 	};
 	requestShowSuccess = (result) => {
 		this.show = result;
-		console.log(result);
 		this.showState = "done";
 	};
 	requestShowFailure = (error) => {
@@ -79,8 +78,8 @@ class Show {
 	};
 
 	requestShowUserInfo = async (id) => {
+		this.userInfoState = "pending";
 		if (await AuthStore.checkAuthorization()) {
-			this.userInfoState = "pending";
 			showRequests.getShowUserInfo(localStorage.getItem("token"), id).then(this.requestShowUserInfoSuccess, this.requestShowUserInfoFailure);
 		}
 	};
@@ -95,7 +94,7 @@ class Show {
 
 	requestSeasonUserInfo = async (showID, seasonID) => {
 		if (await AuthStore.checkAuthorization()) {
-			this.userInfoState = "pending";
+			runInAction(() => (this.userInfoState = "pending"));
 			showRequests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then(this.requestSeasonUserInfoSuccess, this.requestSeasonUserInfoFailure);
 		}
 	};
@@ -111,7 +110,7 @@ class Show {
 	requestSeasonsUserInfo = async (showID, seasonID) => {
 		this.showSeasonsUserInfo[seasonID] = {};
 		if (await AuthStore.checkAuthorization()) {
-			this.showSeasonsUserInfoState[seasonID] = "pending";
+			runInAction(() => (this.showSeasonsUserInfoState[seasonID] = "pending"));
 			showRequests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then(
 				(res) => this.requestSeasonsUserInfoSuccess(res, seasonID),
 				(res) => this.requestSeasonsUserInfoFailure(res, seasonID)
@@ -128,7 +127,7 @@ class Show {
 
 	requestEpisodeUserInfo = async (showID, seasonID, episodeID) => {
 		if (await AuthStore.checkAuthorization()) {
-			this.userInfoState = "pending";
+			runInAction(() => (this.userInfoState = "pending"));
 			showRequests.getShowEpisodeUserInfo(localStorage.getItem("token"), showID, seasonID, episodeID).then(this.requestEpisodeUserInfoSuccess, this.requestEpisodeUserInfoFailure);
 		}
 	};
@@ -156,21 +155,16 @@ class Show {
 
 	setSeasonStatus = async (userInfo, showID, seasonNumber) => {
 		if (await AuthStore.checkAuthorization()) {
-			this.setStatusState = "pending";
+			runInAction(() => (this.setStatusState = "pending"));
 			showRequests.setShowSeasonStatus(localStorage.getItem("token"), showID, seasonNumber, userInfo).then(this.setShowStatusSuccess, this.setShowStatusFailure);
 		}
 	};
 
-	setEpisodesStatus = async (episodesList, showID, needUpdate = false) => {
+	setEpisodesStatus = async (episodesList, showID, seasonsToUpdate = []) => {
 		if (await AuthStore.checkAuthorization()) {
-			this.setStatusState = "pending";
+			runInAction(() => (this.setStatusState = "pending"));
 			showRequests.setShowEpisodesStatus(localStorage.getItem("token"), showID, episodesList).then((result) => {
-				if (needUpdate) {
-					let seasons = [];
-					for (let episode in episodesList.episodes) if (seasons.indexOf(episodesList.episodes[episode].season_number) === -1) seasons.push(episodesList.episodes[episode].season_number);
-
-					for (let season in seasons) this.requestSeasonsUserInfo(showID, seasons[season]);
-				}
+				if (seasonsToUpdate) for (let season in seasonsToUpdate) this.requestSeasonsUserInfo(showID, seasonsToUpdate[season]);
 				this.setShowStatusSuccess();
 			}, this.setShowStatusFailure);
 		}
@@ -187,6 +181,19 @@ class Show {
 	getShowSeasonUserInfo = (seasonNumber) => {
 		return this.showSeasonsUserInfo[seasonNumber];
 	};
+
+	getEpisodesUserInfo = (season, id) => {
+		for (let episodeNumber in this.showSeasonsUserInfo[season].episodes) {
+			let episode = this.showSeasonsUserInfo[season].episodes[episodeNumber];
+			if (episode.tmdb_id === id) return episode;
+		}
+		return null;
+	};
+
+	get anySeasonLoading() {
+		for (let season in this.showSeasonsState) if (this.showSeasonsState[season] === "pending") return true;
+		return false;
+	}
 }
 
 const ShowStore = new Show();

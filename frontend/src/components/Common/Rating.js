@@ -1,6 +1,5 @@
 import React from "react";
 import { MDBIcon } from "mdbreact";
-import "./style.css";
 
 import Rating from "react-rating";
 

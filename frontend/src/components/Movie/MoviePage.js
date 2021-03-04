@@ -5,15 +5,14 @@ import MovieStore from "../../store/MovieStore";
 import AuthStore from "../../store/AuthStore";
 import PagesStore from "../../store/PagesStore";
 
-import { MDBIcon, MDBInput } from "mdbreact";
+import { MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
-import "./style.css";
 import { toast } from "react-toastify";
 
-import Rating from "react-rating";
 import StatusButtonGroup from "../Common/StatusButtonGroup";
 import FriendsActivity from "../Common/FriendsActivity";
 import ScoreBlock from "../Common/ScoreBlock";
+import Rating from "../Common/Rating";
 
 /**
  * Основная страница приложения
@@ -105,23 +104,14 @@ const MoviePage = observer((props) => {
 							</div>
 							<LoadingOverlay active={userInfoState === "pending" && !movieState === "pending"} spinner text='Загрузка...'>
 								<Rating
-									stop={10}
-									emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
-									fullSymbol={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-										<MDBIcon icon='star' size='1x' style={{ fontSize: "25px" }} title={n} />
-									))}
 									initialRating={userRate}
 									readonly={!loggedIn | (userStatus === "Не смотрел")}
 									onChange={(score) => {
-										if (!loggedIn) {
-											openLoginForm();
-										} else {
-											setUserRate(score);
-											setMovieStatus({ score: score });
-										}
+										setUserRate(score);
+										setMovieStatus({ score: score });
 									}}
-								/>{" "}
-								<br />
+									size='1.5rem'
+								/>
 								<StatusButtonGroup
 									statuses={["Не смотрел", "Буду смотреть", "Дропнул", "Посмотрел"]}
 									activeColor='#4527a0'

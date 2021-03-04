@@ -1,0 +1,185 @@
+@import "./_colors"
+
+.showContentPage
+    width: 80rem
+    max-width: 100%
+    margin-left: auto
+    margin-right: auto
+    color: $textColor
+    margin-top: 5em
+    margin-bottom: 2em
+    padding: 0px
+
+.showContentHeader
+    position: relative
+    width: 100%
+    background-color: $headerBackgroundColor
+    color: $headerTextColor
+    padding: 0
+    border-top-left-radius: 10px
+    border-top-right-radius: 10px
+
+.showContentBody
+    background-color: $backgroundColor
+    padding-left: 1rem
+    padding-right: 1rem
+    padding-bottom: 1rem
+
+.showFriendsBlock
+    position: relative
+    max-width: 100%
+    width: 78rem
+
+.img-fluid
+    max-height: 30rem
+
+.showPosterBlock
+    display: inline-block
+    text-align: center
+    width: 25rem
+    max-width: 100%
+    padding: 0
+    overflow: hidden
+
+.showPosterBlock.episode
+    width: 35rem
+
+.showInfoBlock
+    position: relative
+    display: inline-block
+    white-space: normal
+    vertical-align: top
+    max-width: 100%
+    width: 55rem
+    padding-left: 1rem
+    padding-bottom: 1rem
+    padding-right: 1rem
+
+.showInfoBlock.episode
+    width: 45rem
+
+.showInfoBlock .header
+    padding-right: 2.5em
+
+.showReviewBody
+    width: 40rem
+    max-width: 100%
+
+a.episodeLink:link, a.episodeLink:visited, a.episodeLink:active
+    color: $linkTextColor
+
+a.episodeLink:hover
+    color: $activeColor
+
+.seasonBlock
+    margin-bottom: 0px
+    margin-top: 10px
+    margin-bottom: 15px
+
+.seasonBlockName
+    display: inline-block
+    margin-right: 7px
+
+ul
+    list-style-type: none
+    margin-left: -35px
+
+li.episode:nth-child(odd)
+    background-color: $backgroundColor
+
+li.episode:nth-child(even)
+    background-color: $activeBackgroundColor
+    border-radius: 5px
+
+.episodeRating
+    margin-left: 20px
+
+.mainInfo
+    margin-bottom: 20px
+
+.mainInfo p
+    margin-bottom: 2px
+
+#reviewSeasonInput
+    background-color: $headerBackgroundColor
+    color: $headerTextColor
+    width: 50%
+
+.episodeRowRate
+    display: inline-block
+    margin-right: 1rem
+
+.episodeRowCheck
+    display: inline-block
+
+.episodeRowDate
+    margin-bottom: 0px
+    margin-left: 0.5rem
+    display: inline-block
+
+.episodeRowCheckDate
+    display: inline-block
+    width: 7rem
+    max-width: 40%
+
+.episodeRows
+    display: inline-block
+    margin-bottom: 0px
+    margin-top: 0px
+    width: 100%
+
+.episodeRow
+    margin-bottom: 0px
+    margin-top: 0px
+    padding-top: 3px
+    padding-bottom: 3px
+    padding-left: 4px
+    font-size: 1rem
+    display: inline-block
+    max-width: 100%
+
+.episodeRowName
+    margin-bottom: 0px
+    display: inline-block
+
+.detailRow
+    font-size: 1rem
+
+.episodeRowName.detailRow
+    overflow: hidden /* Обрезаем все, что не помещается в область */
+    text-overflow: ellipsis
+
+.saveEpisodesHeader
+    position: fixed
+    bottom: 0
+    left: 0
+    width: 100%
+    height: 60px
+    z-index: 1000
+    text-align: center
+    padding-top: 5px
+    background-color: $activeBackgroundColor
+
+.saveEpisodesButton
+    width: 150px
+    height: 50px
+    background-color: $activeColor
+    color: $headerTextColor
+    border-radius: 5px
+
+.saveEpisodesButton:hover
+    color: $linkTextColor
+
+.saveEpisodesButton:active
+    background-color: $hoverLinkColor
+
+.checkAllEpisodesButton
+    margin-top: 10px
+    background-color: rgba(0, 0, 0, 0)
+    color: $linkTextColor
+    font-weight: bolder
+    border-style: solid
+    border-radius: 5px
+
+.checkAllEpisodesButton:hover
+    color: $activeColor

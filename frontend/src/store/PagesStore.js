@@ -5,6 +5,7 @@ class Pages {
 	LoginFormIsOpen = false;
 	RegistrateFormIsOpen = false;
 	ResetPasswordFormIsOpen = false;
+	saveEpisodesBlockIsOpen = false;
 
 	constructor() {
 		makeAutoObservable(this);
@@ -33,6 +34,8 @@ class Pages {
 	closeResetPasswordForm = async () => {
 		this.ResetPasswordFormIsOpen = false;
 	};
+
+	setSaveEpisodes = (status) => (this.saveEpisodesBlockIsOpen = status);
 }
 
 const PagesStore = new Pages();
