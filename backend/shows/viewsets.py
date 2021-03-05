@@ -21,8 +21,8 @@ from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpis
     UserEpisodeInSeasonSerializer, EpisodeSerializer, ShowSerializer, SeasonSerializer
 from users.models import UserFollow
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
-    SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE, TMDB_BACKDROP_PATH_PREFIX, \
-    TMDB_POSTER_PATH_PREFIX, TMDB_STILL_PATH_PREFIX
+    SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, TMDB_BACKDROP_PATH_PREFIX, \
+    TMDB_POSTER_PATH_PREFIX, TMDB_STILL_PATH_PREFIX, EPISODE_WATCHED_SCORE
 from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
     SEASON_RETRIEVE_200_EXAMPLE
 from utils.functions import update_fields_if_needed, get_tmdb_show_key, get_tmdb_episode_key, get_tmdb_season_key, \
@@ -259,58 +259,83 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except Show.DoesNotExist:
             return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
-        for data in episodes:
-            try:
-                episode = Episode.objects.get(tmdb_id=data.get('tmdb_id'), tmdb_season__tmdb_show=show)
-            except Episode.DoesNotExist:
-                return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+        episode_list = Episode.objects \
+            .filter(tmdb_id__in=[episode.pop('tmdb_id') for episode in episodes], tmdb_season__tmdb_show=show)
 
-            data = data.copy()
-            data.update({'user': request.user.pk,
-                         'episode': episode.pk})
+        if len(episode_list) != len(episodes):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-            try:
-                user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
-                current_user_episode_score = user_episode.score
-                current_user_episode_review = user_episode.review
-                serializer = UserEpisodeSerializer(user_episode, data=data)
-            except UserEpisode.DoesNotExist:
-                user_episode = None
-                serializer = UserEpisodeSerializer(data=data)
+        user_episodes = UserEpisode.objects.select_related('episode__tmdb_season__tmdb_show') \
+            .select_related('episode') \
+            .select_related('user') \
+            .filter(user=request.user, episode__in=episode_list)
+
+        existed_user_episodes = []
+        existed_user_episodes_data = []
+        new_user_episodes = []
+        new_user_episodes_data = []
+
+        for i, data in enumerate(episodes):
+            episode = episode_list[i]
+
+            data.update({
+                'user': request.user,
+                'episode': episode,
+                'review': data.get('review', ''),
+                'score': data.get('score', EPISODE_NOT_WATCHED_SCORE)
+            })
+
+            found = False
+            current_user_episode = None
+            for user_episode in user_episodes:
+                if episode == user_episode.episode:
+                    current_user_episode = user_episode
+                    found = True
+                    break
+
+            if found:
+                current_user_episode_score = current_user_episode.score
+                current_user_episode_review = current_user_episode.review
+                update_fields_if_needed_without_save(current_user_episode, data)
+                existed_user_episodes.append(current_user_episode)
+                existed_user_episodes_data.append(data)
+
+            else:
                 current_user_episode_score = EPISODE_NOT_WATCHED_SCORE
                 current_user_episode_review = ''
+                new_user_episodes.append(
+                    UserEpisode(**data)
+                )
+                new_user_episodes_data.append(data)
 
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-            if user_episode is not None and current_user_episode_review != serializer.data.get('review') or \
-                    user_episode is None and serializer.data.get('review') != '':
+            if current_user_episode is not None and current_user_episode_review != data.get('review') or \
+                    current_user_episode is None and data.get('review') != '':
                 EpisodeLog.objects.create(user=request.user, episode=episode,
-                                          action_type='review', action_result=serializer.validated_data.get('review'))
+                                          action_type='review', action_result=data.get('review'))
 
             if current_user_episode_score == EPISODE_NOT_WATCHED_SCORE and \
-                    serializer.data.get('score') == EPISODE_WATCHED_SCORE:
+                    data.get('score') == EPISODE_WATCHED_SCORE:
                 if watched_episodes_count == 0:
-                    if user_episode is not None and current_user_episode_score != serializer.data.get('score') or \
-                            user_episode is None and serializer.data.get('score') != EPISODE_NOT_WATCHED_SCORE:
+                    if current_user_episode is not None and current_user_episode_score != data.get('score') or \
+                            current_user_episode is None and data.get('score') != EPISODE_NOT_WATCHED_SCORE:
                         first_watched_episode_log = EpisodeLog(user=request.user, episode=episode,
                                                                action_type='score',
-                                                               action_result=serializer.validated_data.get('score'))
+                                                               action_result=data.get('score'))
                 watched_episodes_count += 1
 
             elif current_user_episode_score != EPISODE_NOT_WATCHED_SCORE and \
-                    serializer.data.get('score') == EPISODE_NOT_WATCHED_SCORE:
+                    data.get('score') == EPISODE_NOT_WATCHED_SCORE:
                 if not_watched_episodes_count == 0:
-                    if user_episode is not None:
+                    if current_user_episode is not None:
                         first_not_watched_episode_log = EpisodeLog(user=request.user, episode=episode,
                                                                    action_type='score',
-                                                                   action_result=serializer.validated_data.get('score'))
+                                                                   action_result=data.get('score'))
                 not_watched_episodes_count += 1
 
-            elif user_episode is not None and current_user_episode_score != serializer.data.get('score') or \
-                    user_episode is None and serializer.data.get('score') != EPISODE_NOT_WATCHED_SCORE:
+            elif current_user_episode is not None and current_user_episode_score != data.get('score') or \
+                    current_user_episode is None and data.get('score') != EPISODE_NOT_WATCHED_SCORE:
                 EpisodeLog.objects.create(user=request.user, episode=episode,
-                                          action_type='score', action_result=serializer.validated_data.get('score'))
+                                          action_type='score', action_result=data.get('score'))
 
         if watched_episodes_count > 1:
             ShowLog.objects.create(user=request.user, show=show,
@@ -323,6 +348,14 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                    action_type='episodes', action_result=-not_watched_episodes_count)
         elif not_watched_episodes_count == 1 and first_not_watched_episode_log is not None:
             first_not_watched_episode_log.save()
+
+        serializer = UserEpisodeSerializer(data=existed_user_episodes_data, many=True)
+        serializer.is_valid(raise_exception=True)
+        UserEpisode.objects.bulk_update(existed_user_episodes, fields=('review', 'score'))
+
+        serializer = UserEpisodeSerializer(data=new_user_episodes_data, many=True)
+        serializer.is_valid(raise_exception=True)
+        UserEpisode.objects.bulk_create(new_user_episodes)
 
         return Response(status=status.HTTP_200_OK)
 
