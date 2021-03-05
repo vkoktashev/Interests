@@ -34,11 +34,7 @@ class UserSeasonSerializer(serializers.ModelSerializer):
 class UserEpisodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserEpisode
-        exclude = ('id',)
-        extra_kwargs = {
-            'user': {'write_only': True},
-            'episode': {'write_only': True}
-        }
+        exclude = ('id', 'user', 'episode')
 
 
 class UserEpisodeInSeasonSerializer(UserEpisodeSerializer):
