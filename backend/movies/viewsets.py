@@ -89,7 +89,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'imdb_id': tmdb_movie.get('imdb_id'),
             'tmdb_original_name': tmdb_movie.get('original_title'),
             'tmdb_name': tmdb_movie.get('title'),
-            'tmdb_runtime': tmdb_movie.get('runtime'),
+            'tmdb_runtime': tmdb_movie.get('runtime') if tmdb_movie.get('runtime') is not None else 0,
             'tmdb_release_date': tmdb_movie.get('release_date') if tmdb_movie.get('release_date') != "" else None,
             'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path']
             if tmdb_movie.get('backdrop_path') else ''
@@ -238,8 +238,8 @@ def parse_movie(tmdb_movie):
         if tmdb_movie.get('air_date') != "" else None,
         'score': int(tmdb_movie['vote_average'] * 10) if tmdb_movie.get('vote_average') else None,
         'tagline': tmdb_movie.get('tagline'),
-        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path'] if tmdb_movie.get(
-            'backdrop_path') else '',
+        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path']
+        if tmdb_movie.get('backdrop_path') else '',
         'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_movie['poster_path'] if tmdb_movie.get('poster_path') else '',
         'genres': objects_to_str(tmdb_movie['genres']),
         'production_companies': objects_to_str(tmdb_movie['production_companies']),
