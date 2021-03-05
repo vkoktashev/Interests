@@ -25,7 +25,7 @@ const SeasonsBlock = observer(({ showID, seasons, userWatchedShow }) => {
 				let cbValue = document.getElementById(`cbEpisode${showSeasons[season].episodes[episode].id}`).checked;
 				let currentStatus = currentValue?.score > -1;
 				if (cbValue !== currentStatus) {
-					episodes.push({ tmdb_id: currentValue.tmdb_id, score: cbValue ? 0 : -1 });
+					episodes.push({ tmdb_id: showSeasons[season].episodes[episode].id, score: cbValue ? 0 : -1 });
 					if (seasons.indexOf(season) === -1) seasons.push(season);
 				}
 			}
