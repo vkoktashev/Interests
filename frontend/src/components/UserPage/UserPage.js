@@ -85,7 +85,7 @@ const UserPage = observer((props) => {
 
 							<div hidden={activeCategory !== "Профиль"}>
 								<h4>Моя активность: </h4>
-								<LoadingOverlay active={userLogsState === "pending" && !userState === "pending"} spinner text='Загрузка активности...'>
+								<LoadingOverlay active={userLogsState === "pending" && userState !== "pending"} spinner text='Загрузка активности...'>
 									<ChartBlock stats={user.stats} />
 									<UserLogBlock logs={userLogs} onChangePage={(pageNumber) => requestUserLogs(userID, pageNumber, LOG_ROWS_COUNT)} />
 								</LoadingOverlay>

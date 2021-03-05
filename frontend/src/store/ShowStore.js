@@ -59,6 +59,7 @@ class Show {
 	requestSeasonsSuccess = (result, seasonNumber) => {
 		this.showSeasons[seasonNumber] = result;
 		this.showSeasonsState[seasonNumber] = "done";
+		console.log(result);
 	};
 	requestSeasonsFailure = (error, seasonNumber) => {
 		this.showSeasonsState[seasonNumber] = "error: " + error;

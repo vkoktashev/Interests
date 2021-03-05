@@ -12,12 +12,16 @@ const SeasonsBlock = observer(({ showID, seasons, userWatchedShow }) => {
 	const { saveEpisodesBlockIsOpen, setSaveEpisodes } = PagesStore;
 	const { loggedIn } = AuthStore;
 
+	function getEpisodeByID(episodes, id) {
+		for (let episode in episodes) if (episodes[episode].tmdb_id === id) return episodes[episode];
+	}
+
 	function sendEpisodes() {
 		let episodes = [];
 		let seasons = [];
 		for (let season in showSeasons) {
 			for (let episode in showSeasons[season].episodes) {
-				let currentValue = showSeasonsUserInfo[season].episodes[episode];
+				let currentValue = getEpisodeByID(showSeasonsUserInfo[season].episodes, showSeasons[season].episodes[episode].id);
 				let cbValue = document.getElementById(`cbEpisode${showSeasons[season].episodes[episode].id}`).checked;
 				if (cbValue === !(currentValue.score > -1)) {
 					episodes.push({ tmdb_id: currentValue.tmdb_id, score: cbValue ? 0 : -1 });

@@ -33,6 +33,7 @@ const SeasonPage = observer((props) => {
 		() => {
 			setReview("");
 			setUserRate(0);
+			setIsChecked(0);
 			requestSeason(show_id, number);
 		},
 		// eslint-disable-next-line
@@ -45,6 +46,7 @@ const SeasonPage = observer((props) => {
 			else {
 				setReview("");
 				setUserRate(0);
+				setIsChecked(0);
 			}
 		},
 		// eslint-disable-next-line
@@ -100,8 +102,8 @@ const SeasonPage = observer((props) => {
 			let cbValue = document.getElementById(`cbEpisode${currentValue.tmdb_id}`).checked;
 			if (cbValue === !(currentValue.score > -1)) episodes.push({ tmdb_id: currentValue.tmdb_id, score: cbValue ? 0 : -1 });
 		}
-		console.log(episodes);
-		setEpisodesStatus({ episodes }, show_id, [number]);
+		setEpisodesStatus({ episodes }, show_id);
+		requestSeasonUserInfo(show_id, number);
 		setSaveEpisodes(false);
 	}
 
@@ -154,7 +156,7 @@ const SeasonPage = observer((props) => {
 										className={"saveReviewButton"}
 										hidden={!loggedIn | !userInfo?.user_watched_show}
 										onClick={() => {
-											setSeasonStatus({ review: document.getElementById("reviewSeasonInput").value }, show_id, show.season_number);
+											setSeasonStatus({ review: document.getElementById("reviewInput").value }, show_id, show.season_number);
 										}}>
 										Сохранить
 									</button>
@@ -194,6 +196,7 @@ const SeasonPage = observer((props) => {
 														setEpisodeUserStatus={setEpisodesStatus}
 														checkAll={isChecked}
 														userWatchedShow={userInfo?.user_watched_show}
+														setSaveEpisodes={setSaveEpisodes}
 													/>
 												</li>
 										  ))
