@@ -11,7 +11,7 @@ import ShowBlock from "./ShowBlock";
 const UnwatchedPage = observer((props) => {
 	const { loggedIn } = AuthStore;
 	const { unwatched, requestUnwatched, unwatchedState } = CurrentUserStore;
-	const { setShowEpisodesStatus } = ShowStore;
+	const { setEpisodesStatus } = ShowStore;
 
 	useEffect(() => {
 		if (unwatchedState.startsWith("error:")) toast.error(`Ошибка загрузки! ${unwatchedState}`);
@@ -33,7 +33,7 @@ const UnwatchedPage = observer((props) => {
 					<h1>Непросмотренные серии</h1>
 					<LoadingOverlay active={unwatchedState === "pending"} spinner text='Загрузка...'>
 						{unwatched.map((show) => (
-							<ShowBlock show={show} setShowEpisodeUserStatus={setShowEpisodesStatus} loggedIn={loggedIn} key={show.id} />
+							<ShowBlock show={show} setShowEpisodeUserStatus={setEpisodesStatus} loggedIn={loggedIn} key={show.id} />
 						))}
 					</LoadingOverlay>
 				</div>

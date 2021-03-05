@@ -29,8 +29,7 @@ function DetailedEpisodeRow({ episode, showID, seasonNumber, setShowEpisodeUserS
 							{
 								episodes: [
 									{
-										season_number: seasonNumber,
-										episode_number: episode.tmdb_episode_number,
+										tmdb_id: episode.tmdb_id,
 										score: score,
 									},
 								],
