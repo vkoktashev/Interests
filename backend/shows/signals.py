@@ -46,11 +46,5 @@ def create_season_log(instance, **kwargs):
 
 
 @receiver(pre_save, sender=UserShow)
-def update_datetime_if_needed(instance, **kwargs):
-    try:
-        old_status = UserShow.objects.get(user=instance.user, show=instance.show).status
-    except UserShow.DoesNotExist:
-        old_status = None
-
-    if instance.status != old_status and old_status == UserShow.STATUS_NOT_WATCHED:
-        instance.updated_at = timezone.now()
+def update_datetime(instance, **kwargs):
+    instance.updated_at = timezone.now()

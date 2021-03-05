@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import "./style.css";
 import Rating from "react-rating";
 import { MDBIcon } from "mdbreact";
 
-function DetailedEpisodeRow({ episode, showID, setShowEpisodeUserStatus, loggedIn, userInfo, onChangeStatus, checkAll, userWatchedShow }) {
+function DetailedEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, userInfo, checkAll, userWatchedShow, setSaveEpisodes }) {
 	let history = useHistory();
 	const [userRate, setUserRate] = useState(0);
 	const [isChecked, setIsChecked] = useState(false);
@@ -18,24 +17,8 @@ function DetailedEpisodeRow({ episode, showID, setShowEpisodeUserStatus, loggedI
 		() => {
 			if (checkAll === -1) {
 				setIsChecked(false);
-				onChangeStatus({
-					addEpisode: userRate > -1,
-					episode: {
-						season_number: episode.season_number,
-						episode_number: episode.episode_number,
-						score: -1,
-					},
-				});
 			} else if (checkAll === 1) {
 				setIsChecked(true);
-				onChangeStatus({
-					addEpisode: !(userRate > -1),
-					episode: {
-						season_number: episode.season_number,
-						episode_number: episode.episode_number,
-						score: 0,
-					},
-				});
 			}
 		},
 		// eslint-disable-next-line
@@ -50,20 +33,14 @@ function DetailedEpisodeRow({ episode, showID, setShowEpisodeUserStatus, loggedI
 	return (
 		<div className='episodeRow detailRow'>
 			<div className='episodeRowCheckDate'>
-				<div className='episodeRowCheck' hidden={!loggedIn || typeof onChangeStatus === "undefined" || !userWatchedShow}>
+				<div className='episodeRowCheck' hidden={!loggedIn || !userWatchedShow}>
 					<input
 						type='checkbox'
+						id={`cbEpisode${episode.id}`}
 						checked={isChecked}
 						onChange={(res) => {
+							setSaveEpisodes(true);
 							setIsChecked(res.target.checked);
-							onChangeStatus({
-								addEpisode: res.target.checked === !(userRate > -1),
-								episode: {
-									season_number: episode.season_number,
-									episode_number: episode.episode_number,
-									score: res.target.checked ? 0 : -1,
-								},
-							});
 						}}
 					/>
 				</div>
@@ -80,32 +57,12 @@ function DetailedEpisodeRow({ episode, showID, setShowEpisodeUserStatus, loggedI
 					onChange={(score) => {
 						setUserRate(score);
 						setIsChecked(score > -1);
-						/*if (typeof onChangeStatus!=='undefined')
-                                onChangeStatus({
-                                    addEpisode: (score>-1) !== (userRate > -1),
-                                    episode: {
-                                        season_number: episode.season_number,
-                                        episode_number: episode.episode_number,
-                                        score: (score>-1)?0:-1
-                                    } 
-                                });*/
-						setShowEpisodeUserStatus(
-							{
-								episodes: [
-									{
-										season_number: episode.season_number,
-										episode_number: episode.episode_number,
-										score: score,
-									},
-								],
-							},
-							showID
-						);
+						setEpisodeUserStatus({ episodes: [{ tmdb_id: episode.id, score: score }] }, showID);
 					}}
 				/>
 			</div>
 			<a
-				className='episodeRowName episodeLink detailRow'
+				className='episodeRowName detailRow'
 				href={window.location.origin + "/show/" + showID + "/season/" + episode.season_number + "/episode/" + episode.episode_number}
 				onClick={(e) => {
 					history.push("/show/" + showID + "/season/" + episode.season_number + "/episode/" + episode.episode_number);

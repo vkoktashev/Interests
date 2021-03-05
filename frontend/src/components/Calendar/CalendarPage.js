@@ -1,24 +1,31 @@
 import React, { useState, useEffect } from "react";
-import { connect } from "react-redux";
-import * as selectors from "../../store/reducers";
-import * as actions from "../../store/actions";
+import { observer } from "mobx-react";
+import CurrentUserStore from "../../store/CurrentUserStore";
+import AuthStore from "../../store/AuthStore";
 
+import { toast } from "react-toastify";
 import Calendar from "react-calendar";
 import LoadingOverlay from "react-loading-overlay";
 import "react-calendar/dist/Calendar.css";
 import DayInfo from "./DayInfo";
 import ReleasesList from "./ReleasesList";
-import "./style.css";
 
-function CalendarPage({ loggedIn, calendar, getUserCalendar, calendarIsLoading }) {
+const CalendarPage = observer((props) => {
+	const { loggedIn } = AuthStore;
+	const { calendar, calendarState, requestCalendar } = CurrentUserStore;
+
 	const [value, onChange] = useState(new Date());
 	const [currentDay, setCurrentDay] = useState({});
 
 	useEffect(() => {
 		if (loggedIn) {
-			getUserCalendar();
+			requestCalendar();
 		}
-	}, [loggedIn, getUserCalendar]);
+	}, [loggedIn, requestCalendar]);
+
+	useEffect(() => {
+		if (calendarState.startsWith("error:")) toast.error(`Ошибка загрузки! ${calendarState}`);
+	}, [calendarState]);
 
 	useEffect(() => {
 		if (calendar) {
@@ -49,11 +56,11 @@ function CalendarPage({ loggedIn, calendar, getUserCalendar, calendarIsLoading }
 
 	return (
 		<div>
-			<div className='bg searchBG' />
+			<div className='bg textureBG' />
 			<div className='calendarPage'>
 				<div className='calendarBlock'>
 					<h1 className='calendarHeader'>Календарь релизов</h1>
-					<LoadingOverlay active={calendarIsLoading} spinner text='Загрузка...'>
+					<LoadingOverlay active={calendarState === "pending"} spinner text='Загрузка...'>
 						{/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? <DayInfo day={currentDay} date={value} /> : ""}
 						<Calendar className='calendar' onChange={onChange} value={value} defaultView='month' minDetail='decade' locale='ru-RU' minDate={new Date()} tileContent={dateToTile} />
 						{/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? "" : <DayInfo day={currentDay} date={value} />}
@@ -63,23 +70,9 @@ function CalendarPage({ loggedIn, calendar, getUserCalendar, calendarIsLoading }
 			</div>
 		</div>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	loggedIn: selectors.getLoggedIn(state),
-	calendar: selectors.getUserCalendar(state),
-	calendarIsLoading: selectors.getIsLoadingUserCalendar(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		getUserCalendar: () => {
-			dispatch(actions.requestUserCalendar());
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(CalendarPage);
+export default CalendarPage;
 
 function pad(number) {
 	if (number < 10) {

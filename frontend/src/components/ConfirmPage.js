@@ -1,12 +1,15 @@
 import React, { useEffect } from "react";
-import { connect } from "react-redux";
-import * as selectors from "../store/reducers";
-import * as actions from "../store/actions";
+import { observer } from "mobx-react";
+import { useHistory } from "react-router-dom";
+import AuthStore from "../store/AuthStore";
 
 /**
  * Основная страница приложения
  */
-function ConfirmPage({ confirmEmailRequest }) {
+const ConfirmPage = observer((props) => {
+	const { confirmEmail, confirmEmailState } = AuthStore;
+	let history = useHistory();
+
 	let search = window.location.search;
 	let params = new URLSearchParams(search);
 	let uid64 = params.get("uid64");
@@ -14,25 +17,27 @@ function ConfirmPage({ confirmEmailRequest }) {
 
 	useEffect(
 		() => {
-			confirmEmailRequest(uid64, token);
+			confirmEmail(uid64, token);
 		},
 		// eslint-disable-next-line
 		[]
 	);
 
-	return <div className='bg'></div>;
-}
+	useEffect(
+		() => {
+			if (confirmEmailState.startsWith("error")) history.push(`/404page`);
+		},
+		// eslint-disable-next-line
+		[confirmEmailState]
+	);
 
-const mapStateToProps = (state) => ({
-	loggedIn: selectors.getLoggedIn(state),
+	return (
+		<div className='bg'>
+			<div hidden={confirmEmailState !== "done"} className='confirmEmailSuccess'>
+				Ваша почта подтверждена!
+			</div>
+		</div>
+	);
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		confirmEmailRequest: (uid64, token) => {
-			dispatch(actions.confirmEmailRequest(uid64, token));
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(ConfirmPage);
+export default ConfirmPage;

@@ -1,0 +1,107 @@
+@import "./_colors"
+
+.contentPage
+    width: 80rem
+    max-width: 100%
+    margin-left: auto
+    margin-right: auto
+    color: $textColor
+    margin-top: 4rem
+    margin-bottom: 2em
+    padding: 0px
+
+    .contentHeader
+        position: relative
+        width: 100%
+        background-color: $headerBackgroundColor
+        color: $headerTextColor
+        padding: 0
+        border-top-left-radius: 10px
+        border-top-right-radius: 10px
+
+        .posterBlock
+            display: inline-block
+            text-align: center
+            width:
+            max-width: 100%
+            padding: 0
+            overflow: hidden
+
+            &.widePoster
+                width: 35rem
+
+            &.tightPoster
+                width: 25rem
+
+            img
+                max-height: 30rem
+
+        .infoBlock
+            position: relative
+            display: inline-block
+            white-space: normal
+            vertical-align: top
+            max-width: 100%
+
+            padding-left: 1rem
+            padding-bottom: 1rem
+            padding-right: 1rem
+
+            &.tightInfo
+                width: 45rem
+
+            &.wideInfo
+                width: 55rem
+
+            .header
+                padding-right: 2.5em
+
+            .mainInfo
+                margin-bottom: 10px
+
+                p
+                    margin-bottom: 2px
+
+            .scoreBlock
+                position: absolute
+                top: 0
+                right: 0
+                margin-right: 10px
+                margin-top: 10px
+                vertical-align: top
+
+            #reviewInput
+                background-color: $headerBackgroundColor
+                color: $headerTextColor
+                width: 50%
+
+            .saveReviewButton
+                background-color: $headerBackgroundColor
+                color: $headerTextColor
+
+    .contentBody
+        background-color: $backgroundColor
+        padding: 1rem
+
+        .reviewBody
+            width: 40rem
+            max-width: 100%
+
+            .saveReviewButton
+                background-color: $backgroundColor
+                color: $textColor
+
+        .friendsBlock
+            position: relative
+            max-width: 100%
+            width: 78rem
+
+.saveReviewButton
+    border: 1px solid $textColor
+    padding: 4px 8px
+    text-align: center
+    text-decoration: none
+    display: inline-block
+    margin-top: 0px
+    margin-bottom: 20px
+    font-size: 16px

@@ -13,20 +13,15 @@ axios.defaults.headers.common = {
  */
 export async function getShow(token, id) {
 	let data;
-	try {
-		if (token) {
-			var AuthStr = "Bearer " + token;
-			const res = await axios.get(GET_SHOW_URL + id + "/", { headers: { Authorization: AuthStr } });
-			data = res.data;
-		} else {
-			const res = await axios.get(GET_SHOW_URL + id + "/");
-			data = res.data;
-		}
-		return data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
+	if (token) {
+		var AuthStr = "Bearer " + token;
+		const res = await axios.get(GET_SHOW_URL + id + "/", { headers: { Authorization: AuthStr } });
+		data = res.data;
+	} else {
+		const res = await axios.get(GET_SHOW_URL + id + "/");
+		data = res.data;
 	}
+	return data;
 }
 
 /**
@@ -38,20 +33,15 @@ export async function getShow(token, id) {
  */
 export async function getShowSeason(token, showID, seasonNumber) {
 	let data;
-	try {
-		if (token) {
-			var AuthStr = "Bearer " + token;
-			const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber, { headers: { Authorization: AuthStr } });
-			data = res.data;
-		} else {
-			const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber);
-			data = res.data;
-		}
-		return data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
+	if (token) {
+		var AuthStr = "Bearer " + token;
+		const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber, { headers: { Authorization: AuthStr } });
+		data = res.data;
+	} else {
+		const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber);
+		data = res.data;
 	}
+	return data;
 }
 
 /**
@@ -64,20 +54,15 @@ export async function getShowSeason(token, showID, seasonNumber) {
  */
 export async function getShowEpisode(token, showID, seasonNumber, episodeNumber) {
 	let data;
-	try {
-		if (token) {
-			var AuthStr = "Bearer " + token;
-			const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/episode/" + episodeNumber, { headers: { Authorization: AuthStr } });
-			data = res.data;
-		} else {
-			const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/episode/" + episodeNumber);
-			data = res.data;
-		}
-		return data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
+	if (token) {
+		var AuthStr = "Bearer " + token;
+		const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/episode/" + episodeNumber, { headers: { Authorization: AuthStr } });
+		data = res.data;
+	} else {
+		const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/episode/" + episodeNumber);
+		data = res.data;
 	}
+	return data;
 }
 
 /**
@@ -87,15 +72,9 @@ export async function getShowEpisode(token, showID, seasonNumber, episodeNumber)
  * @param {string} id ID сериала
  */
 export async function setShowStatus(token, id, user_info) {
-	try {
-		var AuthStr = "Bearer " + token;
-		const res = await axios.put(GET_SHOW_URL + id + "/", user_info, { headers: { Authorization: AuthStr } });
-		if (res.status === 204 || res.status === 200 || res.status === 201) return res.data;
-		else return null;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	var AuthStr = "Bearer " + token;
+	const res = await axios.put(GET_SHOW_URL + id + "/", user_info, { headers: { Authorization: AuthStr } });
+	return res.data;
 }
 
 /**
@@ -106,15 +85,9 @@ export async function setShowStatus(token, id, user_info) {
  *  * @param {string} seasonNumber номер сезона
  */
 export async function setShowSeasonStatus(token, showID, seasonNumber, user_info) {
-	try {
-		var AuthStr = "Bearer " + token;
-		const res = await axios.put(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/", user_info, { headers: { Authorization: AuthStr } });
-		if (res.status === 204 || res.status === 200 || res.status === 201) return res.data;
-		else return null;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	var AuthStr = "Bearer " + token;
+	const res = await axios.put(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/", user_info, { headers: { Authorization: AuthStr } });
+	return res.data;
 }
 
 /**
@@ -124,14 +97,9 @@ export async function setShowSeasonStatus(token, showID, seasonNumber, user_info
  * @param {string} showID ID сериала
  */
 export async function setShowEpisodesStatus(token, showID, episodesList) {
-	try {
-		var AuthStr = "Bearer " + token;
-		const res = await axios.put(GET_SHOW_URL + showID + "/episodes/", episodesList, { headers: { Authorization: AuthStr } });
-		return res;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	var AuthStr = "Bearer " + token;
+	const res = await axios.put(GET_SHOW_URL + showID + "/episodes/", episodesList, { headers: { Authorization: AuthStr } });
+	return res;
 }
 
 /**
@@ -140,13 +108,8 @@ export async function setShowEpisodesStatus(token, showID, episodesList) {
  * @param {int} page Страница поиска
  */
 export async function searchShows(query, page) {
-	try {
-		const res = await axios.get(SEARCH_SHOWS_URL, { params: { query: query, page: page } });
-		return res.data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	const res = await axios.get(SEARCH_SHOWS_URL, { params: { query: query, page: page } });
+	return res.data;
 }
 
 /**
@@ -155,15 +118,10 @@ export async function searchShows(query, page) {
  */
 export async function getShowUserInfo(token, showID) {
 	let data;
-	try {
-		var AuthStr = "Bearer " + token;
-		const res = await axios.get(GET_SHOW_URL + showID + "/user_info/", { headers: { Authorization: AuthStr } });
-		data = res.data;
-		return data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	var AuthStr = "Bearer " + token;
+	const res = await axios.get(GET_SHOW_URL + showID + "/user_info/", { headers: { Authorization: AuthStr } });
+	data = res.data;
+	return data;
 }
 
 /**
@@ -172,15 +130,10 @@ export async function getShowUserInfo(token, showID) {
  */
 export async function getShowSeasonUserInfo(token, showID, seasonID) {
 	let data;
-	try {
-		var AuthStr = "Bearer " + token;
-		const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonID + "/user_info/", { headers: { Authorization: AuthStr } });
-		data = res.data;
-		return data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	var AuthStr = "Bearer " + token;
+	const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonID + "/user_info/", { headers: { Authorization: AuthStr } });
+	data = res.data;
+	return data;
 }
 
 /**
@@ -190,15 +143,10 @@ export async function getShowSeasonUserInfo(token, showID, seasonID) {
  */
 export async function getShowEpisodeUserInfo(token, showID, seasonID, episodeID) {
 	let data;
-	try {
-		var AuthStr = "Bearer " + token;
-		const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonID + "/episode/" + episodeID + "/user_info/", { headers: { Authorization: AuthStr } });
-		data = res.data;
-		return data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	var AuthStr = "Bearer " + token;
+	const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonID + "/episode/" + episodeID + "/user_info/", { headers: { Authorization: AuthStr } });
+	data = res.data;
+	return data;
 }
 
 /**
@@ -208,13 +156,8 @@ export async function getShowEpisodeUserInfo(token, showID, seasonID, episodeID)
  */
 export async function getUnwatchedEpisodes(token) {
 	let data;
-	try {
-		var AuthStr = "Bearer " + token;
-		const res = await axios.get(GET_UNWATCHED_EPISODES_URL, { headers: { Authorization: AuthStr } });
-		data = res.data;
-		return data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	var AuthStr = "Bearer " + token;
+	const res = await axios.get(GET_UNWATCHED_EPISODES_URL, { headers: { Authorization: AuthStr } });
+	data = res.data;
+	return data;
 }

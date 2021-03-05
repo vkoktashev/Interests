@@ -13,20 +13,15 @@ axios.defaults.headers.common = {
  */
 export async function getUserInfo(token, userID) {
 	let data;
-	try {
-		if (token) {
-			var AuthStr = "Bearer " + token;
-			const res = await axios.get(USER_INFO_URL + userID + "/", { headers: { Authorization: AuthStr } });
-			data = res.data;
-		} else {
-			const res = await axios.get(USER_INFO_URL + userID + "/");
-			data = res.data;
-		}
-		return data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
+	if (token) {
+		var AuthStr = "Bearer " + token;
+		const res = await axios.get(USER_INFO_URL + userID + "/", { headers: { Authorization: AuthStr } });
+		data = res.data;
+	} else {
+		const res = await axios.get(USER_INFO_URL + userID + "/");
+		data = res.data;
 	}
+	return data;
 }
 
 /**
@@ -34,13 +29,8 @@ export async function getUserInfo(token, userID) {
  * @param {string} query Поисковый запрос
  */
 export async function searchUsers(query) {
-	try {
-		const res = await axios.get(SEARCH_USERS_URL, { params: { query: query } });
-		return res.data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	const res = await axios.get(SEARCH_USERS_URL, { params: { query: query } });
+	return res.data;
 }
 
 /**
@@ -50,15 +40,10 @@ export async function searchUsers(query) {
  * @param {string} userID ID пользовтеля
  */
 export async function setUserStatus(token, is_following, userID) {
-	try {
-		var AuthStr = "Bearer " + token;
-		const res = await axios.put(USER_INFO_URL + userID + "/follow/", is_following, { headers: { Authorization: AuthStr } });
-		if (res.status === 204 || res.status === 200 || res.status === 201) return res.data;
-		else return null;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	var AuthStr = "Bearer " + token;
+	const res = await axios.put(USER_INFO_URL + userID + "/follow/", is_following, { headers: { Authorization: AuthStr } });
+	if (res.status === 204 || res.status === 200 || res.status === 201) return res.data;
+	else return null;
 }
 
 /**
@@ -69,20 +54,15 @@ export async function setUserStatus(token, is_following, userID) {
  */
 export async function getUserLog(token, userID, page, resultsOnPage) {
 	let data;
-	try {
-		if (token) {
-			var AuthStr = "Bearer " + token;
-			const res = await axios.get(USER_INFO_URL + userID + "/log/", { params: { page: page, page_size: resultsOnPage } }, { headers: { Authorization: AuthStr } });
-			data = res.data;
-		} else {
-			const res = await axios.get(USER_INFO_URL + userID + "/log/", { params: { page: page, page_size: resultsOnPage } });
-			data = res.data;
-		}
-		return data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
+	if (token) {
+		var AuthStr = "Bearer " + token;
+		const res = await axios.get(USER_INFO_URL + userID + "/log/", { params: { page: page, page_size: resultsOnPage } }, { headers: { Authorization: AuthStr } });
+		data = res.data;
+	} else {
+		const res = await axios.get(USER_INFO_URL + userID + "/log/", { params: { page: page, page_size: resultsOnPage } });
+		data = res.data;
 	}
+	return data;
 }
 
 /**
@@ -93,15 +73,10 @@ export async function getUserLog(token, userID, page, resultsOnPage) {
  */
 export async function getUserFriendsLog(token, userID, page, resultsOnPage) {
 	let data;
-	try {
-		var AuthStr = "Bearer " + token;
-		const res = await axios.get(USER_INFO_URL + userID + "/friends_log/", { params: { page: page, page_size: resultsOnPage }, headers: { Authorization: AuthStr } });
-		data = res.data;
-		return data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	var AuthStr = "Bearer " + token;
+	const res = await axios.get(USER_INFO_URL + userID + "/friends_log/", { params: { page: page, page_size: resultsOnPage }, headers: { Authorization: AuthStr } });
+	data = res.data;
+	return data;
 }
 
 /**
@@ -109,15 +84,10 @@ export async function getUserFriendsLog(token, userID, page, resultsOnPage) {
  */
 export async function getUserCalendar(token) {
 	let data;
-	try {
-		var AuthStr = "Bearer " + token;
-		const res = await axios.get(USER_CALENDAR_URL, { headers: { Authorization: AuthStr } });
-		data = res.data;
-		return data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	var AuthStr = "Bearer " + token;
+	const res = await axios.get(USER_CALENDAR_URL, { headers: { Authorization: AuthStr } });
+	data = res.data;
+	return data;
 }
 
 /**
@@ -125,15 +95,10 @@ export async function getUserCalendar(token) {
  */
 export async function getUserSettings(token) {
 	let data;
-	try {
-		var AuthStr = "Bearer " + token;
-		const res = await axios.get(USER_SETTINGS_URL, { headers: { Authorization: AuthStr } });
-		data = res.data;
-		return data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	var AuthStr = "Bearer " + token;
+	const res = await axios.get(USER_SETTINGS_URL, { headers: { Authorization: AuthStr } });
+	data = res.data;
+	return data;
 }
 
 /**
@@ -141,13 +106,8 @@ export async function getUserSettings(token) {
  */
 export async function patchUserSettings(token, settings) {
 	let data;
-	try {
-		var AuthStr = "Bearer " + token;
-		const res = await axios.patch(USER_SETTINGS_URL, settings, { headers: { Authorization: AuthStr } });
-		data = res.data;
-		return data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	var AuthStr = "Bearer " + token;
+	const res = await axios.patch(USER_SETTINGS_URL, settings, { headers: { Authorization: AuthStr } });
+	data = res.data;
+	return data;
 }

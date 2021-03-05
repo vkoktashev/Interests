@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { MDBRow, MDBCol, MDBContainer } from "mdbreact";
-import { PieChart, Pie, Legend, Cell, Tooltip } from "recharts";
-import { COLORS } from "./Colors";
-import "./style.css";
+import { observer } from "mobx-react";
+import AuthStore from "../../store/AuthStore";
+import UserStore from "../../store/UserStore";
 
-import { connect } from "react-redux";
-import * as selectors from "../../store/reducers";
-import * as actions from "../../store/actions";
+import { MDBRow, MDBCol, MDBContainer } from "mdbreact";
 
 import LoadingOverlay from "react-loading-overlay";
 import GameBlock from "./GameBlock";
@@ -16,44 +13,34 @@ import MovieBlock from "./MovieBlock";
 import UserLogBlock from "./UserLogBlock";
 import CategoriesTab from "../Common/CategoriesTab";
 import ShowBlock from "./ShowBlock";
+import ChartBlock from "./ChartBlock";
 
 const LOG_ROWS_COUNT = 20;
 
 /**
  * Основная страница приложения
  */
-function UserPage({
-	loggedIn,
-	userInfo,
-	userIsLoading,
-	getUserInfo,
-	currentUserInfo,
-	setUserStatus,
-	getUserLogs,
-	userLogs,
-	userLogsIsLoading,
-	getUserFriendsLogs,
-	userFriendsLogs,
-	userFriendsLogsIsLoading,
-}) {
+const UserPage = observer((props) => {
+	const { loggedIn, currentUser } = AuthStore;
+	const { user, userState, requestUser, setUserStatus, requestUserLogs, userLogs, userLogsState, requestUserFriendsLogs, userFriendsLogs, userFriendsLogsState } = UserStore;
+
 	let { userID } = useParams();
 	const [activeCategory, setActiveCategory] = useState("Профиль");
 	const [lastActivity, setLastActivity] = useState("");
-	const [chartData, setChartData] = useState([]);
 
 	useEffect(
 		() => {
-			getUserInfo(userID);
-			getUserLogs(userID, 1, LOG_ROWS_COUNT);
+			requestUser(userID);
+			requestUserLogs(userID, 1, LOG_ROWS_COUNT);
 		},
 		// eslint-disable-next-line
-		[userID, getUserInfo, getUserLogs]
+		[userID, requestUser, requestUserLogs]
 	);
 
 	useEffect(
 		() => {
 			if (loggedIn) {
-				getUserFriendsLogs(userID, 1, LOG_ROWS_COUNT);
+				requestUserFriendsLogs(userID, 1, LOG_ROWS_COUNT);
 			}
 		},
 		// eslint-disable-next-line
@@ -61,39 +48,31 @@ function UserPage({
 	);
 
 	useEffect(() => {
-		setChartData([]);
-		document.title = "Профиль " + userInfo.username;
-		if (userInfo.stats.games) {
-			let newData = [];
-			if (userInfo.stats.games.total_spent_time > 0) newData.push({ name: "Часов в играх", value: userInfo.stats.games.total_spent_time });
-			if (userInfo.stats.movies.total_spent_time > 0) newData.push({ name: "Часов в фильмах", value: userInfo.stats.movies.total_spent_time });
-			if (userInfo.stats.episodes.total_spent_time > 0) newData.push({ name: "Часов в сериалах", value: userInfo.stats.episodes.total_spent_time });
-			setChartData(newData);
-		}
-		if (userInfo.last_activity) {
-			let date = new Date(userInfo.last_activity);
+		document.title = "Профиль " + user.username;
+		if (user.last_activity) {
+			let date = new Date(user.last_activity);
 			Date.now();
 			setLastActivity(date.toLocaleString());
 		} else setLastActivity("");
-	}, [userInfo]);
+	}, [user]);
 
 	return (
 		<div>
-			<div className='bg searchBG' />
-			<LoadingOverlay active={userIsLoading} spinner text='Загрузка...'>
+			<div className='bg textureBG' />
+			<LoadingOverlay active={userState === "pending"} spinner text='Загрузка...'>
 				<MDBContainer>
 					<MDBRow>
 						<MDBCol md='0.5'></MDBCol>
 						<MDBCol className='userPage'>
-							<h1>Информация о пользователе {userInfo.username}</h1>
+							<h1>Информация о пользователе {user.username}</h1>
 							<p>Последняя активность {lastActivity}</p>
 							<button
-								hidden={currentUserInfo.username === userInfo.username}
+								hidden={currentUser.username === user.username}
 								className='addFriendButton'
 								onClick={() => {
-									setUserStatus({ is_following: userInfo.is_followed ? false : true }, userInfo.id);
+									setUserStatus({ is_following: user.is_followed ? false : true }, user.id);
 								}}>
-								{userInfo.is_followed ? "Отписаться" : "Подписаться"}
+								{user.is_followed ? "Отписаться" : "Подписаться"}
 							</button>
 							<CategoriesTab
 								categories={["Профиль", "Игры", "Фильмы", "Сериалы", "Друзья"]}
@@ -106,39 +85,25 @@ function UserPage({
 
 							<div hidden={activeCategory !== "Профиль"}>
 								<h4>Моя активность: </h4>
-								<LoadingOverlay active={userLogsIsLoading && !userIsLoading} spinner text='Загрузка активности...'>
-									<div hidden={chartData.length < 1}>
-										<PieChart width={350} height={250} hidden={chartData.length < 1}>
-											<Pie dataKey='value' data={chartData} cx='50%' cy='50%' outerRadius={80} fill='#8884d8' labelLine={true} label minAngle={5}>
-												{chartData.map((entry, index) => (
-													<Cell fill={COLORS[index]} key={index} />
-												))}
-											</Pie>
-											<Tooltip
-												itemStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }}
-												contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)", borderRadius: "10px" }}
-												cursor={false}
-											/>
-											<Legend verticalAlign='bottom' horizontalAlign='center' />
-										</PieChart>
-									</div>
-									<UserLogBlock logs={userLogs} onChangePage={(pageNumber) => getUserLogs(userID, pageNumber, LOG_ROWS_COUNT)} />
+								<LoadingOverlay active={userLogsState === "pending" && userState !== "pending"} spinner text='Загрузка активности...'>
+									<ChartBlock stats={user.stats} />
+									<UserLogBlock logs={userLogs} onChangePage={(pageNumber) => requestUserLogs(userID, pageNumber, LOG_ROWS_COUNT)} />
 								</LoadingOverlay>
 							</div>
 							<div hidden={activeCategory !== "Игры"}>
-								<GameBlock games={userInfo.games} stats={userInfo.stats.games} />
+								<GameBlock games={user.games} stats={user.stats.games} />
 							</div>
 							<div hidden={activeCategory !== "Фильмы"}>
-								<MovieBlock movies={userInfo.movies} stats={userInfo.stats.movies} />
+								<MovieBlock movies={user.movies} stats={user.stats.movies} />
 							</div>
 							<div hidden={activeCategory !== "Сериалы"}>
-								<ShowBlock shows={userInfo.shows} stats={userInfo.stats.episodes} />
+								<ShowBlock shows={user.shows} stats={user.stats.episodes} />
 							</div>
 							<div hidden={activeCategory !== "Друзья"}>
-								<FriendBlock users={userInfo.followed_users ? userInfo.followed_users : []} />
+								<FriendBlock users={user.followed_users ? user.followed_users : []} />
 								<h4>Активность друзей: </h4>
-								<LoadingOverlay active={userFriendsLogsIsLoading && !userIsLoading} spinner text='Загрузка активности...'>
-									<UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => getUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true} />
+								<LoadingOverlay active={userFriendsLogsState === "pending" && !userState === "pending"} spinner text='Загрузка активности...'>
+									<UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => requestUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true} />
 								</LoadingOverlay>
 							</div>
 						</MDBCol>
@@ -148,37 +113,6 @@ function UserPage({
 			</LoadingOverlay>
 		</div>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	loggedIn: selectors.getLoggedIn(state),
-	userIsLoading: selectors.getIsLoadingUserPageContent(state),
-	userInfo: selectors.getUserPageContent(state),
-	userLogs: selectors.getUserPageLogs(state),
-	userLogsIsLoading: selectors.getIsLoadingUserPageLogs(state),
-	userFriendsLogs: selectors.getUserPageFriendsLogs(state),
-	userFriendsLogsIsLoading: selectors.getIsLoadingUserPageFriendsLogs(state),
-	currentUserInfo: selectors.getUser(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		openLoginForm: () => {
-			dispatch(actions.openLoginForm());
-		},
-		getUserInfo: (user_id) => {
-			dispatch(actions.requestUserPageContent(user_id));
-		},
-		setUserStatus: (is_following, userID) => {
-			dispatch(actions.setUserStatus(is_following, userID));
-		},
-		getUserLogs: (userID, page, resultsOnPage) => {
-			dispatch(actions.requestUserPageLogs(userID, page, resultsOnPage));
-		},
-		getUserFriendsLogs: (userID, page, resultsOnPage) => {
-			dispatch(actions.requestUserPageFriendsLogs(userID, page, resultsOnPage));
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(UserPage);
+export default UserPage;

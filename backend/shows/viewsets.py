@@ -7,6 +7,7 @@ from django.db.models import F, Q
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
+from requests.exceptions import ConnectionError
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -20,10 +21,12 @@ from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpis
     UserEpisodeInSeasonSerializer, EpisodeSerializer, ShowSerializer, SeasonSerializer
 from users.models import UserFollow
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
-    SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE
+    SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, TMDB_BACKDROP_PATH_PREFIX, \
+    TMDB_POSTER_PATH_PREFIX, TMDB_STILL_PATH_PREFIX, EPISODE_WATCHED_SCORE
 from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
     SEASON_RETRIEVE_200_EXAMPLE
-from utils.functions import update_fields_if_needed, get_tmdb_show_key, get_tmdb_episode_key, get_tmdb_season_key
+from utils.functions import update_fields_if_needed, get_tmdb_show_key, get_tmdb_episode_key, get_tmdb_season_key, \
+    objects_to_str, update_fields_if_needed_without_save
 from utils.openapi_params import query_param, page_param
 
 
@@ -88,13 +91,12 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except ConnectionError:
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        episode_run_time = tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0
-
         new_fields = {
             'tmdb_original_name': tmdb_show['original_name'],
             'tmdb_name': tmdb_show['name'],
-            'tmdb_episode_run_time': episode_run_time,
-            'tmdb_backdrop_path': tmdb_show['backdrop_path'],
+            'tmdb_episode_run_time': tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0,
+            'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path']
+            if tmdb_show['backdrop_path'] else '',
             'tmdb_release_date': tmdb_show['first_air_date'] if tmdb_show['first_air_date'] != "" else None
         }
 
@@ -112,7 +114,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                                                  })
                 ShowGenre.objects.get_or_create(genre=genre_obj, show=show)
 
-        return Response({'tmdb': tmdb_show})
+        return Response(parse_show(tmdb_show))
 
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
@@ -186,7 +188,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 user_info = None
 
             user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
-            followed_user_shows = UserShow.objects.prefetch_related('user') \
+            followed_user_shows = UserShow.objects.select_related('user') \
                 .exclude(status=UserShow.STATUS_NOT_WATCHED) \
                 .filter(user__in=user_follow_query, show=show)
             serializer = FollowedUserShowSerializer(followed_user_shows, many=True)
@@ -252,76 +254,108 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         watched_episodes_count = 0
         not_watched_episodes_count = 0
 
-        for data in episodes:
-            try:
-                # todo возможно изменить структуру получаемых данных, чтобы не использовать сезон
-                show = Show.objects.get(tmdb_id=kwargs.get('tmdb_id'))
-                season = Season.objects.get(tmdb_show=show,
-                                            tmdb_season_number=data['season_number'])
-                episode = Episode.objects.get(tmdb_season=season,
-                                              tmdb_episode_number=data['episode_number'])
-            except (Show.DoesNotExist, Season.DoesNotExist, Episode.DoesNotExist):
-                return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            show = Show.objects.get(tmdb_id=kwargs.get('tmdb_id'))
+        except Show.DoesNotExist:
+            return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
-            data = data.copy()
-            data.update({'user': request.user.pk,
-                         'show': kwargs.get('tmdb_id'),
-                         'episode': episode.pk})
+        episode_list = Episode.objects \
+            .filter(tmdb_id__in=[episode.pop('tmdb_id') for episode in episodes], tmdb_season__tmdb_show=show)
 
-            try:
-                user_episode = UserEpisode.objects.get(user=request.user, episode=episode)
-                current_user_episode_score = user_episode.score
-                current_user_episode_review = user_episode.review
-                serializer = UserEpisodeSerializer(user_episode, data=data)
-            except UserEpisode.DoesNotExist:
-                user_episode = None
-                serializer = UserEpisodeSerializer(data=data)
+        if len(episode_list) != len(episodes):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        user_episodes = UserEpisode.objects.select_related('episode__tmdb_season__tmdb_show') \
+            .select_related('episode') \
+            .select_related('user') \
+            .filter(user=request.user, episode__in=episode_list)
+
+        existed_user_episodes = []
+        existed_user_episodes_data = []
+        new_user_episodes = []
+        new_user_episodes_data = []
+
+        for i, data in enumerate(episodes):
+            episode = episode_list[i]
+
+            data.update({
+                'user': request.user,
+                'episode': episode,
+                'review': data.get('review', ''),
+                'score': data.get('score', EPISODE_NOT_WATCHED_SCORE)
+            })
+
+            found = False
+            current_user_episode = None
+            for user_episode in user_episodes:
+                if episode == user_episode.episode:
+                    current_user_episode = user_episode
+                    found = True
+                    break
+
+            if found:
+                current_user_episode_score = current_user_episode.score
+                current_user_episode_review = current_user_episode.review
+                update_fields_if_needed_without_save(current_user_episode, data)
+                existed_user_episodes.append(current_user_episode)
+                existed_user_episodes_data.append(data)
+
+            else:
                 current_user_episode_score = EPISODE_NOT_WATCHED_SCORE
                 current_user_episode_review = ''
+                new_user_episodes.append(
+                    UserEpisode(**data)
+                )
+                new_user_episodes_data.append(data)
 
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-            if user_episode is not None and current_user_episode_review != serializer.data.get('review') or \
-                    user_episode is None and serializer.data.get('review') != '':
+            if current_user_episode is not None and current_user_episode_review != data.get('review') or \
+                    current_user_episode is None and data.get('review') != '':
                 EpisodeLog.objects.create(user=request.user, episode=episode,
-                                          action_type='review', action_result=serializer.validated_data.get('review'))
+                                          action_type='review', action_result=data.get('review'))
 
             if current_user_episode_score == EPISODE_NOT_WATCHED_SCORE and \
-                    serializer.data.get('score') == EPISODE_WATCHED_SCORE:
+                    data.get('score') == EPISODE_WATCHED_SCORE:
                 if watched_episodes_count == 0:
-                    if user_episode is not None and current_user_episode_score != serializer.data.get('score') or \
-                            user_episode is None and serializer.data.get('score') != EPISODE_NOT_WATCHED_SCORE:
+                    if current_user_episode is not None and current_user_episode_score != data.get('score') or \
+                            current_user_episode is None and data.get('score') != EPISODE_NOT_WATCHED_SCORE:
                         first_watched_episode_log = EpisodeLog(user=request.user, episode=episode,
                                                                action_type='score',
-                                                               action_result=serializer.validated_data.get('score'))
+                                                               action_result=data.get('score'))
                 watched_episodes_count += 1
 
             elif current_user_episode_score != EPISODE_NOT_WATCHED_SCORE and \
-                    serializer.data.get('score') == EPISODE_NOT_WATCHED_SCORE:
+                    data.get('score') == EPISODE_NOT_WATCHED_SCORE:
                 if not_watched_episodes_count == 0:
-                    if user_episode is not None:
+                    if current_user_episode is not None:
                         first_not_watched_episode_log = EpisodeLog(user=request.user, episode=episode,
                                                                    action_type='score',
-                                                                   action_result=serializer.validated_data.get('score'))
+                                                                   action_result=data.get('score'))
                 not_watched_episodes_count += 1
 
-            elif user_episode is not None and current_user_episode_score != serializer.data.get('score') or \
-                    user_episode is None and serializer.data.get('score') != EPISODE_NOT_WATCHED_SCORE:
+            elif current_user_episode is not None and current_user_episode_score != data.get('score') or \
+                    current_user_episode is None and data.get('score') != EPISODE_NOT_WATCHED_SCORE:
                 EpisodeLog.objects.create(user=request.user, episode=episode,
-                                          action_type='score', action_result=serializer.validated_data.get('score'))
+                                          action_type='score', action_result=data.get('score'))
 
         if watched_episodes_count > 1:
-            ShowLog.objects.create(user=request.user, show_id=kwargs.get('tmdb_id'),
+            ShowLog.objects.create(user=request.user, show=show,
                                    action_type='episodes', action_result=watched_episodes_count)
         elif watched_episodes_count == 1 and first_watched_episode_log is not None:
             first_watched_episode_log.save()
 
         if not_watched_episodes_count > 1:
-            ShowLog.objects.create(user=request.user, show_id=kwargs.get('tmdb_id'),
+            ShowLog.objects.create(user=request.user, show=show,
                                    action_type='episodes', action_result=-not_watched_episodes_count)
         elif not_watched_episodes_count == 1 and first_not_watched_episode_log is not None:
             first_not_watched_episode_log.save()
+
+        serializer = UserEpisodeSerializer(data=existed_user_episodes_data, many=True)
+        serializer.is_valid(raise_exception=True)
+        UserEpisode.objects.bulk_update(existed_user_episodes, fields=('review', 'score'))
+
+        serializer = UserEpisodeSerializer(data=new_user_episodes_data, many=True)
+        serializer.is_valid(raise_exception=True)
+        UserEpisode.objects.bulk_create(new_user_episodes)
 
         return Response(status=status.HTTP_200_OK)
 
@@ -338,8 +372,6 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .exclude(tmdb_season__tmdb_season_number=0) \
             .exclude(userepisode__score__gt=-1, userepisode__user=request.user) \
             .order_by('tmdb_season__tmdb_season_number', 'tmdb_episode_number')
-
-        print(len(episodes))
 
         shows_info = []
 
@@ -431,7 +463,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         new_fields = {
             'tmdb_season_number': tmdb_season.get('season_number'),
             'tmdb_name': tmdb_season.get('name'),
-            'tmdb_show_id': tmdb_season.get('show_pk')
+            'tmdb_show_id': tmdb_season.get('show').get('id')
         }
 
         with transaction.atomic():
@@ -445,21 +477,31 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             existed_episodes = Episode.objects.select_related('tmdb_season') \
                 .select_for_update().filter(tmdb_season=season)
             episodes_to_create = []
-            for episode in episodes:
+            episodes_to_update = []
+            episodes_to_delete_pks = []
+            for existed_episode in existed_episodes:
                 exists = False
-                for existed_episode in existed_episodes:
-                    if episode['episode_number'] == existed_episode.tmdb_episode_number:
+                for episode in episodes:
+                    if episode['id'] == existed_episode.tmdb_id:
                         exists = True
+                        episode['exists'] = True
                         new_fields = {
-                            'tmdb_id': episode.get('id'),
+                            'tmdb_episode_number': episode.get('episode_number'),
                             'tmdb_season': season,
                             'tmdb_name': episode.get('name'),
                             'tmdb_release_date': episode.get('air_date') if episode.get('air_date') != "" else None
                         }
-                        update_fields_if_needed(existed_episode, new_fields)
+                        update_fields_if_needed_without_save(existed_episode, new_fields)
+                        episodes_to_update.append(existed_episode)
                         break
 
                 if not exists:
+                    episodes_to_delete_pks.append(existed_episode.pk)
+
+            for episode in episodes:
+                if episode.get('exists'):
+                    del episode['exists']
+                else:
                     episodes_to_create.append(Episode(tmdb_id=episode.get('id'),
                                                       tmdb_episode_number=episode.get('episode_number'),
                                                       tmdb_season=season,
@@ -467,9 +509,12 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                                       if episode.get('air_date') != "" else None,
                                                       tmdb_name=episode.get('name')))
 
+            Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
+            Episode.objects.bulk_update(episodes_to_update,
+                                        ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date'])
             Episode.objects.bulk_create(episodes_to_create)
 
-        return Response({'tmdb': tmdb_season})
+        return Response(parse_season(tmdb_season))
 
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
@@ -506,7 +551,10 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     )
     def update(self, request, *args, **kwargs):
         try:
-            season = Season.objects.get(tmdb_show=kwargs.get('show_tmdb_id'), tmdb_season_number=kwargs.get('number'))
+            show = Show.objects.get(tmdb_id=kwargs.get('show_tmdb_id'))
+            season = Season.objects.get(tmdb_show=show, tmdb_season_number=kwargs.get('number'))
+        except Show.DoesNotExist:
+            return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
         except Season.DoesNotExist:
             return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
@@ -543,7 +591,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             # friends_info
             user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
-            followed_user_seasons = UserSeason.objects.prefetch_related('user') \
+            followed_user_seasons = UserSeason.objects.select_related('user') \
                 .filter(user__in=user_follow_query, season=season) \
                 .exclude(id__in=UserSeason.objects
                          .filter(season__tmdb_show__usershow__user=F('user_id'),
@@ -552,8 +600,8 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             serializer = FollowedUserSeasonSerializer(followed_user_seasons, many=True)
             friends_info = serializer.data
             episodes = Episode.objects.filter(tmdb_season=season)
-            user_episodes = UserEpisode.objects.prefetch_related('episode').filter(user=request.user,
-                                                                                   episode__in=episodes)
+            user_episodes = UserEpisode.objects.select_related('episode').filter(user=request.user,
+                                                                                 episode__in=episodes)
             episodes_user_info = UserEpisodeInSeasonSerializer(user_episodes, many=True).data
         except (Show.DoesNotExist, Season.DoesNotExist, ValueError):
             show = None
@@ -615,8 +663,7 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         tmdb_episode.update(show_info)
-
-        return Response({'tmdb': tmdb_episode})
+        return Response(parse_episode(tmdb_episode))
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserEpisodeSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
@@ -641,7 +688,7 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             # friends_info
             user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
-            followed_user_episodes = UserEpisode.objects.prefetch_related('user') \
+            followed_user_episodes = UserEpisode.objects.select_related('user') \
                 .filter(user__in=user_follow_query, episode=episode) \
                 .exclude(id__in=UserEpisode.objects
                          .filter(episode__tmdb_season__tmdb_show__usershow__user=F('user_id'),
@@ -670,19 +717,14 @@ def user_watched_show(show, user):
     return False
 
 
-# todo написать сериалайзер вместо метода?
 def get_show_info(show_id):
     show = Show.objects.get(tmdb_id=show_id)
-
-    return {'show_name': show.tmdb_name,
-            'show_id': show.tmdb_id,
-            'show_pk': show.pk,
-            'show_original_name': show.tmdb_original_name,
-            'backdrop_path': show.tmdb_backdrop_path}
+    show_data = ShowSerializer(show).data
+    return {'show': show_data}
 
 
 def get_show_search_results(query, page):
-    key = f'tmdb_show_search_{query}_page_{page}'
+    key = f'tmdb_show_search_{query.replace(" ", "_")}_page_{page}'
     results = cache.get(key, None)
     if results is None:
         results = tmdb.Search().tv(query=query, page=page, language=LANGUAGE)
@@ -719,3 +761,82 @@ def get_episode(show_tmdb_id, season_number, episode_number):
         tmdb_episode = tmdb.TV_Episodes(show_tmdb_id, season_number, episode_number).info(language=LANGUAGE)
         cache.set(key, tmdb_episode, CACHE_TIMEOUT)
     return tmdb_episode
+
+
+def translate_tmdb_status(tmdb_status):
+    if tmdb_status == 'Ended':
+        return 'Окончен'
+    elif tmdb_status == 'Returning Series':
+        return 'Продолжается'
+    elif tmdb_status == 'Pilot':
+        return 'Пилот'
+    elif tmdb_status == 'Canceled':
+        return 'Отменен'
+    elif tmdb_status == 'In Production':
+        return 'В производстве'
+    elif tmdb_status == 'Planned':
+        return 'Запланирован'
+    else:
+        return tmdb_status
+
+
+def parse_show(tmdb_show):
+    new_show = {
+        'id': tmdb_show.get('id'),
+        'name': tmdb_show.get('name'),
+        'original_name': tmdb_show.get('original_name'),
+        'overview': tmdb_show.get('overview'),
+        'episode_run_time': tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0,
+        'seasons_count': tmdb_show.get('number_of_seasons'),
+        'episodes_count': tmdb_show.get('number_of_episodes'),
+        'score': int(tmdb_show['vote_average'] * 10) if tmdb_show.get('vote_average') is not None else None,
+        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path']
+        if tmdb_show.get('backdrop_path') is not None else '',
+        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_show['poster_path']
+        if tmdb_show.get('poster_path') is not None else '',
+        'genres': objects_to_str(tmdb_show['genres']),
+        'production_companies': objects_to_str(tmdb_show['production_companies']),
+        'status': translate_tmdb_status(tmdb_show['status']),
+        'first_air_date': '.'.join(reversed(tmdb_show['first_air_date'].split('-')))
+        if tmdb_show.get('first_air_date') is not None else None,
+        'last_air_date': '.'.join(reversed(tmdb_show['last_air_date'].split('-')))
+        if tmdb_show.get('last_air_date') is not None else None,
+        'seasons': tmdb_show['seasons'],
+    }
+
+    return new_show
+
+
+def parse_season(tmdb_season):
+    new_season = {
+        'id': tmdb_season.get('id'),
+        'name': tmdb_season.get('name'),
+        'overview': tmdb_season.get('overview'),
+        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_season['poster_path']
+        if tmdb_season.get('poster_path') is not None else '',
+        'air_date': '.'.join(reversed(tmdb_season['air_date'].split('-')))
+        if tmdb_season.get('air_date') != "" else None,
+        'season_number': tmdb_season.get('season_number'),
+        'show': tmdb_season.get('show'),
+        'episodes': tmdb_season.get('episodes')
+    }
+
+    return new_season
+
+
+def parse_episode(tmdb_episode):
+    new_episode = {
+        'id': tmdb_episode.get('id'),
+        'name': tmdb_episode.get('name'),
+        'overview': tmdb_episode.get('overview'),
+        'score': int(tmdb_episode['vote_average'] * 10) if tmdb_episode.get('vote_average') is not None else None,
+        'still_path': TMDB_STILL_PATH_PREFIX + tmdb_episode['still_path']
+        if tmdb_episode.get('still_path') is not None else '',
+        'air_date': '.'.join(reversed(tmdb_episode['air_date'].split('-')))
+        if tmdb_episode.get('air_date') != "" else None,
+        'season_number': tmdb_episode.get('season_number'),
+        'episode_number': tmdb_episode.get('episode_number'),
+        'show': tmdb_episode.get('show'),
+    }
+
+    return new_episode

@@ -13,20 +13,15 @@ axios.defaults.headers.common = {
  */
 export async function getMovie(token, id) {
 	let data;
-	try {
-		if (token) {
-			var AuthStr = "Bearer " + token;
-			const res = await axios.get(GET_MOVIE_URL + id + "/", { headers: { Authorization: AuthStr } });
-			data = res.data;
-		} else {
-			const res = await axios.get(GET_MOVIE_URL + id + "/");
-			data = res.data;
-		}
-		return data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
+	if (token) {
+		var AuthStr = "Bearer " + token;
+		const res = await axios.get(GET_MOVIE_URL + id + "/", { headers: { Authorization: AuthStr } });
+		data = res.data;
+	} else {
+		const res = await axios.get(GET_MOVIE_URL + id + "/");
+		data = res.data;
 	}
+	return data;
 }
 
 /**
@@ -36,15 +31,9 @@ export async function getMovie(token, id) {
  * @param {string} movieID ID фильма
  */
 export async function setMovieStatus(token, id, user_info) {
-	try {
-		var AuthStr = "Bearer " + token;
-		const res = await axios.put(GET_MOVIE_URL + id + "/", user_info, { headers: { Authorization: AuthStr } });
-		if (res.status === 204 || res.status === 200 || res.status === 201) return res.data;
-		else return null;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	var AuthStr = "Bearer " + token;
+	const res = await axios.put(GET_MOVIE_URL + id + "/", user_info, { headers: { Authorization: AuthStr } });
+	return res.data;
 }
 
 /**
@@ -53,13 +42,8 @@ export async function setMovieStatus(token, id, user_info) {
  * @param {int} page Страница поиска
  */
 export async function searchMovies(query, page) {
-	try {
-		const res = await axios.get(SEARCH_MOVIES_URL, { params: { query: query, page: page } });
-		return res.data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	const res = await axios.get(SEARCH_MOVIES_URL, { params: { query: query, page: page } });
+	return res.data;
 }
 
 /**
@@ -68,13 +52,8 @@ export async function searchMovies(query, page) {
  */
 export async function getMovieUserInfo(token, id) {
 	let data;
-	try {
-		var AuthStr = "Bearer " + token;
-		const res = await axios.get(GET_MOVIE_URL + id + "/user_info/", { headers: { Authorization: AuthStr } });
-		data = res.data;
-		return data;
-	} catch (e) {
-		console.log("AXIOS ERROR: ", e);
-		return null;
-	}
+	var AuthStr = "Bearer " + token;
+	const res = await axios.get(GET_MOVIE_URL + id + "/user_info/", { headers: { Authorization: AuthStr } });
+	data = res.data;
+	return data;
 }

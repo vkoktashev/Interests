@@ -34,19 +34,15 @@ class UserSeasonSerializer(serializers.ModelSerializer):
 class UserEpisodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserEpisode
-        exclude = ('id',)
-        extra_kwargs = {
-            'user': {'write_only': True},
-            'episode': {'write_only': True}
-        }
+        exclude = ('id', 'user', 'episode')
 
 
 class UserEpisodeInSeasonSerializer(UserEpisodeSerializer):
-    episode_number = serializers.SerializerMethodField('get_episode_number')
+    tmdb_id = serializers.SerializerMethodField('get_tmdb_id')
 
     @staticmethod
-    def get_episode_number(user_episode):
-        return user_episode.episode.tmdb_episode_number
+    def get_tmdb_id(user_episode):
+        return user_episode.episode.tmdb_id
 
 
 class ShowStatsSerializer(UserShowSerializer):
@@ -198,7 +194,6 @@ class SeasonSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# todo возможно переделать с depth=2
 class EpisodeShowSerializer(serializers.ModelSerializer):
     tmdb_show = serializers.SerializerMethodField('get_tmdb_show')
     tmdb_season_number = serializers.SerializerMethodField('get_season_number')

@@ -4,6 +4,7 @@ from django.db import transaction
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
+from requests.exceptions import ConnectionError
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -13,9 +14,10 @@ from rest_framework.viewsets import GenericViewSet
 from movies.models import Movie, UserMovie, Genre, MovieGenre
 from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer
 from users.models import UserFollow
-from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, CACHE_TIMEOUT
+from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, CACHE_TIMEOUT, \
+    TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX
 from utils.documentation import MOVIES_SEARCH_200_EXAMPLE, MOVIE_RETRIEVE_200_EXAMPLE
-from utils.functions import update_fields_if_needed, get_tmdb_movie_key
+from utils.functions import update_fields_if_needed, get_tmdb_movie_key, objects_to_str
 from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER
 
 
@@ -87,8 +89,10 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'imdb_id': tmdb_movie.get('imdb_id'),
             'tmdb_original_name': tmdb_movie.get('original_title'),
             'tmdb_name': tmdb_movie.get('title'),
-            'tmdb_runtime': tmdb_movie.get('runtime'),
-            'tmdb_release_date': tmdb_movie.get('release_date') if tmdb_movie.get('release_date') != "" else None
+            'tmdb_runtime': tmdb_movie.get('runtime') if tmdb_movie.get('runtime') is not None else 0,
+            'tmdb_release_date': tmdb_movie.get('release_date') if tmdb_movie.get('release_date') != "" else None,
+            'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path']
+            if tmdb_movie.get('backdrop_path') else ''
         }
 
         with transaction.atomic():
@@ -105,7 +109,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                                                  })
                 MovieGenre.objects.get_or_create(genre=genre_obj, movie=movie)
 
-        return Response({'tmdb': tmdb_movie})
+        return Response(parse_movie(tmdb_movie))
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserMovieSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
@@ -190,7 +194,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
 
 def get_movie_search_results(query, page):
-    key = f'tmdb_movie_search_{query}_page_{page}'
+    key = f'tmdb_movie_search_{query.replace(" ", "_")}_page_{page}'
     results = cache.get(key, None)
     if results is None:
         results = tmdb.Search().movie(query=query, page=page, language=LANGUAGE)
@@ -216,3 +220,31 @@ def get_cast_crew(tmdb_id):
         tmdb_cast_crew = tmdb.Movies(tmdb_id).credits(language=LANGUAGE)
         cache.set(key, tmdb_cast_crew, CACHE_TIMEOUT)
     return tmdb_cast_crew
+
+
+def parse_movie(tmdb_movie):
+    directors = []
+    for i in tmdb_movie['crew']:
+        if i['job'] == 'Director':
+            directors.append(i)
+
+    new_movie = {
+        'id': tmdb_movie.get('id'),
+        'name': tmdb_movie.get('title'),
+        'original_name': tmdb_movie.get('original_title'),
+        'overview': tmdb_movie.get('overview'),
+        'runtime': tmdb_movie.get('runtime'),
+        'release_date': '.'.join(reversed(tmdb_movie['release_date'].split('-')))
+        if tmdb_movie.get('air_date') != "" else None,
+        'score': int(tmdb_movie['vote_average'] * 10) if tmdb_movie.get('vote_average') else None,
+        'tagline': tmdb_movie.get('tagline'),
+        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path']
+        if tmdb_movie.get('backdrop_path') else '',
+        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_movie['poster_path'] if tmdb_movie.get('poster_path') else '',
+        'genres': objects_to_str(tmdb_movie['genres']),
+        'production_companies': objects_to_str(tmdb_movie['production_companies']),
+        'cast': objects_to_str(tmdb_movie['cast'][:5]),
+        'directors': objects_to_str(directors),
+    }
+
+    return new_movie

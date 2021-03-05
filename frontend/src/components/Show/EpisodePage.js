@@ -1,41 +1,45 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { useParams } from "react-router-dom";
+import { observer } from "mobx-react";
+import AuthStore from "../../store/AuthStore";
+import ShowStore from "../../store/ShowStore";
+import PagesStore from "../../store/PagesStore";
+
+import { toast } from "react-toastify";
 import { MDBIcon, MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
-import "./style.css";
 
 import Rating from "react-rating";
-import { connect } from "react-redux";
-import * as selectors from "../../store/reducers";
-import * as actions from "../../store/actions";
 import FriendsActivity from "../Common/FriendsActivity";
 import ScoreBlock from "../Common/ScoreBlock";
 
 /**
  * Основная страница приложения
  */
-function EpisodePage({ requestShowEpisode, showEpisode, showEpisodeIsLoading, setEpisodeUserStatus, requestShowEpisodeUserInfo, showUserInfo, showUserInfoIsLoading, loggedIn, openLoginForm }) {
+const EpisodePage = observer((props) => {
+	const { loggedIn } = AuthStore;
+	const { openLoginForm } = PagesStore;
+	const { requestEpisode, show, showState, setEpisodesStatus, requestEpisodeUserInfo, userInfo, userInfoState, friendsInfo, setStatusState } = ShowStore;
+
 	let history = useHistory();
 	let { show_id, season_number, episode_number } = useParams();
-	const [date, setDate] = useState("");
 	const [review, setReview] = useState("");
 	const [userRate, setUserRate] = useState(-1);
 
 	useEffect(
 		() => {
-			setClear();
 			setReview("");
 			setUserRate(-1);
-			requestShowEpisode(show_id, season_number, episode_number);
+			requestEpisode(show_id, season_number, episode_number);
 		},
 		// eslint-disable-next-line
-		[show_id, season_number, episode_number, requestShowEpisode]
+		[show_id, season_number, episode_number, requestEpisode]
 	);
 
 	useEffect(
 		() => {
-			if (loggedIn) requestShowEpisodeUserInfo(show_id, season_number, episode_number);
+			if (loggedIn) requestEpisodeUserInfo(show_id, season_number, episode_number);
 			else {
 				setReview("");
 				setUserRate(-1);
@@ -46,42 +50,41 @@ function EpisodePage({ requestShowEpisode, showEpisode, showEpisodeIsLoading, se
 	);
 
 	useEffect(() => {
-		setClear();
-		if (showEpisode.tmdb.air_date) {
-			let mas = showEpisode.tmdb.air_date.split("-");
-			let newDate = mas[2] + "." + mas[1] + "." + mas[0];
-			setDate(newDate);
-		}
-
-		document.title = showEpisode.tmdb.show_name + " - " + showEpisode.tmdb.name;
-	}, [showEpisode]);
+		document.title = show.show?.tmdb_name + " - " + show.name;
+	}, [show]);
 
 	useEffect(
 		() => {
-			if (showUserInfo?.review) setReview(showUserInfo.review);
+			if (userInfo?.review) setReview(userInfo.review);
 			else setReview("");
 
-			if (showUserInfo?.score) setUserRate(showUserInfo.score);
+			if (userInfo?.score) setUserRate(userInfo.score);
 			else setUserRate(-1);
 		},
 		// eslint-disable-next-line
-		[showUserInfo]
+		[userInfo]
 	);
 
-	function setClear() {
-		setDate("");
-	}
+	useEffect(() => {
+		if (showState.startsWith("error:")) toast.error(`Ошибка загрузки! ${showState}`);
+	}, [showState]);
+	useEffect(() => {
+		if (userInfoState.startsWith("error:")) toast.error(`Ошибка загрузки пользовательской информации! ${userInfoState}`);
+	}, [userInfoState]);
+	useEffect(() => {
+		if (setStatusState.startsWith("error:")) toast.error(`Ошибка сохранения! ${setStatusState}`);
+	}, [setStatusState]);
 
 	return (
 		<div>
-			<div className='bg' style={{ backgroundImage: `url(${"http://image.tmdb.org/t/p/w1920_and_h800_multi_faces" + showEpisode.tmdb.backdrop_path})` }} />
-			<LoadingOverlay active={showEpisodeIsLoading} spinner text='Загрузка...'>
-				<div className='showContentPage'>
-					<div className='showContentHeader'>
-						<div className='showPosterBlock'>
-							<img src={"http://image.tmdb.org/t/p/w600_and_h900_bestv2" + showEpisode.tmdb.still_path} className='img-fluid' alt='' />
+			<div className='bg' style={{ backgroundImage: `url(${show.show?.tmdb_backdrop_path})` }} />
+			<LoadingOverlay active={showState === "pending"} spinner text='Загрузка...'>
+				<div className='contentPage'>
+					<div className='contentHeader'>
+						<div className='posterBlock widePoster'>
+							<img src={show.still_path} className='img-fluid' alt='' />
 						</div>
-						<div className='showInfoBlock'>
+						<div className='infoBlock tightInfo'>
 							<h1 className='header'>
 								<a
 									href={window.location.origin + "/show/" + show_id}
@@ -89,26 +92,24 @@ function EpisodePage({ requestShowEpisode, showEpisode, showEpisodeIsLoading, se
 										history.push("/show/" + show_id);
 										e.preventDefault();
 									}}>
-									{showEpisode.tmdb.show_name}
+									{show.show?.tmdb_name}
 								</a>
-								{" - " + showEpisode.tmdb.name}
+								{" - " + show.name}
 							</h1>
-							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>
-								{showEpisode.tmdb.show_original_name + " - Season " + showEpisode.tmdb.season_number + " - Episode " + showEpisode.tmdb.episode_number}{" "}
-							</h5>
+							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{show.show?.tmdb_original_name + " - Season " + show.season_number + " - Episode " + show.episode_number}</h5>
 							<div className='mainInfo'>
-								<p hidden={date === ""}>Дата выхода: {date}</p>
+								<p hidden={!show.air_date}>Дата выхода: {show.air_date}</p>
 								<a
 									href={window.location.origin + "/show/" + show_id + "/season/" + season_number}
 									onClick={(e) => {
 										history.push("/show/" + show_id + "/season/" + season_number);
 										e.preventDefault();
 									}}>
-									Сезон: {showEpisode.tmdb.season_number}
+									Сезон: {show.season_number}
 								</a>
 							</div>
-							<div hidden={!loggedIn | !showUserInfo?.user_watched_show}>
-								<LoadingOverlay active={showUserInfoIsLoading & !showEpisodeIsLoading} spinner text='Загрузка...'>
+							<div hidden={!loggedIn | !userInfo?.user_watched_show}>
+								<LoadingOverlay active={userInfoState === "pending" && !showState === "pending"} spinner text='Загрузка...'>
 									<Rating
 										start={-1}
 										stop={10}
@@ -124,79 +125,42 @@ function EpisodePage({ requestShowEpisode, showEpisode, showEpisodeIsLoading, se
 												openLoginForm();
 											} else {
 												setUserRate(score);
-												setEpisodeUserStatus({ episodes: [{ season_number: season_number, episode_number: episode_number, score: score }] }, show_id);
+												setEpisodesStatus({ episodes: [{ tmdb_id: show.id, score: score }] }, show_id);
 											}
 										}}
 									/>
-									<MDBInput type='textarea' id='reviewSeasonInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
+									<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
 									<button
-										className={"savePreviewButton"}
-										hidden={!loggedIn | !showUserInfo?.user_watched_show}
+										className={"saveReviewButton"}
+										hidden={!loggedIn | !userInfo?.user_watched_show}
 										onClick={() => {
 											if (!loggedIn) {
 												openLoginForm();
 											} else {
-												setEpisodeUserStatus(
-													{
-														episodes: [
-															{
-																season_number: season_number,
-																episode_number: episode_number,
-																review: document.getElementById("reviewSeasonInput").value,
-															},
-														],
-													},
-													show_id
-												);
+												setEpisodesStatus({ episodes: [{ tmdb_id: show.id, review: review }] }, show_id);
 											}
 										}}>
 										Сохранить
 									</button>
 								</LoadingOverlay>
 							</div>
-							<ScoreBlock score={showEpisode.tmdb.vote_average * 10} text='TMDB score' className='scoreBlock' />
+							<ScoreBlock score={show.score} text='TMDB score' className='scoreBlock' />
 						</div>
 					</div>
-					<div className='showContentBody'>
+					<div className='contentBody'>
 						<div>
-							<h3 style={{ paddingTop: "15px" }}>Описание</h3>
-							<div dangerouslySetInnerHTML={{ __html: showEpisode.tmdb.overview }} />
+							<h3>Описание</h3>
+							<div dangerouslySetInnerHTML={{ __html: show.overview }} />
 						</div>
-						<div className='movieFriendsBlock' hidden={showUserInfo.friends_info.length < 1}>
+						<div className='friendsBlock' hidden={friendsInfo.length < 1}>
 							<h4>Отзывы друзей</h4>
-							<FriendsActivity info={showUserInfo.friends_info} />
+							<FriendsActivity info={friendsInfo} />
 						</div>
 					</div>
 				</div>
 			</LoadingOverlay>
 		</div>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	loggedIn: selectors.getLoggedIn(state),
-	requestError: selectors.getShowRequestError(state),
-	showEpisode: selectors.getContentShow(state),
-	showEpisodeIsLoading: selectors.getIsLoadingContentShow(state),
-	showUserInfo: selectors.getContentShowUserInfo(state),
-	showUserInfoIsLoading: selectors.getIsLoadingContentShowUserInfo(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		requestShowEpisode: (showID, seasonNumber, episodeNumber) => {
-			dispatch(actions.requestShowEpisode(showID, seasonNumber, episodeNumber));
-		},
-		setEpisodeUserStatus: (status, showID) => {
-			dispatch(actions.setShowEpisodesStatus(status, showID));
-		},
-		openLoginForm: () => {
-			dispatch(actions.openLoginForm());
-		},
-		requestShowEpisodeUserInfo: (showID, seasonID, episodeID) => {
-			dispatch(actions.requestShowEpisodeUserInfo(showID, seasonID, episodeID));
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(EpisodePage);
+export default EpisodePage;

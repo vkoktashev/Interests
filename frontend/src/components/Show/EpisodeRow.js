@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import "./style.css";
 import Rating from "react-rating";
 import { MDBIcon } from "mdbreact";
 
-function EpisodeRow({ episode, season, showID, userInfo, setShowEpisodeUserStatus, loggedIn, onCheckBox, checked }) {
+function EpisodeRow({ episode, season, showID, userInfo, setEpisodeUserStatus, loggedIn, onCheckBox, checked }) {
 	let history = useHistory();
 	const [isChecked, setIsChecked] = useState(false);
 
@@ -43,18 +42,7 @@ function EpisodeRow({ episode, season, showID, userInfo, setShowEpisodeUserStatu
 				readonly={!loggedIn}
 				initialRating={userInfo ? userInfo.score : -1}
 				onChange={(score) => {
-					setShowEpisodeUserStatus(
-						{
-							episodes: [
-								{
-									season_number: season,
-									episode_number: episode,
-									score: score,
-								},
-							],
-						},
-						showID
-					);
+					setEpisodeUserStatus({ episodes: [{ tmdb_id: episode.id, score: score }] }, showID);
 				}}
 			/>
 		</div>

@@ -106,6 +106,14 @@ def update_fields_if_needed(obj, new_fields):
     obj.save(update_fields=fields_to_update)
 
 
+def update_fields_if_needed_without_save(obj, new_fields):
+    fields_to_update = []
+    for key, value in new_fields.items():
+        if str(value) != str(getattr(obj, key)):
+            obj.__setattr__(key, value)
+            fields_to_update.append(key)
+
+
 # cache keys
 def get_rawg_game_key(slug):
     return f'game_{slug}'
@@ -125,3 +133,7 @@ def get_tmdb_season_key(show_tmdb_id, season_number):
 
 def get_tmdb_episode_key(show_tmdb_id, season_number, episode_number):
     return f'show_{show_tmdb_id}_season_{season_number}_episode_{episode_number}'
+
+
+def objects_to_str(objects):
+    return ', '.join(obj['name'] for obj in objects)

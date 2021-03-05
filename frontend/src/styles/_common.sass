@@ -1,0 +1,143 @@
+@import "./_colors"
+
+.categoriesTab
+    background-color: $backgroundColor
+    color: $textColor
+    border: none
+    padding: 0px 20px 0px 0px
+    text-align: left
+    font-weight: bolder
+    margin-left: 0px
+    margin-right: 0px
+    margin-top: 15px
+    cursor: pointer
+    font-size: 32px
+    outline: none
+
+.categoriesTab:focus
+    outline: 0 !important
+
+.contentStatus
+    background-color: $headerBackgroundColor
+    border: 1px solid #fff
+    color: white
+    padding: 4px 8px
+    text-align: center
+    text-decoration: none
+    margin: 0px
+    cursor: pointer
+    font-size: 1rem
+
+.contentStatuses
+    max-width: 100%
+    margin-top: 15px
+
+.cardUser
+    max-width: 100%
+    width: 250px
+    height: 75px
+    margin-right: 5px
+    margin-left: 5px
+    margin-bottom: 0px
+    display: inline-block
+
+.cardUserImage
+    height: 75px
+    width: 75px
+    background-position: center
+    background-repeat: no-repeat
+    background-size: cover
+    background-color: $activeBackgroundColor
+    display: inline-block
+    margin: 0
+    border-top-left-radius: 10px
+    border-bottom-left-radius: 10px
+
+.cardUserText
+    padding: 10px
+    text-align: center
+    vertical-align: top
+    color: $textColor
+    font-weight: 200
+    background-color: $activeBackgroundColor
+    width: 175px
+    height: 75px
+    display: inline-block
+    margin: 0
+    border-top-right-radius: 10px
+    border-bottom-right-radius: 10px
+
+.friendsBlock
+    width: 100%
+    display: flex
+    flex-direction: row
+
+.fActivityBlock
+    display: inline-flex
+    margin-bottom: 0px
+    margin-top: 10px
+    margin-right: 1rem
+    background-color: $activeBackgroundColor
+    color: $textColor
+    vertical-align: top
+    width: 38rem
+    max-width: 100%
+    border-radius: 5px
+    padding-bottom: 1rem
+
+.fActivityUser
+    display: inline-block
+    padding-top: 10px
+    padding-left: 10px
+    margin-left: 0px
+    margin-right: 13px
+    vertical-align: top
+    font-weight: 400
+
+.fActivityInfo
+    display: inline-block
+    margin-bottom: 0px
+    margin-top: 0px
+    padding-top: 12px
+
+.fActivityInfoText
+    margin-bottom: 5px
+
+#reviewInput
+    color: $textColor
+    background-color: $backgroundColor
+
+#spentTimeInput
+    color: $textColor
+    background-color: $backgroundColor
+
+.md-form label.active
+    color: $textColor !important
+    background-color: $backgroundColor !important
+
+.metacritic
+    vertical-align: middle
+    text-align: center
+    color: #fff !important
+    font-family: Arial, Helvetica, sans-serif
+    font-style: normal !important
+    font-weight: bold !important
+    background-color: darkgrey
+    font-size: 35px
+    height: 2em
+    width: 2em
+    line-height: 2em
+    border-radius: 6px
+
+    &.green
+        background-color: rgb(102, 204, 51) !important
+    &.yellow
+        background-color: rgb(243, 193, 43) !important
+    &.red
+        background-color: rgb(255, 0, 0) !important
+
+.metacriticText
+    font-family: Arial, Helvetica, sans-serif
+    font-size: 12px
+    text-align: center
+    padding-left: 3px

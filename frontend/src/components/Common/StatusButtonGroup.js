@@ -1,5 +1,4 @@
 import React from "react";
-import "./style.css";
 
 function StatusButtonGroup({ statuses, activeColor, onChangeStatus, userStatus }) {
 	return (

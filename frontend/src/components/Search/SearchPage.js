@@ -1,92 +1,65 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useHistory } from "react-router-dom";
+import { observer } from "mobx-react";
+import SearchStore from "../../store/SearchStore";
+
 import { MDBRow, MDBCol, MDBContainer, MDBIcon, MDBFormInline } from "mdbreact";
-import "./style.css";
 
 import LoadingOverlay from "react-loading-overlay";
-
-import CardGame from "./CardGame";
-import CardMovie from "./CardMovie";
-import CardShow from "./CardShow";
-import CardUser from "../Common/CardUser";
+import { toast } from "react-toastify";
+import GamesBlock from "./Blocks/GamesBlock";
+import MoviesBlock from "./Blocks/MoviesBlock";
+import ShowsBlock from "./Blocks/ShowsBlock";
+import UsersBlock from "./Blocks/UsersBlock";
 import CategoriesTab from "../Common/CategoriesTab";
-
-import { connect } from "react-redux";
-import * as selectors from "../../store/reducers";
-import * as actions from "../../store/actions";
 
 /**
  * Основная страница приложения
  */
-function SearchPage({ loggedIn, gamesIsLoading, moviesIsLoading, showsIsLoading, usersIsLoading, searchGame, games, searchMovie, movies, searchShow, shows, searchUsers, users }) {
+const SearchPage = observer((props) => {
+	const { gamesState, searchGames, games, moviesState, searchMovies, movies, showsState, searchShows, shows, usersState, searchUsers, users } = SearchStore;
+
 	let history = useHistory();
 	let { query } = useParams();
 	const [queryText, setQueryText] = useState("");
-	const [gamesCards, setGamesCards] = useState("");
-	const [moviesCards, setMoviesCards] = useState("");
-	const [showsCards, setShowsCards] = useState("");
-	const [usersCards, setUsersCards] = useState("");
 	const [gamesPage, setGamesPage] = useState(1);
 	const [moviesPage, setMoviesPage] = useState(1);
 	const [showsPage, setShowsPage] = useState(1);
 
 	const [activeCategory, setActiveCategory] = useState("Всё");
 
-	useEffect(() => {
-		searchGame(query, 1, 6);
-		searchMovie(query, 1);
-		searchShow(query, 1);
-		searchUsers(query);
-		setQueryText(query);
-		document.title = "Поиск";
-		setGamesPage(1);
-		setMoviesPage(1);
-		setShowsPage(1);
-	}, [query, searchGame, searchMovie, searchUsers, searchShow]);
+	useEffect(
+		() => {
+			if (activeCategory === "Всё" || activeCategory === "Игры") searchGames(query, 1, 6);
+			if (activeCategory === "Всё" || activeCategory === "Фильмы") searchMovies(query, 1);
+			if (activeCategory === "Всё" || activeCategory === "Сериалы") searchShows(query, 1);
+			if (activeCategory === "Всё" || activeCategory === "Пользователи") searchUsers(query);
+			setQueryText(query);
+			document.title = "Поиск";
+			setGamesPage(1);
+			setMoviesPage(1);
+			setShowsPage(1);
+		},
+		// eslint-disable-next-line
+		[query, searchGames, searchMovies, searchUsers, searchShows, activeCategory]
+	);
 
 	useEffect(() => {
-		setGamesCards(
-			<div className='searchCardsGroup'>
-				{games.map((game) => (
-					<CardGame game={game} key={game.id} />
-				))}
-			</div>
-		);
-	}, [games]);
-
+		if (gamesState.startsWith("error:")) toast.error(`Ошибка поиска игр! ${gamesState}`);
+	}, [gamesState]);
 	useEffect(() => {
-		setMoviesCards(
-			<div className='searchCardsGroup'>
-				{movies.map((movie) => (
-					<CardMovie movie={movie} key={movie.id} />
-				))}
-			</div>
-		);
-	}, [movies]);
-
+		if (moviesState.startsWith("error:")) toast.error(`Ошибка поиска фильмов! ${moviesState}`);
+	}, [moviesState]);
 	useEffect(() => {
-		setShowsCards(
-			<div className='searchCardsGroup'>
-				{shows.map((show) => (
-					<CardShow show={show} key={show.id} />
-				))}
-			</div>
-		);
-	}, [shows]);
-
+		if (showsState.startsWith("error:")) toast.error(`Ошибка поиска серилов! ${showsState}`);
+	}, [showsState]);
 	useEffect(() => {
-		setUsersCards(
-			<div className='searchCardsGroup'>
-				{users.map((user) => (
-					<CardUser user={user} key={user.username} />
-				))}
-			</div>
-		);
-	}, [users]);
+		if (usersState.startsWith("error:")) toast.error(`Ошибка поиска пользователей! ${usersState}`);
+	}, [usersState]);
 
 	return (
 		<div>
-			<div className='bg searchBG' />
+			<div className='bg textureBG' />
 			<MDBContainer>
 				<MDBRow>
 					<MDBCol md='0.5'></MDBCol>
@@ -121,92 +94,44 @@ function SearchPage({ loggedIn, gamesIsLoading, moviesIsLoading, showsIsLoading,
 							}}
 						/>
 
-						<LoadingOverlay active={gamesIsLoading} spinner text='Ищем игры...'>
-							<div hidden={activeCategory !== "Всё" && activeCategory !== "Игры"}>
-								<h3>Игры</h3>
-								<div className='reslutsBlock'>
-									<button
-										className='paginationButton'
-										disabled={gamesPage === 1}
-										onClick={() => {
-											searchGame(query, gamesPage - 1, 6);
-											setGamesPage(gamesPage - 1);
-										}}>
-										&lt;
-									</button>
-									{gamesCards}
-									<button
-										className='paginationButton'
-										disabled={games.length < 6}
-										onClick={() => {
-											searchGame(query, gamesPage + 1, 6);
-											setGamesPage(gamesPage + 1);
-										}}>
-										&gt;
-									</button>
-								</div>
-							</div>
+						<LoadingOverlay active={gamesState === "pending"} spinner text='Ищем игры...'>
+							<GamesBlock
+								games={games}
+								gamesPage={gamesPage}
+								onPaginate={(page) => {
+									setGamesPage(page);
+									searchGames(query, page, 6);
+								}}
+								hidden={activeCategory !== "Всё" && activeCategory !== "Игры"}
+							/>
 						</LoadingOverlay>
 
-						<LoadingOverlay active={moviesIsLoading} spinner text='Ищем фильмы...'>
-							<div hidden={activeCategory !== "Всё" && activeCategory !== "Фильмы"}>
-								<h3>Фильмы</h3>
-								<div className='reslutsBlock'>
-									<button
-										className='paginationButton'
-										disabled={moviesPage === 1}
-										onClick={() => {
-											searchMovie(query, moviesPage - 1);
-											setMoviesPage(moviesPage - 1);
-										}}>
-										&lt;
-									</button>
-									{moviesCards}
-									<button
-										className='paginationButton'
-										disabled={movies.length < 20}
-										onClick={() => {
-											searchMovie(query, moviesPage + 1);
-											setMoviesPage(moviesPage + 1);
-										}}>
-										&gt;
-									</button>
-								</div>
-							</div>
+						<LoadingOverlay active={moviesState === "pending"} spinner text='Ищем фильмы...'>
+							<MoviesBlock
+								movies={movies}
+								moviesPage={moviesPage}
+								onPaginate={(page) => {
+									setMoviesPage(page);
+									searchMovies(query, page);
+								}}
+								hidden={activeCategory !== "Всё" && activeCategory !== "Фильмы"}
+							/>
 						</LoadingOverlay>
 
-						<LoadingOverlay active={showsIsLoading} spinner text='Ищем сериалы...'>
-							<div hidden={activeCategory !== "Всё" && activeCategory !== "Сериалы"}>
-								<h3>Сериалы</h3>
-								<div className='reslutsBlock'>
-									<button
-										className='paginationButton'
-										disabled={showsPage === 1}
-										onClick={() => {
-											searchShow(query, showsPage - 1);
-											setShowsPage(showsPage - 1);
-										}}>
-										&lt;
-									</button>
-									{showsCards}
-									<button
-										className='paginationButton'
-										disabled={shows.length < 20}
-										onClick={() => {
-											searchShow(query, showsPage + 1);
-											setShowsPage(showsPage + 1);
-										}}>
-										&gt;
-									</button>
-								</div>
-							</div>
+						<LoadingOverlay active={showsState === "pending"} spinner text='Ищем сериалы...'>
+							<ShowsBlock
+								shows={shows}
+								showsPage={showsPage}
+								onPaginate={(page) => {
+									setShowsPage(page);
+									searchShows(query, page);
+								}}
+								hidden={activeCategory !== "Всё" && activeCategory !== "Сериалы"}
+							/>
 						</LoadingOverlay>
 
-						<LoadingOverlay active={usersIsLoading} spinner text='Ищем пользователей...'>
-							<div hidden={activeCategory !== "Всё" && activeCategory !== "Пользователи"}>
-								<h3>Пользователи</h3>
-								{usersCards}
-							</div>
+						<LoadingOverlay active={usersState === "pending"} spinner text='Ищем пользователей...'>
+							<UsersBlock users={users} hidden={activeCategory !== "Всё" && activeCategory !== "Пользователи"} />
 						</LoadingOverlay>
 					</MDBCol>
 					<MDBCol md='0.5'></MDBCol>
@@ -214,35 +139,6 @@ function SearchPage({ loggedIn, gamesIsLoading, moviesIsLoading, showsIsLoading,
 			</MDBContainer>
 		</div>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	loggedIn: selectors.getLoggedIn(state),
-	gamesIsLoading: selectors.getIsLoadingSearchGames(state),
-	moviesIsLoading: selectors.getIsLoadingSearchMovies(state),
-	showsIsLoading: selectors.getIsLoadingSearchShows(state),
-	usersIsLoading: selectors.getIsLoadingSearchUsers(state),
-	games: selectors.getSearchContentGames(state),
-	movies: selectors.getSearchContentMovies(state),
-	shows: selectors.getSearchContentShows(state),
-	users: selectors.getSearchContentUsers(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		searchGame: (query, page, gamesCount) => {
-			dispatch(actions.searchGames(query, page, gamesCount));
-		},
-		searchMovie: (query, page) => {
-			dispatch(actions.searchMovies(query, page));
-		},
-		searchShow: (query, page) => {
-			dispatch(actions.searchShows(query, page));
-		},
-		searchUsers: (query) => {
-			dispatch(actions.searchUsers(query));
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(SearchPage);
+export default SearchPage;

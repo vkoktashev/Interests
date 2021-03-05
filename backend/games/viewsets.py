@@ -18,7 +18,8 @@ from users.models import UserFollow
 from utils.constants import RAWG_UNAVAILABLE, ERROR, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, \
     GAME_NOT_FOUND, CACHE_TIMEOUT
 from utils.documentation import GAMES_SEARCH_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE
-from utils.functions import int_to_hours, get_page_size, int_to_minutes, update_fields_if_needed, get_rawg_game_key
+from utils.functions import int_to_hours, get_page_size, int_to_minutes, update_fields_if_needed, get_rawg_game_key, \
+    objects_to_str
 from utils.openapi_params import query_param, page_param, page_size_param
 
 
@@ -97,6 +98,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'rawg_name': rawg_game.get('name'),
             'rawg_release_date': rawg_game.get('released'),
             'rawg_tba': rawg_game.get('tba'),
+            'rawg_backdrop_path': rawg_game.get('background_image'),
             'hltb_name': hltb_game_name,
             'hltb_id': hltb_game_id
         }
@@ -121,7 +123,10 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         translate_hltb_time(hltb_game, 'gameplay_main_extra', 'gameplay_main_extra_unit')
         translate_hltb_time(hltb_game, 'gameplay_completionist', 'gameplay_completionist_unit')
 
-        return Response({'rawg': rawg_game, 'hltb': hltb_game})
+        rawg_game = parse_game(rawg_game)
+        if hltb_game:
+            rawg_game.update({'hltb': hltb_game})
+        return Response(rawg_game)
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserGameSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
@@ -240,8 +245,8 @@ def get_hltb_search_result(game_name):
     key = f'hltb_search_{game_name.replace(" ", "_")}'
     results = cache.get(key, None)
     if results is None:
-        results = HowLongToBeat(1.0).search(game_name.replace('’', '\''),
-                                            similarity_case_sensitive=False)
+        results = HowLongToBeat(1).search(game_name.replace('’', '\''),
+                                          similarity_case_sensitive=False)
         cache.set(key, results, CACHE_TIMEOUT)
     return results
 
@@ -255,3 +260,25 @@ def get_rawg_game(slug):
         cache.set(key, rawg_game, CACHE_TIMEOUT)
         returned_from_cache = False
     return rawg_game, returned_from_cache
+
+
+def parse_game(rawg_game):
+    platforms = [obj['platform'] for obj in rawg_game['platforms']]
+
+    new_game = {
+        'name': rawg_game.get('name'),
+        'slug': rawg_game.get('slug'),
+        'overview': rawg_game.get('description'),
+        'metacritic': rawg_game.get('metacritic'),
+        'genres': objects_to_str(rawg_game['genres']),
+        'developers': objects_to_str(rawg_game['developers']),
+        'platforms': objects_to_str(platforms),
+        'background': rawg_game.get('background_image_additional')
+        if rawg_game.get('background_image_additional')
+        else rawg_game.get('background_image'),
+        'poster': rawg_game.get('background_image'),
+        'release_date': '.'.join(reversed(rawg_game['released'].split('-')))
+        if rawg_game.get('released') != "" else None,
+    }
+
+    return new_game

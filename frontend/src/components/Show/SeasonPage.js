@@ -1,57 +1,52 @@
 import React, { useEffect, useState } from "react";
-import { useHistory } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import { useHistory, useParams } from "react-router-dom";
+import { observer } from "mobx-react";
+import AuthStore from "../../store/AuthStore";
+import ShowStore from "../../store/ShowStore";
+import PagesStore from "../../store/PagesStore";
+
 import { MDBIcon, MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
 import { AreaChart, linearGradient, XAxis, Tooltip, YAxis, Area, ResponsiveContainer } from "recharts";
-import "./style.css";
+import { toast } from "react-toastify";
 
 import Rating from "react-rating";
-import { connect } from "react-redux";
-import * as selectors from "../../store/reducers";
-import * as actions from "../../store/actions";
 import FriendsActivity from "../Common/FriendsActivity";
 import DetailedEpisodeRow from "./DetailedEpisodeRow";
 
 /**
  * Основная страница приложения
  */
-function ShowPage({
-	requestShowSeason,
-	showSeason,
-	showSeasonIsLoading,
-	setShowUserStatus,
-	setShowEpisodeUserStatus,
-	requestShowSeasonUserInfo,
-	showUserInfo,
-	showUserInfoIsLoading,
-	loggedIn,
-	openLoginForm,
-}) {
+const SeasonPage = observer((props) => {
+	const { loggedIn } = AuthStore;
+	const { requestSeason, show, showState, setSeasonStatus, setEpisodesStatus, requestSeasonUserInfo, userInfo, userInfoState, friendsInfo, setStatusState } = ShowStore;
+	const { openLoginForm, setSaveEpisodes, saveEpisodesBlockIsOpen } = PagesStore;
+
 	let history = useHistory();
 	let { show_id, number } = useParams();
-	const [date, setDate] = useState("");
 	const [review, setReview] = useState("");
 	const [userRate, setUserRate] = useState(0);
 	const [chartData, setChartData] = useState([]);
+	const [isChecked, setIsChecked] = useState(0);
 
 	useEffect(
 		() => {
-			setClear();
 			setReview("");
 			setUserRate(0);
-			requestShowSeason(show_id, number);
+			setIsChecked(0);
+			requestSeason(show_id, number);
 		},
 		// eslint-disable-next-line
-		[show_id, number, requestShowSeason]
+		[show_id, number, requestSeason]
 	);
 
 	useEffect(
 		() => {
-			if (loggedIn) requestShowSeasonUserInfo(show_id, number);
+			if (loggedIn) requestSeasonUserInfo(show_id, number);
 			else {
 				setReview("");
 				setUserRate(0);
+				setIsChecked(0);
 			}
 		},
 		// eslint-disable-next-line
@@ -59,77 +54,88 @@ function ShowPage({
 	);
 
 	useEffect(() => {
-		setClear();
-		if (showSeason.tmdb.air_date) {
-			let mas = showSeason.tmdb.air_date.split("-");
-			let newDate = mas[2] + "." + mas[1] + "." + mas[0];
-			setDate(newDate);
-		}
-
-		document.title = showSeason.tmdb.show_name + " - " + showSeason.tmdb.name;
-	}, [showSeason]);
+		document.title = show.show?.tmdb_name + " - " + show.name;
+	}, [show]);
 
 	useEffect(() => {
 		setChartData([]);
-		if (showSeason.tmdb.episodes)
-			if (showSeason.tmdb.episodes.length > 0) {
+		if (show.episodes)
+			if (show.episodes.length > 0) {
 				let newData = [];
-				for (let episode in showSeason.tmdb.episodes) {
-					if (showSeason.tmdb.episodes[episode].vote_average > 0)
-						newData.push({ name: "Ep " + showSeason.tmdb.episodes[episode].episode_number, Оценка: showSeason.tmdb.episodes[episode].vote_average });
+				for (let episode in show.episodes) {
+					if (show.episodes[episode].vote_average > 0) newData.push({ name: "Ep " + show.episodes[episode].episode_number, Оценка: show.episodes[episode].vote_average });
 				}
 				setChartData(newData);
 			}
-	}, [showSeason]);
+	}, [show]);
 
 	useEffect(
 		() => {
-			if (showUserInfo?.review) setReview(showUserInfo.review);
+			if (userInfo?.review) setReview(userInfo.review);
 			else setReview("");
 
-			if (showUserInfo?.score) setUserRate(showUserInfo.score);
+			if (userInfo?.score) setUserRate(userInfo.score);
 			else setUserRate(0);
 		},
 		// eslint-disable-next-line
-		[showUserInfo]
+		[userInfo]
 	);
 
-	function setClear() {
-		setDate("");
+	useEffect(() => {
+		if (showState.startsWith("error:")) toast.error(`Ошибка загрузки! ${showState}`);
+	}, [showState]);
+	useEffect(() => {
+		if (userInfoState.startsWith("error:")) toast.error(`Ошибка загрузки пользовательской информации! ${userInfoState}`);
+	}, [userInfoState]);
+	useEffect(() => {
+		if (setStatusState.startsWith("error:")) toast.error(`Ошибка сохранения! ${setStatusState}`);
+	}, [setStatusState]);
+
+	function getEpisodeByID(episodes, id) {
+		for (let episode in episodes) if (episodes[episode].tmdb_id === id) return episodes[episode];
 	}
 
-	function getEpisodeByNumber(episodes, number) {
-		for (let episode in episodes) if (episodes[episode].episode_number === number) return episodes[episode];
+	function sendEpisodes() {
+		let episodes = [];
+		for (let episode in userInfo.episodes) {
+			let currentValue = userInfo.episodes[episode];
+			let cbValue = document.getElementById(`cbEpisode${currentValue.tmdb_id}`).checked;
+			let currentStatus = currentValue?.score > -1;
+			if (cbValue !== currentStatus) episodes.push({ tmdb_id: currentValue.tmdb_id, score: cbValue ? 0 : -1 });
+		}
+		setEpisodesStatus({ episodes }, show_id);
+		requestSeasonUserInfo(show_id, number);
+		setSaveEpisodes(false);
 	}
 
 	return (
 		<div>
-			<div className='bg' style={{ backgroundImage: `url(${"http://image.tmdb.org/t/p/w1920_and_h800_multi_faces" + showSeason.tmdb.backdrop_path})` }} />
-			<LoadingOverlay active={showSeasonIsLoading} spinner text='Загрузка...'>
-				<div className='showContentPage'>
-					<div className='showContentHeader'>
-						<div className='showPosterBlock'>
-							<img src={"http://image.tmdb.org/t/p/w600_and_h900_bestv2" + showSeason.tmdb.poster_path} className='img-fluid' alt='' />
+			<div className='bg' style={{ backgroundImage: `url(${show.show?.tmdb_backdrop_path})` }} />
+			<LoadingOverlay active={showState === "pending"} spinner text='Загрузка...'>
+				<div className='contentPage'>
+					<div className='contentHeader'>
+						<div className='posterBlock tightPoster'>
+							<img src={show.poster_path} className='img-fluid' alt='' />
 						</div>
-						<div className='showInfoBlock'>
+						<div className='infoBlock wideInfo'>
 							<h1 className='header'>
 								<a
-									href={window.location.origin + "/show/" + show_id}
+									href={window.location.origin + "/show/" + show.show?.id}
 									onClick={(e) => {
-										history.push("/show/" + show_id);
+										history.push("/show/" + show.show?.tmdb_id);
 										e.preventDefault();
 									}}>
-									{showSeason.tmdb.show_name}
+									{show.show?.tmdb_name}
 								</a>
-								{" - " + showSeason.tmdb.name}
+								{" - " + show.name}
 							</h1>
-							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{showSeason.tmdb.show_original_name + " - Season " + showSeason.tmdb.season_number}</h5>
+							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{show.show?.tmdb_original_name + " - Season " + show.season_number}</h5>
 							<div className='mainInfo'>
-								<p hidden={date === ""}>Дата выхода: {date}</p>
-								<p>Количество серий: {showSeason.tmdb.episodes ? showSeason.tmdb.episodes.length : 0}</p>
+								<p hidden={!show.air_date}>Дата выхода: {show.air_date}</p>
+								<p hidden={!show.episodes}>Количество серий: {show.episodes?.length}</p>
 							</div>
-							<div hidden={!loggedIn | !showUserInfo?.user_watched_show}>
-								<LoadingOverlay active={showUserInfoIsLoading & !showSeasonIsLoading} spinner text='Загрузка...'>
+							<div hidden={!loggedIn | !userInfo?.user_watched_show}>
+								<LoadingOverlay active={userInfoState === "pending" && !showState === "pending"} spinner text='Загрузка...'>
 									<Rating
 										stop={10}
 										emptySymbol={<MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />}
@@ -142,125 +148,114 @@ function ShowPage({
 												openLoginForm();
 											} else {
 												setUserRate(score);
-												setShowUserStatus({ score: score }, show_id, showSeason.tmdb.season_number);
+												setSeasonStatus({ score: score }, show_id, show.season_number);
 											}
 										}}
 									/>
-									<MDBInput type='textarea' id='reviewSeasonInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
+									<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
 									<button
-										className={"savePreviewButton"}
-										hidden={!loggedIn | !showUserInfo?.user_watched_show}
+										className={"saveReviewButton"}
+										hidden={!loggedIn | !userInfo?.user_watched_show}
 										onClick={() => {
-											if (!loggedIn) {
-												openLoginForm();
-											} else {
-												setShowUserStatus({ review: document.getElementById("reviewSeasonInput").value }, show_id, showSeason.tmdb.season_number);
-											}
+											setSeasonStatus({ review: document.getElementById("reviewInput").value }, show_id, show.season_number);
 										}}>
 										Сохранить
 									</button>
 								</LoadingOverlay>
 							</div>
 						</div>
-						<div className='showContentBody'>
-							<div>
-								<h3 style={{ paddingTop: "15px" }}>Описание</h3>
-								<div dangerouslySetInnerHTML={{ __html: showSeason.tmdb.overview }} />
-							</div>
-							<div className='showSeasonsBody'>
-								<h3 style={{ paddingTop: "15px" }}>Список серий</h3>
-								<details open={false} className='episodeRows' style={{ marginBottom: "15px" }}>
-									<summary>Развернуть</summary>
-									<ul>
-										{showSeason.tmdb.episodes
-											? showSeason.tmdb.episodes.map((episode) => (
-													<li className='episode' key={showSeason.tmdb.id + episode.episode_number}>
-														<DetailedEpisodeRow
-															episode={episode}
-															showID={show_id}
-															loggedIn={loggedIn}
-															userInfo={getEpisodeByNumber(showUserInfo.episodes, episode.episode_number)}
-															setShowEpisodeUserStatus={setShowEpisodeUserStatus}
-															userWatchedShow={showUserInfo?.user_watched_show}
-														/>
-													</li>
-											  ))
-											: ""}
-									</ul>
-								</details>
-								<div hidden={!(chartData.length > 0)}>
-									{document.body.clientHeight < document.body.clientWidth ? (
-										<ResponsiveContainer width='100%' height={200}>
-											<AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-												<defs>
-													<linearGradient id='colorUv' x1='0' y1='0' x2='0' y2='1'>
-														<stop offset='5%' stopColor='#8884d8' stopOpacity={0.8} />
-														<stop offset='95%' stopColor='#8884d8' stopOpacity={0} />
-													</linearGradient>
-												</defs>
-												<XAxis dataKey='name' interval={0} tick={{ fill: "rgb(238, 238, 238)" }} />
-												<YAxis tickLine={false} domain={[0, 10]} tick={{ fill: "rgb(238, 238, 238)" }} tickCount={2} />
-												<Tooltip contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }} />
-												<Area type='monotone' dataKey='Оценка' stroke='#8884d8' fillOpacity={1} fill='url(#colorUv)' />
-											</AreaChart>
-										</ResponsiveContainer>
-									) : (
-										<ResponsiveContainer width='100%' height={chartData.length * 30}>
-											<AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }} layout='vertical'>
-												<defs>
-													<linearGradient id='colorUv' x1='0' y1='0' x2='0' y2='1'>
-														<stop offset='5%' stopColor='#8884d8' stopOpacity={0.8} />
-														<stop offset='95%' stopColor='#8884d8' stopOpacity={0} />
-													</linearGradient>
-												</defs>
-												<YAxis dataKey='name' interval={0} tick={{ fill: "rgb(238, 238, 238)" }} type='category' />
-												<XAxis tickLine={false} domain={[0, 10]} tick={{ fill: "rgb(238, 238, 238)" }} tickCount={2} type='number' />
-												<Tooltip contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }} />
-												<Area type='monotone' dataKey='Оценка' stroke='#8884d8' fillOpacity={1} fill='url(#colorUv)' />
-											</AreaChart>
-										</ResponsiveContainer>
-									)}
+					</div>
+					<div className='contentBody'>
+						<div>
+							<h3>Описание</h3>
+							<div dangerouslySetInnerHTML={{ __html: show.overview }} />
+						</div>
+						<div className='showSeasonsBody'>
+							<h3 style={{ paddingTop: "15px" }}>Список серий</h3>
+							<details open={false} className='episodeRows' style={{ marginBottom: "15px" }}>
+								<summary>Развернуть</summary>
+								<div style={{ marginLeft: "5px" }} hidden={!loggedIn || !userInfo?.user_watched_show}>
+									Выбрать все&nbsp;
+									<input
+										type='checkbox'
+										checked={isChecked > 0}
+										onChange={(res) => {
+											setSaveEpisodes(true);
+											setIsChecked(res.target.checked ? 1 : -1);
+										}}
+									/>
 								</div>
+								<ul>
+									{show.episodes
+										? show.episodes.map((episode, counter) => (
+												<li className='episode' key={counter}>
+													<DetailedEpisodeRow
+														episode={episode}
+														showID={show_id}
+														loggedIn={loggedIn}
+														userInfo={getEpisodeByID(userInfo.episodes, episode.id)}
+														setEpisodeUserStatus={setEpisodesStatus}
+														checkAll={isChecked}
+														userWatchedShow={userInfo?.user_watched_show}
+														setSaveEpisodes={setSaveEpisodes}
+													/>
+												</li>
+										  ))
+										: ""}
+								</ul>
+							</details>
+							<div hidden={!(chartData.length > 0)}>
+								{document.body.clientHeight < document.body.clientWidth ? (
+									<ResponsiveContainer width='100%' height={200}>
+										<AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+											<defs>
+												<linearGradient id='colorUv' x1='0' y1='0' x2='0' y2='1'>
+													<stop offset='5%' stopColor='#8884d8' stopOpacity={0.8} />
+													<stop offset='95%' stopColor='#8884d8' stopOpacity={0} />
+												</linearGradient>
+											</defs>
+											<XAxis dataKey='name' interval={0} tick={{ fill: "rgb(238, 238, 238)" }} />
+											<YAxis tickLine={false} domain={[0, 10]} tick={{ fill: "rgb(238, 238, 238)" }} tickCount={2} />
+											<Tooltip contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }} />
+											<Area type='monotone' dataKey='Оценка' stroke='#8884d8' fillOpacity={1} fill='url(#colorUv)' />
+										</AreaChart>
+									</ResponsiveContainer>
+								) : (
+									<ResponsiveContainer width='100%' height={chartData.length * 30}>
+										<AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }} layout='vertical'>
+											<defs>
+												<linearGradient id='colorUv' x1='0' y1='0' x2='0' y2='1'>
+													<stop offset='5%' stopColor='#8884d8' stopOpacity={0.8} />
+													<stop offset='95%' stopColor='#8884d8' stopOpacity={0} />
+												</linearGradient>
+											</defs>
+											<YAxis dataKey='name' interval={0} tick={{ fill: "rgb(238, 238, 238)" }} type='category' />
+											<XAxis tickLine={false} domain={[0, 10]} tick={{ fill: "rgb(238, 238, 238)" }} tickCount={2} type='number' />
+											<Tooltip contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }} />
+											<Area type='monotone' dataKey='Оценка' stroke='#8884d8' fillOpacity={1} fill='url(#colorUv)' />
+										</AreaChart>
+									</ResponsiveContainer>
+								)}
 							</div>
-							<div className='movieFriendsBlock' hidden={showUserInfo.friends_info.length < 1}>
-								<h4>Отзывы друзей</h4>
-								<FriendsActivity info={showUserInfo.friends_info} />
-							</div>
+						</div>
+						<div className='friendsBlock' hidden={friendsInfo.length < 1}>
+							<h4>Отзывы друзей</h4>
+							<FriendsActivity info={friendsInfo} />
 						</div>
 					</div>
 				</div>
 			</LoadingOverlay>
+			<div className='saveEpisodesHeader' hidden={!saveEpisodesBlockIsOpen}>
+				<button
+					className='saveEpisodesButton'
+					onClick={() => {
+						sendEpisodes();
+					}}>
+					Сохранить
+				</button>
+			</div>
 		</div>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	loggedIn: selectors.getLoggedIn(state),
-	requestError: selectors.getShowRequestError(state),
-	showSeason: selectors.getContentShow(state),
-	showSeasonIsLoading: selectors.getIsLoadingContentShow(state),
-	showUserInfo: selectors.getContentShowUserInfo(state),
-	showUserInfoIsLoading: selectors.getIsLoadingContentShowUserInfo(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		requestShowSeason: (showID, seasonNumber) => {
-			dispatch(actions.requestShowSeason(showID, seasonNumber));
-		},
-		setShowUserStatus: (status, showID, seasonNumber) => {
-			dispatch(actions.setShowSeasonStatus(status, showID, seasonNumber));
-		},
-		setShowEpisodeUserStatus: (status, showID) => {
-			dispatch(actions.setShowEpisodesStatus(status, showID));
-		},
-		openLoginForm: () => {
-			dispatch(actions.openLoginForm());
-		},
-		requestShowSeasonUserInfo: (showID, seasonID) => {
-			dispatch(actions.requestShowSeasonUserInfo(showID, seasonID));
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(ShowPage);
+export default SeasonPage;

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { MDBIcon } from "mdbreact";
-import "./style.css";
 import LogRow from "./LogRow";
 
 function UserLogBlock({ logs, showUsername, onChangePage }) {

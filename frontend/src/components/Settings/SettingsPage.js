@@ -1,24 +1,35 @@
 import React, { useState, useEffect } from "react";
-
-import { connect } from "react-redux";
-import * as selectors from "../../store/reducers";
-import * as actions from "../../store/actions";
+import { observer } from "mobx-react";
+import AuthStore from "../../store/AuthStore";
+import CurrentUserStore from "../../store/CurrentUserStore";
+import { toast } from "react-toastify";
 
 import LoadingOverlay from "react-loading-overlay";
-import "./style.css";
+import SettingsCheckbox from "./SettingsCheckbox";
 
-function SettingsPage({ loggedIn, settings, getUserSettings, saveSettings, settingsIsLoading, user }) {
+const SettingsPage = observer((props) => {
+	const { loggedIn, user } = AuthStore;
+	const { settings, requestSettings, patchSettings, settingsState, saveSettingsState } = CurrentUserStore;
+
 	const [gameNotifInput, setGameNotifInput] = useState(false);
 	const [movieNotifInput, setMovieNotifInput] = useState(false);
 	const [showNotifInput, setShowNotifInput] = useState(false);
 
 	useEffect(
 		() => {
-			if (loggedIn) getUserSettings();
+			if (loggedIn) requestSettings();
 		},
 		// eslint-disable-next-line
 		[loggedIn]
 	);
+
+	useEffect(() => {
+		if (saveSettingsState === "saved") toast.success("Настройки сохранены!");
+		if (saveSettingsState.startsWith("error:")) toast.error(`Ошибка сохранения! ${saveSettingsState}`);
+	}, [saveSettingsState]);
+	useEffect(() => {
+		if (settingsState.startsWith("error:")) toast.error(`Ошибка загрузки! ${settingsState}`);
+	}, [settingsState]);
 
 	useEffect(
 		() => {
@@ -32,29 +43,20 @@ function SettingsPage({ loggedIn, settings, getUserSettings, saveSettings, setti
 
 	return (
 		<div>
-			<div className='bg searchBG' />
+			<div className='bg textureBG' />
 			<div className='settingsPage'>
 				<div className='settingsBlock'>
 					<h1 className='calendarHeader'>Настройки</h1>
 					<h3>Подписка на почтовые уведомления:</h3>
-					<LoadingOverlay active={settingsIsLoading} spinner text='Загрузка...'>
-						<div className='settingsRow' onClick={() => setGameNotifInput(!gameNotifInput)}>
-							<input type='checkbox' className='settingsCheckbox' id='gameNotificationsInput' checked={gameNotifInput} onChange={(event) => setGameNotifInput(event.target.checked)} />{" "}
-							релиз новых игр
-						</div>
-						<div className='settingsRow' onClick={() => setMovieNotifInput(!movieNotifInput)}>
-							<input type='checkbox' className='settingsCheckbox' id='movieNotificationsInput' checked={movieNotifInput} onChange={(event) => setMovieNotifInput(event.target.checked)} />{" "}
-							релиз новых фильмов
-						</div>
-						<div className='settingsRow' onClick={() => setShowNotifInput(!showNotifInput)}>
-							<input type='checkbox' className='settingsCheckbox' id='episodeNotificationsInput' checked={showNotifInput} onChange={(event) => setShowNotifInput(event.target.checked)} />{" "}
-							релиз новых серий сериалов
-						</div>
+					<LoadingOverlay active={settingsState === "pending" || saveSettingsState === "pending"} spinner text='Загрузка...'>
+						<SettingsCheckbox text={" релиз новых игр"} checked={gameNotifInput} onChange={(checked) => setGameNotifInput(checked)} />
+						<SettingsCheckbox text={" релиз новых фильмов"} checked={movieNotifInput} onChange={(checked) => setMovieNotifInput(checked)} />
+						<SettingsCheckbox text={" релиз новых серий сериалов"} checked={showNotifInput} onChange={(checked) => setShowNotifInput(checked)} />
 						<button
 							className='saveSettingsButton'
 							disabled={!loggedIn}
 							onClick={() => {
-								saveSettings({ receive_games_releases: gameNotifInput, receive_movies_releases: movieNotifInput, receive_episodes_releases: showNotifInput });
+								patchSettings({ receive_games_releases: gameNotifInput, receive_movies_releases: movieNotifInput, receive_episodes_releases: showNotifInput });
 							}}>
 							Сохранить
 						</button>
@@ -64,24 +66,6 @@ function SettingsPage({ loggedIn, settings, getUserSettings, saveSettings, setti
 			</div>
 		</div>
 	);
-}
-
-const mapStateToProps = (state) => ({
-	loggedIn: selectors.getLoggedIn(state),
-	user: selectors.getUser(state),
-	settings: selectors.getUserSettings(state),
-	settingsIsLoading: selectors.getIsLoadingUserSettings(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
-	return {
-		getUserSettings: () => {
-			dispatch(actions.requestUserSettings());
-		},
-		saveSettings: (settings) => {
-			dispatch(actions.patchUserSettings(settings));
-		},
-	};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(SettingsPage);
+export default SettingsPage;

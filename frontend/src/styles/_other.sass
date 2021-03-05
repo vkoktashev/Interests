@@ -1,0 +1,120 @@
+@import "./_colors"
+
+.confirmPasswordForm
+    margin-top: 10rem
+    color: $textColor
+    margin-left: auto
+    margin-right: auto
+    width: 30%
+
+.confirmPasswordLabel
+    padding-bottom: 0px
+    margin-bottom: 0px
+    font-size: 1em
+
+.confirmPasswordInput
+    width: 300px
+    background-color: $backgroundColor
+    color: $textColor
+    border: 1px solid
+    border-color: $textColor
+    border-radius: 5px
+    outline: 0
+    padding-bottom: 0px
+    margin-bottom: 10px
+    line-height: 1.5
+    font-size: 1.2rem
+
+.confirmPasswordInput:focus
+    border-color: #80bdff
+    outline: 0
+
+.confirmPasswordButton
+    background-color: $activeColor !important
+    color: $headerTextColor
+    font-size: 1.1rem
+    padding: 5px 30px
+    width: 12rem
+    border-radius: 5px
+
+.confirmPasswordButton:disabled
+    background-color: #5b1a81 !important
+    color: rgb(177, 177, 177)
+    font-size: 1.1rem
+    padding: 5px 30px
+    width: 12rem
+    border-radius: 5px
+
+.show .dropdown-menu
+    background-color: $backgroundColor
+
+.dropdown-item
+    color: $textColor !important
+
+.dropdown-item:hover,
+.dropdown-item:focus
+    background-color: $activeBackgroundColor !important
+
+.navDropdownItem
+    color: $textColor !important
+    padding-left: 0
+    margin-left: 0
+    font-size: 1em !important
+    font-weight: 400 !important
+
+.confirmEmailSuccess,
+.confirmEmailFailure
+    margin-top: 3rem
+    margin-left: 3rem
+    font-size: 3rem
+
+.notFound
+    position: absolute
+    top: 50%
+    left: 50%
+    margin-right: -50%
+    transform: translate(-50%, -50%)
+    text-align: center
+    max-width: 80%
+
+.registrationBody
+    background-color: $backgroundColor
+    color: $textColor
+    text-align: center
+
+.loginBody
+    background-color: $backgroundColor
+    color: $textColor
+    text-align: center
+
+input.form-control
+    background-color: $backgroundColor
+    color: $textColor
+    margin-bottom: 10px
+    outline: none
+
+input.form-control:focus
+    background-color: $backgroundColor
+    color: $textColor
+
+input.form-control:-webkit-autofill
+    box-shadow: inset 0 0 0 50px $backgroundColor !important
+    -webkit-box-shadow: inset 0 0 0 50px $backgroundColor !important
+    -webkit-text-fill-color: $textColor !important
+    color: $textColor !important
+
+.confirmButton
+    background-color: $activeColor !important
+    color: $headerTextColor
+
+.note
+    color: black
+
+.passwordResetLabel
+    display: block
+    margin-top: 15px
+    color: $textColor
+
+.passwordResetLabel:hover
+    color: #7654de
+    cursor: pointer
