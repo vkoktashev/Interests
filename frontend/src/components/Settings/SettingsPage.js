@@ -43,7 +43,7 @@ const SettingsPage = observer((props) => {
 
 	return (
 		<div>
-			<div className='bg searchBG' />
+			<div className='bg textureBG' />
 			<div className='settingsPage'>
 				<div className='settingsBlock'>
 					<h1 className='calendarHeader'>Настройки</h1>

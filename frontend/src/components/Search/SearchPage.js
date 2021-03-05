@@ -59,7 +59,7 @@ const SearchPage = observer((props) => {
 
 	return (
 		<div>
-			<div className='bg searchBG' />
+			<div className='bg textureBG' />
 			<MDBContainer>
 				<MDBRow>
 					<MDBCol md='0.5'></MDBCol>

@@ -62,7 +62,7 @@ function DetailedEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, u
 				/>
 			</div>
 			<a
-				className='episodeRowName episodeLink detailRow'
+				className='episodeRowName detailRow'
 				href={window.location.origin + "/show/" + showID + "/season/" + episode.season_number + "/episode/" + episode.episode_number}
 				onClick={(e) => {
 					history.push("/show/" + showID + "/season/" + episode.season_number + "/episode/" + episode.episode_number);

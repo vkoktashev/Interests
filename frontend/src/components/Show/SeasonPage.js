@@ -109,12 +109,12 @@ const SeasonPage = observer((props) => {
 		<div>
 			<div className='bg' style={{ backgroundImage: `url(${show.show?.tmdb_backdrop_path})` }} />
 			<LoadingOverlay active={showState === "pending"} spinner text='Загрузка...'>
-				<div className='showContentPage'>
-					<div className='showContentHeader'>
-						<div className='showPosterBlock'>
+				<div className='contentPage'>
+					<div className='contentHeader'>
+						<div className='posterBlock tightPoster'>
 							<img src={show.poster_path} className='img-fluid' alt='' />
 						</div>
-						<div className='showInfoBlock'>
+						<div className='infoBlock wideInfo'>
 							<h1 className='header'>
 								<a
 									href={window.location.origin + "/show/" + show.show?.id}
@@ -149,9 +149,9 @@ const SeasonPage = observer((props) => {
 											}
 										}}
 									/>
-									<MDBInput type='textarea' id='reviewSeasonInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
+									<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
 									<button
-										className={"savePreviewButton"}
+										className={"saveReviewButton"}
 										hidden={!loggedIn | !userInfo?.user_watched_show}
 										onClick={() => {
 											setSeasonStatus({ review: document.getElementById("reviewSeasonInput").value }, show_id, show.season_number);
@@ -161,82 +161,82 @@ const SeasonPage = observer((props) => {
 								</LoadingOverlay>
 							</div>
 						</div>
-						<div className='showContentBody'>
-							<div>
-								<h3 style={{ paddingTop: "15px" }}>Описание</h3>
-								<div dangerouslySetInnerHTML={{ __html: show.overview }} />
-							</div>
-							<div className='showSeasonsBody'>
-								<h3 style={{ paddingTop: "15px" }}>Список серий</h3>
-								<details open={false} className='episodeRows' style={{ marginBottom: "15px" }}>
-									<summary>Развернуть</summary>
-									<div style={{ marginLeft: "5px" }} hidden={!loggedIn || !userInfo?.user_watched_show}>
-										Выбрать все&nbsp;
-										<input
-											type='checkbox'
-											checked={isChecked > 0}
-											onChange={(res) => {
-												setSaveEpisodes(true);
-												setIsChecked(res.target.checked ? 1 : -1);
-											}}
-										/>
-									</div>
-									<ul>
-										{show.episodes
-											? show.episodes.map((episode, counter) => (
-													<li className='episode' key={counter}>
-														<DetailedEpisodeRow
-															episode={episode}
-															showID={show_id}
-															loggedIn={loggedIn}
-															userInfo={getEpisodeByID(userInfo.episodes, episode.id)}
-															setEpisodeUserStatus={setEpisodesStatus}
-															checkAll={isChecked}
-															userWatchedShow={userInfo?.user_watched_show}
-														/>
-													</li>
-											  ))
-											: ""}
-									</ul>
-								</details>
-								<div hidden={!(chartData.length > 0)}>
-									{document.body.clientHeight < document.body.clientWidth ? (
-										<ResponsiveContainer width='100%' height={200}>
-											<AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-												<defs>
-													<linearGradient id='colorUv' x1='0' y1='0' x2='0' y2='1'>
-														<stop offset='5%' stopColor='#8884d8' stopOpacity={0.8} />
-														<stop offset='95%' stopColor='#8884d8' stopOpacity={0} />
-													</linearGradient>
-												</defs>
-												<XAxis dataKey='name' interval={0} tick={{ fill: "rgb(238, 238, 238)" }} />
-												<YAxis tickLine={false} domain={[0, 10]} tick={{ fill: "rgb(238, 238, 238)" }} tickCount={2} />
-												<Tooltip contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }} />
-												<Area type='monotone' dataKey='Оценка' stroke='#8884d8' fillOpacity={1} fill='url(#colorUv)' />
-											</AreaChart>
-										</ResponsiveContainer>
-									) : (
-										<ResponsiveContainer width='100%' height={chartData.length * 30}>
-											<AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }} layout='vertical'>
-												<defs>
-													<linearGradient id='colorUv' x1='0' y1='0' x2='0' y2='1'>
-														<stop offset='5%' stopColor='#8884d8' stopOpacity={0.8} />
-														<stop offset='95%' stopColor='#8884d8' stopOpacity={0} />
-													</linearGradient>
-												</defs>
-												<YAxis dataKey='name' interval={0} tick={{ fill: "rgb(238, 238, 238)" }} type='category' />
-												<XAxis tickLine={false} domain={[0, 10]} tick={{ fill: "rgb(238, 238, 238)" }} tickCount={2} type='number' />
-												<Tooltip contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }} />
-												<Area type='monotone' dataKey='Оценка' stroke='#8884d8' fillOpacity={1} fill='url(#colorUv)' />
-											</AreaChart>
-										</ResponsiveContainer>
-									)}
+					</div>
+					<div className='contentBody'>
+						<div>
+							<h3>Описание</h3>
+							<div dangerouslySetInnerHTML={{ __html: show.overview }} />
+						</div>
+						<div className='showSeasonsBody'>
+							<h3 style={{ paddingTop: "15px" }}>Список серий</h3>
+							<details open={false} className='episodeRows' style={{ marginBottom: "15px" }}>
+								<summary>Развернуть</summary>
+								<div style={{ marginLeft: "5px" }} hidden={!loggedIn || !userInfo?.user_watched_show}>
+									Выбрать все&nbsp;
+									<input
+										type='checkbox'
+										checked={isChecked > 0}
+										onChange={(res) => {
+											setSaveEpisodes(true);
+											setIsChecked(res.target.checked ? 1 : -1);
+										}}
+									/>
 								</div>
+								<ul>
+									{show.episodes
+										? show.episodes.map((episode, counter) => (
+												<li className='episode' key={counter}>
+													<DetailedEpisodeRow
+														episode={episode}
+														showID={show_id}
+														loggedIn={loggedIn}
+														userInfo={getEpisodeByID(userInfo.episodes, episode.id)}
+														setEpisodeUserStatus={setEpisodesStatus}
+														checkAll={isChecked}
+														userWatchedShow={userInfo?.user_watched_show}
+													/>
+												</li>
+										  ))
+										: ""}
+								</ul>
+							</details>
+							<div hidden={!(chartData.length > 0)}>
+								{document.body.clientHeight < document.body.clientWidth ? (
+									<ResponsiveContainer width='100%' height={200}>
+										<AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+											<defs>
+												<linearGradient id='colorUv' x1='0' y1='0' x2='0' y2='1'>
+													<stop offset='5%' stopColor='#8884d8' stopOpacity={0.8} />
+													<stop offset='95%' stopColor='#8884d8' stopOpacity={0} />
+												</linearGradient>
+											</defs>
+											<XAxis dataKey='name' interval={0} tick={{ fill: "rgb(238, 238, 238)" }} />
+											<YAxis tickLine={false} domain={[0, 10]} tick={{ fill: "rgb(238, 238, 238)" }} tickCount={2} />
+											<Tooltip contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }} />
+											<Area type='monotone' dataKey='Оценка' stroke='#8884d8' fillOpacity={1} fill='url(#colorUv)' />
+										</AreaChart>
+									</ResponsiveContainer>
+								) : (
+									<ResponsiveContainer width='100%' height={chartData.length * 30}>
+										<AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }} layout='vertical'>
+											<defs>
+												<linearGradient id='colorUv' x1='0' y1='0' x2='0' y2='1'>
+													<stop offset='5%' stopColor='#8884d8' stopOpacity={0.8} />
+													<stop offset='95%' stopColor='#8884d8' stopOpacity={0} />
+												</linearGradient>
+											</defs>
+											<YAxis dataKey='name' interval={0} tick={{ fill: "rgb(238, 238, 238)" }} type='category' />
+											<XAxis tickLine={false} domain={[0, 10]} tick={{ fill: "rgb(238, 238, 238)" }} tickCount={2} type='number' />
+											<Tooltip contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }} />
+											<Area type='monotone' dataKey='Оценка' stroke='#8884d8' fillOpacity={1} fill='url(#colorUv)' />
+										</AreaChart>
+									</ResponsiveContainer>
+								)}
 							</div>
-							<div className='movieFriendsBlock' hidden={friendsInfo.length < 1}>
-								<h4>Отзывы друзей</h4>
-								<FriendsActivity info={friendsInfo} />
-							</div>
+						</div>
+						<div className='friendsBlock' hidden={friendsInfo.length < 1}>
+							<h4>Отзывы друзей</h4>
+							<FriendsActivity info={friendsInfo} />
 						</div>
 					</div>
 				</div>

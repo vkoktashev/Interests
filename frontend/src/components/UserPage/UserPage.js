@@ -58,7 +58,7 @@ const UserPage = observer((props) => {
 
 	return (
 		<div>
-			<div className='bg searchBG' />
+			<div className='bg textureBG' />
 			<LoadingOverlay active={userState === "pending"} spinner text='Загрузка...'>
 				<MDBContainer>
 					<MDBRow>

@@ -1,84 +1,13 @@
 @import "./_colors"
 
-.showContentPage
-    width: 80rem
-    max-width: 100%
-    margin-left: auto
-    margin-right: auto
-    color: $textColor
-    margin-top: 5em
-    margin-bottom: 2em
-    padding: 0px
-
-.showContentHeader
-    position: relative
-    width: 100%
-    background-color: $headerBackgroundColor
-    color: $headerTextColor
-    padding: 0
-    border-top-left-radius: 10px
-    border-top-right-radius: 10px
-
-.showContentBody
-    background-color: $backgroundColor
-    padding-left: 1rem
-    padding-right: 1rem
-    padding-bottom: 1rem
-
-.showFriendsBlock
-    position: relative
-    max-width: 100%
-    width: 78rem
-
-.img-fluid
-    max-height: 30rem
-
-.showPosterBlock
-    display: inline-block
-    text-align: center
-    width: 25rem
-    max-width: 100%
-    padding: 0
-    overflow: hidden
-
-.showPosterBlock.episode
-    width: 35rem
-
-.showInfoBlock
-    position: relative
-    display: inline-block
-    white-space: normal
-    vertical-align: top
-    max-width: 100%
-    width: 55rem
-    padding-left: 1rem
-    padding-bottom: 1rem
-    padding-right: 1rem
-
-.showInfoBlock.episode
-    width: 45rem
-
-.showInfoBlock .header
-    padding-right: 2.5em
-
-.showReviewBody
-    width: 40rem
-    max-width: 100%
-
-a.episodeLink:link, a.episodeLink:visited, a.episodeLink:active
-    color: $linkTextColor
-
-a.episodeLink:hover
-    color: $activeColor
-
 .seasonBlock
     margin-bottom: 0px
     margin-top: 10px
     margin-bottom: 15px
 
-.seasonBlockName
-    display: inline-block
-    margin-right: 7px
+    .name
+        display: inline-block
+        margin-right: 7px
 
 ul
     list-style-type: none
@@ -93,17 +22,6 @@ li.episode:nth-child(even)
 
 .episodeRating
     margin-left: 20px
-
-.mainInfo
-    margin-bottom: 20px
-
-.mainInfo p
-    margin-bottom: 2px
-
-#reviewSeasonInput
-    background-color: $headerBackgroundColor
-    color: $headerTextColor
-    width: 50%
 
 .episodeRowRate
     display: inline-block
@@ -163,14 +81,12 @@ li.episode:nth-child(even)
 .saveEpisodesButton
     width: 150px
     height: 50px
-    background-color: $activeColor
+    background-color: $mainColor
     color: $headerTextColor
     border-radius: 5px
 
 .saveEpisodesButton:hover
-    color: $linkTextColor
-
-.saveEpisodesButton:active
+    color: $textColor
     background-color: $hoverLinkColor
 
 .checkAllEpisodesButton

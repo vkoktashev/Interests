@@ -56,7 +56,7 @@ const CalendarPage = observer((props) => {
 
 	return (
 		<div>
-			<div className='bg searchBG' />
+			<div className='bg textureBG' />
 			<div className='calendarPage'>
 				<div className='calendarBlock'>
 					<h1 className='calendarHeader'>Календарь релизов</h1>

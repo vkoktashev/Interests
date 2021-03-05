@@ -108,12 +108,12 @@ const GamePage = observer((props) => {
 		<div>
 			<div className='bg' style={{ backgroundImage: `url(${game.background})` }} />
 			<LoadingOverlay active={gameState === "pending"} spinner text='Загрузка...'>
-				<div className='gameContentPage'>
-					<div className='gameContentHeader'>
-						<div className='posterBlock'>
+				<div className='contentPage'>
+					<div className='contentHeader'>
+						<div className='posterBlock widePoster'>
 							<img src={game.poster} className='img-fluid' alt='' />
 						</div>
-						<div className='gameInfoBlock'>
+						<div className='infoBlock tightInfo'>
 							<h1 className='header'>{game.name}</h1>
 							<div className='mainInfo'>
 								<p>Разработчики: {game.developers}</p>
@@ -153,13 +153,13 @@ const GamePage = observer((props) => {
 							<ScoreBlock score={game.metacritic} text='Metascore' className='scoreBlock' />
 						</div>
 					</div>
-					<div className='gameContentBody'>
+					<div className='contentBody'>
 						<div>
 							{/* <video width='800' height='450' controls='controls' poster={game.rawg?.clip?.preview} src={game.rawg?.clip?.clip} type='video' /> */}
-							<h3 style={{ paddingTop: "15px" }}>Описание</h3>
+							<h3>Описание</h3>
 							<div dangerouslySetInnerHTML={{ __html: game.overview }} />
 						</div>
-						<div className='gameReviewBody' hidden={!loggedIn}>
+						<div className='reviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
 							<LoadingOverlay active={userInfoState === "pending" && gameState !== "pending"} spinner text='Загрузка...'>
 								<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
@@ -173,7 +173,7 @@ const GamePage = observer((props) => {
 								/>
 								{getTimeToBeatDatalist()}
 								<button
-									className={"savePreviewButton"}
+									className={"saveReviewButton"}
 									disabled={!loggedIn | (userStatus === "Не играл")}
 									onClick={() => {
 										if (!loggedIn) {
@@ -186,7 +186,7 @@ const GamePage = observer((props) => {
 								</button>
 							</LoadingOverlay>
 						</div>
-						<div className='gameFriendsBlock' hidden={!loggedIn | (friendsInfo?.length < 1)}>
+						<div className='friendsBlock' hidden={!loggedIn | (friendsInfo?.length < 1)}>
 							<h4>Отзывы друзей</h4>
 							<FriendsActivity info={friendsInfo} />
 						</div>

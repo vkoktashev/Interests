@@ -74,10 +74,10 @@ const SeasonBlock = observer(
 							history.push("/show/" + showID + "/season/" + seasonNumber);
 							e.preventDefault();
 						}}
-						className='seasonBlockName'>
+						className='name'>
 						<h5> {showSeason?.name} </h5>
 					</a>
-					<div hidden={!loggedIn || !userWatchedShow} className='seasonBlockName'>
+					<div hidden={!loggedIn || !userWatchedShow} className='name'>
 						<Rating
 							stop={10}
 							emptySymbol={<MDBIcon far icon='star' size='1x' />}

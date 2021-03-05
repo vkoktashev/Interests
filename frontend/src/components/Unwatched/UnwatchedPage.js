@@ -27,7 +27,7 @@ const UnwatchedPage = observer((props) => {
 
 	return (
 		<div>
-			<div className='bg searchBG' />
+			<div className='bg textureBG' />
 			<div className='unwatchedPage'>
 				<div className='unwatchedBlock'>
 					<h1>Непросмотренные серии</h1>

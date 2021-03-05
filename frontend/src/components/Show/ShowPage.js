@@ -86,12 +86,12 @@ const ShowPage = observer((props) => {
 		<div>
 			<div className='bg' style={{ backgroundImage: `url(${show.backdrop_path})` }} />
 			<LoadingOverlay active={showState === "pending"} spinner text='Загрузка...'>
-				<div className='showContentPage'>
-					<div className='showContentHeader'>
-						<div className='showPosterBlock'>
+				<div className='contentPage'>
+					<div className='contentHeader'>
+						<div className='posterBlock tightPoster'>
 							<img src={show.poster_path} className='img-fluid' alt='' />
 						</div>
-						<div className='showInfoBlock'>
+						<div className='infoBlock wideInfo'>
 							<h1 className='header'>{show.name}</h1>
 							<h5 style={{ marginBottom: "10px", marginTop: "-10px" }}>{show.original_name}</h5>
 							<div className='mainInfo'>
@@ -145,21 +145,21 @@ const ShowPage = observer((props) => {
 							<ScoreBlock score={show.score} text='TMDB score' className='scoreBlock' />
 						</div>
 					</div>
-					<div className='showContentBody'>
+					<div className='contentBody'>
 						<div>
-							<h3 style={{ paddingTop: "15px" }}>Описание</h3>
+							<h3>Описание</h3>
 							<div dangerouslySetInnerHTML={{ __html: show.overview }} />
 						</div>
 						<div className='showSeasonsBody'>
 							<h3 style={{ paddingTop: "15px" }}>Список серий</h3>
 							<SeasonsBlock showID={show.id} seasons={show.seasons} userWatchedShow={userStatus !== "Не смотрел"} />
 						</div>
-						<div className='showReviewBody' hidden={!loggedIn}>
+						<div className='reviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
 							<LoadingOverlay active={userInfoState === "pending" && !showState === "pending"} spinner text='Загрузка...'>
 								<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
 								<button
-									className={"savePreviewButton"}
+									className={"saveReviewButton"}
 									disabled={!loggedIn | (userStatus === "Не смотрел")}
 									onClick={() => {
 										if (!loggedIn) {
@@ -172,7 +172,7 @@ const ShowPage = observer((props) => {
 								</button>
 							</LoadingOverlay>
 						</div>
-						<div className='showFriendsBlock' hidden={friendsInfo.length < 1}>
+						<div className='friendsBlock' hidden={friendsInfo.length < 1}>
 							<h4>Отзывы друзей</h4>
 							<FriendsActivity info={friendsInfo} />
 						</div>

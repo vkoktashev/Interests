@@ -79,12 +79,12 @@ const EpisodePage = observer((props) => {
 		<div>
 			<div className='bg' style={{ backgroundImage: `url(${show.show?.tmdb_backdrop_path})` }} />
 			<LoadingOverlay active={showState === "pending"} spinner text='Загрузка...'>
-				<div className='showContentPage'>
-					<div className='showContentHeader'>
-						<div className='showPosterBlock episode'>
+				<div className='contentPage'>
+					<div className='contentHeader'>
+						<div className='posterBlock widePoster'>
 							<img src={show.still_path} className='img-fluid' alt='' />
 						</div>
-						<div className='showInfoBlock episode'>
+						<div className='infoBlock tightInfo'>
 							<h1 className='header'>
 								<a
 									href={window.location.origin + "/show/" + show_id}
@@ -129,9 +129,9 @@ const EpisodePage = observer((props) => {
 											}
 										}}
 									/>
-									<MDBInput type='textarea' id='reviewSeasonInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
+									<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
 									<button
-										className={"savePreviewButton"}
+										className={"saveReviewButton"}
 										hidden={!loggedIn | !userInfo?.user_watched_show}
 										onClick={() => {
 											if (!loggedIn) {
@@ -147,12 +147,12 @@ const EpisodePage = observer((props) => {
 							<ScoreBlock score={show.score} text='TMDB score' className='scoreBlock' />
 						</div>
 					</div>
-					<div className='showContentBody'>
+					<div className='contentBody'>
 						<div>
-							<h3 style={{ paddingTop: "15px" }}>Описание</h3>
+							<h3>Описание</h3>
 							<div dangerouslySetInnerHTML={{ __html: show.overview }} />
 						</div>
-						<div className='movieFriendsBlock' hidden={friendsInfo.length < 1}>
+						<div className='friendsBlock' hidden={friendsInfo.length < 1}>
 							<h4>Отзывы друзей</h4>
 							<FriendsActivity info={friendsInfo} />
 						</div>

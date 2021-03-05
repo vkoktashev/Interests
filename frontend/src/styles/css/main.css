@@ -131,18 +131,6 @@
   display: none;
 }
 
-a.dayInfoLink:link,
-a.dayInfoLink:visited,
-a.dayInfoLink:active {
-  color: #cfcfcf;
-  font-weight: 500;
-}
-
-a.dayInfoLink:hover {
-  color: #a77edd;
-  font-weight: 500;
-}
-
 .categoriesTab {
   background-color: #1e1e1e;
   color: #cfcfcf;
@@ -314,42 +302,127 @@ a.dayInfoLink:hover {
   padding-left: 3px;
 }
 
-.scoreBlock {
-  position: absolute;
-  top: 0;
-  right: 0;
-  margin-right: 10px;
+.seasonBlock {
+  margin-bottom: 0px;
   margin-top: 10px;
-  vertical-align: top;
+  margin-bottom: 15px;
 }
 
-.savePreviewButton {
-  background-color: #1e1e1e;
-  border: 1px solid #cfcfcf;
-  color: #cfcfcf;
-  padding: 4px 8px;
-  text-align: center;
-  text-decoration: none;
+.seasonBlock .name {
   display: inline-block;
+  margin-right: 7px;
+}
+
+ul {
+  list-style-type: none;
+  margin-left: -35px;
+}
+
+li.episode:nth-child(odd) {
+  background-color: #1e1e1e;
+}
+
+li.episode:nth-child(even) {
+  background-color: #323232;
+  border-radius: 5px;
+}
+
+.episodeRating {
+  margin-left: 20px;
+}
+
+.episodeRowRate {
+  display: inline-block;
+  margin-right: 1rem;
+}
+
+.episodeRowCheck {
+  display: inline-block;
+}
+
+.episodeRowDate {
+  margin-bottom: 0px;
+  margin-left: 0.5rem;
+  display: inline-block;
+}
+
+.episodeRowCheckDate {
+  display: inline-block;
+  width: 7rem;
+  max-width: 40%;
+}
+
+.episodeRows {
+  display: inline-block;
+  margin-bottom: 0px;
   margin-top: 0px;
-  margin-bottom: 20px;
-  cursor: pointer;
-  font-size: 16px;
+  width: 100%;
 }
 
-.ratingDigits {
-  padding-left: 12px;
-  padding-right: 10px;
-  font-size: 12px;
-}
-
-.gameFriendsBlock {
-  position: relative;
+.episodeRow {
+  margin-bottom: 0px;
+  margin-top: 0px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  padding-left: 4px;
+  font-size: 1rem;
+  display: inline-block;
   max-width: 100%;
-  width: 78rem;
 }
 
-.gameContentPage {
+.episodeRowName {
+  margin-bottom: 0px;
+  display: inline-block;
+}
+
+.detailRow {
+  font-size: 1rem;
+}
+
+.episodeRowName.detailRow {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.saveEpisodesHeader {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  z-index: 1000;
+  text-align: center;
+  padding-top: 5px;
+  background-color: #323232;
+}
+
+.saveEpisodesButton {
+  width: 150px;
+  height: 50px;
+  background-color: #4527a0;
+  color: white;
+  border-radius: 5px;
+}
+
+.saveEpisodesButton:hover {
+  color: #cfcfcf;
+  background-color: #7654de;
+}
+
+.checkAllEpisodesButton {
+  margin-top: 10px;
+  background-color: rgba(0, 0, 0, 0);
+  color: #eeeeee;
+  font-weight: bolder;
+  border-style: solid;
+  border-radius: 5px;
+}
+
+.checkAllEpisodesButton:hover {
+  color: #a77edd;
+}
+
+.contentPage {
   width: 80rem;
   max-width: 100%;
   margin-left: auto;
@@ -360,7 +433,7 @@ a.dayInfoLink:hover {
   padding: 0px;
 }
 
-.gameContentHeader {
+.contentPage .contentHeader {
   position: relative;
   width: 100%;
   background-color: black;
@@ -370,185 +443,107 @@ a.dayInfoLink:hover {
   border-top-right-radius: 10px;
 }
 
-.gameContentBody {
-  background-color: #1e1e1e;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  padding-bottom: 1rem;
-}
-
-.mainInfo {
-  margin-bottom: 10px;
-}
-
-.mainInfo p {
-  margin-bottom: 2px;
-}
-
-.posterBlock {
+.contentPage .contentHeader .posterBlock {
   display: inline-block;
   text-align: center;
-  width: 35rem;
   max-width: 100%;
   padding: 0;
   overflow: hidden;
 }
 
-.gameInfoBlock {
+.contentPage .contentHeader .posterBlock.widePoster {
+  width: 35rem;
+}
+
+.contentPage .contentHeader .posterBlock.tightPoster {
+  width: 25rem;
+}
+
+.contentPage .contentHeader .posterBlock img {
+  max-height: 30rem;
+}
+
+.contentPage .contentHeader .infoBlock {
   position: relative;
   display: inline-block;
   white-space: normal;
   vertical-align: top;
   max-width: 100%;
-  width: 45rem;
   padding-left: 1rem;
   padding-bottom: 1rem;
   padding-right: 1rem;
 }
 
-.gameInfoBlock .header {
+.contentPage .contentHeader .infoBlock.tightInfo {
+  width: 45rem;
+}
+
+.contentPage .contentHeader .infoBlock.wideInfo {
+  width: 55rem;
+}
+
+.contentPage .contentHeader .infoBlock .header {
   padding-right: 2.5em;
 }
 
-.gameReviewBody {
+.contentPage .contentHeader .infoBlock .mainInfo {
+  margin-bottom: 10px;
+}
+
+.contentPage .contentHeader .infoBlock .mainInfo p {
+  margin-bottom: 2px;
+}
+
+.contentPage .contentHeader .infoBlock .scoreBlock {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin-right: 10px;
+  margin-top: 10px;
+  vertical-align: top;
+}
+
+.contentPage .contentHeader .infoBlock #reviewInput {
+  background-color: black;
+  color: white;
+  width: 50%;
+}
+
+.contentPage .contentHeader .infoBlock .saveReviewButton {
+  background-color: black;
+  color: white;
+}
+
+.contentPage .contentBody {
+  background-color: #1e1e1e;
+  padding: 1rem;
+}
+
+.contentPage .contentBody .reviewBody {
   width: 40rem;
   max-width: 100%;
 }
 
-.testil {
+.contentPage .contentBody .reviewBody .saveReviewButton {
   background-color: #1e1e1e;
   color: #cfcfcf;
 }
 
-.movieContentPage {
-  width: 80rem;
-  max-width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-  color: #cfcfcf;
-  margin-top: 5em;
-  margin-bottom: 2em;
-  padding: 0px;
-}
-
-.movieContentHeader {
-  position: relative;
-  width: 100%;
-  background-color: black;
-  color: white;
-  padding: 0;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-}
-
-.movieContentBody {
-  background-color: #1e1e1e;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  padding-bottom: 1rem;
-}
-
-.movieFriendsBlock {
+.contentPage .contentBody .friendsBlock {
   position: relative;
   max-width: 100%;
   width: 78rem;
 }
 
-.mainInfo {
-  margin-bottom: 10px;
-}
-
-.mainInfo p {
-  margin-bottom: 2px;
-}
-
-.moviePosterBlock {
+.saveReviewButton {
+  border: 1px solid #cfcfcf;
+  padding: 4px 8px;
+  text-align: center;
+  text-decoration: none;
   display: inline-block;
-  text-align: center;
-  width: 25rem;
-  max-width: 100%;
-  padding: 0;
-  overflow: hidden;
-}
-
-.movieInfoBlock {
-  position: relative;
-  display: inline-block;
-  white-space: normal;
-  vertical-align: top;
-  max-width: 100%;
-  width: 55rem;
-  padding-left: 1rem;
-  padding-bottom: 1rem;
-  padding-right: 1rem;
-}
-
-.movieInfoBlock .header {
-  padding-right: 2.5em;
-}
-
-.movieReviewBody {
-  width: 40rem;
-  max-width: 100%;
-}
-
-.registrationBody {
-  background-color: #1e1e1e;
-  color: #cfcfcf;
-  text-align: center;
-}
-
-.loginBody {
-  background-color: #1e1e1e;
-  color: #cfcfcf;
-  text-align: center;
-}
-
-input.form-control {
-  background-color: #1e1e1e;
-  color: #cfcfcf;
-  margin-bottom: 10px;
-  outline: none;
-}
-
-input.form-control:focus {
-  background-color: #1e1e1e;
-  color: #cfcfcf;
-}
-
-input.form-control:-webkit-autofill {
-  box-shadow: inset 0 0 0 50px #1e1e1e !important;
-  -webkit-box-shadow: inset 0 0 0 50px #1e1e1e !important;
-  -webkit-text-fill-color: #cfcfcf !important;
-  color: #cfcfcf !important;
-}
-
-.confirmButton {
-  background-color: #a77edd !important;
-  color: white;
-}
-
-.note {
-  color: black;
-}
-
-.passwordResetLabel {
-  display: block;
-  margin-top: 15px;
-  color: #cfcfcf;
-}
-
-.passwordResetLabel:hover {
-  color: #7654de;
-  cursor: pointer;
-}
-
-a:link, a:visited, a:active {
-  color: #eeeeee;
-}
-
-a:hover {
-  color: #a77edd;
+  margin-top: 0px;
+  margin-bottom: 20px;
+  font-size: 16px;
 }
 
 .searchCardsGroup {
@@ -632,13 +627,6 @@ a:hover {
   margin: 0;
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
-}
-
-.searchBG {
-  background-size: auto;
-  background-repeat: repeat;
-  background-image: url("https://365psd.ru/images/backgrounds/bg-dark-4782.jpg");
-  height: 100vh;
 }
 
 .searchPage {
@@ -729,227 +717,6 @@ a:hover {
   margin-bottom: 20px;
   cursor: pointer;
   font-size: 16px;
-}
-
-.showContentPage {
-  width: 80rem;
-  max-width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-  color: #cfcfcf;
-  margin-top: 5em;
-  margin-bottom: 2em;
-  padding: 0px;
-}
-
-.showContentHeader {
-  position: relative;
-  width: 100%;
-  background-color: black;
-  color: white;
-  padding: 0;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-}
-
-.showContentBody {
-  background-color: #1e1e1e;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  padding-bottom: 1rem;
-}
-
-.showFriendsBlock {
-  position: relative;
-  max-width: 100%;
-  width: 78rem;
-}
-
-.img-fluid {
-  max-height: 30rem;
-}
-
-.showPosterBlock {
-  display: inline-block;
-  text-align: center;
-  width: 25rem;
-  max-width: 100%;
-  padding: 0;
-  overflow: hidden;
-}
-
-.showPosterBlock.episode {
-  width: 35rem;
-}
-
-.showInfoBlock {
-  position: relative;
-  display: inline-block;
-  white-space: normal;
-  vertical-align: top;
-  max-width: 100%;
-  width: 55rem;
-  padding-left: 1rem;
-  padding-bottom: 1rem;
-  padding-right: 1rem;
-}
-
-.showInfoBlock.episode {
-  width: 45rem;
-}
-
-.showInfoBlock .header {
-  padding-right: 2.5em;
-}
-
-.showReviewBody {
-  width: 40rem;
-  max-width: 100%;
-}
-
-a.episodeLink:link, a.episodeLink:visited, a.episodeLink:active {
-  color: #eeeeee;
-}
-
-a.episodeLink:hover {
-  color: #a77edd;
-}
-
-.seasonBlock {
-  margin-bottom: 0px;
-  margin-top: 10px;
-  margin-bottom: 15px;
-}
-
-.seasonBlockName {
-  display: inline-block;
-  margin-right: 7px;
-}
-
-ul {
-  list-style-type: none;
-  margin-left: -35px;
-}
-
-li.episode:nth-child(odd) {
-  background-color: #1e1e1e;
-}
-
-li.episode:nth-child(even) {
-  background-color: #323232;
-  border-radius: 5px;
-}
-
-.episodeRating {
-  margin-left: 20px;
-}
-
-.mainInfo {
-  margin-bottom: 20px;
-}
-
-.mainInfo p {
-  margin-bottom: 2px;
-}
-
-#reviewSeasonInput {
-  background-color: black;
-  color: white;
-  width: 50%;
-}
-
-.episodeRowRate {
-  display: inline-block;
-  margin-right: 1rem;
-}
-
-.episodeRowCheck {
-  display: inline-block;
-}
-
-.episodeRowDate {
-  margin-bottom: 0px;
-  margin-left: 0.5rem;
-  display: inline-block;
-}
-
-.episodeRowCheckDate {
-  display: inline-block;
-  width: 7rem;
-  max-width: 40%;
-}
-
-.episodeRows {
-  display: inline-block;
-  margin-bottom: 0px;
-  margin-top: 0px;
-  width: 100%;
-}
-
-.episodeRow {
-  margin-bottom: 0px;
-  margin-top: 0px;
-  padding-top: 3px;
-  padding-bottom: 3px;
-  padding-left: 4px;
-  font-size: 1rem;
-  display: inline-block;
-  max-width: 100%;
-}
-
-.episodeRowName {
-  margin-bottom: 0px;
-  display: inline-block;
-}
-
-.detailRow {
-  font-size: 1rem;
-}
-
-.episodeRowName.detailRow {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.saveEpisodesHeader {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 60px;
-  z-index: 1000;
-  text-align: center;
-  padding-top: 5px;
-  background-color: #323232;
-}
-
-.saveEpisodesButton {
-  width: 150px;
-  height: 50px;
-  background-color: #a77edd;
-  color: white;
-  border-radius: 5px;
-}
-
-.saveEpisodesButton:hover {
-  color: #eeeeee;
-}
-
-.saveEpisodesButton:active {
-  background-color: #7654de;
-}
-
-.checkAllEpisodesButton {
-  margin-top: 10px;
-  background-color: rgba(0, 0, 0, 0);
-  color: #eeeeee;
-  font-weight: bolder;
-  border-style: solid;
-  border-radius: 5px;
-}
-
-.checkAllEpisodesButton:hover {
-  color: #a77edd;
 }
 
 .unwatchedPage {
@@ -1267,6 +1034,57 @@ a.logLink:hover, a.dataTable:hover {
   max-width: 80%;
 }
 
+.registrationBody {
+  background-color: #1e1e1e;
+  color: #cfcfcf;
+  text-align: center;
+}
+
+.loginBody {
+  background-color: #1e1e1e;
+  color: #cfcfcf;
+  text-align: center;
+}
+
+input.form-control {
+  background-color: #1e1e1e;
+  color: #cfcfcf;
+  margin-bottom: 10px;
+  outline: none;
+}
+
+input.form-control:focus {
+  background-color: #1e1e1e;
+  color: #cfcfcf;
+}
+
+input.form-control:-webkit-autofill {
+  box-shadow: inset 0 0 0 50px #1e1e1e !important;
+  -webkit-box-shadow: inset 0 0 0 50px #1e1e1e !important;
+  -webkit-text-fill-color: #cfcfcf !important;
+  color: #cfcfcf !important;
+}
+
+.confirmButton {
+  background-color: #a77edd !important;
+  color: white;
+}
+
+.note {
+  color: black;
+}
+
+.passwordResetLabel {
+  display: block;
+  margin-top: 15px;
+  color: #cfcfcf;
+}
+
+.passwordResetLabel:hover {
+  color: #7654de;
+  cursor: pointer;
+}
+
 html {
   overflow-x: hidden;
 }
@@ -1295,7 +1113,26 @@ body {
   z-index: -1000;
 }
 
+.textureBG {
+  background-size: auto;
+  background-repeat: repeat;
+  background-image: url("https://365psd.ru/images/backgrounds/bg-dark-4782.jpg");
+  height: 100vh;
+}
+
 .hs {
   margin-left: 0.2em;
+}
+
+a {
+  font-weight: 400;
+}
+
+a:link, a:visited, a:active {
+  color: #eeeeee;
+}
+
+a:hover {
+  color: #a77edd;
 }
 /*# sourceMappingURL=main.css.map */
