@@ -23,7 +23,8 @@ const SeasonsBlock = observer(({ showID, seasons, userWatchedShow }) => {
 			for (let episode in showSeasons[season].episodes) {
 				let currentValue = getEpisodeByID(showSeasonsUserInfo[season].episodes, showSeasons[season].episodes[episode].id);
 				let cbValue = document.getElementById(`cbEpisode${showSeasons[season].episodes[episode].id}`).checked;
-				if (cbValue === !(currentValue.score > -1)) {
+				let currentStatus = currentValue?.score > -1;
+				if (cbValue !== currentStatus) {
 					episodes.push({ tmdb_id: currentValue.tmdb_id, score: cbValue ? 0 : -1 });
 					if (seasons.indexOf(season) === -1) seasons.push(season);
 				}

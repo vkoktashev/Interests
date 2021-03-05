@@ -100,7 +100,8 @@ const SeasonPage = observer((props) => {
 		for (let episode in userInfo.episodes) {
 			let currentValue = userInfo.episodes[episode];
 			let cbValue = document.getElementById(`cbEpisode${currentValue.tmdb_id}`).checked;
-			if (cbValue === !(currentValue.score > -1)) episodes.push({ tmdb_id: currentValue.tmdb_id, score: cbValue ? 0 : -1 });
+			let currentStatus = currentValue?.score > -1;
+			if (cbValue !== currentStatus) episodes.push({ tmdb_id: currentValue.tmdb_id, score: cbValue ? 0 : -1 });
 		}
 		setEpisodesStatus({ episodes }, show_id);
 		requestSeasonUserInfo(show_id, number);
@@ -121,7 +122,7 @@ const SeasonPage = observer((props) => {
 								<a
 									href={window.location.origin + "/show/" + show.show?.id}
 									onClick={(e) => {
-										history.push("/show/" + show.show?.id);
+										history.push("/show/" + show.show?.tmdb_id);
 										e.preventDefault();
 									}}>
 									{show.show?.tmdb_name}
