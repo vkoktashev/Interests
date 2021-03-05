@@ -188,7 +188,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 user_info = None
 
             user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
-            followed_user_shows = UserShow.objects.prefetch_related('user') \
+            followed_user_shows = UserShow.objects.select_related('user') \
                 .exclude(status=UserShow.STATUS_NOT_WATCHED) \
                 .filter(user__in=user_follow_query, show=show)
             serializer = FollowedUserShowSerializer(followed_user_shows, many=True)
@@ -591,7 +591,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             # friends_info
             user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
-            followed_user_seasons = UserSeason.objects.prefetch_related('user') \
+            followed_user_seasons = UserSeason.objects.select_related('user') \
                 .filter(user__in=user_follow_query, season=season) \
                 .exclude(id__in=UserSeason.objects
                          .filter(season__tmdb_show__usershow__user=F('user_id'),
@@ -688,7 +688,7 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             # friends_info
             user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
-            followed_user_episodes = UserEpisode.objects.prefetch_related('user') \
+            followed_user_episodes = UserEpisode.objects.select_related('user') \
                 .filter(user__in=user_follow_query, episode=episode) \
                 .exclude(id__in=UserEpisode.objects
                          .filter(episode__tmdb_season__tmdb_show__usershow__user=F('user_id'),

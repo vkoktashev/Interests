@@ -356,8 +356,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         stats = {}
 
         # games
-        user_games = UserGame.objects.prefetch_related('game')
-        user_games = user_games.exclude(status=UserGame.STATUS_NOT_PLAYED) \
+        user_games = UserGame.objects.select_related('game') \
+            .exclude(status=UserGame.STATUS_NOT_PLAYED) \
             .filter(user=user) \
             .order_by('-updated_at')
         serializer = GameStatsSerializer(user_games, many=True)
@@ -386,8 +386,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         }})
 
         # movies
-        user_movies = UserMovie.objects.prefetch_related('movie')
-        user_movies = user_movies.exclude(status=UserMovie.STATUS_NOT_WATCHED) \
+        user_movies = UserMovie.objects.select_related('movie') \
+            .exclude(status=UserMovie.STATUS_NOT_WATCHED) \
             .filter(user=user) \
             .order_by('-updated_at')
         serializer = MovieStatsSerializer(user_movies, many=True)
@@ -417,8 +417,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         }})
 
         # shows
-        user_shows = UserShow.objects.prefetch_related('show')
-        user_shows = user_shows.exclude(status=UserShow.STATUS_NOT_WATCHED) \
+        user_shows = UserShow.objects.select_related('show') \
+            .exclude(status=UserShow.STATUS_NOT_WATCHED) \
             .filter(user=user) \
             .order_by('-updated_at') \
             .annotate(watched_episodes_count=Count('show__season__episode',
@@ -551,18 +551,15 @@ def get_logs(user_query, page_size, page_number):
     page_size = get_page_size(page_size)
     page = page_number
 
-    game_logs = GameLog.objects.select_related('user').prefetch_related('game').filter(user__in=user_query)
-    movie_logs = MovieLog.objects.select_related('user').prefetch_related('movie').filter(user__in=user_query)
-    show_logs = ShowLog.objects.select_related('user').prefetch_related('show').filter(user__in=user_query)
-    season_logs = SeasonLog.objects.select_related('user') \
-        .select_related('season__tmdb_show') \
-        .filter(user__in=user_query)
-    episode_logs = EpisodeLog.objects.select_related('user') \
-        .select_related('episode') \
-        .select_related('episode__tmdb_season') \
-        .select_related('episode__tmdb_season__tmdb_show') \
-        .filter(user__in=user_query)
-    user_logs = UserLog.objects.select_related('user').select_related('followed_user').filter(user__in=user_query)
+    game_logs = GameLog.objects.select_related('user', 'game').filter(user__in=user_query)
+    movie_logs = MovieLog.objects.select_related('user', 'movie').filter(user__in=user_query)
+    show_logs = ShowLog.objects.select_related('user', 'show').filter(user__in=user_query)
+    season_logs = SeasonLog.objects.select_related('user', 'season__tmdb_show').filter(user__in=user_query)
+    episode_logs = EpisodeLog.objects.select_related(
+        'user', 'episode', 'episode__tmdb_season',
+        'episode__tmdb_season__tmdb_show'
+    ).filter(user__in=user_query)
+    user_logs = UserLog.objects.select_related('user', 'followed_user').filter(user__in=user_query)
 
     union_logs = sorted(chain(game_logs, movie_logs, show_logs, season_logs, episode_logs, user_logs),
                         key=lambda obj: obj.created, reverse=True)
