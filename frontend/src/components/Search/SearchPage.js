@@ -3,7 +3,7 @@ import { useParams, useHistory } from "react-router-dom";
 import { observer } from "mobx-react";
 import SearchStore from "../../store/SearchStore";
 
-import { MDBRow, MDBCol, MDBContainer, MDBIcon, MDBFormInline } from "mdbreact";
+import { MDBIcon, MDBFormInline } from "mdbreact";
 
 import LoadingOverlay from "react-loading-overlay";
 import { toast } from "react-toastify";
@@ -60,83 +60,76 @@ const SearchPage = observer((props) => {
 	return (
 		<div>
 			<div className='bg textureBG' />
-			<MDBContainer>
-				<MDBRow>
-					<MDBCol md='0.5'></MDBCol>
-					<MDBCol className='searchPage'>
-						<h1>Поиск</h1>
-						<MDBFormInline
-							className='md-form'
-							onSubmit={(event) => {
-								event.preventDefault();
-								history.push("/search/" + document.getElementById("searchInput2").value);
-								return false;
-							}}>
-							<MDBIcon icon='search' />
-							<input
-								className='form-control form-control-sm ml-3 w-50'
-								type='text'
-								placeholder='Найти'
-								aria-label='Search'
-								id='searchInput2'
-								value={queryText}
-								onChange={(event) => setQueryText(event.target.value)}
-							/>
-						</MDBFormInline>
-
-						<h1>Результаты поиска</h1>
-						<CategoriesTab
-							categories={["Всё", "Игры", "Фильмы", "Сериалы", "Пользователи"]}
-							activeColor='#7654de'
-							activeCategory={activeCategory}
-							onChangeCategory={(category) => {
-								setActiveCategory(category);
-							}}
+			<div className='contentPage'>
+				<div className='contentBody'>
+					<h1>Поиск</h1>
+					<MDBFormInline
+						className='md-form'
+						onSubmit={(event) => {
+							event.preventDefault();
+							history.push("/search/" + document.getElementById("searchInput2").value);
+							return false;
+						}}>
+						<MDBIcon icon='search' />
+						<input
+							className='form-control form-control-sm ml-3 w-50'
+							type='text'
+							placeholder='Найти'
+							aria-label='Search'
+							id='searchInput2'
+							value={queryText}
+							onChange={(event) => setQueryText(event.target.value)}
 						/>
+					</MDBFormInline>
+					<CategoriesTab
+						categories={["Всё", "Игры", "Фильмы", "Сериалы", "Пользователи"]}
+						activeCategory={activeCategory}
+						onChangeCategory={(category) => {
+							setActiveCategory(category);
+						}}
+					/>
 
-						<LoadingOverlay active={gamesState === "pending"} spinner text='Ищем игры...'>
-							<GamesBlock
-								games={games}
-								gamesPage={gamesPage}
-								onPaginate={(page) => {
-									setGamesPage(page);
-									searchGames(query, page, 6);
-								}}
-								hidden={activeCategory !== "Всё" && activeCategory !== "Игры"}
-							/>
-						</LoadingOverlay>
+					<LoadingOverlay active={gamesState === "pending"} spinner text='Ищем игры...'>
+						<GamesBlock
+							games={games}
+							gamesPage={gamesPage}
+							onPaginate={(page) => {
+								setGamesPage(page);
+								searchGames(query, page, 6);
+							}}
+							hidden={activeCategory !== "Всё" && activeCategory !== "Игры"}
+						/>
+					</LoadingOverlay>
 
-						<LoadingOverlay active={moviesState === "pending"} spinner text='Ищем фильмы...'>
-							<MoviesBlock
-								movies={movies}
-								moviesPage={moviesPage}
-								onPaginate={(page) => {
-									setMoviesPage(page);
-									searchMovies(query, page);
-								}}
-								hidden={activeCategory !== "Всё" && activeCategory !== "Фильмы"}
-							/>
-						</LoadingOverlay>
+					<LoadingOverlay active={moviesState === "pending"} spinner text='Ищем фильмы...'>
+						<MoviesBlock
+							movies={movies}
+							moviesPage={moviesPage}
+							onPaginate={(page) => {
+								setMoviesPage(page);
+								searchMovies(query, page);
+							}}
+							hidden={activeCategory !== "Всё" && activeCategory !== "Фильмы"}
+						/>
+					</LoadingOverlay>
 
-						<LoadingOverlay active={showsState === "pending"} spinner text='Ищем сериалы...'>
-							<ShowsBlock
-								shows={shows}
-								showsPage={showsPage}
-								onPaginate={(page) => {
-									setShowsPage(page);
-									searchShows(query, page);
-								}}
-								hidden={activeCategory !== "Всё" && activeCategory !== "Сериалы"}
-							/>
-						</LoadingOverlay>
+					<LoadingOverlay active={showsState === "pending"} spinner text='Ищем сериалы...'>
+						<ShowsBlock
+							shows={shows}
+							showsPage={showsPage}
+							onPaginate={(page) => {
+								setShowsPage(page);
+								searchShows(query, page);
+							}}
+							hidden={activeCategory !== "Всё" && activeCategory !== "Сериалы"}
+						/>
+					</LoadingOverlay>
 
-						<LoadingOverlay active={usersState === "pending"} spinner text='Ищем пользователей...'>
-							<UsersBlock users={users} hidden={activeCategory !== "Всё" && activeCategory !== "Пользователи"} />
-						</LoadingOverlay>
-					</MDBCol>
-					<MDBCol md='0.5'></MDBCol>
-				</MDBRow>
-			</MDBContainer>
+					<LoadingOverlay active={usersState === "pending"} spinner text='Ищем пользователей...'>
+						<UsersBlock users={users} hidden={activeCategory !== "Всё" && activeCategory !== "Пользователи"} />
+					</LoadingOverlay>
+				</div>
+			</div>
 		</div>
 	);
 });

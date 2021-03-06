@@ -57,6 +57,13 @@ class Game {
 	setGameStatusFailure = (error) => {
 		this.setStatusState = "error: " + error;
 	};
+
+	get anyError() {
+		if (this.gameState.startsWith("error:")) return this.gameState;
+		if (this.userInfoState.startsWith("error:")) return this.userInfoState;
+		if (this.setStatusState.startsWith("error:")) return this.setStatusState;
+		return null;
+	}
 }
 
 const GameStore = new Game();

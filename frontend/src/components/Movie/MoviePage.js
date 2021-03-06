@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import MovieStore from "../../store/MovieStore";
 import AuthStore from "../../store/AuthStore";
 import PagesStore from "../../store/PagesStore";
+import CurrentUserStore from "../../store/CurrentUserStore";
 
 import { MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
@@ -18,8 +19,9 @@ import Rating from "../Common/Rating";
  * Основная страница приложения
  */
 const MoviePage = observer((props) => {
-	const { movie, movieState, requestMovie, setMovieStatus, userInfo, friendsInfo, userInfoState, requestUserInfo, setStatusState } = MovieStore;
+	const { movie, movieState, requestMovie, setMovieStatus, userInfo, friendsInfo, userInfoState, requestUserInfo, anyError } = MovieStore;
 	const { loggedIn } = AuthStore;
+	const { patchSettings, saveSettingsState } = CurrentUserStore;
 	const { openLoginForm } = PagesStore;
 
 	let { id } = useParams();
@@ -72,14 +74,12 @@ const MoviePage = observer((props) => {
 	);
 
 	useEffect(() => {
-		if (movieState.startsWith("error:")) toast.error(`Ошибка загрузки! ${movieState}`);
-	}, [movieState]);
+		if (anyError) toast.error(anyError);
+	}, [anyError]);
 	useEffect(() => {
-		if (userInfoState.startsWith("error:")) toast.error(`Ошибка загрузки пользовательской информации! ${userInfoState}`);
-	}, [userInfoState]);
-	useEffect(() => {
-		if (setStatusState.startsWith("error:")) toast.error(`Ошибка сохранения! ${setStatusState}`);
-	}, [setStatusState]);
+		if (saveSettingsState.startsWith("error:")) toast.error(`Ошибка фона! ${saveSettingsState}`);
+		else if (saveSettingsState === "saved") toast.success(`Фон установлен!`);
+	}, [saveSettingsState]);
 
 	return (
 		<div>
@@ -137,6 +137,15 @@ const MoviePage = observer((props) => {
 						<div>
 							<h3>Описание</h3>
 							<div dangerouslySetInnerHTML={{ __html: movie.overview }} />
+							<br />
+							<button
+								className={"saveReviewButton"}
+								hidden={!loggedIn}
+								onClick={() => {
+									patchSettings({ backdrop_path: movie.backdrop_path });
+								}}>
+								Выбрать как фон профиля
+							</button>
 						</div>
 						<div className='reviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>

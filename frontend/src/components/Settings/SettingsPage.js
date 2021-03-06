@@ -44,9 +44,9 @@ const SettingsPage = observer((props) => {
 	return (
 		<div>
 			<div className='bg textureBG' />
-			<div className='settingsPage'>
-				<div className='settingsBlock'>
-					<h1 className='calendarHeader'>Настройки</h1>
+			<div className='contentPage'>
+				<div className='contentBody'>
+					<h1 className='settingsHeader'>Настройки</h1>
 					<h3>Подписка на почтовые уведомления:</h3>
 					<LoadingOverlay active={settingsState === "pending" || saveSettingsState === "pending"} spinner text='Загрузка...'>
 						<SettingsCheckbox text={" релиз новых игр"} checked={gameNotifInput} onChange={(checked) => setGameNotifInput(checked)} />

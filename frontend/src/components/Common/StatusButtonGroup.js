@@ -3,11 +3,10 @@ import React from "react";
 function StatusButtonGroup({ statuses, activeColor, onChangeStatus, userStatus }) {
 	return (
 		<div className='contentStatuses'>
-			{statuses.map((status) => (
+			{statuses.map((status, counter) => (
 				<button
-					className={"contentStatus"}
+					className={"contentStatus" + (userStatus === status ? " active" : "")}
 					key={status}
-					style={{ backgroundColor: userStatus === status ? activeColor : "#000000" }}
 					onClick={() => {
 						onChangeStatus(status);
 					}}>

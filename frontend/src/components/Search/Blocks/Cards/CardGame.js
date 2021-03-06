@@ -14,10 +14,10 @@ function CardGame({ game }) {
 	}, [game]);
 
 	return (
-		<div className='searchCardGame'>
-			<div className='searchCardGameImage' style={{ backgroundImage: `url(${game.background_image})` }} />
-			<div className='searchCardGameText'>
-				<div className='searchCardGameName'>
+		<div className='searchCard'>
+			<div className='searchCardImage' style={{ backgroundImage: `url(${game.background_image})` }} />
+			<div className='searchCardText'>
+				<div className='searchCardName'>
 					<a
 						href={window.location.origin + "/game/" + game.slug}
 						onClick={(e) => {

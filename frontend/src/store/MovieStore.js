@@ -57,6 +57,13 @@ class Movie {
 	setMovieStatusFailure = (error) => {
 		this.setStatusState = "error: " + error;
 	};
+
+	get anyError() {
+		if (this.movieState.startsWith("error:")) return this.movieState;
+		if (this.userInfoState.startsWith("error:")) return this.userInfoState;
+		if (this.setStatusState.startsWith("error:")) return this.setStatusState;
+		return null;
+	}
 }
 
 const MovieStore = new Movie();
