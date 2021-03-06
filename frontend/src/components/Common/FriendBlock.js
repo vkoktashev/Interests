@@ -4,7 +4,7 @@ import CardUser from "../Common/CardUser";
 
 function FriendBlock({ users }) {
 	return (
-		<div className='friendsBlock'>
+		<div className='friendsCards'>
 			{users.map((user) => (
 				<CardUser user={user} key={user.id} />
 			))}

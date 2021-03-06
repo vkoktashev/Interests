@@ -2,19 +2,18 @@ import React from "react";
 
 function CategoriesTab({ categories, activeColor, onChangeCategory, activeCategory, hidden }) {
 	return (
-		<div hidden={hidden}>
+		<div hidden={hidden} className='categoriesTabs'>
 			{categories.map((category, counter) => (
 				<button
-					className={"categoriesTab"}
+					className={"categoriesTab" + (activeCategory === category ? " active" : "")}
 					key={counter}
-					style={{ color: activeCategory === category ? activeColor : "rgb(207, 207, 207)" }}
 					onClick={() => {
 						onChangeCategory(category);
 					}}>
 					{category}
 				</button>
 			))}
-			<hr style={{ backgroundColor: activeColor, height: 2.5, marginTop: "0px", marginBottom: "10px" }} />
+			<hr className='categoriesLine' />
 		</div>
 	);
 }

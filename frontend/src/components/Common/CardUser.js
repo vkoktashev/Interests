@@ -10,14 +10,11 @@ function CardUser({ user }) {
 			onClick={(e) => {
 				history.push("/user/" + user.id);
 				e.preventDefault();
-			}}>
-			<div className='cardUser'>
-				<div className='cardUserImage' style={{ backgroundImage: `url(${"http://upload.wikimedia.org/wikipedia/commons/f/f4/User_Avatar_2.png"})` }}>
-					{" "}
-				</div>
-				<div className='cardUserText'>
-					<h4>{user.username}</h4>
-				</div>
+			}}
+			className='cardUser'>
+			<div className='cardUserImage' style={{ backgroundImage: `url(${"http://upload.wikimedia.org/wikipedia/commons/f/f4/User_Avatar_2.png"})` }} />
+			<div className='cardUserText'>
+				<h4>{user.username}</h4>
 			</div>
 		</a>
 	);

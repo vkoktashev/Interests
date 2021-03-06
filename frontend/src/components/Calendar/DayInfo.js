@@ -6,7 +6,7 @@ function DayInfo({ day, date }) {
 
 	return (
 		<div className='dayInfoBlock'>
-			<h3 className='dayInfo date'>
+			<h3 className='dayInfoDate'>
 				{date ? date.toLocaleDateString("ru-RU", { year: date.getFullYear() === new Date().getFullYear() ? undefined : "numeric", month: "long", day: "numeric", weekday: "long" }) : ""}
 			</h3>
 			<div className='dayInfoCategory' hidden={!(day?.games?.length > 0)}>
@@ -15,7 +15,6 @@ function DayInfo({ day, date }) {
 					<div key={game.rawg_id}>
 						<a
 							href={window.location.origin + "/game/" + game.rawg_slug}
-							className='dayInfoLink'
 							onClick={(e) => {
 								history.push("/game/" + game.rawg_slug);
 								e.preventDefault();
@@ -31,7 +30,6 @@ function DayInfo({ day, date }) {
 					<div key={movie.tmdb_id}>
 						<a
 							href={window.location.origin + "/movie/" + movie.tmdb_id}
-							className='dayInfoLink'
 							onClick={(e) => {
 								history.push("/movie/" + movie.tmdb_id);
 								e.preventDefault();
@@ -48,7 +46,6 @@ function DayInfo({ day, date }) {
 						<div style={{ display: "inline-block" }}>
 							<a
 								href={window.location.origin + "/show/" + episode.tmdb_show.tmdb_id + "/season/" + episode.tmdb_season_number + "/episode/" + episode.tmdb_episode_number}
-								className='dayInfoLink'
 								onClick={(e) => {
 									history.push("/show/" + episode.tmdb_show.tmdb_id + "/season/" + episode.tmdb_season_number + "/episode/" + episode.tmdb_episode_number);
 									e.preventDefault();
@@ -58,7 +55,6 @@ function DayInfo({ day, date }) {
 							&thinsp;сериала&thinsp;
 							<a
 								href={window.location.origin + "/show/" + episode.tmdb_show.tmdb_id}
-								className='dayInfoLink'
 								onClick={(e) => {
 									history.push("/show/" + episode.tmdb_show.tmdb_id);
 									e.preventDefault();
