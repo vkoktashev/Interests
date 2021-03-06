@@ -509,24 +509,15 @@ li.episode:nth-child(even) {
   width: 50%;
 }
 
-.contentPage .contentHeader .infoBlock .saveReviewButton {
-  background-color: black;
-  color: white;
-}
-
 .contentPage .contentBody {
   background-color: #1e1e1e;
   padding: 1rem;
 }
 
 .contentPage .contentBody .reviewBody {
-  width: 40rem;
+  width: 39rem;
   max-width: 100%;
-}
-
-.contentPage .contentBody .reviewBody .saveReviewButton {
-  background-color: #1e1e1e;
-  color: #cfcfcf;
+  padding-right: 1rem;
 }
 
 .contentPage .contentBody .friendsBlock {
@@ -535,15 +526,29 @@ li.episode:nth-child(even) {
   width: 78rem;
 }
 
+.contentPage .contentBody .additionalBody {
+  width: 39rem;
+  max-width: 100%;
+  display: inline-block;
+  vertical-align: top;
+  margin-top: 1.5rem;
+}
+
 .saveReviewButton {
+  background-color: black;
+  color: white;
   border: 1px solid #cfcfcf;
   padding: 4px 8px;
   text-align: center;
   text-decoration: none;
-  display: inline-block;
   margin-top: 0px;
   margin-bottom: 20px;
+  margin-right: 1rem;
   font-size: 16px;
+}
+
+.saveReviewButton:hover {
+  color: #a77edd;
 }
 
 .searchCardsGroup {
@@ -652,22 +657,6 @@ li.episode:nth-child(even) {
   margin-bottom: 20px;
   cursor: pointer;
   font-size: 16px;
-}
-
-.unwatchedPage {
-  width: 80rem;
-  max-width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-  color: #cfcfcf;
-  margin-top: 4rem;
-  margin-bottom: 2em;
-  padding: 0px;
-}
-
-.unwatchedBlock {
-  padding: 1rem;
-  background-color: #1e1e1e;
 }
 
 .episodeRowRate {

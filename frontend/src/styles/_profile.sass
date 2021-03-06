@@ -75,33 +75,38 @@
                 color: $headerTextColor
                 width: 50%
 
-            .saveReviewButton
-                background-color: $headerBackgroundColor
-                color: $headerTextColor
-
     .contentBody
         background-color: $backgroundColor
         padding: 1rem
 
         .reviewBody
-            width: 40rem
+            width: 39rem
             max-width: 100%
-
-            .saveReviewButton
-                background-color: $backgroundColor
-                color: $textColor
+            padding-right: 1rem
 
         .friendsBlock
             position: relative
             max-width: 100%
             width: 78rem
 
+        .additionalBody
+            width: 39rem
+            max-width: 100%
+            display: inline-block
+            vertical-align: top
+            margin-top: 1.5rem
+
 .saveReviewButton
+    background-color: $headerBackgroundColor
+    color: $headerTextColor
     border: 1px solid $textColor
     padding: 4px 8px
     text-align: center
     text-decoration: none
-    display: inline-block
     margin-top: 0px
     margin-bottom: 20px
+    margin-right: 1rem
     font-size: 16px
+
+.saveReviewButton:hover
+    color: $activeColor

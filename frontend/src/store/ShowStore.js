@@ -194,6 +194,13 @@ class Show {
 		for (let season in this.showSeasonsState) if (this.showSeasonsState[season] === "pending") return true;
 		return false;
 	}
+
+	get anyError() {
+		if (this.showState.startsWith("error:")) return this.gameState;
+		if (this.userInfoState.startsWith("error:")) return this.userInfoState;
+		if (this.setStatusState.startsWith("error:")) return this.setStatusState;
+		return null;
+	}
 }
 
 const ShowStore = new Show();

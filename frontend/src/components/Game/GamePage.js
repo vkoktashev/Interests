@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import GameStore from "../../store/GameStore";
 import AuthStore from "../../store/AuthStore";
 import PagesStore from "../../store/PagesStore";
+import CurrentUserStore from "../../store/CurrentUserStore";
 
 import { MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
@@ -19,7 +20,8 @@ import Rating from "../Common/Rating";
  * Основная страница приложения
  */
 const GamePage = observer((props) => {
-	const { game, gameState, requestGame, setGameStatus, userInfo, friendsInfo, userInfoState, requestUserInfo, setStatusState } = GameStore;
+	const { game, gameState, requestGame, setGameStatus, userInfo, friendsInfo, userInfoState, requestUserInfo, anyError } = GameStore;
+	const { patchSettings, saveSettingsState } = CurrentUserStore;
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
 
@@ -69,14 +71,12 @@ const GamePage = observer((props) => {
 	);
 
 	useEffect(() => {
-		if (gameState.startsWith("error:")) toast.error(`Ошибка загрузки! ${gameState}`);
-	}, [gameState]);
+		if (anyError) toast.error(anyError);
+	}, [anyError]);
 	useEffect(() => {
-		if (userInfoState.startsWith("error:")) toast.error(`Ошибка загрузки пользовательской информации! ${userInfoState}`);
-	}, [userInfoState]);
-	useEffect(() => {
-		if (setStatusState.startsWith("error:")) toast.error(`Ошибка сохранения! ${setStatusState}`);
-	}, [setStatusState]);
+		if (saveSettingsState.startsWith("error:")) toast.error(`Ошибка фона! ${saveSettingsState}`);
+		else if (saveSettingsState === "saved") toast.success(`Фон установлен!`);
+	}, [saveSettingsState]);
 
 	function setClearUI() {
 		setReview("");
@@ -158,9 +158,17 @@ const GamePage = observer((props) => {
 							{/* <video width='800' height='450' controls='controls' poster={game.rawg?.clip?.preview} src={game.rawg?.clip?.clip} type='video' /> */}
 							<h3>Описание</h3>
 							<div dangerouslySetInnerHTML={{ __html: game.overview }} />
+							<button
+								className={"saveReviewButton"}
+								hidden={!loggedIn}
+								onClick={() => {
+									patchSettings({ backdrop_path: game.background });
+								}}>
+								Выбрать как фон профиля
+							</button>
 						</div>
+						<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
 						<div className='reviewBody' hidden={!loggedIn}>
-							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
 							<LoadingOverlay active={userInfoState === "pending" && gameState !== "pending"} spinner text='Загрузка...'>
 								<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
 								<MDBInput
@@ -186,6 +194,7 @@ const GamePage = observer((props) => {
 								</button>
 							</LoadingOverlay>
 						</div>
+						<div className='additionalBody'></div>
 						<div className='friendsBlock' hidden={!loggedIn | (friendsInfo?.length < 1)}>
 							<h4>Отзывы друзей</h4>
 							<FriendsActivity info={friendsInfo} />

@@ -56,7 +56,7 @@ const UserPage = observer((props) => {
 
 	return (
 		<div>
-			<div className='bg textureBG' />
+			<div className={"bg " + (!user.backdrop_path ? " textureBG" : "")} style={{ backgroundImage: user.backdrop_path ? `url(${user.backdrop_path})` : "" }} />
 			<LoadingOverlay active={userState === "pending"} spinner text='Загрузка...'>
 				<div className='contentPage'>
 					<div className='contentBody'>
