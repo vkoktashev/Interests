@@ -98,7 +98,9 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'rawg_name': rawg_game.get('name'),
             'rawg_release_date': rawg_game.get('released'),
             'rawg_tba': rawg_game.get('tba'),
-            'rawg_backdrop_path': rawg_game.get('background_image'),
+            'rawg_backdrop_path': rawg_game.get('background_image_additional')
+            if rawg_game.get('background_image_additional') is not None
+            else rawg_game.get('background_image'),
             'hltb_name': hltb_game_name,
             'hltb_id': hltb_game_id
         }
@@ -274,11 +276,11 @@ def parse_game(rawg_game):
         'developers': objects_to_str(rawg_game['developers']),
         'platforms': objects_to_str(platforms),
         'background': rawg_game.get('background_image_additional')
-        if rawg_game.get('background_image_additional')
+        if rawg_game.get('background_image_additional') is not None
         else rawg_game.get('background_image'),
         'poster': rawg_game.get('background_image'),
         'release_date': '.'.join(reversed(rawg_game['released'].split('-')))
-        if rawg_game.get('released') != "" else None,
+        if rawg_game.get('released') is not None else None,
     }
 
     return new_game
