@@ -4,11 +4,9 @@ import { observer } from "mobx-react";
 import AuthStore from "../../store/AuthStore";
 import UserStore from "../../store/UserStore";
 
-import { MDBRow, MDBCol, MDBContainer } from "mdbreact";
-
 import LoadingOverlay from "react-loading-overlay";
 import GameBlock from "./GameBlock";
-import FriendBlock from "./FriendBlock";
+import FriendBlock from "../Common/FriendBlock";
 import MovieBlock from "./MovieBlock";
 import UserLogBlock from "./UserLogBlock";
 import CategoriesTab from "../Common/CategoriesTab";
@@ -60,56 +58,51 @@ const UserPage = observer((props) => {
 		<div>
 			<div className='bg textureBG' />
 			<LoadingOverlay active={userState === "pending"} spinner text='Загрузка...'>
-				<MDBContainer>
-					<MDBRow>
-						<MDBCol md='0.5'></MDBCol>
-						<MDBCol className='userPage'>
-							<h1>Информация о пользователе {user.username}</h1>
-							<p>Последняя активность {lastActivity}</p>
-							<button
-								hidden={currentUser.username === user.username}
-								className='addFriendButton'
-								onClick={() => {
-									setUserStatus({ is_following: user.is_followed ? false : true }, user.id);
-								}}>
-								{user.is_followed ? "Отписаться" : "Подписаться"}
-							</button>
-							<CategoriesTab
-								categories={["Профиль", "Игры", "Фильмы", "Сериалы", "Друзья"]}
-								activeColor='#7654de'
-								activeCategory={activeCategory}
-								onChangeCategory={(category) => {
-									setActiveCategory(category);
-								}}
-							/>
+				<div className='contentPage'>
+					<div className='contentBody'>
+						<h1>Информация о пользователе {user.username}</h1>
+						<p>Последняя активность {lastActivity}</p>
+						<button
+							hidden={currentUser.username === user.username}
+							className='addFriendButton'
+							onClick={() => {
+								setUserStatus({ is_following: user.is_followed ? false : true }, user.id);
+							}}>
+							{user.is_followed ? "Отписаться" : "Подписаться"}
+						</button>
+						<CategoriesTab
+							categories={["Профиль", "Игры", "Фильмы", "Сериалы", "Друзья"]}
+							activeCategory={activeCategory}
+							onChangeCategory={(category) => {
+								setActiveCategory(category);
+							}}
+						/>
 
-							<div hidden={activeCategory !== "Профиль"}>
-								<h4>Моя активность: </h4>
-								<LoadingOverlay active={userLogsState === "pending" && userState !== "pending"} spinner text='Загрузка активности...'>
-									<ChartBlock stats={user.stats} />
-									<UserLogBlock logs={userLogs} onChangePage={(pageNumber) => requestUserLogs(userID, pageNumber, LOG_ROWS_COUNT)} />
-								</LoadingOverlay>
-							</div>
-							<div hidden={activeCategory !== "Игры"}>
-								<GameBlock games={user.games} stats={user.stats.games} />
-							</div>
-							<div hidden={activeCategory !== "Фильмы"}>
-								<MovieBlock movies={user.movies} stats={user.stats.movies} />
-							</div>
-							<div hidden={activeCategory !== "Сериалы"}>
-								<ShowBlock shows={user.shows} stats={user.stats.episodes} />
-							</div>
-							<div hidden={activeCategory !== "Друзья"}>
-								<FriendBlock users={user.followed_users ? user.followed_users : []} />
-								<h4>Активность друзей: </h4>
-								<LoadingOverlay active={userFriendsLogsState === "pending" && !userState === "pending"} spinner text='Загрузка активности...'>
-									<UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => requestUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true} />
-								</LoadingOverlay>
-							</div>
-						</MDBCol>
-						<MDBCol md='0.5'></MDBCol>
-					</MDBRow>
-				</MDBContainer>
+						<div hidden={activeCategory !== "Профиль"}>
+							<h4>Моя активность: </h4>
+							<LoadingOverlay active={userLogsState === "pending" && userState !== "pending"} spinner text='Загрузка активности...'>
+								<ChartBlock stats={user.stats} />
+								<UserLogBlock logs={userLogs} onChangePage={(pageNumber) => requestUserLogs(userID, pageNumber, LOG_ROWS_COUNT)} />
+							</LoadingOverlay>
+						</div>
+						<div hidden={activeCategory !== "Игры"}>
+							<GameBlock games={user.games} stats={user.stats.games} />
+						</div>
+						<div hidden={activeCategory !== "Фильмы"}>
+							<MovieBlock movies={user.movies} stats={user.stats.movies} />
+						</div>
+						<div hidden={activeCategory !== "Сериалы"}>
+							<ShowBlock shows={user.shows} stats={user.stats.episodes} />
+						</div>
+						<div hidden={activeCategory !== "Друзья"}>
+							<FriendBlock users={user.followed_users ? user.followed_users : []} />
+							<h4>Активность друзей: </h4>
+							<LoadingOverlay active={userFriendsLogsState === "pending" && !userState === "pending"} spinner text='Загрузка активности...'>
+								<UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => requestUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true} />
+							</LoadingOverlay>
+						</div>
+					</div>
+				</div>
 			</LoadingOverlay>
 		</div>
 	);

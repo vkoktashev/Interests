@@ -15,10 +15,10 @@ function CardShow({ show }) {
 	}, [show]);
 
 	return (
-		<div className='searchCardMovie'>
-			<div className='searchCardMovieImage' style={{ backgroundImage: `url(${"http://image.tmdb.org/t/p/w600_and_h900_bestv2" + show.poster_path})` }} />
-			<div className='searchCardMovieText'>
-				<div className='searchCardMovieName'>
+		<div className='searchCard'>
+			<div className='searchCardImage' style={{ backgroundImage: `url(${"http://image.tmdb.org/t/p/w600_and_h900_bestv2" + show.poster_path})` }} />
+			<div className='searchCardText'>
+				<div className='searchCardName'>
 					<a
 						href={window.location.origin + "/show/" + show.id}
 						onClick={(e) => {

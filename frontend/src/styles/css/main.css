@@ -1,46 +1,49 @@
-.calendarPage {
-  width: 80rem;
-  max-width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-  color: #cfcfcf;
-  margin-top: 4rem;
-  margin-bottom: 2em;
-  padding: 0px;
-}
-
-.calendarBlock {
-  padding: 1rem;
-  width: 100%;
-  display: inline-block;
-  vertical-align: top;
-  background-color: #1e1e1e;
-}
-
 .calendarHeader {
   margin-bottom: 2rem;
-}
-
-.timelineEvent {
-  background-color: #1e1e1e !important;
-}
-
-.releasesList {
-  margin-top: 1rem;
-}
-
-.dayInfo {
-  display: inline-block;
-}
-
-.dayInfo.date {
-  width: auto;
 }
 
 .dayInfoBlock {
   display: inline-block;
   white-space: pre-line;
   max-width: 100%;
+  max-height: 480px;
+}
+
+.dayInfoBlock .dayInfoDate {
+  display: inline-block;
+  width: auto;
+}
+
+.dayInfoBlock .dayInfoCategory {
+  margin-bottom: 1rem;
+}
+
+.calendarDay {
+  color: #cfcfcf;
+  padding: 0;
+  height: auto;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.calendarDay .calendarDayTile {
+  display: inline-block;
+  color: #cfcfcf;
+  padding: 0.25rem;
+  height: auto;
+  text-align: center;
+}
+
+.calendarDay .calendarDayTile.Games {
+  background-color: #1e752a;
+}
+
+.calendarDay .calendarDayTile.Movies {
+  background-color: #831717;
+}
+
+.calendarDay .calendarDayTile.Episodes {
+  background-color: #245a6b;
 }
 
 .react-calendar {
@@ -52,38 +55,6 @@
   border: 1px solid #646464 !important;
   border-radius: 10px;
   margin-right: 1rem;
-}
-
-.calendarDay {
-  color: #cfcfcf;
-  padding: 0;
-  height: auto;
-  text-align: center;
-  margin-top: 10px;
-}
-
-.calendarDayTile {
-  display: inline-block;
-  color: #cfcfcf;
-  padding: 0.25rem;
-  height: auto;
-  text-align: center;
-}
-
-.calendarDayTile.Games {
-  background-color: #1e752a;
-}
-
-.calendarDayTile.Movies {
-  background-color: #831717;
-}
-
-.calendarDayTile.Episodes {
-  background-color: #245a6b;
-}
-
-.dayInfoCategory {
-  margin-bottom: 1rem;
 }
 
 .react-calendar__tile--active,
@@ -131,7 +102,13 @@
   display: none;
 }
 
-.categoriesTab {
+.categoriesTabs {
+  white-space: pre;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.categoriesTabs .categoriesTab {
   background-color: #1e1e1e;
   color: #cfcfcf;
   border: none;
@@ -141,25 +118,24 @@
   margin-left: 0px;
   margin-right: 0px;
   margin-top: 15px;
-  cursor: pointer;
   font-size: 32px;
   outline: none;
 }
 
-.categoriesTab:focus {
+.categoriesTabs .categoriesTab.active {
+  color: #a77edd;
+}
+
+.categoriesTabs .categoriesTab:focus {
   outline: 0 !important;
 }
 
-.contentStatus {
-  background-color: black;
-  border: 1px solid #fff;
-  color: white;
-  padding: 4px 8px;
-  text-align: center;
-  text-decoration: none;
-  margin: 0px;
-  cursor: pointer;
-  font-size: 1rem;
+.categoriesTabs .categoriesLine {
+  background-color: #a77edd;
+  height: 0.2rem;
+  margin-top: 0px;
+  margin-bottom: 10px;
+  width: 100%;
 }
 
 .contentStatuses {
@@ -167,19 +143,61 @@
   margin-top: 15px;
 }
 
-.cardUser {
+.contentStatuses .contentStatus {
+  background-color: black;
+  border: 1px solid white;
+  color: white;
+  padding: 4px 8px;
+  text-align: center;
+  margin: 0px;
+  font-size: 1rem;
+}
+
+.contentStatuses .contentStatus.active {
+  background-color: #4527a0;
+}
+
+.contentStatuses .contentStatus:first-child {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.contentStatuses .contentStatus:last-child {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+.friendsCards {
+  width: 100%;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  margin-top: 2px;
+  margin-bottom: 1rem;
+}
+
+.friendsCards .cardUser {
   max-width: 100%;
   width: 250px;
   height: 75px;
   margin-right: 5px;
   margin-left: 5px;
-  margin-bottom: 0px;
+  margin-top: 10px;
   display: inline-block;
 }
 
-.cardUserImage {
-  height: 75px;
-  width: 75px;
+.friendsCards .cardUser .cardUserImage {
+  height: inherit;
+  width: 30%;
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -190,39 +208,26 @@
   border-bottom-left-radius: 10px;
 }
 
-.cardUserText {
+.friendsCards .cardUser .cardUserText {
+  height: inherit;
+  width: 70%;
   padding: 10px;
   text-align: center;
   vertical-align: top;
   color: #cfcfcf;
   font-weight: 200;
   background-color: #323232;
-  width: 175px;
-  height: 75px;
   display: inline-block;
   margin: 0;
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
 }
 
-.friendsBlock {
-  width: 100%;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: horizontal;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: row;
-          flex-direction: row;
-}
-
 .fActivityBlock {
   display: -webkit-inline-box;
   display: -ms-inline-flexbox;
   display: inline-flex;
-  margin-bottom: 0px;
-  margin-top: 10px;
-  margin-right: 1rem;
+  margin: 1rem 1rem 1rem 0px;
   background-color: #323232;
   color: #cfcfcf;
   vertical-align: top;
@@ -232,7 +237,7 @@
   padding-bottom: 1rem;
 }
 
-.fActivityUser {
+.fActivityBlock .fActivityUser {
   display: inline-block;
   padding-top: 10px;
   padding-left: 10px;
@@ -242,23 +247,18 @@
   font-weight: 400;
 }
 
-.fActivityInfo {
+.fActivityBlock .fActivityInfo {
   display: inline-block;
   margin-bottom: 0px;
   margin-top: 0px;
   padding-top: 12px;
 }
 
-.fActivityInfoText {
+.fActivityBlock .fActivityInfo .fActivityInfoText {
   margin-bottom: 5px;
 }
 
-#reviewInput {
-  color: #cfcfcf;
-  background-color: #1e1e1e;
-}
-
-#spentTimeInput {
+#reviewInput, #spentTimeInput {
   color: #cfcfcf;
   background-color: #1e1e1e;
 }
@@ -553,7 +553,7 @@ li.episode:nth-child(even) {
   margin-left: 4%;
 }
 
-.searchCardMovie {
+.searchCard {
   width: 500px;
   max-width: 100%;
   height: 100px;
@@ -563,7 +563,7 @@ li.episode:nth-child(even) {
   display: inline-block;
 }
 
-.searchCardMovieImage {
+.searchCard .searchCardImage {
   height: 100px;
   width: 50%;
   background-position: center;
@@ -576,7 +576,7 @@ li.episode:nth-child(even) {
   border-bottom-left-radius: 10px;
 }
 
-.searchCardMovieText {
+.searchCard .searchCardText {
   padding: 10px;
   text-align: center;
   vertical-align: top;
@@ -591,51 +591,10 @@ li.episode:nth-child(even) {
   border-bottom-right-radius: 10px;
 }
 
-.searchCardGame {
-  width: 500px;
-  max-width: 100%;
-  height: 100px;
-  margin-right: 5px;
-  margin-left: 5px;
-  margin-bottom: 10px;
-  display: inline-block;
-}
-
-.searchCardGameImage {
-  height: 100px;
-  width: 50%;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  display: inline-block;
-  background-color: gray;
-  margin: 0;
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
-}
-
-.searchCardGameText {
-  padding: 10px;
-  text-align: center;
-  vertical-align: top;
-  color: #eeeeee;
-  font-weight: 200;
-  background-color: #323232;
-  width: 50%;
-  height: 100px;
-  display: inline-block;
-  margin: 0;
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
-}
-
-.searchPage {
-  background-color: #1e1e1e;
-  color: #cfcfcf;
-  margin-top: 30px;
-  margin-bottom: 30px;
-  padding-left: 10px;
-  padding-top: 10px;
+.searchCard .searchCardName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 70%;
 }
 
 #searchInput2 {
@@ -668,32 +627,8 @@ li.episode:nth-child(even) {
   position: relative;
 }
 
-.searchCardMovieName {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  height: 70%;
-}
-
-.searchCardGameName {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  height: 70%;
-}
-
-.settingsPage {
-  width: 80rem;
-  max-width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-  color: #cfcfcf;
-  margin-top: 4rem;
-  margin-bottom: 2em;
-  padding: 0px;
-}
-
-.settingsBlock {
-  padding: 1rem;
-  background-color: #1e1e1e;
+.settingsHeader {
+  margin-bottom: 2rem;
 }
 
 .settingsCheckbox {
@@ -834,43 +769,6 @@ li.episode:nth-child(even) {
   color: white;
 }
 
-.friendCard {
-  width: 500px;
-  height: 150px;
-  margin-right: 5px;
-  margin-left: 5px;
-  margin-bottom: 10px;
-  display: inline-block;
-}
-
-.friendCardImage {
-  height: 150px;
-  width: 250px;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-color: gray;
-  display: inline-block;
-  margin: 0;
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
-}
-
-.friendCardText {
-  padding: 10px;
-  text-align: center;
-  vertical-align: top;
-  color: white;
-  font-weight: 200;
-  background-color: black;
-  width: 250px;
-  height: 150px;
-  display: inline-block;
-  margin: 0;
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
-}
-
 a.logLink:link, a.logLink:visited, a.logLink:active, a.dataTable:link, a.dataTable:visited, a.dataTable:active {
   color: #eeeeee;
   font-weight: 500;
@@ -914,12 +812,6 @@ a.logLink:hover, a.dataTable:hover {
   background-color: #1e1e1e;
   border: 1px solid #cfcfcf;
   color: #cfcfcf;
-}
-
-.friendsBlock {
-  margin-top: 20px;
-  margin-bottom: 15px;
-  display: inline;
 }
 
 .dataTable {
@@ -1034,13 +926,7 @@ a.logLink:hover, a.dataTable:hover {
   max-width: 80%;
 }
 
-.registrationBody {
-  background-color: #1e1e1e;
-  color: #cfcfcf;
-  text-align: center;
-}
-
-.loginBody {
+.registrationBody, .loginBody {
   background-color: #1e1e1e;
   color: #cfcfcf;
   text-align: center;

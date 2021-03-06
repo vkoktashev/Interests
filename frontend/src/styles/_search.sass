@@ -6,7 +6,7 @@
     display: inline-block
     margin-left: 4%
 
-.searchCardMovie
+.searchCard
     width: 500px
     max-width: 100%
     height: 100px
@@ -15,74 +15,36 @@
     margin-bottom: 10px
     display: inline-block
 
-.searchCardMovieImage
-    height: 100px
-    width: 50%
-    background-position: center
-    background-repeat: no-repeat
-    background-size: cover
-    background-color: gray
-    display: inline-block
-    margin: 0
-    border-top-left-radius: 10px
-    border-bottom-left-radius: 10px
+    .searchCardImage
+        height: 100px
+        width: 50%
+        background-position: center
+        background-repeat: no-repeat
+        background-size: cover
+        background-color: gray
+        display: inline-block
+        margin: 0
+        border-top-left-radius: 10px
+        border-bottom-left-radius: 10px
 
-.searchCardMovieText
-    padding: 10px
-    text-align: center
-    vertical-align: top
-    color: $linkTextColor
-    font-weight: 200
-    background-color: $activeBackgroundColor
-    height: 100px
-    width: 50%
-    display: inline-block
-    margin: 0
-    border-top-right-radius: 10px
-    border-bottom-right-radius: 10px
+    .searchCardText
+        padding: 10px
+        text-align: center
+        vertical-align: top
+        color: $linkTextColor
+        font-weight: 200
+        background-color: $activeBackgroundColor
+        height: 100px
+        width: 50%
+        display: inline-block
+        margin: 0
+        border-top-right-radius: 10px
+        border-bottom-right-radius: 10px
 
-.searchCardGame
-    width: 500px
-    max-width: 100%
-    height: 100px
-    margin-right: 5px
-    margin-left: 5px
-    margin-bottom: 10px
-    display: inline-block
-
-.searchCardGameImage
-    height: 100px
-    width: 50%
-    background-position: center
-    background-repeat: no-repeat
-    background-size: cover
-    display: inline-block
-    background-color: gray
-    margin: 0
-    border-top-left-radius: 10px
-    border-bottom-left-radius: 10px
-
-.searchCardGameText
-    padding: 10px
-    text-align: center
-    vertical-align: top
-    color: $linkTextColor
-    font-weight: 200
-    background-color: $activeBackgroundColor
-    width: 50%
-    height: 100px
-    display: inline-block
-    margin: 0
-    border-top-right-radius: 10px
-    border-bottom-right-radius: 10px
-
-.searchPage
-    background-color: $backgroundColor
-    color: $textColor
-    margin-top: 30px
-    margin-bottom: 30px
-    padding-left: 10px
-    padding-top: 10px
+    .searchCardName
+        overflow: hidden
+        text-overflow: ellipsis
+        height: 70%
 
 #searchInput2
     color: $textColor
@@ -108,13 +70,3 @@
 
 .reslutsBlock
     position: relative
-
-.searchCardMovieName
-    overflow: hidden
-    text-overflow: ellipsis
-    height: 70%
-
-.searchCardGameName
-    overflow: hidden
-    text-overflow: ellipsis
-    height: 70%
