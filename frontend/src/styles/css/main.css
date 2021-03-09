@@ -785,7 +785,8 @@ a.logLink:hover, a.dataTable:hover {
   display: inline-block;
   margin-bottom: 0px;
   margin-top: 0px;
-  width: 90%;
+  width: 70rem;
+  max-width: 100%;
 }
 
 .logRow {
@@ -971,10 +972,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.navbar {
-  margin-bottom: 30px;
-}
-
 .bg {
   background-color: #1e1e1e;
   color: #cfcfcf;
@@ -993,6 +990,42 @@ body {
   background-repeat: repeat;
   background-image: url("https://365psd.ru/images/backgrounds/bg-dark-4782.jpg");
   height: 100vh;
+}
+
+.rootPage {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: stretch;
+      -ms-flex-align: stretch;
+          align-items: stretch;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+}
+
+.sideNav {
+  margin-top: 1rem;
+}
+
+.activePage {
+  width: 100%;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
 }
 
 .hs {

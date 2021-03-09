@@ -29,7 +29,7 @@ const UnwatchedPage = observer((props) => {
 		<div>
 			<div className='bg textureBG' />
 			<div className='contentPage'>
-				<div className='contentBody'>
+				<div className='contentBody header'>
 					<h1>Непросмотренные серии</h1>
 					<LoadingOverlay active={unwatchedState === "pending"} spinner text='Загрузка...'>
 						{unwatched.map((show) => (
