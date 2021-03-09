@@ -61,7 +61,7 @@ const SearchPage = observer((props) => {
 		<div>
 			<div className='bg textureBG' />
 			<div className='contentPage'>
-				<div className='contentBody'>
+				<div className='contentBody header'>
 					<h1>Поиск</h1>
 					<MDBFormInline
 						className='md-form'
