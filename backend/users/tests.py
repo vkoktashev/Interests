@@ -48,10 +48,9 @@ class AuthTests(TestCase):
         response = c.post(url, {'username': 'john', 'password': 'smith', 'email': 'email@email'})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        response = c.post(url, {'username': 'john', 'password': 'smith', 'email': 'email@email.com'})
+        response = c.post(url, {'username': 'john', 'password': 'sOme_g00d_pAssworD', 'email': 'email@email.com'})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.json()['username'], 'john')
-        self.assertEqual(response.json()['email'], 'email@email.com')
 
     def test_login(self):
         login_url = '/users/auth/login/'
@@ -102,14 +101,14 @@ class AuthTests(TestCase):
         user = User.objects.create_user(username=username, email=email, password=password)
         self.assertEqual(user.is_active, False)
 
-        url = '/users/auth/confirmation/'
+        url = '/users/auth/confirm_email/'
         uid64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = account_activation_token.make_token(user)
 
         activation_link = f"{url}?uid64={uid64}&token=random_string/"
-        response = c.get(activation_link)
+        response = c.patch(activation_link)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         activation_link = f"{url}?uid64={uid64}&token={token}"
-        response = c.get(activation_link)
+        response = c.patch(activation_link)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
