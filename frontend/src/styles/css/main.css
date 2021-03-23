@@ -1,3 +1,25 @@
+@-webkit-keyframes fadeIn {
+  0% {
+    opacity: 0;
+    padding-left: 0;
+  }
+  100% {
+    opacity: 1;
+    padding-left: 1rem;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    padding-left: 0;
+  }
+  100% {
+    opacity: 1;
+    padding-left: 1rem;
+  }
+}
+
 .calendarHeader {
   margin-bottom: 2rem;
 }
@@ -315,7 +337,6 @@
 
 ul {
   list-style-type: none;
-  margin-left: -35px;
 }
 
 li.episode:nth-child(odd) {
@@ -357,6 +378,17 @@ li.episode:nth-child(even) {
   margin-bottom: 0px;
   margin-top: 0px;
   width: 100%;
+}
+
+.episodeRows .content {
+  padding-left: 1rem;
+}
+
+.episodeRows[open] .content {
+  -webkit-animation-name: fadeIn;
+          animation-name: fadeIn;
+  -webkit-animation-duration: 1000ms;
+          animation-duration: 1000ms;
 }
 
 .episodeRow {
@@ -718,7 +750,6 @@ li.episode:nth-child(even) {
 
 ul {
   list-style-type: none;
-  margin-left: -35px;
 }
 
 li.episode:nth-child(odd) {
@@ -728,6 +759,24 @@ li.episode:nth-child(odd) {
 li.episode:nth-child(even) {
   background-color: #323232;
   border-radius: 5px;
+}
+
+li.episode {
+  -webkit-transition-property: display;
+  transition-property: display;
+  -webkit-transition-duration: 2s;
+          transition-duration: 2s;
+}
+
+.unwatchedSeasonBlock .content {
+  padding-left: 1rem;
+}
+
+.unwatchedSeasonBlock[open] .content {
+  -webkit-animation-name: fadeIn;
+          animation-name: fadeIn;
+  -webkit-animation-duration: 1000ms;
+          animation-duration: 1000ms;
 }
 
 .userPage {
@@ -983,6 +1032,8 @@ body {
   background-position: center;
   background-size: cover;
   z-index: -1000;
+  -webkit-filter: blur(10px);
+          filter: blur(10px);
 }
 
 .textureBG {
@@ -990,6 +1041,8 @@ body {
   background-repeat: repeat;
   background-image: url("https://365psd.ru/images/backgrounds/bg-dark-4782.jpg");
   height: 100vh;
+  -webkit-filter: none;
+          filter: none;
 }
 
 .rootPage {

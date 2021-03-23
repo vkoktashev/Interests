@@ -37,8 +37,8 @@ function UserLogBlock({ logs, showUsername, onChangePage }) {
 
 	return (
 		<div>
-			{logsByDay.map((dayLog) => (
-				<div key={dayLog.logs[0].id} className='logDay'>
+			{logsByDay.map((dayLog, counter) => (
+				<div key={counter} className='logDay'>
 					<h5 className='logDate'>{dayLog.date.toLocaleDateString("ru-RU")}</h5>
 					<div className='logRows'>
 						{dayLog.logs.map((log) => (

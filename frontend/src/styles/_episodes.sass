@@ -10,7 +10,6 @@
 
 ul
     list-style-type: none
-    margin-left: -35px
 
 li.episode:nth-child(odd)
     background-color: $backgroundColor
@@ -44,6 +43,13 @@ li.episode:nth-child(even)
     margin-bottom: 0px
     margin-top: 0px
     width: 100%
+
+    .content
+        padding-left: 1rem
+
+    &[open] .content
+        animation-name: fadeIn
+        animation-duration: 1000ms
 
 .episodeRow
     margin-bottom: 0px

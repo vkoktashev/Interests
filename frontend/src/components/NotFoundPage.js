@@ -7,7 +7,7 @@ function NotFoundPage() {
 
 	useEffect(
 		() => {
-			setTimeout(() => setAngle(angle + 1), 100);
+			window.requestAnimationFrame(() => setAngle(angle + 1));
 		},
 		// eslint-disable-next-line
 		[angle]
