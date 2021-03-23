@@ -109,7 +109,7 @@ const SeasonBlock = observer(
 								}}
 							/>
 						</div>
-						<ul>
+						<ul className='content'>
 							{showSeason?.episodes
 								?.map((episode, counter) => (
 									<li className='episode' key={counter}>
