@@ -311,7 +311,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             if current_user_episode is not None and current_user_episode_review != data.get('review') or \
                     current_user_episode is None and data.get('review') != '':
                 EpisodeLog.objects.create(user=request.user, episode=episode,
-                                          action_type='review', action_result=data.get('review'))
+                                          action_type=EpisodeLog.ACTION_TYPE_REVIEW, action_result=data.get('review'))
 
             if current_user_episode_score == EPISODE_NOT_WATCHED_SCORE and \
                     data.get('score') == EPISODE_WATCHED_SCORE:
@@ -319,7 +319,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                     if current_user_episode is not None and current_user_episode_score != data.get('score') or \
                             current_user_episode is None and data.get('score') != EPISODE_NOT_WATCHED_SCORE:
                         first_watched_episode_log = EpisodeLog(user=request.user, episode=episode,
-                                                               action_type='score',
+                                                               action_type=EpisodeLog.ACTION_TYPE_SCORE,
                                                                action_result=data.get('score'))
                 watched_episodes_count += 1
 
@@ -328,24 +328,24 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 if not_watched_episodes_count == 0:
                     if current_user_episode is not None:
                         first_not_watched_episode_log = EpisodeLog(user=request.user, episode=episode,
-                                                                   action_type='score',
+                                                                   action_type=EpisodeLog.ACTION_TYPE_SCORE,
                                                                    action_result=data.get('score'))
                 not_watched_episodes_count += 1
 
             elif current_user_episode is not None and current_user_episode_score != data.get('score') or \
                     current_user_episode is None and data.get('score') != EPISODE_NOT_WATCHED_SCORE:
                 EpisodeLog.objects.create(user=request.user, episode=episode,
-                                          action_type='score', action_result=data.get('score'))
+                                          action_type=EpisodeLog.ACTION_TYPE_SCORE, action_result=data.get('score'))
 
         if watched_episodes_count > 1:
             ShowLog.objects.create(user=request.user, show=show,
-                                   action_type='episodes', action_result=watched_episodes_count)
+                                   action_type=ShowLog.ACTION_TYPE_EPISODES, action_result=watched_episodes_count)
         elif watched_episodes_count == 1 and first_watched_episode_log is not None:
             first_watched_episode_log.save()
 
         if not_watched_episodes_count > 1:
             ShowLog.objects.create(user=request.user, show=show,
-                                   action_type='episodes', action_result=-not_watched_episodes_count)
+                                   action_type=ShowLog.ACTION_TYPE_EPISODES, action_result=-not_watched_episodes_count)
         elif not_watched_episodes_count == 1 and first_not_watched_episode_log is not None:
             first_not_watched_episode_log.save()
 
