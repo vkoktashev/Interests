@@ -58,7 +58,7 @@ const CalendarPage = observer((props) => {
 		<div>
 			<div className='bg textureBG' />
 			<div className='contentPage'>
-				<div className='contentBody'>
+				<div className='contentBody header'>
 					<h1 className='calendarHeader'>Календарь релизов</h1>
 					<LoadingOverlay active={calendarState === "pending"} spinner text='Загрузка...'>
 						{/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? <DayInfo day={currentDay} date={value} /> : ""}

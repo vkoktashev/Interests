@@ -55,52 +55,50 @@ const UserPage = observer((props) => {
 	}, [user]);
 
 	return (
-		<div>
-			<div className='bg textureBG' />
+		<div className='contentPage'>
+			<div className={"bg " + (!user.backdrop_path ? " textureBG" : "")} style={{ backgroundImage: user.backdrop_path ? `url(${user.backdrop_path})` : "" }} />
 			<LoadingOverlay active={userState === "pending"} spinner text='Загрузка...'>
-				<div className='contentPage'>
-					<div className='contentBody'>
-						<h1>Информация о пользователе {user.username}</h1>
-						<p>Последняя активность {lastActivity}</p>
-						<button
-							hidden={currentUser.username === user.username}
-							className='addFriendButton'
-							onClick={() => {
-								setUserStatus({ is_following: user.is_followed ? false : true }, user.id);
-							}}>
-							{user.is_followed ? "Отписаться" : "Подписаться"}
-						</button>
-						<CategoriesTab
-							categories={["Профиль", "Игры", "Фильмы", "Сериалы", "Друзья"]}
-							activeCategory={activeCategory}
-							onChangeCategory={(category) => {
-								setActiveCategory(category);
-							}}
-						/>
+				<div className='contentBody header'>
+					<h1>Информация о пользователе {user.username}</h1>
+					<p>Последняя активность {lastActivity}</p>
+					<button
+						hidden={currentUser.username === user.username}
+						className='addFriendButton'
+						onClick={() => {
+							setUserStatus({ is_following: user.is_followed ? false : true }, user.id);
+						}}>
+						{user.is_followed ? "Отписаться" : "Подписаться"}
+					</button>
+					<CategoriesTab
+						categories={["Профиль", "Игры", "Фильмы", "Сериалы", "Друзья"]}
+						activeCategory={activeCategory}
+						onChangeCategory={(category) => {
+							setActiveCategory(category);
+						}}
+					/>
 
-						<div hidden={activeCategory !== "Профиль"}>
-							<h4>Моя активность: </h4>
-							<LoadingOverlay active={userLogsState === "pending" && userState !== "pending"} spinner text='Загрузка активности...'>
-								<ChartBlock stats={user.stats} />
-								<UserLogBlock logs={userLogs} onChangePage={(pageNumber) => requestUserLogs(userID, pageNumber, LOG_ROWS_COUNT)} />
-							</LoadingOverlay>
-						</div>
-						<div hidden={activeCategory !== "Игры"}>
-							<GameBlock games={user.games} stats={user.stats.games} />
-						</div>
-						<div hidden={activeCategory !== "Фильмы"}>
-							<MovieBlock movies={user.movies} stats={user.stats.movies} />
-						</div>
-						<div hidden={activeCategory !== "Сериалы"}>
-							<ShowBlock shows={user.shows} stats={user.stats.episodes} />
-						</div>
-						<div hidden={activeCategory !== "Друзья"}>
-							<FriendBlock users={user.followed_users ? user.followed_users : []} />
-							<h4>Активность друзей: </h4>
-							<LoadingOverlay active={userFriendsLogsState === "pending" && !userState === "pending"} spinner text='Загрузка активности...'>
-								<UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => requestUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true} />
-							</LoadingOverlay>
-						</div>
+					<div hidden={activeCategory !== "Профиль"}>
+						<h4>Моя активность: </h4>
+						<LoadingOverlay active={userLogsState === "pending" && userState !== "pending"} spinner text='Загрузка активности...'>
+							<ChartBlock stats={user.stats} />
+							<UserLogBlock logs={userLogs} onChangePage={(pageNumber) => requestUserLogs(userID, pageNumber, LOG_ROWS_COUNT)} />
+						</LoadingOverlay>
+					</div>
+					<div hidden={activeCategory !== "Игры"}>
+						<GameBlock games={user.games} stats={user.stats.games} />
+					</div>
+					<div hidden={activeCategory !== "Фильмы"}>
+						<MovieBlock movies={user.movies} stats={user.stats.movies} />
+					</div>
+					<div hidden={activeCategory !== "Сериалы"}>
+						<ShowBlock shows={user.shows} stats={user.stats.episodes} />
+					</div>
+					<div hidden={activeCategory !== "Друзья"}>
+						<FriendBlock users={user.followed_users ? user.followed_users : []} />
+						<h4>Активность друзей: </h4>
+						<LoadingOverlay active={userFriendsLogsState === "pending" && !userState === "pending"} spinner text='Загрузка активности...'>
+							<UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => requestUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true} />
+						</LoadingOverlay>
 					</div>
 				</div>
 			</LoadingOverlay>

@@ -1,5 +1,5 @@
+@import "./abstracts/_colors"
 @import "./_calendar"
-@import "./_colors"
 @import "./_common"
 @import "./_episodes"
 @import "./profile"
@@ -20,9 +20,6 @@ body
     -webkit-font-smoothing: antialiased
     -moz-osx-font-smoothing: grayscale
 
-.navbar
-    margin-bottom: 30px
-
 .bg
     background-color: $backgroundColor
     color: $textColor
@@ -41,6 +38,22 @@ body
     background-image: url("https://365psd.ru/images/backgrounds/bg-dark-4782.jpg")
     height: 100vh
 
+.rootPage
+    display: flex
+    flex-direction: row
+    justify-content: center
+    align-items: stretch
+    flex-wrap: wrap
+
+.sideNav
+    margin-top: 1rem
+
+.activePage
+    width: 100%
+    display: flex
+    flex-direction: row
+    justify-content: center
+
 .hs
     margin-left: 0.2em
 
@@ -52,3 +65,5 @@ a:link, a:visited, a:active
 
 a:hover
     color: $activeColor
+
+$sidebar-width: 470px

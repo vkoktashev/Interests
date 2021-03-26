@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import AuthStore from "../../store/AuthStore";
 import PagesStore from "../../store/PagesStore";
 import ShowStore from "../../store/ShowStore";
+import CurrentUserStore from "../../store/CurrentUserStore";
 
 import { MDBIcon, MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
@@ -21,7 +22,8 @@ import ScoreBlock from "../Common/ScoreBlock";
 const ShowPage = observer((props) => {
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
-	const { requestShow, show, showState, setShowStatus, requestShowUserInfo, userInfo, friendsInfo, userInfoState, setStatusState } = ShowStore;
+	const { patchSettings, saveSettingsState } = CurrentUserStore;
+	const { requestShow, show, showState, setShowStatus, requestShowUserInfo, userInfo, friendsInfo, userInfoState, anyError } = ShowStore;
 
 	let { id } = useParams();
 	const [review, setReview] = useState("");
@@ -73,14 +75,12 @@ const ShowPage = observer((props) => {
 	);
 
 	useEffect(() => {
-		if (showState.startsWith("error:")) toast.error(`Ошибка загрузки! ${showState}`);
-	}, [showState]);
+		if (anyError) toast.error(anyError);
+	}, [anyError]);
 	useEffect(() => {
-		if (userInfoState.startsWith("error:")) toast.error(`Ошибка загрузки пользовательской информации! ${userInfoState}`);
-	}, [userInfoState]);
-	useEffect(() => {
-		if (setStatusState.startsWith("error:")) toast.error(`Ошибка сохранения! ${setStatusState}`);
-	}, [setStatusState]);
+		if (saveSettingsState.startsWith("error:")) toast.error(`Ошибка фона! ${saveSettingsState}`);
+		else if (saveSettingsState === "saved") toast.success(`Фон установлен!`);
+	}, [saveSettingsState]);
 
 	return (
 		<div>
@@ -149,6 +149,15 @@ const ShowPage = observer((props) => {
 						<div>
 							<h3>Описание</h3>
 							<div dangerouslySetInnerHTML={{ __html: show.overview }} />
+							<br />
+							<button
+								className={"saveReviewButton"}
+								hidden={!loggedIn}
+								onClick={() => {
+									patchSettings({ backdrop_path: show.backdrop_path });
+								}}>
+								Выбрать как фон профиля
+							</button>
 						</div>
 						<div className='showSeasonsBody'>
 							<h3 style={{ paddingTop: "15px" }}>Список серий</h3>

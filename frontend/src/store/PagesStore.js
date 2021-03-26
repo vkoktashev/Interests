@@ -6,6 +6,7 @@ class Pages {
 	RegistrateFormIsOpen = false;
 	ResetPasswordFormIsOpen = false;
 	saveEpisodesBlockIsOpen = false;
+	sidebarIsOpen = true;
 
 	constructor() {
 		makeAutoObservable(this);
@@ -33,6 +34,10 @@ class Pages {
 
 	closeResetPasswordForm = async () => {
 		this.ResetPasswordFormIsOpen = false;
+	};
+
+	setSidebar = async (status) => {
+		this.sidebarIsOpen = status;
 	};
 
 	setSaveEpisodes = (status) => (this.saveEpisodesBlockIsOpen = status);
