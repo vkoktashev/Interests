@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import AuthStore from "./store/AuthStore";
 
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import LoginForm from "./components/Modals/LoginForm";
 import RegistrationForm from "./components/Modals/RegistrationForm";
 import ResetPasswordForm from "./components/Modals/ResetPasswordForm";
@@ -24,13 +25,14 @@ const App = observer((props) => {
 	);
 
 	return (
-		<div>
+		<div className='mainDiv'>
 			<Router>
 				<Navbar />
 				<div className='navbar'></div>
 				<main>
 					<Routes />
 				</main>
+				<Footer />
 			</Router>
 			<ToastContainer position='top-center' hideProgressBar newestOnTop closeOnClick autoClose={3000} />
 			<LoginForm />
