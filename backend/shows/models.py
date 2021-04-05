@@ -75,6 +75,9 @@ class UserEpisode(UserScore):
 
 
 class ShowLog(UserLogAbstract):
+    ACTION_TYPE_EPISODES = 'episodes'
+    ACTION_TYPE_CHOICES = *UserLogAbstract.ACTION_TYPE_CHOICES, (ACTION_TYPE_EPISODES, 'Episodes changed'),
+
     show = models.ForeignKey(Show, on_delete=models.CASCADE)
 
 
