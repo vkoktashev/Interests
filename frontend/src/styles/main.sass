@@ -9,6 +9,7 @@
 @import "./_unwatched"
 @import "./_user"
 @import "./_other"
+@import "./_footer"
 
 $font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif
 
@@ -47,6 +48,14 @@ body
     justify-content: center
     align-items: stretch
     flex-wrap: wrap
+
+html, body, #root, .mainDiv
+    height: 100%
+
+.mainDiv
+    display: flex
+    flex-direction: column
+    min-height: 100%
 
 .sideNav
     margin-top: 1rem
