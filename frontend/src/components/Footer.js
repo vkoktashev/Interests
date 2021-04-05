@@ -6,6 +6,7 @@ function Footer() {
 		<div className='footer'>
 			<div>
 				<h2 className='footerName'>Interests</h2>
+				<p>your_interests@mail.ru</p>
 				2020-2021
 			</div>
 			<div className='socialBlock'>
