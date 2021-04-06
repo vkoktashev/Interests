@@ -47,7 +47,6 @@
 
 ul
     list-style-type: none
-    margin-left: -35px
 
 li.episode:nth-child(odd)
     background-color: $backgroundColor
@@ -55,3 +54,14 @@ li.episode:nth-child(odd)
 li.episode:nth-child(even)
     background-color: $activeBackgroundColor
     border-radius: 5px
+
+li.episode
+    transition-property: display
+    transition-duration: 2s
+
+.unwatchedSeasonBlock .content
+    padding-left: 1rem
+
+.unwatchedSeasonBlock[open] .content
+    animation-name: fadeIn
+    animation-duration: 1000ms

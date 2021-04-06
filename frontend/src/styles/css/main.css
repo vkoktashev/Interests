@@ -1,3 +1,25 @@
+@-webkit-keyframes fadeIn {
+  0% {
+    opacity: 0;
+    padding-left: 0;
+  }
+  100% {
+    opacity: 1;
+    padding-left: 1rem;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    padding-left: 0;
+  }
+  100% {
+    opacity: 1;
+    padding-left: 1rem;
+  }
+}
+
 .calendarHeader {
   margin-bottom: 2rem;
 }
@@ -315,7 +337,6 @@
 
 ul {
   list-style-type: none;
-  margin-left: -35px;
 }
 
 li.episode:nth-child(odd) {
@@ -357,6 +378,17 @@ li.episode:nth-child(even) {
   margin-bottom: 0px;
   margin-top: 0px;
   width: 100%;
+}
+
+.episodeRows .content {
+  padding-left: 1rem;
+}
+
+.episodeRows[open] .content {
+  -webkit-animation-name: fadeIn;
+          animation-name: fadeIn;
+  -webkit-animation-duration: 1000ms;
+          animation-duration: 1000ms;
 }
 
 .episodeRow {
@@ -718,7 +750,6 @@ li.episode:nth-child(even) {
 
 ul {
   list-style-type: none;
-  margin-left: -35px;
 }
 
 li.episode:nth-child(odd) {
@@ -728,6 +759,24 @@ li.episode:nth-child(odd) {
 li.episode:nth-child(even) {
   background-color: #323232;
   border-radius: 5px;
+}
+
+li.episode {
+  -webkit-transition-property: display;
+  transition-property: display;
+  -webkit-transition-duration: 2s;
+          transition-duration: 2s;
+}
+
+.unwatchedSeasonBlock .content {
+  padding-left: 1rem;
+}
+
+.unwatchedSeasonBlock[open] .content {
+  -webkit-animation-name: fadeIn;
+          animation-name: fadeIn;
+  -webkit-animation-duration: 1000ms;
+          animation-duration: 1000ms;
 }
 
 .userPage {
@@ -961,6 +1010,78 @@ input.form-control:-webkit-autofill {
   cursor: pointer;
 }
 
+.footer {
+  width: 100%;
+  background-color: #1e1e1e;
+  bottom: 0;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  color: #cfcfcf;
+  font-size: 1.1em;
+  margin-top: auto;
+}
+
+.footer > * {
+  -webkit-box-flex: 0;
+      -ms-flex: 0 1 400px;
+          flex: 0 1 400px;
+  max-width: 100%;
+  padding: 1rem;
+}
+
+.footer .footerName {
+  color: #cfcfcf;
+  font-weight: bolder;
+}
+
+.footer .socialBlock {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -ms-flex-pack: distribute;
+      justify-content: space-around;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+}
+
+.footer .socialBlock .footerSocialLink {
+  font-size: 3em;
+  margin-left: -1.5em;
+}
+
+.footer .rawgLogo {
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 5px;
+  color: #fff;
+  text-transform: uppercase;
+  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Open Sans,Helvetica Neue,sans-serif;
+}
+
+.footer .tmdbLogo {
+  width: 120px;
+  height: 87px;
+  background-image: url(https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_2-d537fb228cf3ded904ef09b136fe3fec72548ebc1fea3fbbd1ad9e36364db38b.svg);
+}
+
 html {
   overflow-x: hidden;
 }
@@ -983,6 +1104,8 @@ body {
   background-position: center;
   background-size: cover;
   z-index: -1000;
+  -webkit-filter: blur(10px);
+          filter: blur(10px);
 }
 
 .textureBG {
@@ -990,6 +1113,8 @@ body {
   background-repeat: repeat;
   background-image: url("https://365psd.ru/images/backgrounds/bg-dark-4782.jpg");
   height: 100vh;
+  -webkit-filter: none;
+          filter: none;
 }
 
 .rootPage {
@@ -1008,6 +1133,21 @@ body {
           align-items: stretch;
   -ms-flex-wrap: wrap;
       flex-wrap: wrap;
+}
+
+html, body, #root, .mainDiv {
+  height: 100%;
+}
+
+.mainDiv {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  min-height: 100%;
 }
 
 .sideNav {

@@ -51,6 +51,7 @@ const UserPage = observer((props) => {
 			let date = new Date(user.last_activity);
 			Date.now();
 			setLastActivity(date.toLocaleString());
+			setActiveCategory("Профиль");
 		} else setLastActivity("");
 	}, [user]);
 

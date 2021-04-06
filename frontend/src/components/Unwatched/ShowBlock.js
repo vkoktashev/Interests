@@ -39,7 +39,7 @@ function ShowBlock({ loggedIn, show, setShowEpisodeUserStatus }) {
 						key={counter}
 						onToggle={(e) => setUserSeasonOpen(show.tmdb_id, season.tmdb_season_number, e.target.open)}>
 						<summary>{season.tmdb_name}</summary>
-						<ul>
+						<ul class='content'>
 							{season.episodes.map((episode, counter) => {
 								return (
 									<li className='episode' key={counter}>
