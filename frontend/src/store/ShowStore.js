@@ -28,6 +28,7 @@ class Show {
 	};
 	requestShowSuccess = (result) => {
 		this.show = result;
+		console.log(result);
 		this.showState = "done";
 	};
 	requestShowFailure = (error) => {
