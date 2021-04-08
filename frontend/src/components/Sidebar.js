@@ -6,7 +6,7 @@ import PagesStore from "../store/PagesStore";
 import { MDBIcon } from "mdbreact";
 
 import { ProSidebar, Menu, MenuItem, SubMenu, SidebarFooter } from "react-pro-sidebar";
-import "react-pro-sidebar/dist/css/styles.css";
+//import "react-pro-sidebar/dist/css/styles.css";
 
 /**
  * Основная страница приложения

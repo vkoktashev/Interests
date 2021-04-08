@@ -34,7 +34,6 @@ body
     background-position: center
     background-size: cover
     z-index: -1000
-    filter: blur(10px)
 
 .textureBG
     background-size: auto
@@ -67,10 +66,6 @@ html, body, #root, .mainDiv
     padding-top: 3.2rem
     height: 100vh !important
 
-    .pro-sidebar-inner
-        background: $backgroundColor !important
-$sidebar-width: 470px
-
 .activePage
     width: 100%
     display: flex
@@ -88,3 +83,9 @@ a:link, a:visited, a:active
 
 a:hover
     color: $activeColor
+
+$sidebar-width: 250px
+$icon-size: 40px
+$sidebar-bg-color: $backgroundColor
+
+@import "../../node_modules/react-pro-sidebar/dist/scss/styles.scss"

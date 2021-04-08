@@ -59,8 +59,8 @@ const UserPage = observer((props) => {
 		document.title = "Профиль " + user.username;
 		if (user.last_activity) {
 			let date = new Date(user.last_activity);
-			Date.now();
-			setLastActivity(date.toLocaleString());
+			let options = { year: date.getFullYear() === new Date().getFullYear() ? undefined : "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric" };
+			setLastActivity(date.toLocaleString("ru-RU", options));
 		} else setLastActivity("");
 	}, [user]);
 
@@ -69,16 +69,23 @@ const UserPage = observer((props) => {
 			<div className={"bg " + (!user.backdrop_path ? " textureBG" : "")} style={{ backgroundImage: user.backdrop_path ? `url(${user.backdrop_path})` : "" }} />
 			<LoadingOverlay active={userState === "pending"} spinner text='Загрузка...'>
 				<div className='contentBody header'>
-					<h1>Информация о пользователе {user.username}</h1>
-					<p>Последняя активность {lastActivity}</p>
-					<button
-						hidden={currentUser.username === user.username}
-						className='addFriendButton'
-						onClick={() => {
-							setUserStatus({ is_following: user.is_followed ? false : true }, user.id);
-						}}>
-						{user.is_followed ? "Отписаться" : "Подписаться"}
-					</button>
+					<div className='userHeader'>
+						<div className='userAvatar' style={{ backgroundImage: `url(${"http://upload.wikimedia.org/wikipedia/commons/f/f4/User_Avatar_2.png"})` }} />
+						<div>
+							<h2>{user.username}</h2>
+							<p>Последняя активность {lastActivity}</p>
+						</div>
+
+						<button
+							hidden={currentUser.username === user.username}
+							className='addFriendButton'
+							onClick={() => {
+								setUserStatus({ is_following: user.is_followed ? false : true }, user.id);
+							}}>
+							{user.is_followed ? "Отписаться" : "Подписаться"}
+						</button>
+					</div>
+
 					<CategoriesTab
 						categories={["Профиль", "Игры", "Фильмы", "Сериалы", "Друзья"]}
 						activeCategory={activeCategory}
