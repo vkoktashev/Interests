@@ -58,7 +58,7 @@ const EpisodePage = observer((props) => {
 			if (userInfo?.review) setReview(userInfo.review);
 			else setReview("");
 
-			if (userInfo?.score) setUserRate(userInfo.score);
+			if (userInfo?.score > -1) setUserRate(userInfo.score);
 			else setUserRate(-1);
 		},
 		// eslint-disable-next-line

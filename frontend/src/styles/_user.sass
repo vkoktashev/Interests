@@ -6,21 +6,47 @@
     padding-left: 10px
     padding-top: 10px
 
-.addFriendButton
-    background-color: $backgroundColor
-    border: 1px solid $textColor
-    color: $textColor
-    padding: 4px 8px
-    text-align: center
-    text-decoration: none
-    margin-top: 10px
-    font-size: 16px
+.userHeader
+    position: relative
+    display: flex
+    flex-direction: row
 
-.addFriendButton:hover
-    color: $activeColor
+    .userAvatar
+        height: 100px
+        width: 100px
+        background-position: center
+        background-repeat: no-repeat
+        background-size: cover
+        background-color: $activeBackgroundColor
+        border-radius: 4rem
+        margin-right: 1rem
 
-.addFriendButton:active
-    color: white
+    h2
+        font-weight: 500
+
+    p
+        font-size: 1rem
+
+    .addFriendButton
+        position: absolute
+        top: 0
+        right: 0
+        background-color: $mainColor
+        border: none
+        color: $headerTextColor
+        padding: 0.5rem
+        text-align: center
+        text-decoration: none
+        margin-top: 0.5rem
+        font-size: 16px
+        border-radius: 0.5rem
+        font-weight: 500
+
+    .addFriendButton:hover
+        color: $activeColor
+
+    .addFriendButton:active
+        color: white
 
 a.logLink:link, a.logLink:visited, a.logLink:active, a.dataTable:link, a.dataTable:visited, a.dataTable:active
     color: rgb(238, 238, 238)

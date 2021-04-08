@@ -31,6 +31,7 @@ class Routes extends React.Component {
 				<Route exact path='/confirm/' component={ConfirmPage} />
 				<Route exact path='/confirm_password/' component={ConfirmPasswordPage} />
 				<Route exact path='/user/:userID' component={UserPage} />
+				<Route exact path='/user/:userID/:category' component={UserPage} />
 				<Route exact path='/calendar' component={CalendarPage} />
 				<Route exact path='/settings' component={SettingsPage} />
 				<Route exact path='/unwatched' component={UnwatchedPage} />

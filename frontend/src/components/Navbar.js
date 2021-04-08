@@ -1,143 +1,82 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 import { observer } from "mobx-react";
-import AuthStore from "../store/AuthStore";
 import PagesStore from "../store/PagesStore";
+import AuthStore from "../store/AuthStore";
 
-import {
-	MDBNavbar,
-	MDBNavItem,
-	MDBNavbarBrand,
-	MDBNavbarNav,
-	MDBNavLink,
-	MDBIcon,
-	MDBFormInline,
-	MDBDropdown,
-	MDBDropdownItem,
-	MDBDropdownMenu,
-	MDBDropdownToggle,
-	MDBNavbarToggler,
-	MDBCollapse,
-} from "mdbreact";
+import { MDBIcon } from "mdbreact";
 
 const Navbar = observer((props) => {
+	const { toggleSidebar, openLoginForm } = PagesStore;
+	const { width } = useWindowDimensions();
 	const { loggedIn, user, resetAuthorization } = AuthStore;
-	const { openLoginForm, openRegistrateForm } = PagesStore;
 
 	let history = useHistory();
-	const [collapseID, setCollapseID] = useState("");
 
-	const toggleCollapse = (newCollapseID) => () => {
-		if (newCollapseID !== collapseID) setCollapseID(newCollapseID);
-		else setCollapseID("");
+	const [collapse, setCollapse] = useState(false);
+
+	const toggleCollapse = () => {
+		setCollapse(!collapse);
 	};
 
 	return (
-		<MDBNavbar style={{ backgroundColor: "#4527a0" }} dark expand='md' fixed='top'>
-			<MDBNavbarBrand
-				onClick={(event) => {
-					event.preventDefault();
-					history.push("/");
-					return false;
-				}}>
-				<strong className='white-text' style={{ cursor: "pointer" }}>
+		<div className='navbar'>
+			<div className='navbarLeft'>
+				<div onClick={toggleSidebar} className='sidebarButton'>
+					<MDBIcon icon='bars' />
+				</div>
+				<div onClick={() => history.push("/")} className='navLogo'>
 					Interests
-				</strong>
-			</MDBNavbarBrand>
-			<MDBNavbarNav left></MDBNavbarNav>
-
-			<MDBNavbarToggler onClick={toggleCollapse("navbarCollapse1")} />
-			<MDBCollapse id='navbarCollapse1' isOpen={collapseID} navbar>
-				<MDBNavbarNav right>
-					<MDBNavItem>
-						<MDBFormInline
-							onSubmit={(event) => {
-								event.preventDefault();
-								history.push("/search/" + document.getElementById("searchInput").value);
-								return false;
-							}}>
-							<div className='md-form my-0'>
-								<input className='form-control mr-sm-2' type='text' placeholder='Найти' aria-label='Найти' id='searchInput' />
-							</div>
-						</MDBFormInline>
-					</MDBNavItem>
-
-					<MDBNavItem className='font-weight-bold' hidden={loggedIn}>
-						<MDBNavLink to='#' onClick={openLoginForm}>
-							<MDBIcon icon='sign-in-alt' /> Войти
-						</MDBNavLink>
-					</MDBNavItem>
-					<MDBNavItem className='font-weight-bold' hidden={loggedIn}>
-						<MDBNavLink to='#' onClick={openRegistrateForm}>
-							<MDBIcon icon='user-plus' /> Зарегистрироваться
-						</MDBNavLink>
-					</MDBNavItem>
-					<MDBNavItem hidden={!loggedIn} className='font-weight-bold'>
-						<MDBDropdown>
-							<MDBDropdownToggle nav caret>
-								<span className='mr-2'>{user.username}</span>
-							</MDBDropdownToggle>
-							<MDBDropdownMenu>
-								<MDBDropdownItem>
-									<a
-										href={`/user/${user.id}`}
-										className='navDropdownItem'
-										onClick={(event) => {
-											event.preventDefault();
-											history.push(`/user/${user.id}`);
-											return false;
-										}}>
-										<MDBIcon icon='user-circle' /> Профиль
-									</a>
-								</MDBDropdownItem>
-								<MDBDropdownItem>
-									<a
-										href={`/calendar`}
-										className='navDropdownItem'
-										onClick={(event) => {
-											event.preventDefault();
-											history.push(`/calendar`);
-											return false;
-										}}>
-										<MDBIcon icon='calendar-day' /> Календарь
-									</a>
-								</MDBDropdownItem>
-								<MDBDropdownItem>
-									<a
-										href={`/unwatched`}
-										className='navDropdownItem'
-										onClick={(event) => {
-											event.preventDefault();
-											history.push(`/unwatched`);
-											return false;
-										}}>
-										<MDBIcon icon='tv' /> Непросмотренное
-									</a>
-								</MDBDropdownItem>
-								<MDBDropdownItem>
-									<a
-										href={`/settings`}
-										className='navDropdownItem'
-										onClick={(event) => {
-											event.preventDefault();
-											history.push(`/settings`);
-											return false;
-										}}>
-										<MDBIcon icon='cog' /> Настройки
-									</a>
-								</MDBDropdownItem>
-								<MDBDropdownItem onClick={resetAuthorization}>
-									<a className='navDropdownItem' href='/' onClick={(event) => event.preventDefault()}>
-										<MDBIcon icon='sign-out-alt' /> Выйти
-									</a>
-								</MDBDropdownItem>
-							</MDBDropdownMenu>
-						</MDBDropdown>
-					</MDBNavItem>
-				</MDBNavbarNav>
-			</MDBCollapse>
-		</MDBNavbar>
+				</div>
+				<div onClick={toggleCollapse} className='collapseButton'>
+					{collapse ? <MDBIcon icon='angle-down' /> : <MDBIcon icon='angle-up' />}
+				</div>
+			</div>
+			<div className={`navbarCenter ${collapse && width <= 600 ? " collapsed" : ""}`}>
+				<form
+					onSubmit={(event) => {
+						event.preventDefault();
+						history.push("/search/" + document.getElementById("searchInput").value);
+						return false;
+					}}>
+					<div>
+						<input type='text' placeholder='Поиск' aria-label='Поиск' id='searchInput' />
+					</div>
+				</form>
+			</div>
+			<div className={`navbarRight ${collapse && width <= 600 ? " collapsed" : ""}`}>
+				<div onClick={() => history.push(`/user/${user.id}`)} className='navUserButton' hidden={!loggedIn}>
+					<MDBIcon icon='user-circle' /> {user.username}
+				</div>
+				<div onClick={openLoginForm} className='navUserButton' hidden={loggedIn}>
+					<MDBIcon icon='sign-in-alt' /> Войти
+				</div>
+			</div>
+		</div>
 	);
 });
+
+function getWindowDimensions() {
+	const { innerWidth: width, innerHeight: height } = window;
+	return {
+		width,
+		height,
+	};
+}
+
+function useWindowDimensions() {
+	const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
+
+	useEffect(() => {
+		function handleResize() {
+			setWindowDimensions(getWindowDimensions());
+		}
+
+		window.addEventListener("resize", handleResize);
+		return () => window.removeEventListener("resize", handleResize);
+	}, []);
+
+	return windowDimensions;
+}
 
 export default Navbar;
