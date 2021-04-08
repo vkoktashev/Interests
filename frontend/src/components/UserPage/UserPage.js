@@ -22,7 +22,7 @@ const UserPage = observer((props) => {
 	const { loggedIn, currentUser } = AuthStore;
 	const { user, userState, requestUser, setUserStatus, requestUserLogs, userLogs, userLogsState, requestUserFriendsLogs, userFriendsLogs, userFriendsLogsState } = UserStore;
 
-	let { userID } = useParams();
+	let { userID, category } = useParams();
 	const [activeCategory, setActiveCategory] = useState("Профиль");
 	const [lastActivity, setLastActivity] = useState("");
 
@@ -30,9 +30,19 @@ const UserPage = observer((props) => {
 		() => {
 			requestUser(userID);
 			requestUserLogs(userID, 1, LOG_ROWS_COUNT);
+			setActiveCategory("Профиль");
 		},
 		// eslint-disable-next-line
 		[userID, requestUser, requestUserLogs]
+	);
+
+	useEffect(
+		() => {
+			if (category) setActiveCategory(category);
+			else setActiveCategory("Профиль");
+		},
+		// eslint-disable-next-line
+		[category]
 	);
 
 	useEffect(
@@ -51,7 +61,6 @@ const UserPage = observer((props) => {
 			let date = new Date(user.last_activity);
 			Date.now();
 			setLastActivity(date.toLocaleString());
-			setActiveCategory("Профиль");
 		} else setLastActivity("");
 	}, [user]);
 

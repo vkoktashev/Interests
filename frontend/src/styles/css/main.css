@@ -456,12 +456,12 @@ li.episode:nth-child(even) {
 
 .contentPage {
   width: 80rem;
-  max-width: 100%;
+  max-width: 100vw;
   margin-left: auto;
   margin-right: auto;
   color: #cfcfcf;
   margin-top: 4rem;
-  margin-bottom: 2em;
+  margin-bottom: 1rem;
   padding: 0px;
 }
 
@@ -1082,6 +1082,177 @@ input.form-control:-webkit-autofill {
   background-image: url(https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_2-d537fb228cf3ded904ef09b136fe3fec72548ebc1fea3fbbd1ad9e36364db38b.svg);
 }
 
+.navbar {
+  position: fixed;
+  width: 100%;
+  background: #1e1e1e;
+  top: 0;
+  left: 0;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -ms-flex-pack: distribute;
+      justify-content: space-around;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  z-index: 1100;
+  color: white !important;
+}
+
+@media (max-width: 600px) {
+  .navbar {
+    -webkit-box-orient: vertical !important;
+    -webkit-box-direction: normal !important;
+        -ms-flex-direction: column !important;
+            flex-direction: column !important;
+    -webkit-box-align: start !important;
+        -ms-flex-align: start !important;
+            align-items: flex-start !important;
+    -webkit-box-align: stretch !important;
+        -ms-flex-align: stretch !important;
+            align-items: stretch !important;
+  }
+}
+
+.navbar > * {
+  max-width: 100%;
+  -webkit-box-flex: 1;
+      -ms-flex: 1 1 100px;
+          flex: 1 1 100px;
+}
+
+@media (max-width: 600px) {
+  .navbar > * {
+    margin-top: 1rem !important;
+    -webkit-box-flex: 1;
+        -ms-flex: 1 1 20px;
+            flex: 1 1 20px;
+  }
+}
+
+.navbar .navbarLeft {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: flex-start;
+  -webkit-box-align: stretch;
+      -ms-flex-align: stretch;
+          align-items: stretch;
+  -ms-flex-wrap: nowrap;
+      flex-wrap: nowrap;
+  position: relative;
+}
+
+.navbar .navbarLeft .navLogo {
+  color: white;
+  margin-left: 1rem;
+  font-weight: bolder;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.navbar .navbarLeft .sidebarButton {
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+
+.navbar .navbarLeft .collapseButton {
+  cursor: pointer;
+  font-size: 1.5rem;
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .navbar .navbarLeft .collapseButton {
+    display: block;
+  }
+}
+
+.navbar .navbarCenter {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -ms-flex-wrap: nowrap;
+      flex-wrap: nowrap;
+  min-width: 200px;
+}
+
+.navbar .navbarCenter.collapsed {
+  display: none;
+}
+
+.navbar .navbarCenter form {
+  width: 100%;
+}
+
+.navbar .navbarCenter form #searchInput {
+  background-color: #5a5a5a;
+  color: white;
+  border: none;
+  border-radius: 1rem;
+  font-size: 1.3rem;
+  width: 100%;
+  outline: none;
+}
+
+.navbar .navbarCenter form #searchInput[type=text] {
+  padding-left: 1rem;
+}
+
+.navbar .navbarRight {
+  min-width: 100px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: end;
+      -ms-flex-pack: end;
+          justify-content: flex-end;
+  -ms-flex-wrap: nowrap;
+      flex-wrap: nowrap;
+}
+
+.navbar .navbarRight.collapsed {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .navbar .navbarRight {
+    -webkit-box-pack: center !important;
+        -ms-flex-pack: center !important;
+            justify-content: center !important;
+    margin-bottom: 1rem;
+  }
+}
+
+.navbar .navbarRight .navUserButton {
+  cursor: pointer;
+  font-weight: 500;
+}
+
 html {
   overflow-x: hidden;
 }
@@ -1143,15 +1314,28 @@ html, body, #root, .mainDiv {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
-  -webkit-box-orient: vertical;
+  -webkit-box-orient: horizontal;
   -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
+      -ms-flex-direction: row;
+          flex-direction: row;
   min-height: 100%;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
 }
 
 .sideNav {
-  margin-top: 1rem;
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  padding-top: 3.2rem;
+  height: 100vh !important;
+}
+
+.sideNav .pro-sidebar-inner {
+  background: #1e1e1e !important;
 }
 
 .activePage {
