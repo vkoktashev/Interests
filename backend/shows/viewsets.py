@@ -294,8 +294,8 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             data.update({
                 'user': request.user,
                 'episode': episode,
-                'review': data.get('review', ''),
-                'score': data.get('score', EPISODE_NOT_WATCHED_SCORE)
+                'review': data.get('review'),
+                'score': data.get('score')
             })
 
             found = False
@@ -309,6 +309,10 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             if found:
                 current_user_episode_score = current_user_episode.score
                 current_user_episode_review = current_user_episode.review
+                if data.get('review') is None:
+                    data.update({'review': current_user_episode_review})
+                if data.get('score') is None:
+                    data.update({'score': current_user_episode_score})
                 update_fields_if_needed_without_save(current_user_episode, data)
                 existed_user_episodes.append(current_user_episode)
                 existed_user_episodes_data.append(data)
@@ -316,6 +320,10 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             else:
                 current_user_episode_score = EPISODE_NOT_WATCHED_SCORE
                 current_user_episode_review = ''
+                if data.get('review') is None:
+                    data.update({'review': current_user_episode_review})
+                if data.get('score') is None:
+                    data.update({'score': current_user_episode_score})
                 new_user_episodes.append(
                     UserEpisode(**data)
                 )
