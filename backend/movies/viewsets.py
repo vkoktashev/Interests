@@ -1,6 +1,8 @@
 import tmdbsimple as tmdb
 from django.core.cache import cache
+from django.core.paginator import Paginator
 from django.db import transaction
+from django.db.models import Q
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
@@ -12,12 +14,12 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from movies.models import Movie, UserMovie, Genre, MovieGenre
-from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer
+from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer, MovieSerializer
 from users.models import UserFollow
 from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, CACHE_TIMEOUT, \
-    TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX
+    TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, DEFAULT_PAGE_SIZE
 from utils.documentation import MOVIES_SEARCH_200_EXAMPLE, MOVIE_RETRIEVE_200_EXAMPLE
-from utils.functions import update_fields_if_needed, get_tmdb_movie_key, objects_to_str
+from utils.functions import update_fields_if_needed, get_tmdb_movie_key, objects_to_str, get_page_size
 from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER
 
 
@@ -32,7 +34,8 @@ class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
 
                              )
                          })
-    def list(self, request, *args, **kwargs):
+    @action(detail=False, methods=['get'])
+    def tmdb(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
         try:
@@ -40,6 +43,17 @@ class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
         except HTTPError:
             results = None
         return Response(results, status=status.HTTP_200_OK)
+
+    def list(self, request, *args, **kwargs):
+        query = request.GET.get('query', '')
+        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
+        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
+
+        movies = Movie.objects.filter(Q(tmdb_name__icontains=query) | Q(tmdb_original_name__icontains=query))
+        paginator_page = Paginator(movies, page_size).get_page(page)
+        serializer = MovieSerializer(paginator_page.object_list, many=True)
+
+        return Response(serializer.data)
 
 
 class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
