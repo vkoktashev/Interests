@@ -26,8 +26,9 @@ function DetailedEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, u
 	);
 
 	function parseDate(date) {
-		let newDate = new Date(date);
-		return newDate.toLocaleDateString("ru-RU");
+		let newDate = new Date(date).toLocaleDateString("ru-RU");
+		if (newDate !== "Invalid Date") return newDate;
+		else return "TBA";
 	}
 
 	return (

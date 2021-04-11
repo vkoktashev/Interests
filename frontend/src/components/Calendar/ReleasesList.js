@@ -90,7 +90,8 @@ function ReleasesList({ calendar }) {
 
 	function remainedDays(date) {
 		let days = dateDiff(date);
-		return `${days} ${intToDays(days)}`;
+		if (days > 0) return `${days} ${intToDays(days)}`;
+		else return "сегодня";
 	}
 
 	return (
