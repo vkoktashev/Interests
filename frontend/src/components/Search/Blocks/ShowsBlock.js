@@ -18,6 +18,7 @@ function ShowsBlock({ shows, showsPage, onPaginate, hidden }) {
 					{shows.map((show) => (
 						<CardShow show={show} key={show.id} />
 					))}
+					{shows.length < 1 ? "Сериалы не найдены" : ""}
 				</div>
 				<button
 					className='paginationButton'

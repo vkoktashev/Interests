@@ -18,6 +18,7 @@ function MoviesBlock({ movies, moviesPage, onPaginate, hidden }) {
 					{movies.map((movie) => (
 						<CardMovie movie={movie} key={movie.id} />
 					))}
+					{movies.length < 1 ? "Фильмы не найдены" : ""}
 				</div>
 				<button
 					className='paginationButton'
