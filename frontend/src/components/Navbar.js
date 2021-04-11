@@ -17,8 +17,12 @@ const Navbar = observer((props) => {
 	const [collapse, setCollapse] = useState(true);
 
 	const toggleCollapse = () => {
-        setCollapse(!collapse);
+		setCollapse(!collapse);
 	};
+
+	function toggleIfSmallScreen() {
+		if (width <= 600) setCollapse(true);
+	}
 
 	return (
 		<div className='navbar'>
@@ -33,12 +37,12 @@ const Navbar = observer((props) => {
 					{collapse ? <MDBIcon icon='angle-down' /> : <MDBIcon icon='angle-up' />}
 				</div>
 			</div>
-			<div className={`navbarCenter ${collapse && (width <= 600) ? " collapsed" : ""}`}>
+			<div className={`navbarCenter ${collapse && width <= 600 ? " collapsed" : ""}`}>
 				<form
 					onSubmit={(event) => {
 						event.preventDefault();
 						history.push("/search/" + document.getElementById("searchInput").value);
-						return false;
+						toggleIfSmallScreen();
 					}}>
 					<div>
 						<input type='text' placeholder='Поиск' aria-label='Поиск' id='searchInput' />
@@ -46,7 +50,13 @@ const Navbar = observer((props) => {
 				</form>
 			</div>
 			<div className={`navbarRight ${collapse && width <= 600 ? " collapsed" : ""}`}>
-				<div onClick={() => history.push(`/user/${user.id}`)} className='navUserButton' hidden={!loggedIn}>
+				<div
+					onClick={() => {
+						history.push(`/user/${user.id}`);
+						toggleIfSmallScreen();
+					}}
+					className='navUserButton'
+					hidden={!loggedIn}>
 					<MDBIcon icon='user-circle' /> {user.username}
 				</div>
 				<div onClick={openLoginForm} className='navUserButton' hidden={loggedIn}>

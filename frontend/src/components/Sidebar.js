@@ -6,9 +6,13 @@ import PagesStore from "../store/PagesStore";
 import { MDBIcon } from "mdbreact";
 import useWindowDimensions from "../hooks/useWindowDimensions";
 
-import { ProSidebar, Menu, MenuItem, 
-    //SubMenu, 
-    SidebarFooter } from "react-pro-sidebar";
+import {
+	ProSidebar,
+	Menu,
+	MenuItem,
+	//SubMenu,
+	SidebarFooter,
+} from "react-pro-sidebar";
 //import "react-pro-sidebar/dist/css/styles.css";
 
 /**
@@ -16,15 +20,15 @@ import { ProSidebar, Menu, MenuItem,
  */
 const Sidebar = observer((props) => {
 	const history = useHistory();
-    const { width } = useWindowDimensions();
+	const { width } = useWindowDimensions();
 
 	const { loggedIn, user, resetAuthorization } = AuthStore;
 	const { sidebarIsCollapsed, sidebarIsToggled, collapseSidebar, toggleSidebar, openLoginForm, openRegistrateForm } = PagesStore;
 
-    function toggleSidebarIfSmallScreen(){
-        if (width < 1780 && width > 1440 && !sidebarIsCollapsed) collapseSidebar();
-        if (width <= 1440 && !sidebarIsCollapsed) toggleSidebar();
-    }
+	function toggleSidebarIfSmallScreen() {
+		if (width < 1780 && width > 1440 && !sidebarIsCollapsed) collapseSidebar();
+		if (width <= 1440) toggleSidebar();
+	}
 
 	return (
 		<ProSidebar className='sideNav' collapsed={sidebarIsCollapsed} hidden={!sidebarIsToggled}>
@@ -103,7 +107,7 @@ const Sidebar = observer((props) => {
 						onClick={(event) => {
 							event.preventDefault();
 							openLoginForm();
-                            toggleSidebarIfSmallScreen();
+							toggleSidebarIfSmallScreen();
 						}}>
 						Войти
 					</a>
@@ -114,7 +118,7 @@ const Sidebar = observer((props) => {
 						onClick={(event) => {
 							event.preventDefault();
 							openRegistrateForm();
-                            toggleSidebarIfSmallScreen();
+							toggleSidebarIfSmallScreen();
 						}}>
 						Зарегистрироваться
 					</a>

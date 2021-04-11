@@ -8,6 +8,7 @@ function FriendBlock({ users }) {
 			{users.map((user) => (
 				<CardUser user={user} key={user.id} />
 			))}
+			{users.length < 1 ? "Пользователи не найдены" : ""}
 		</div>
 	);
 }

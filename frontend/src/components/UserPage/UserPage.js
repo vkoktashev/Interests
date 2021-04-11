@@ -93,32 +93,31 @@ const UserPage = observer((props) => {
 						activeCategory={activeCategory}
 						onChangeCategory={(category) => {
 							setActiveCategory(category);
-						}}
-					/>
-
-					<div hidden={activeCategory !== "Профиль"}>
-						<h4>Моя активность: </h4>
-						<LoadingOverlay active={userLogsState === "pending" && userState !== "pending"} spinner text='Загрузка активности...'>
-							<ChartBlock stats={user.stats} />
-							<UserLogBlock logs={userLogs} onChangePage={(pageNumber) => requestUserLogs(userID, pageNumber, LOG_ROWS_COUNT)} />
-						</LoadingOverlay>
-					</div>
-					<div hidden={activeCategory !== "Игры"}>
-						<GameBlock games={user.games} stats={user.stats.games} />
-					</div>
-					<div hidden={activeCategory !== "Фильмы"}>
-						<MovieBlock movies={user.movies} stats={user.stats.movies} />
-					</div>
-					<div hidden={activeCategory !== "Сериалы"}>
-						<ShowBlock shows={user.shows} stats={user.stats.episodes} />
-					</div>
-					<div hidden={activeCategory !== "Друзья"}>
-						<FriendBlock users={user.followed_users ? user.followed_users : []} />
-						<h4>Активность друзей: </h4>
-						<LoadingOverlay active={userFriendsLogsState === "pending" && !userState === "pending"} spinner text='Загрузка активности...'>
-							<UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => requestUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true} />
-						</LoadingOverlay>
-					</div>
+						}}>
+						<div hidden={activeCategory !== "Профиль"}>
+							<h4>Моя активность: </h4>
+							<LoadingOverlay active={userLogsState === "pending" && userState !== "pending"} spinner text='Загрузка активности...'>
+								<ChartBlock stats={user.stats} />
+								<UserLogBlock logs={userLogs} onChangePage={(pageNumber) => requestUserLogs(userID, pageNumber, LOG_ROWS_COUNT)} />
+							</LoadingOverlay>
+						</div>
+						<div hidden={activeCategory !== "Игры"}>
+							<GameBlock games={user.games} stats={user.stats.games} />
+						</div>
+						<div hidden={activeCategory !== "Фильмы"}>
+							<MovieBlock movies={user.movies} stats={user.stats.movies} />
+						</div>
+						<div hidden={activeCategory !== "Сериалы"}>
+							<ShowBlock shows={user.shows} stats={user.stats.episodes} />
+						</div>
+						<div hidden={activeCategory !== "Друзья"}>
+							<FriendBlock users={user.followed_users ? user.followed_users : []} />
+							<h4>Активность друзей: </h4>
+							<LoadingOverlay active={userFriendsLogsState === "pending" && !userState === "pending"} spinner text='Загрузка активности...'>
+								<UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => requestUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true} />
+							</LoadingOverlay>
+						</div>
+					</CategoriesTab>
 				</div>
 			</LoadingOverlay>
 		</div>
