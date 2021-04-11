@@ -1,34 +1,43 @@
 
 .categoriesTabs
-    white-space: pre
     max-width: 100%
-    overflow-x: auto
+    margin-top: 15px
 
-    .categoriesTab
-        background-color: $backgroundColor
-        color: $textColor
-        border: none
-        padding: 0px 20px 0px 0px
-        text-align: left
-        font-weight: bolder
-        margin-left: 0px
-        margin-right: 0px
-        margin-top: 15px
-        font-size: 32px
-        outline: none
+    .tabs
+        white-space: pre
+        overflow-x: auto
 
-        &.active
-            color: $activeColor
+        .categoriesTab
+            background-color: $backgroundColor
+            color: $textColor
+            border-top-left-radius: 1rem
+            border-top-right-radius: 1rem
+            border: none
+            padding: 8px 16px
+            text-align: left
+            margin-left: 0px
+            margin-right: 0px
+            font-size: 21px
+            outline: none
 
-    .categoriesTab:focus
-        outline: 0 !important
+            &.active
+                background-color: $categoryTabActiveColor
 
-    .categoriesLine
-        background-color: $activeColor
-        height: 0.2rem
-        margin-top: 0px
-        margin-bottom: 10px
-        width: 100%
+        .categoriesTab:focus
+            outline: 0 !important
+
+        .categoriesLine
+            background-color: $activeColor
+            height: 0.2rem
+            margin-top: 0px
+            margin-bottom: 10px
+            width: 100%
+
+    .categoryContent
+        background-color: $categoryTabActiveColor
+        padding: 1rem
+        border-radius: 1rem
+        border-top-left-radius: 0
 
 .contentStatuses
     max-width: 100%

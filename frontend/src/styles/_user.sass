@@ -59,26 +59,27 @@ a.logLink:hover, a.dataTable:hover
     font-weight: 500
 
 .logDay
-    margin-bottom: 0px
-    margin-top: 10px
+    display: flex
+    flex-direction: row
+    margin-bottom: 0.5rem
+    align-items: flex-start
+    flex-wrap: wrap
 
-.logDate
-    display: inline-block
-    margin-left: 0px
-    margin-right: 13px
-    vertical-align: top
-    font-weight: 400
+    .logDate
+        margin-left: 0px
+        margin-right: 0.5rem
+        vertical-align: top
+        font-weight: 400
 
-.logRows
-    display: inline-block
-    margin-bottom: 0px
-    margin-top: 0px
-    width: 70rem
-    max-width: 100%
+    .logRows
+        display: flex
+        flex-direction: column
+        max-width: 100%
+        flex-wrap: wrap
 
-.logRow
-    margin-bottom: 8px
-    margin-top: 0px
+        .logRow
+            margin-bottom: 0.5rem
+            margin-top: 0px
 
 .logPaginationButton
     margin-top: 10px

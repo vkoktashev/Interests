@@ -125,39 +125,50 @@
 }
 
 .categoriesTabs {
-  white-space: pre;
   max-width: 100%;
+  margin-top: 15px;
+}
+
+.categoriesTabs .tabs {
+  white-space: pre;
   overflow-x: auto;
 }
 
-.categoriesTabs .categoriesTab {
+.categoriesTabs .tabs .categoriesTab {
   background-color: #1e1e1e;
   color: #cfcfcf;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
   border: none;
-  padding: 0px 20px 0px 0px;
+  padding: 8px 16px;
   text-align: left;
-  font-weight: bolder;
   margin-left: 0px;
   margin-right: 0px;
-  margin-top: 15px;
-  font-size: 32px;
+  font-size: 21px;
   outline: none;
 }
 
-.categoriesTabs .categoriesTab.active {
-  color: #a77edd;
+.categoriesTabs .tabs .categoriesTab.active {
+  background-color: #282828;
 }
 
-.categoriesTabs .categoriesTab:focus {
+.categoriesTabs .tabs .categoriesTab:focus {
   outline: 0 !important;
 }
 
-.categoriesTabs .categoriesLine {
+.categoriesTabs .tabs .categoriesLine {
   background-color: #a77edd;
   height: 0.2rem;
   margin-top: 0px;
   margin-bottom: 10px;
   width: 100%;
+}
+
+.categoriesTabs .categoryContent {
+  background-color: #282828;
+  padding: 1rem;
+  border-radius: 1rem;
+  border-top-left-radius: 0;
 }
 
 .contentStatuses {
@@ -176,7 +187,7 @@
 }
 
 .contentStatuses .contentStatus.active {
-  background-color: #4527a0;
+  background-color: #4F5DEA;
 }
 
 .contentStatuses .contentStatus:first-child {
@@ -431,7 +442,7 @@ li.episode:nth-child(even) {
 .saveEpisodesButton {
   width: 150px;
   height: 50px;
-  background-color: #4527a0;
+  background-color: #4F5DEA;
   color: white;
   border-radius: 5px;
 }
@@ -838,7 +849,7 @@ li.episode {
 
 .userHeader .addFriendButton {
   margin: 0.5rem;
-  background-color: #4527a0;
+  background-color: #4F5DEA;
   border: none;
   color: white;
   padding: 0.5rem;
@@ -866,28 +877,43 @@ a.logLink:hover, a.dataTable:hover {
 }
 
 .logDay {
-  margin-bottom: 0px;
-  margin-top: 10px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  margin-bottom: 0.5rem;
+  -webkit-box-align: start;
+      -ms-flex-align: start;
+          align-items: flex-start;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
 }
 
-.logDate {
-  display: inline-block;
+.logDay .logDate {
   margin-left: 0px;
-  margin-right: 13px;
+  margin-right: 0.5rem;
   vertical-align: top;
   font-weight: 400;
 }
 
-.logRows {
-  display: inline-block;
-  margin-bottom: 0px;
-  margin-top: 0px;
-  width: 70rem;
+.logDay .logRows {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
   max-width: 100%;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
 }
 
-.logRow {
-  margin-bottom: 8px;
+.logDay .logRows .logRow {
+  margin-bottom: 0.5rem;
   margin-top: 0px;
 }
 
