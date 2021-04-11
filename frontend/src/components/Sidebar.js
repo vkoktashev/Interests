@@ -4,21 +4,30 @@ import { observer } from "mobx-react";
 import AuthStore from "../store/AuthStore";
 import PagesStore from "../store/PagesStore";
 import { MDBIcon } from "mdbreact";
+import useWindowDimensions from "../hooks/useWindowDimensions";
 
-import { ProSidebar, Menu, MenuItem, SubMenu, SidebarFooter } from "react-pro-sidebar";
+import { ProSidebar, Menu, MenuItem, 
+    //SubMenu, 
+    SidebarFooter } from "react-pro-sidebar";
 //import "react-pro-sidebar/dist/css/styles.css";
 
 /**
  * Основная страница приложения
  */
 const Sidebar = observer((props) => {
-	let history = useHistory();
+	const history = useHistory();
+    const { width } = useWindowDimensions();
 
 	const { loggedIn, user, resetAuthorization } = AuthStore;
-	const { sidebarIsCollapsed, sidebarIsToggled, collapseSidebar, openLoginForm, openRegistrateForm } = PagesStore;
+	const { sidebarIsCollapsed, sidebarIsToggled, collapseSidebar, toggleSidebar, openLoginForm, openRegistrateForm } = PagesStore;
+
+    function toggleSidebarIfSmallScreen(){
+        if (width < 1780 && width > 1440 && !sidebarIsCollapsed) collapseSidebar();
+        if (width <= 1440 && !sidebarIsCollapsed) toggleSidebar();
+    }
 
 	return (
-		<ProSidebar className='sideNav' collapsed={sidebarIsCollapsed} hidden={sidebarIsToggled}>
+		<ProSidebar className='sideNav' collapsed={sidebarIsCollapsed} hidden={!sidebarIsToggled}>
 			<Menu iconShape='round' hidden={!loggedIn}>
 				<MenuItem icon={<MDBIcon icon='user-circle' />}>
 					<a
@@ -26,7 +35,7 @@ const Sidebar = observer((props) => {
 						onClick={(event) => {
 							event.preventDefault();
 							history.push(`/user/${user.id}`);
-							return false;
+							toggleSidebarIfSmallScreen();
 						}}>
 						Профиль
 					</a>
@@ -37,7 +46,7 @@ const Sidebar = observer((props) => {
 						onClick={(event) => {
 							event.preventDefault();
 							history.push(`/user/${user.id}/Друзья`);
-							return false;
+							toggleSidebarIfSmallScreen();
 						}}>
 						Друзья
 					</a>
@@ -49,7 +58,7 @@ const Sidebar = observer((props) => {
 						onClick={(event) => {
 							event.preventDefault();
 							history.push(`/unwatched`);
-							return false;
+							toggleSidebarIfSmallScreen();
 						}}>
 						Непросмотренное
 					</a>
@@ -60,7 +69,7 @@ const Sidebar = observer((props) => {
 						onClick={(event) => {
 							event.preventDefault();
 							history.push(`/calendar`);
-							return false;
+							toggleSidebarIfSmallScreen();
 						}}>
 						Календарь
 					</a>
@@ -71,7 +80,7 @@ const Sidebar = observer((props) => {
 						onClick={(event) => {
 							event.preventDefault();
 							history.push(`/settings`);
-							return false;
+							toggleSidebarIfSmallScreen();
 						}}>
 						Настройки
 					</a>
@@ -94,6 +103,7 @@ const Sidebar = observer((props) => {
 						onClick={(event) => {
 							event.preventDefault();
 							openLoginForm();
+                            toggleSidebarIfSmallScreen();
 						}}>
 						Войти
 					</a>
@@ -104,6 +114,7 @@ const Sidebar = observer((props) => {
 						onClick={(event) => {
 							event.preventDefault();
 							openRegistrateForm();
+                            toggleSidebarIfSmallScreen();
 						}}>
 						Зарегистрироваться
 					</a>

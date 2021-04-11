@@ -20,6 +20,7 @@ class Pages {
 	};
 
 	collapseSidebar = async () => {
+        console.log(localStorage.getItem("sidebarToggled"));
 		this.sidebarIsCollapsed = !this.sidebarIsCollapsed;
 		localStorage.setItem("sidebarCollapsed", this.sidebarIsCollapsed);
 	};
