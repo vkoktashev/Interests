@@ -4,76 +4,133 @@ import { observer } from "mobx-react";
 import AuthStore from "../store/AuthStore";
 import PagesStore from "../store/PagesStore";
 import { MDBIcon } from "mdbreact";
+import useWindowDimensions from "../hooks/useWindowDimensions";
 
-import { ProSidebar, Menu, MenuItem, SubMenu, SidebarFooter } from "react-pro-sidebar";
-import "react-pro-sidebar/dist/css/styles.css";
+import {
+	ProSidebar,
+	Menu,
+	MenuItem,
+	//SubMenu,
+	SidebarFooter,
+} from "react-pro-sidebar";
+//import "react-pro-sidebar/dist/css/styles.css";
 
 /**
  * Основная страница приложения
  */
 const Sidebar = observer((props) => {
-	let history = useHistory();
+	const history = useHistory();
+	const { width } = useWindowDimensions();
 
-	const { loggedIn, user } = AuthStore;
-	const { sidebarIsOpen } = PagesStore;
+	const { loggedIn, user, resetAuthorization } = AuthStore;
+	const { sidebarIsCollapsed, sidebarIsToggled, collapseSidebar, toggleSidebar, openLoginForm, openRegistrateForm } = PagesStore;
+
+	function toggleSidebarIfSmallScreen() {
+		if (width < 1780 && width > 1440 && !sidebarIsCollapsed) collapseSidebar();
+		if (width <= 1440) toggleSidebar();
+	}
 
 	return (
-		<ProSidebar className='sideNav' hidden={!sidebarIsOpen}>
-			<Menu iconShape='square'>
-				<MenuItem>
+		<ProSidebar className='sideNav' collapsed={sidebarIsCollapsed} hidden={!sidebarIsToggled}>
+			<Menu iconShape='round' hidden={!loggedIn}>
+				<MenuItem icon={<MDBIcon icon='user-circle' />}>
 					<a
 						href={`/user/${user.id}`}
-						className='navDropdownItem'
 						onClick={(event) => {
 							event.preventDefault();
 							history.push(`/user/${user.id}`);
-							return false;
+							toggleSidebarIfSmallScreen();
 						}}>
-						<MDBIcon icon='user-circle' /> Профиль
+						Профиль
 					</a>
 				</MenuItem>
-				<MenuItem>
+				<MenuItem icon={<MDBIcon icon='user-friends' />}>
+					<a
+						href={`/user/${user.id}/Друзья`}
+						onClick={(event) => {
+							event.preventDefault();
+							history.push(`/user/${user.id}/Друзья`);
+							toggleSidebarIfSmallScreen();
+						}}>
+						Друзья
+					</a>
+				</MenuItem>
+
+				<MenuItem icon={<MDBIcon icon='tv' />}>
 					<a
 						href={`/unwatched`}
-						className='navDropdownItem'
 						onClick={(event) => {
 							event.preventDefault();
 							history.push(`/unwatched`);
-							return false;
+							toggleSidebarIfSmallScreen();
 						}}>
-						<MDBIcon icon='tv' /> Непросмотренное
+						Непросмотренное
 					</a>
 				</MenuItem>
-				<MenuItem>
+				<MenuItem icon={<MDBIcon icon='calendar-day' />}>
 					<a
 						href={`/calendar`}
-						className='navDropdownItem'
 						onClick={(event) => {
 							event.preventDefault();
 							history.push(`/calendar`);
-							return false;
+							toggleSidebarIfSmallScreen();
 						}}>
-						<MDBIcon icon='calendar-day' /> Календарь
+						Календарь
 					</a>
 				</MenuItem>
-				<MenuItem>
+				<MenuItem icon={<MDBIcon icon='cog' />}>
 					<a
 						href={`/settings`}
-						className='navDropdownItem'
 						onClick={(event) => {
 							event.preventDefault();
 							history.push(`/settings`);
-							return false;
+							toggleSidebarIfSmallScreen();
 						}}>
-						<MDBIcon icon='cog' /> Настройки
+						Настройки
 					</a>
 				</MenuItem>
-				<SubMenu title='Components'>
-					<MenuItem>Component 1</MenuItem>
-					<MenuItem>Component 2</MenuItem>
-				</SubMenu>
+				<MenuItem icon={<MDBIcon icon='sign-out-alt' />}>
+					<a
+						href={`/`}
+						onClick={(event) => {
+							event.preventDefault();
+							resetAuthorization();
+						}}>
+						Выход
+					</a>
+				</MenuItem>
 			</Menu>
-			<SidebarFooter></SidebarFooter>
+			<Menu iconShape='round' hidden={loggedIn}>
+				<MenuItem icon={<MDBIcon icon='sign-in-alt' />}>
+					<a
+						href={`/`}
+						onClick={(event) => {
+							event.preventDefault();
+							openLoginForm();
+							toggleSidebarIfSmallScreen();
+						}}>
+						Войти
+					</a>
+				</MenuItem>
+				<MenuItem icon={<MDBIcon icon='user-plus' />}>
+					<a
+						href={`/`}
+						onClick={(event) => {
+							event.preventDefault();
+							openRegistrateForm();
+							toggleSidebarIfSmallScreen();
+						}}>
+						Зарегистрироваться
+					</a>
+				</MenuItem>
+			</Menu>
+			<SidebarFooter>
+				<Menu iconShape='round'>
+					<MenuItem icon={sidebarIsCollapsed ? <MDBIcon icon='arrow-right' /> : <MDBIcon icon='arrow-left' />} onClick={collapseSidebar}>
+						Свернуть
+					</MenuItem>
+				</Menu>
+			</SidebarFooter>
 		</ProSidebar>
 	);
 });

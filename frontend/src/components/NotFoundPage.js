@@ -14,11 +14,14 @@ function NotFoundPage() {
 	);
 
 	return (
-		<div className='bg'>
-			<div className='notFound'>
-				<p style={{ fontSize: "3rem" }}>Страница не найдена!</p>
-				<div style={{ transform: `rotate(${angle}deg)` }}>
-					<img src='images/wrongPage.png' alt='Картинка' style={{ width: "500px", maxWidth: "80%" }} />
+		<div className='contentPage'>
+			<div className='bg' />
+			<div className='contentBody header'>
+				<div className='notFound'>
+					<p style={{ fontSize: "3rem" }}>Страница не найдена!</p>
+					<div style={{ transform: `rotate(${angle}deg)` }}>
+						<img src='images/wrongPage.png' alt='Картинка' style={{ width: "500px", maxWidth: "80%" }} />
+					</div>
 				</div>
 			</div>
 		</div>

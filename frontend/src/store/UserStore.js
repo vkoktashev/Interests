@@ -23,7 +23,6 @@ class User {
 	};
 	requestUserSuccess = (result) => {
 		this.user = result;
-		console.log(result);
 		this.userState = "done";
 	};
 	requestUserFailure = (error) => {

@@ -6,21 +6,49 @@
     padding-left: 10px
     padding-top: 10px
 
-.addFriendButton
-    background-color: $backgroundColor
-    border: 1px solid $textColor
-    color: $textColor
-    padding: 4px 8px
-    text-align: center
-    text-decoration: none
-    margin-top: 10px
-    font-size: 16px
+.userHeader
+    position: relative
+    display: flex
+    flex-direction: row
+    justify-content: space-between
+    align-items: flex-start
+    flex-wrap: wrap
 
-.addFriendButton:hover
-    color: $activeColor
+    .userCard
+        display: flex
+        flex-direction: row
 
-.addFriendButton:active
-    color: white
+        .userAvatar
+            height: 100px
+            width: 100px
+            background-position: center
+            background-repeat: no-repeat
+            background-size: cover
+            background-color: $activeBackgroundColor
+            border-radius: 4rem
+            margin-right: 1rem
+
+        h2
+            font-weight: 500
+
+        p
+            font-size: 1rem
+
+    .addFriendButton
+        margin: 0.5rem
+        background-color: $mainColor
+        border: none
+        color: $headerTextColor
+        padding: 0.5rem
+        text-align: center
+        text-decoration: none
+        border-radius: 0.5rem
+
+    .addFriendButton:hover
+        color: $activeColor
+
+    .addFriendButton:active
+        color: white
 
 a.logLink:link, a.logLink:visited, a.logLink:active, a.dataTable:link, a.dataTable:visited, a.dataTable:active
     color: rgb(238, 238, 238)
@@ -31,26 +59,30 @@ a.logLink:hover, a.dataTable:hover
     font-weight: 500
 
 .logDay
-    margin-bottom: 0px
-    margin-top: 10px
+    display: flex
+    flex-direction: row
+    margin-bottom: 0.5rem
+    justify-content: : flex-start
+    flex-wrap: wrap
+    align-items: stretch
 
-.logDate
-    display: inline-block
-    margin-left: 0px
-    margin-right: 13px
-    vertical-align: top
-    font-weight: 400
+    .logDate
+        margin-left: 0px
+        margin-right: 0.5rem
+        font-weight: 400
 
-.logRows
-    display: inline-block
-    margin-bottom: 0px
-    margin-top: 0px
-    width: 70rem
-    max-width: 100%
+    .logRows
+        display: flex
+        flex-direction: column
+        flex-wrap: wrap
+        flex-shrink: 2
+        min-width: 200px
+        max-width: 90%
 
-.logRow
-    margin-bottom: 8px
-    margin-top: 0px
+        .logRow
+            margin-bottom: 0.5rem
+            margin-top: 0px
+            flex-wrap: wrap
 
 .logPaginationButton
     margin-top: 10px

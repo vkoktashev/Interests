@@ -18,6 +18,7 @@ function GamesBlock({ games, gamesPage, onPaginate, hidden }) {
 					{games.map((game) => (
 						<CardGame game={game} key={game.id} />
 					))}
+					{games.length < 1 ? "Игры не найдены" : ""}
 				</div>
 				<button
 					className='paginationButton'

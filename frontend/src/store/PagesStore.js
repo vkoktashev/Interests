@@ -6,11 +6,24 @@ class Pages {
 	RegistrateFormIsOpen = false;
 	ResetPasswordFormIsOpen = false;
 	saveEpisodesBlockIsOpen = false;
-	sidebarIsOpen = true;
+	sidebarIsToggled = localStorage.getItem("sidebarToggled") === "true";
+	sidebarIsCollapsed = localStorage.getItem("sidebarCollapsed") === "true";
 
 	constructor() {
 		makeAutoObservable(this);
 	}
+
+	toggleSidebar = async () => {
+		this.sidebarIsToggled = !this.sidebarIsToggled;
+		if (!this.sidebarIsToggled) this.sidebarIsCollapsed = false;
+		localStorage.setItem("sidebarToggled", this.sidebarIsToggled);
+	};
+
+	collapseSidebar = async () => {
+        console.log(localStorage.getItem("sidebarToggled"));
+		this.sidebarIsCollapsed = !this.sidebarIsCollapsed;
+		localStorage.setItem("sidebarCollapsed", this.sidebarIsCollapsed);
+	};
 
 	openLoginForm = async () => {
 		this.LoginFormIsOpen = true;
@@ -34,10 +47,6 @@ class Pages {
 
 	closeResetPasswordForm = async () => {
 		this.ResetPasswordFormIsOpen = false;
-	};
-
-	setSidebar = async (status) => {
-		this.sidebarIsOpen = status;
 	};
 
 	setSaveEpisodes = (status) => (this.saveEpisodesBlockIsOpen = status);

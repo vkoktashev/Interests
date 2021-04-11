@@ -5,6 +5,7 @@ import AuthStore from "./store/AuthStore";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import Sidebar from "./components/Sidebar";
 import LoginForm from "./components/Modals/LoginForm";
 import RegistrationForm from "./components/Modals/RegistrationForm";
 import ResetPasswordForm from "./components/Modals/ResetPasswordForm";
@@ -18,6 +19,12 @@ const App = observer((props) => {
 
 	useEffect(
 		() => {
+			window.addEventListener("scroll", function () {
+				console.log("привет");
+				var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+				if (scrollTop > 100) console.log("привет");
+			});
+
 			checkAuthorization();
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -28,12 +35,10 @@ const App = observer((props) => {
 		<div className='mainDiv'>
 			<Router>
 				<Navbar />
-				<div className='navbar'></div>
-				<main>
-					<Routes />
-				</main>
-				<Footer />
+				<Sidebar />
+				<Routes />
 			</Router>
+			<Footer />
 			<ToastContainer position='top-center' hideProgressBar newestOnTop closeOnClick autoClose={3000} />
 			<LoginForm />
 			<RegistrationForm />
