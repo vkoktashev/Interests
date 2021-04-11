@@ -797,9 +797,27 @@ li.episode {
   -webkit-box-direction: normal;
       -ms-flex-direction: row;
           flex-direction: row;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  -webkit-box-align: start;
+      -ms-flex-align: start;
+          align-items: flex-start;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
 }
 
-.userHeader .userAvatar {
+.userHeader .userCard {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+}
+
+.userHeader .userCard .userAvatar {
   height: 100px;
   width: 100px;
   background-position: center;
@@ -810,28 +828,23 @@ li.episode {
   margin-right: 1rem;
 }
 
-.userHeader h2 {
+.userHeader .userCard h2 {
   font-weight: 500;
 }
 
-.userHeader p {
+.userHeader .userCard p {
   font-size: 1rem;
 }
 
 .userHeader .addFriendButton {
-  position: absolute;
-  top: 0;
-  right: 0;
+  margin: 0.5rem;
   background-color: #4527a0;
   border: none;
   color: white;
   padding: 0.5rem;
   text-align: center;
   text-decoration: none;
-  margin-top: 0.5rem;
-  font-size: 16px;
   border-radius: 0.5rem;
-  font-weight: 500;
 }
 
 .userHeader .addFriendButton:hover {

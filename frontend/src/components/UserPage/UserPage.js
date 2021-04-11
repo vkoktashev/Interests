@@ -70,10 +70,12 @@ const UserPage = observer((props) => {
 			<LoadingOverlay active={userState === "pending"} spinner text='Загрузка...'>
 				<div className='contentBody header'>
 					<div className='userHeader'>
-						<div className='userAvatar' style={{ backgroundImage: `url(${"http://upload.wikimedia.org/wikipedia/commons/f/f4/User_Avatar_2.png"})` }} />
-						<div>
-							<h2>{user.username}</h2>
-							<p>Последняя активность {lastActivity}</p>
+						<div className='userCard'>
+							<div className='userAvatar' style={{ backgroundImage: `url(${"http://upload.wikimedia.org/wikipedia/commons/f/f4/User_Avatar_2.png"})` }} />
+							<div>
+								<h2>{user.username}</h2>
+								<p>Последняя активность {lastActivity}</p>
+							</div>
 						</div>
 
 						<button

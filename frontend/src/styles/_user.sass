@@ -10,37 +10,39 @@
     position: relative
     display: flex
     flex-direction: row
+    justify-content: space-between
+    align-items: flex-start
+    flex-wrap: wrap
 
-    .userAvatar
-        height: 100px
-        width: 100px
-        background-position: center
-        background-repeat: no-repeat
-        background-size: cover
-        background-color: $activeBackgroundColor
-        border-radius: 4rem
-        margin-right: 1rem
+    .userCard
+        display: flex
+        flex-direction: row
 
-    h2
-        font-weight: 500
+        .userAvatar
+            height: 100px
+            width: 100px
+            background-position: center
+            background-repeat: no-repeat
+            background-size: cover
+            background-color: $activeBackgroundColor
+            border-radius: 4rem
+            margin-right: 1rem
 
-    p
-        font-size: 1rem
+        h2
+            font-weight: 500
+
+        p
+            font-size: 1rem
 
     .addFriendButton
-        position: absolute
-        top: 0
-        right: 0
+        margin: 0.5rem
         background-color: $mainColor
         border: none
         color: $headerTextColor
         padding: 0.5rem
         text-align: center
         text-decoration: none
-        margin-top: 0.5rem
-        font-size: 16px
         border-radius: 0.5rem
-        font-weight: 500
 
     .addFriendButton:hover
         color: $activeColor

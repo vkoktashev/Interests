@@ -1,22 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { observer } from "mobx-react";
 import PagesStore from "../store/PagesStore";
 import AuthStore from "../store/AuthStore";
+import useWindowDimensions from "../hooks/useWindowDimensions";
 
 import { MDBIcon } from "mdbreact";
 
 const Navbar = observer((props) => {
 	const { toggleSidebar, openLoginForm } = PagesStore;
 	const { width } = useWindowDimensions();
-	const { loggedIn, user, resetAuthorization } = AuthStore;
+	const { loggedIn, user } = AuthStore;
 
 	let history = useHistory();
 
-	const [collapse, setCollapse] = useState(false);
+	const [collapse, setCollapse] = useState(true);
 
 	const toggleCollapse = () => {
-		setCollapse(!collapse);
+        setCollapse(!collapse);
 	};
 
 	return (
@@ -32,7 +33,7 @@ const Navbar = observer((props) => {
 					{collapse ? <MDBIcon icon='angle-down' /> : <MDBIcon icon='angle-up' />}
 				</div>
 			</div>
-			<div className={`navbarCenter ${collapse && width <= 600 ? " collapsed" : ""}`}>
+			<div className={`navbarCenter ${collapse && (width <= 600) ? " collapsed" : ""}`}>
 				<form
 					onSubmit={(event) => {
 						event.preventDefault();
@@ -55,28 +56,5 @@ const Navbar = observer((props) => {
 		</div>
 	);
 });
-
-function getWindowDimensions() {
-	const { innerWidth: width, innerHeight: height } = window;
-	return {
-		width,
-		height,
-	};
-}
-
-function useWindowDimensions() {
-	const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
-
-	useEffect(() => {
-		function handleResize() {
-			setWindowDimensions(getWindowDimensions());
-		}
-
-		window.addEventListener("resize", handleResize);
-		return () => window.removeEventListener("resize", handleResize);
-	}, []);
-
-	return windowDimensions;
-}
 
 export default Navbar;
