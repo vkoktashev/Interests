@@ -890,12 +890,14 @@ a.logLink:hover, a.dataTable:hover {
           align-items: flex-start;
   -ms-flex-wrap: wrap;
       flex-wrap: wrap;
+  -webkit-box-align: stretch;
+      -ms-flex-align: stretch;
+          align-items: stretch;
 }
 
 .logDay .logDate {
   margin-left: 0px;
   margin-right: 0.5rem;
-  vertical-align: top;
   font-weight: 400;
 }
 
@@ -907,14 +909,19 @@ a.logLink:hover, a.dataTable:hover {
   -webkit-box-direction: normal;
       -ms-flex-direction: column;
           flex-direction: column;
-  max-width: 100%;
   -ms-flex-wrap: wrap;
       flex-wrap: wrap;
+  -ms-flex-negative: 2;
+      flex-shrink: 2;
+  min-width: 200px;
+  max-width: 90%;
 }
 
 .logDay .logRows .logRow {
   margin-bottom: 0.5rem;
   margin-top: 0px;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
 }
 
 .logPaginationButton {
