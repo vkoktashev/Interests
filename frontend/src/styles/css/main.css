@@ -369,27 +369,50 @@
       -ms-flex-direction: column;
           flex-direction: column;
   margin-bottom: 1rem;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
 }
 
 .searchInputDiv .searchHints > * .searchHint {
   font-size: 1rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
   border-radius: 0.5rem;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
 }
 
 .searchInputDiv .searchHints > * .searchHint img {
   display: none;
 }
 
+.searchInputDiv .searchHints > * .searchHint:nth-child(1) {
+  padding-left: 0;
+}
+
 .searchInputDiv .searchHints > * .searchHint:nth-child(1) img {
   display: inline;
-  width: 8rem;
+  width: 20%;
+  max-height: 100px;
   margin-right: 1rem;
+  margin-bottom: 0.2rem;
 }
 
 .searchInputDiv .searchHints > * .searchHint:hover {
   color: #a77edd;
-  background-color: #dfdfdd;
+  background-color: #323232;
 }
 
 .seasonBlock {
@@ -1087,8 +1110,17 @@ a.logLink:hover, a.dataTable:hover {
 
 .confirmEmailSuccess,
 .confirmEmailFailure {
-  margin-top: 3rem;
-  margin-left: 3rem;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  margin-top: 5rem;
   font-size: 3rem;
 }
 

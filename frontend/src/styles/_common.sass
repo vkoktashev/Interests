@@ -159,11 +159,11 @@
     border-radius: 6px
 
     &.green
-        background-color: rgb(102, 204, 51) !important
+        background-color: $metacriticGreen !important
     &.yellow
-        background-color: rgb(243, 193, 43) !important
+        background-color: $metacriticYellow !important
     &.red
-        background-color: rgb(255, 0, 0) !important
+        background-color: $metacriticRed !important
 
 .metacriticText
     font-family: Arial, Helvetica, sans-serif
@@ -193,21 +193,32 @@
         display: flex
         flex-direction: column
         margin-bottom: 1rem
-        font-size: 0.8rem
+        font-size: 0.9rem
 
         .searchHint
             font-size: 1rem
+            padding-left: 0.5rem
+            padding-right: 0.5rem
             border-radius: 0.5rem
+            display: flex
+            flex-direction: row
+            justify-content: space-between
+            align-items: center
+            flex-wrap: wrap
 
             img
                 display: none
 
         .searchHint:nth-child(1)
+            padding-left: 0
+
             img
                 display: inline
-                width: 8rem
+                width: 20%
+                max-height: 100px
                 margin-right: 1rem
+                margin-bottom: 0.2rem
 
         .searchHint:hover
             color: $activeColor
-            background-color: #dfdfdd
+            background-color: $activeBackgroundColor
