@@ -62,6 +62,7 @@ class SearchShowsViewSet(GenericViewSet, mixins.ListModelMixin):
         shows = Show.objects \
             .annotate(similarity=Greatest(TrigramSimilarity('tmdb_name', query),
                                           TrigramSimilarity('tmdb_original_name', query))) \
+            .filter(similarity__gt=0.1) \
             .order_by('-similarity')
         paginator_page = Paginator(shows, page_size).get_page(page)
         serializer = ShowSerializer(paginator_page.object_list, many=True)
