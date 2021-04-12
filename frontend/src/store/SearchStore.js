@@ -10,6 +10,8 @@ class Search {
 	movies = [];
 	shows = [];
 	users = [];
+	hints = { games: [], shows: [], movies: [] };
+	currentQuery = "";
 	gamesState = "done";
 	moviesState = "done";
 	showsState = "done";
@@ -18,6 +20,24 @@ class Search {
 	constructor() {
 		makeAutoObservable(this);
 	}
+
+	searchHints = async (query) => {
+		if (this.currentQuery !== query) {
+			this.currentQuery = query;
+			gameRequests.searchGamesFast(query).then(this.searchGamesHintsSuccess);
+			movieRequests.searchMoviesFast(query).then(this.searchMoviesHintsSuccess);
+			showRequests.searchShowsFast(query).then(this.searchShowsHintsSuccess);
+		}
+	};
+	searchGamesHintsSuccess = (result) => {
+		this.hints.games = result;
+	};
+	searchMoviesHintsSuccess = (result) => {
+		this.hints.movies = result;
+	};
+	searchShowsHintsSuccess = (result) => {
+		this.hints.shows = result;
+	};
 
 	searchGames = async (query, page, gamesCount) => {
 		this.gamesState = "pending";

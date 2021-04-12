@@ -1,12 +1,10 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useHistory } from "react-router-dom";
 import Rating from "react-rating";
 import { MDBIcon } from "mdbreact";
 
 function LogRow({ log, showUsername }) {
 	let history = useHistory();
-
-	useEffect(() => {}, [log]);
 
 	function translateActionType(action, actionResult) {
 		switch (action) {

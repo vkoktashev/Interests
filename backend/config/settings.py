@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'django.contrib.postgres',
     'rest_framework',
     'corsheaders',
     'debug_toolbar',
@@ -24,6 +25,7 @@ INSTALLED_APPS = [
     'django_createsuperuser',
 
     # our apps
+    'config',
     'users',
     'games',
     'movies',
@@ -63,10 +65,8 @@ SITE_ID = 1
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-
 CORS_ALLOW_METHODS = [
     'DELETE',
-    'GET',
     'OPTIONS',
     'PATCH',
     'POST',

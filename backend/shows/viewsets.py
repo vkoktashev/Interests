@@ -1,9 +1,12 @@
 from datetime import datetime
 
 import tmdbsimple as tmdb
+from django.contrib.postgres.search import TrigramSimilarity
 from django.core.cache import cache
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import F, Q
+from django.db.models.functions import Greatest
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
@@ -22,11 +25,11 @@ from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpis
 from users.models import UserFollow
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
     SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, TMDB_BACKDROP_PATH_PREFIX, \
-    TMDB_POSTER_PATH_PREFIX, TMDB_STILL_PATH_PREFIX, EPISODE_WATCHED_SCORE
+    TMDB_POSTER_PATH_PREFIX, TMDB_STILL_PATH_PREFIX, EPISODE_WATCHED_SCORE, DEFAULT_PAGE_SIZE
 from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
     SEASON_RETRIEVE_200_EXAMPLE
 from utils.functions import update_fields_if_needed, get_tmdb_show_key, get_tmdb_episode_key, get_tmdb_season_key, \
-    objects_to_str, update_fields_if_needed_without_save
+    objects_to_str, update_fields_if_needed_without_save, get_page_size
 from utils.openapi_params import query_param, page_param
 
 
@@ -41,7 +44,8 @@ class SearchShowsViewSet(GenericViewSet, mixins.ListModelMixin):
 
                              )
                          })
-    def list(self, request, *args, **kwargs):
+    @action(detail=False, methods=['get'])
+    def tmdb(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
         try:
@@ -49,6 +53,20 @@ class SearchShowsViewSet(GenericViewSet, mixins.ListModelMixin):
         except HTTPError:
             results = None
         return Response(results, status=status.HTTP_200_OK)
+
+    def list(self, request, *args, **kwargs):
+        query = request.GET.get('query', '')
+        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
+        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
+
+        shows = Show.objects \
+            .annotate(similarity=Greatest(TrigramSimilarity('tmdb_name', query),
+                                          TrigramSimilarity('tmdb_original_name', query))) \
+            .order_by('-similarity')
+        paginator_page = Paginator(shows, page_size).get_page(page)
+        serializer = ShowSerializer(paginator_page.object_list, many=True)
+
+        return Response(serializer.data)
 
 
 class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -281,8 +299,8 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             data.update({
                 'user': request.user,
                 'episode': episode,
-                'review': data.get('review', ''),
-                'score': data.get('score', EPISODE_NOT_WATCHED_SCORE)
+                'review': data.get('review'),
+                'score': data.get('score')
             })
 
             found = False
@@ -296,6 +314,10 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             if found:
                 current_user_episode_score = current_user_episode.score
                 current_user_episode_review = current_user_episode.review
+                if data.get('review') is None:
+                    data.update({'review': current_user_episode_review})
+                if data.get('score') is None:
+                    data.update({'score': current_user_episode_score})
                 update_fields_if_needed_without_save(current_user_episode, data)
                 existed_user_episodes.append(current_user_episode)
                 existed_user_episodes_data.append(data)
@@ -303,6 +325,10 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             else:
                 current_user_episode_score = EPISODE_NOT_WATCHED_SCORE
                 current_user_episode_review = ''
+                if data.get('review') is None:
+                    data.update({'review': current_user_episode_review})
+                if data.get('score') is None:
+                    data.update({'score': current_user_episode_score})
                 new_user_episodes.append(
                     UserEpisode(**data)
                 )

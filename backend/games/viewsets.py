@@ -1,6 +1,8 @@
 from json import JSONDecodeError
 
+from django.contrib.postgres.search import TrigramSimilarity
 from django.core.cache import cache
+from django.core.paginator import Paginator
 from django.db import transaction
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -13,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from games.models import Game, UserGame, Genre, GameGenre
-from games.serializers import UserGameSerializer, FollowedUserGameSerializer
+from games.serializers import UserGameSerializer, FollowedUserGameSerializer, GameSerializer
 from users.models import UserFollow
 from utils.constants import RAWG_UNAVAILABLE, ERROR, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, \
     GAME_NOT_FOUND, CACHE_TIMEOUT
@@ -33,7 +35,8 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
                                  }
                              )
                          })
-    def list(self, request, *args, **kwargs):
+    @action(detail=False, methods=['get'])
+    def rawg(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
         page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
@@ -44,6 +47,18 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
             return Response(RAWG_UNAVAILABLE, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         return Response(results)
+
+    def list(self, request, *args, **kwargs):
+        query = request.GET.get('query', '')
+        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
+        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
+
+        games = Game.objects.annotate(similarity=TrigramSimilarity('rawg_name', query)).order_by('-similarity')
+        paginator = Paginator(games, page_size)
+        paginator_page = paginator.get_page(page)
+        serializer = GameSerializer(paginator_page.object_list, many=True)
+
+        return Response(serializer.data)
 
 
 class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
