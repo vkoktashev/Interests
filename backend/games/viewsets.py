@@ -53,7 +53,9 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
         page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
 
-        games = Game.objects.annotate(similarity=TrigramSimilarity('rawg_name', query)).order_by('-similarity')
+        games = Game.objects.annotate(similarity=TrigramSimilarity('rawg_name', query)) \
+            .filter(similarity__gt=0.1) \
+            .order_by('-similarity')
         paginator = Paginator(games, page_size)
         paginator_page = paginator.get_page(page)
         serializer = GameSerializer(paginator_page.object_list, many=True)
