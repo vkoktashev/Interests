@@ -19,15 +19,21 @@ export const USER_SETTINGS_URL = BACKEND_URL + "users/user/user_settings/";
 /**Адрес запроса игры */
 export const GET_GAME_URL = BACKEND_URL + "games/game/";
 /**Адрес поиска игр */
-export const SEARCH_GAMES_URL = BACKEND_URL + "games/search/";
+export const SEARCH_GAMES_URL = BACKEND_URL + "games/search/rawg/";
+/**Адрес быстрого поиска игр */
+export const SEARCH_GAMES_FAST_URL = BACKEND_URL + "games/search/";
 /**Адрес запроса фильма */
 export const GET_MOVIE_URL = BACKEND_URL + "movies/movie/";
 /**Адрес поиска фильмов */
-export const SEARCH_MOVIES_URL = BACKEND_URL + "movies/search/";
+export const SEARCH_MOVIES_URL = BACKEND_URL + "movies/search/tmdb/";
+/**Адрес быстрого поиска игр */
+export const SEARCH_MOVIES_FAST_URL = BACKEND_URL + "movies/search/";
 /**Адрес запроса сериала */
 export const GET_SHOW_URL = BACKEND_URL + "shows/show/";
 /**Адрес поиска сериалов */
-export const SEARCH_SHOWS_URL = BACKEND_URL + "shows/search/";
+export const SEARCH_SHOWS_URL = BACKEND_URL + "shows/search/tmdb/";
+/**Адрес юыстрого поиска сериалов */
+export const SEARCH_SHOWS_FAST_URL = BACKEND_URL + "shows/search/";
 /**Адрес запроса непросмотренных серий */
 export const GET_UNWATCHED_EPISODES_URL = BACKEND_URL + "shows/show/unwatched_episodes/";
 /**Адрес получения информации о пользователе */

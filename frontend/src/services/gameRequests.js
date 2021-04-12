@@ -1,5 +1,5 @@
 import axios from "axios";
-import { GET_GAME_URL, SEARCH_GAMES_URL } from "../settings";
+import { GET_GAME_URL, SEARCH_GAMES_URL, SEARCH_GAMES_FAST_URL } from "../settings";
 
 axios.defaults.headers.common = {
 	"Content-Type": "application/json;charset=UTF-8",
@@ -45,6 +45,15 @@ export async function setGameStatus(token, gameSlug, user_info) {
  */
 export async function searchGames(query, page, gamesCount) {
 	const res = await axios.get(SEARCH_GAMES_URL, { params: { query: query, page: page, page_size: gamesCount } });
+	return res.data;
+}
+
+/**
+ * Запрос на поиск локльных игр
+ * @param {string} query Поисковый запрос
+ */
+export async function searchGamesFast(query) {
+	const res = await axios.get(SEARCH_GAMES_FAST_URL, { params: { query: query } });
 	return res.data;
 }
 

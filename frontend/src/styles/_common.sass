@@ -170,3 +170,44 @@
     font-size: 12px
     text-align: center
     padding-left: 3px
+
+.searchInputDiv
+    position: relative
+
+    .searchHints
+        z-index: 1200
+        position: absolute
+        top: 40px
+        left: 0
+        width: 100%
+        padding: 1rem
+        background-color: $active2BackgroundColor
+        color: $headerTextColor
+        border-radius: 1rem
+        display: flex
+        flex-direction: column
+        overflow-y: auto
+        max-height: 70vh
+
+    .searchHints > *
+        display: flex
+        flex-direction: column
+        margin-bottom: 1rem
+        font-size: 0.8rem
+
+        .searchHint
+            font-size: 1rem
+            border-radius: 0.5rem
+
+            img
+                display: none
+
+        .searchHint:nth-child(1)
+            img
+                display: inline
+                width: 8rem
+                margin-right: 1rem
+
+        .searchHint:hover
+            color: $activeColor
+            background-color: #dfdfdd

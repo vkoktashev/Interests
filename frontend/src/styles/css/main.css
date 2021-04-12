@@ -335,6 +335,63 @@
   padding-left: 3px;
 }
 
+.searchInputDiv {
+  position: relative;
+}
+
+.searchInputDiv .searchHints {
+  z-index: 1200;
+  position: absolute;
+  top: 40px;
+  left: 0;
+  width: 100%;
+  padding: 1rem;
+  background-color: #5a5a5a;
+  color: white;
+  border-radius: 1rem;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  overflow-y: auto;
+  max-height: 70vh;
+}
+
+.searchInputDiv .searchHints > * {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+}
+
+.searchInputDiv .searchHints > * .searchHint {
+  font-size: 1rem;
+  border-radius: 0.5rem;
+}
+
+.searchInputDiv .searchHints > * .searchHint img {
+  display: none;
+}
+
+.searchInputDiv .searchHints > * .searchHint:nth-child(1) img {
+  display: inline;
+  width: 8rem;
+  margin-right: 1rem;
+}
+
+.searchInputDiv .searchHints > * .searchHint:hover {
+  color: #a77edd;
+  background-color: #dfdfdd;
+}
+
 .seasonBlock {
   margin-bottom: 0px;
   margin-top: 10px;
@@ -885,9 +942,9 @@ a.logLink:hover, a.dataTable:hover {
       -ms-flex-direction: row;
           flex-direction: row;
   margin-bottom: 0.5rem;
-  -webkit-box-align: start;
-      -ms-flex-align: start;
-          align-items: flex-start;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: flex-start;
   -ms-flex-wrap: wrap;
       flex-wrap: wrap;
   -webkit-box-align: stretch;
@@ -1091,7 +1148,7 @@ input.form-control:-webkit-autofill {
 }
 
 .passwordResetLabel:hover {
-  color: #7654de;
+  color: #4F5DEA;
   cursor: pointer;
 }
 
