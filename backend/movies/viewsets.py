@@ -1,8 +1,9 @@
 import tmdbsimple as tmdb
+from django.contrib.postgres.search import TrigramSimilarity
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Q
+from django.db.models.functions import Greatest
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
@@ -49,7 +50,10 @@ class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
         page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
 
-        movies = Movie.objects.filter(Q(tmdb_name__icontains=query) | Q(tmdb_original_name__icontains=query))
+        movies = Movie.objects \
+            .annotate(similarity=Greatest(TrigramSimilarity('tmdb_name', query),
+                                          TrigramSimilarity('tmdb_original_name', query))) \
+            .order_by('-similarity')
         paginator_page = Paginator(movies, page_size).get_page(page)
         serializer = MovieSerializer(paginator_page.object_list, many=True)
 
