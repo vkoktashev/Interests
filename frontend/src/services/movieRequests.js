@@ -1,5 +1,5 @@
 import axios from "axios";
-import { SEARCH_MOVIES_URL, GET_MOVIE_URL } from "../settings";
+import { SEARCH_MOVIES_URL, SEARCH_MOVIES_FAST_URL, GET_MOVIE_URL } from "../settings";
 
 axios.defaults.headers.common = {
 	"Content-Type": "application/json;charset=UTF-8",
@@ -43,6 +43,15 @@ export async function setMovieStatus(token, id, user_info) {
  */
 export async function searchMovies(query, page) {
 	const res = await axios.get(SEARCH_MOVIES_URL, { params: { query: query, page: page } });
+	return res.data;
+}
+
+/**
+ * Запрос на поиск локальных фильмов
+ * @param {string} query Поисковый запрос
+ */
+export async function searchMoviesFast(query) {
+	const res = await axios.get(SEARCH_MOVIES_FAST_URL, { params: { query: query } });
 	return res.data;
 }
 

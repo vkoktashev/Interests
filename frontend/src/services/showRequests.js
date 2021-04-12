@@ -1,5 +1,5 @@
 import axios from "axios";
-import { SEARCH_SHOWS_URL, GET_SHOW_URL, GET_UNWATCHED_EPISODES_URL } from "../settings";
+import { SEARCH_SHOWS_URL, SEARCH_SHOWS_FAST_URL, GET_SHOW_URL, GET_UNWATCHED_EPISODES_URL } from "../settings";
 
 axios.defaults.headers.common = {
 	"Content-Type": "application/json;charset=UTF-8",
@@ -109,6 +109,15 @@ export async function setShowEpisodesStatus(token, showID, episodesList) {
  */
 export async function searchShows(query, page) {
 	const res = await axios.get(SEARCH_SHOWS_URL, { params: { query: query, page: page } });
+	return res.data;
+}
+
+/**
+ * Запрос на поиск локальных сериалов
+ * @param {string} query Поисковый запрос
+ */
+export async function searchShowsFast(query) {
+	const res = await axios.get(SEARCH_SHOWS_FAST_URL, { params: { query: query } });
 	return res.data;
 }
 

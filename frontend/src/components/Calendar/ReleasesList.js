@@ -76,9 +76,14 @@ function ReleasesList({ calendar }) {
 	}
 
 	function dateDiff(date) {
+		let now = new Date();
 		let time = date.getTime();
-		let timeNow = new Date().getTime();
-		return parseInt((time - timeNow) / (24 * 3600 * 1000));
+		let timeNow = now.getTime();
+		let diff = (time - timeNow) / (24 * 3600 * 1000);
+		if (diff < 1)
+			if (now.getUTCDay() === date.getUTCDay()) return 0;
+			else return 1;
+		return parseInt(diff) + 1;
 	}
 
 	function intToDays(number) {

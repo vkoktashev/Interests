@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import PagesStore from "../store/PagesStore";
 import AuthStore from "../store/AuthStore";
 import useWindowDimensions from "../hooks/useWindowDimensions";
+import SearchInput from "../components/Common/SearchInput";
 
 import { MDBIcon } from "mdbreact";
 
@@ -38,16 +39,13 @@ const Navbar = observer((props) => {
 				</div>
 			</div>
 			<div className={`navbarCenter ${collapse && width <= 600 ? " collapsed" : ""}`}>
-				<form
+				<SearchInput
 					onSubmit={(event) => {
 						event.preventDefault();
 						history.push("/search/" + document.getElementById("searchInput").value);
 						toggleIfSmallScreen();
-					}}>
-					<div>
-						<input type='text' placeholder='Поиск' aria-label='Поиск' id='searchInput' />
-					</div>
-				</form>
+					}}
+				/>
 			</div>
 			<div className={`navbarRight ${collapse && width <= 600 ? " collapsed" : ""}`}>
 				<div
