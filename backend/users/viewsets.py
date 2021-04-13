@@ -533,7 +533,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             if user.privacy == user.PRIVACY_NOBODY:
                 UserFollow.objects.filter(followed_user=user).update(is_following=False)
             elif user.privacy == user.PRIVACY_FOLLOWED:
-                followed_users = UserFollow.objects.filter(user=user, is_following=True)
+                followed_users = UserFollow.objects.filter(user=user, is_following=True).values('followed_user')
                 UserFollow.objects.filter(followed_user=user) \
                     .exclude(user__in=followed_users) \
                     .update(is_following=False)
