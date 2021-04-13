@@ -33,7 +33,7 @@ from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
     USER_NOT_FOUND, EMAIL_ERROR, MINUTES_IN_HOUR, SITE_URL
 from utils.documentation import USER_SIGNUP_201_EXAMPLE, USER_SIGNUP_400_EXAMPLE, USER_LOG_200_EXAMPLE, \
     USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE
-from utils.functions import similar, get_page_size
+from utils.functions import similar, get_page_size, is_user_available
 from utils.models import Round
 from utils.openapi_params import page_param, page_size_param, query_param, uid64_param, token_param, reset_token_param
 from .models import User, UserFollow, UserLog, UserPasswordToken
@@ -222,6 +222,9 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except User.DoesNotExist:
             return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
+        if not is_user_available(request.user, user):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         results, has_next_page = get_logs((user,), request.GET.get('page_size'), request.GET.get('page'))
 
         return Response({'log': results, 'has_next_page': has_next_page})
@@ -256,7 +259,10 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except User.DoesNotExist:
             return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
-        user_follow_query = UserFollow.objects.filter(user=user).values('followed_user')
+        if not is_user_available(request.user, user):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        user_follow_query = UserFollow.objects.filter(user=user, is_following=True).values('followed_user')
         results, has_next_page = get_logs(user_follow_query, request.GET.get('page_size'), request.GET.get('page'))
 
         return Response({'log': results, 'has_next_page': has_next_page})
@@ -352,6 +358,9 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             user_is_followed = UserFollow.objects.get(user=request.user, followed_user=user).is_following
         except (UserFollow.DoesNotExist, TypeError):
             user_is_followed = False
+
+        if not is_user_available(request.user, user, user_is_followed):
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         stats = {}
 
@@ -497,15 +506,20 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=True, methods=['put'])
     def follow(self, request, *args, **kwargs):
         try:
-            user_id = int(kwargs.get('pk'))
+            user = get_user_by_id(kwargs.get('pk'), request.user)
         except ValueError:
             return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+
+        if not is_user_available(request.user, user):
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         data = request.data.copy()
-        data.update({'user': request.user.pk, 'followed_user': user_id})
+        data.update({'user': request.user.pk, 'followed_user': user.pk})
 
         try:
-            user_follow = UserFollow.objects.get(user=request.user, followed_user=user_id)
+            user_follow = UserFollow.objects.get(user=request.user, followed_user=user)
             serializer = UserFollowSerializer(user_follow, data=data, partial=True)
         except UserFollow.DoesNotExist:
             serializer = UserFollowSerializer(data=data)
@@ -524,7 +538,16 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         else:
             serializer = SettingsSerializer(request.user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            user = serializer.save()
+
+            if user.privacy == user.PRIVACY_NOBODY:
+                UserFollow.objects.filter(followed_user=user).update(is_following=False)
+            elif user.privacy == user.PRIVACY_FOLLOWED:
+                followed_users = UserFollow.objects.filter(user=user, is_following=True)
+                UserFollow.objects.filter(followed_user=user) \
+                    .exclude(user__in=followed_users) \
+                    .update(is_following=False)
+
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 

@@ -4,6 +4,7 @@ from difflib import SequenceMatcher
 
 from django.db.models import DecimalField, IntegerField, CharField
 
+from users.models import UserFollow
 from utils.openapi_params import DEFAULT_PAGE_SIZE
 
 
@@ -137,3 +138,20 @@ def get_tmdb_episode_key(show_tmdb_id, season_number, episode_number):
 
 def objects_to_str(objects):
     return ', '.join(obj['name'] for obj in objects)
+
+
+def is_user_available(current_user, target_user, user_is_followed=None):
+    if current_user != target_user:
+        if target_user.privacy == target_user.PRIVACY_NOBODY:
+            return False
+
+        if user_is_followed is None:
+            try:
+                user_is_followed = UserFollow.objects.get(user=current_user, followed_user=target_user).is_following
+            except (UserFollow.DoesNotExist, TypeError):
+                user_is_followed = False
+
+        if target_user.privacy == target_user.PRIVACY_FOLLOWED and not user_is_followed:
+            return False
+
+    return True
