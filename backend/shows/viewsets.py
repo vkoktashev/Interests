@@ -206,7 +206,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             except UserShow.DoesNotExist:
                 user_info = None
 
-            user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
+            user_follow_query = UserFollow.objects.filter(user=request.user, is_following=True).values('followed_user')
             followed_user_shows = UserShow.objects.select_related('user') \
                 .exclude(status=UserShow.STATUS_NOT_WATCHED) \
                 .filter(user__in=user_follow_query, show=show)
@@ -617,7 +617,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 user_info = None
 
             # friends_info
-            user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
+            user_follow_query = UserFollow.objects.filter(user=request.user, is_following=True).values('followed_user')
             followed_user_seasons = UserSeason.objects.select_related('user') \
                 .filter(user__in=user_follow_query, season=season) \
                 .exclude(id__in=UserSeason.objects
@@ -714,7 +714,7 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 user_info = None
 
             # friends_info
-            user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
+            user_follow_query = UserFollow.objects.filter(user=request.user, is_following=True).values('followed_user')
             followed_user_episodes = UserEpisode.objects.select_related('user') \
                 .filter(user__in=user_follow_query, episode=episode) \
                 .exclude(id__in=UserEpisode.objects

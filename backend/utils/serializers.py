@@ -15,4 +15,4 @@ class ChoicesField(serializers.Field):
         for choice in self._choices:
             if data in choice:
                 return choice[0]
-        raise serializers.ValidationError(f'Choice should be one of {self._choices}')
+        raise serializers.ValidationError(f'Выберите значение из допустимых вариантов: {self._choices}')

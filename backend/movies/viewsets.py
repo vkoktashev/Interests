@@ -143,7 +143,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             except UserMovie.DoesNotExist:
                 user_info = None
 
-            user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
+            user_follow_query = UserFollow.objects.filter(user=request.user, is_following=True).values('followed_user')
             followed_user_movies = UserMovie.objects.filter(user__in=user_follow_query, movie=movie)
             serializer = FollowedUserMovieSerializer(followed_user_movies, many=True)
             friends_info = serializer.data
