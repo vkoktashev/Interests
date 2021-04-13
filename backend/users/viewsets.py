@@ -250,19 +250,9 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                  }
                              )
                          })
-    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_log(self, request, *args, **kwargs):
-        try:
-            user = get_user_by_id(kwargs.get('pk'), request.user)
-        except ValueError:
-            return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
-        except User.DoesNotExist:
-            return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-
-        if not is_user_available(request.user, user):
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        user_follow_query = UserFollow.objects.filter(user=user, is_following=True).values('followed_user')
+        user_follow_query = UserFollow.objects.filter(user=request.user, is_following=True).values('followed_user')
         results, has_next_page = get_logs(user_follow_query, request.GET.get('page_size'), request.GET.get('page'))
 
         return Response({'log': results, 'has_next_page': has_next_page})
