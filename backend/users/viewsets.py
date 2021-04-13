@@ -4,10 +4,10 @@ from datetime import datetime
 from itertools import chain
 from smtplib import SMTPAuthenticationError
 
+from django.contrib.postgres.search import TrigramSimilarity
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
 from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField
-from django.template.defaultfilters import lower
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from drf_yasg import openapi
@@ -33,7 +33,7 @@ from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
     USER_NOT_FOUND, EMAIL_ERROR, MINUTES_IN_HOUR, SITE_URL
 from utils.documentation import USER_SIGNUP_201_EXAMPLE, USER_SIGNUP_400_EXAMPLE, USER_LOG_200_EXAMPLE, \
     USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE
-from utils.functions import similar, get_page_size, is_user_available
+from utils.functions import get_page_size, is_user_available
 from utils.models import Round
 from utils.openapi_params import page_param, page_size_param, query_param, uid64_param, token_param, reset_token_param
 from .models import User, UserFollow, UserLog, UserPasswordToken
@@ -623,13 +623,9 @@ class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):
                          })
     def list(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
-        results = []
-        for user in User.objects.all():
-            similarity = similar(lower(query), lower(user.username))  # similarity is 0.0-1.0
-            if similarity > 0.4:
-                user.similarity = similarity
-                results.append(user)
-        results.sort(key=lambda u: u.similarity, reverse=True)
+        results = User.objects.annotate(similarity=TrigramSimilarity('username', query)) \
+            .filter(similarity__gt=0.1) \
+            .order_by('-similarity')
         serializer = UserSerializer(results, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
