@@ -102,7 +102,7 @@ DATABASES = {
         'NAME': 'interests',
         'USER': 'postgres',
         'PASSWORD': '8080',
-        'HOST': 'db2',
+        'HOST': os.environ['DATABASE_URL'],
         'PORT': '',
     }
 }
