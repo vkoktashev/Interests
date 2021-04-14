@@ -46,6 +46,10 @@ function GameBlock({ games, stats }) {
 
 	useEffect(
 		() => {
+			setGameTableData({
+				columns: gameColumns,
+				rows: [],
+			});
 			if (games) {
 				setGameTableData({
 					columns: gameColumns,

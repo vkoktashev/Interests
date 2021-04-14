@@ -36,6 +36,10 @@ function MovieBlock({ movies, stats }) {
 
 	useEffect(
 		() => {
+			setMovieTableData({
+				columns: movieColumns,
+				rows: [],
+			});
 			if (movies) {
 				setMovieTableData({
 					columns: movieColumns,

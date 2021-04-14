@@ -18,12 +18,10 @@ class User {
 
 	requestUser = async (username) => {
 		this.userState = "pending";
-		this.user = {};
 		await AuthStore.checkAuthorization();
 		userRequests.getUserInfo(localStorage.getItem("token"), username).then(this.requestUserSuccess, this.requestUserFailure);
 	};
 	requestUserSuccess = (result) => {
-		console.log(result);
 		this.user = result;
 		this.userState = "done";
 	};
@@ -33,7 +31,6 @@ class User {
 
 	requestUserLogs = async (userID, page, resultsOnPage) => {
 		this.userLogsState = "pending";
-		this.userLogs = {};
 		await AuthStore.checkAuthorization();
 		userRequests.getUserLog(localStorage.getItem("token"), userID, page, resultsOnPage).then(this.requestLogsSuccess, this.requestLogsFailure);
 	};

@@ -103,7 +103,7 @@ const UserPage = observer((props) => {
 									<UserLogBlock logs={userLogs} onChangePage={(pageNumber) => requestUserLogs(userID, pageNumber, LOG_ROWS_COUNT)} />
 								</LoadingOverlay>
 							</div>
-							<h4 hidden={user.is_available}>
+							<h4 hidden={user.is_available || userState === "pending"}>
 								<MDBIcon icon='lock' style={{ marginRight: "1rem" }} />
 								Профиль скрыт настройками приватности
 							</h4>
