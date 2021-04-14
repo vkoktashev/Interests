@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { observer } from "mobx-react";
 import SearchStore from "../../store/SearchStore";
 import { useHistory } from "react-router-dom";
@@ -9,12 +9,12 @@ const SearchInput = observer(({ onSubmit }) => {
 	let history = useHistory();
 	const { searchHints, hints } = SearchStore;
 
-	useEffect(() => {
-		console.log("ЖОПА");
-	}, [hints]);
-
 	return (
-		<form onSubmit={onSubmit}>
+		<form
+			onSubmit={(event) => {
+				onSubmit(event);
+				setQuery("");
+			}}>
 			<div className='searchInputDiv'>
 				<input
 					type='text'
@@ -30,9 +30,9 @@ const SearchInput = observer(({ onSubmit }) => {
 				<div className='searchHints' hidden={query === "" || !(hints.games.length > 0 || hints.movies.length > 0 || hints.shows.length > 0)}>
 					<div hidden={!hints.games.length > 0}>
 						<MDBIcon icon='gamepad' />
-						{hints.games.map((hint) => (
+						{hints.games.map((hint, key) => (
 							<a
-								key={hint.rawg_slug}
+								key={key}
 								href={window.location.origin + "/game/" + hint.rawg_slug}
 								className='searchHint'
 								onClick={(e) => {
@@ -48,9 +48,9 @@ const SearchInput = observer(({ onSubmit }) => {
 					</div>
 					<div hidden={!hints.movies.length > 0}>
 						<MDBIcon icon='film' />
-						{hints.movies.map((hint) => (
+						{hints.movies.map((hint, key) => (
 							<a
-								key={hint.rawg_slug}
+								key={key}
 								href={window.location.origin + "/movie/" + hint.tmdb_id}
 								className='searchHint'
 								onClick={(e) => {
@@ -66,9 +66,9 @@ const SearchInput = observer(({ onSubmit }) => {
 					</div>
 					<div hidden={!hints.shows.length > 0}>
 						<MDBIcon icon='tv' />
-						{hints.shows.map((hint) => (
+						{hints.shows.map((hint, key) => (
 							<a
-								key={hint.rawg_slug}
+								key={key}
 								href={window.location.origin + "/show/" + hint.tmdb_id}
 								className='searchHint'
 								onClick={(e) => {

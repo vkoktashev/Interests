@@ -13,6 +13,16 @@ from .managers import UserManager
 class User(AbstractBaseUser, PermissionsMixin):
     username_validator = UnicodeUsernameValidator()
 
+    PRIVACY_NOBODY = 'nobody'
+    PRIVACY_ALL = 'all'
+    PRIVACY_FOLLOWED = 'followed'
+
+    PRIVACY_CHOICES = (
+        (PRIVACY_NOBODY, 'Никто'),
+        (PRIVACY_ALL, 'Все'),
+        (PRIVACY_FOLLOWED, 'Друзья'),
+    )
+
     username = models.CharField(
         _('username'),
         max_length=150,
@@ -33,6 +43,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     receive_movies_releases = models.BooleanField(default=False)
     receive_episodes_releases = models.BooleanField(default=False)
     backdrop_path = models.CharField(max_length=200, null=True)
+    privacy = models.CharField(max_length=50, choices=PRIVACY_CHOICES, default=PRIVACY_ALL)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []

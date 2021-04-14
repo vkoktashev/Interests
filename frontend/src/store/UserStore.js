@@ -4,8 +4,8 @@ import AuthStore from "./AuthStore";
 import * as userRequests from "../services/userRequests";
 
 class User {
-	user = { stats: {} };
-	userLogs = { log: [] };
+	user = {};
+	userLogs = {};
 	userFriendsLogs = { log: [] };
 	userState = "done";
 	userLogsState = "done";
@@ -39,7 +39,8 @@ class User {
 		this.userLogsState = "done";
 	};
 	requestLogsFailure = (error) => {
-		this.userLogsState = "error: " + error;
+		if (error.response.status === 403) this.userLogsState = "forbidden";
+		else this.userLogsState = "error: " + error;
 	};
 
 	requestUserFriendsLogs = async (userID, page, resultsOnPage) => {

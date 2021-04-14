@@ -42,6 +42,10 @@ function ShowBlock({ shows, stats }) {
 
 	useEffect(
 		() => {
+			setShowTableData({
+				columns: showColumns,
+				rows: [],
+			});
 			if (shows) {
 				setShowTableData({
 					columns: showColumns,

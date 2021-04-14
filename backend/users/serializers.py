@@ -10,6 +10,7 @@ from shows.models import Show
 from users.models import User, UserFollow, UserLog
 from utils.constants import USER_USERNAME_EXISTS, USER_EMAIL_EXISTS, USERNAME_CONTAINS_ILLEGAL_CHARACTERS, \
     WRONG_BACKDROP_PATH
+from utils.serializers import ChoicesField
 
 TYPE_USER = 'user'
 
@@ -107,6 +108,8 @@ class UserLogSerializer(serializers.ModelSerializer):
 
 
 class SettingsSerializer(serializers.ModelSerializer):
+    privacy = ChoicesField(choices=User.PRIVACY_CHOICES, required=False)
+
     @staticmethod
     def validate_backdrop_path(value):
         if not (Game.objects.filter(rawg_backdrop_path=value).exists() or
@@ -117,7 +120,8 @@ class SettingsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('receive_games_releases', 'receive_movies_releases', 'receive_episodes_releases', 'backdrop_path')
+        fields = ('receive_games_releases', 'receive_movies_releases',
+                  'receive_episodes_releases', 'backdrop_path', 'privacy')
 
 
 class UserInfoSerializer(serializers.ModelSerializer):

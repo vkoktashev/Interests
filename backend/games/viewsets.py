@@ -160,7 +160,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             except UserGame.DoesNotExist:
                 user_info = None
 
-            user_follow_query = UserFollow.objects.filter(user=request.user).values('followed_user')
+            user_follow_query = UserFollow.objects.filter(user=request.user, is_following=True).values('followed_user')
             followed_user_games = UserGame.objects.filter(user__in=user_follow_query, game=game)
             serializer = FollowedUserGameSerializer(followed_user_games, many=True)
             friends_info = serializer.data

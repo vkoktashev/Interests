@@ -14,6 +14,7 @@ const SettingsPage = observer((props) => {
 	const [gameNotifInput, setGameNotifInput] = useState(false);
 	const [movieNotifInput, setMovieNotifInput] = useState(false);
 	const [showNotifInput, setShowNotifInput] = useState(false);
+	const [privacySelect, setPrivacySelect] = useState("Все");
 
 	useEffect(
 		() => {
@@ -36,6 +37,7 @@ const SettingsPage = observer((props) => {
 			if (settings.receive_games_releases) setGameNotifInput(settings.receive_games_releases);
 			if (settings.receive_movies_releases) setMovieNotifInput(settings.receive_movies_releases);
 			if (settings.receive_episodes_releases) setShowNotifInput(settings.receive_episodes_releases);
+			if (settings.privacy) setPrivacySelect(settings.privacy);
 		},
 		// eslint-disable-next-line
 		[settings]
@@ -49,14 +51,38 @@ const SettingsPage = observer((props) => {
 					<h1 className='settingsHeader'>Настройки</h1>
 					<h3>Подписка на почтовые уведомления:</h3>
 					<LoadingOverlay active={settingsState === "pending" || saveSettingsState === "pending"} spinner text='Загрузка...'>
-						<SettingsCheckbox text={" релиз новых игр"} checked={gameNotifInput} onChange={(checked) => setGameNotifInput(checked)} />
-						<SettingsCheckbox text={" релиз новых фильмов"} checked={movieNotifInput} onChange={(checked) => setMovieNotifInput(checked)} />
-						<SettingsCheckbox text={" релиз новых серий сериалов"} checked={showNotifInput} onChange={(checked) => setShowNotifInput(checked)} />
+						<div className='settingsRow' onClick={() => setGameNotifInput(!gameNotifInput)}>
+							<input type='checkbox' className='settingsCheckbox' checked={gameNotifInput} onChange={(event) => setGameNotifInput(event.target.checked)} />
+							{" релиз новых игр"}
+						</div>
+						<div className='settingsRow' onClick={() => setMovieNotifInput(!movieNotifInput)}>
+							<input type='checkbox' className='settingsCheckbox' checked={movieNotifInput} onChange={(event) => setMovieNotifInput(event.target.checked)} />
+							{" релиз новых фильмов"}
+						</div>
+						<div className='settingsRow' onClick={() => setShowNotifInput(!showNotifInput)}>
+							<input type='checkbox' className='settingsCheckbox' checked={showNotifInput} onChange={(event) => setShowNotifInput(event.target.checked)} />
+							{" релиз новых серий сериалов"}
+						</div>
+						<div className='settingsRow'>
+							<label htmlFor='privacySelect'>Кто может видеть мой профиль:</label>
+							<select
+								id='privacySelect'
+								name='privacySelect'
+								onChange={(event) => {
+									setPrivacySelect(event.target.value);
+								}}
+								value={privacySelect}>
+								<option value='Все'>Все</option>
+								<option value='Никто'>Никто</option>
+								<option value='Друзья'>Мои подписки</option>
+							</select>
+						</div>
+
 						<button
 							className='saveSettingsButton'
 							disabled={!loggedIn}
 							onClick={() => {
-								patchSettings({ receive_games_releases: gameNotifInput, receive_movies_releases: movieNotifInput, receive_episodes_releases: showNotifInput });
+								patchSettings({ receive_games_releases: gameNotifInput, receive_movies_releases: movieNotifInput, receive_episodes_releases: showNotifInput, privacy: privacySelect });
 							}}>
 							Сохранить
 						</button>

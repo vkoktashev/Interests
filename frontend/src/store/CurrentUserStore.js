@@ -39,6 +39,7 @@ class CurrentUser {
 	};
 	requestSettingsSuccess = (result) => {
 		this.settings = result;
+		console.log(result);
 		this.settingsState = "done";
 	};
 	requestSettingsFailure = (error) => {
@@ -69,7 +70,6 @@ class CurrentUser {
 		this.saveSettingsState = "done";
 	};
 	patchSettingsSuccess = (result) => {
-		this.unwatched = result;
 		this.saveSettingsState = "saved";
 		setTimeout(this.patchSettingsReset, 1000);
 	};

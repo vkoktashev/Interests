@@ -56,7 +56,7 @@ export async function getUserLog(token, userID, page, resultsOnPage) {
 	let data;
 	if (token) {
 		var AuthStr = "Bearer " + token;
-		const res = await axios.get(USER_INFO_URL + userID + "/log/", { params: { page: page, page_size: resultsOnPage } }, { headers: { Authorization: AuthStr } });
+		const res = await axios.get(USER_INFO_URL + userID + "/log/", { params: { page: page, page_size: resultsOnPage }, headers: { Authorization: AuthStr } });
 		data = res.data;
 	} else {
 		const res = await axios.get(USER_INFO_URL + userID + "/log/", { params: { page: page, page_size: resultsOnPage } });
@@ -74,7 +74,7 @@ export async function getUserLog(token, userID, page, resultsOnPage) {
 export async function getUserFriendsLog(token, userID, page, resultsOnPage) {
 	let data;
 	var AuthStr = "Bearer " + token;
-	const res = await axios.get(USER_INFO_URL + userID + "/friends_log/", { params: { page: page, page_size: resultsOnPage }, headers: { Authorization: AuthStr } });
+	const res = await axios.get(USER_INFO_URL + "friends_log/", { params: { page: page, page_size: resultsOnPage }, headers: { Authorization: AuthStr } });
 	data = res.data;
 	return data;
 }
