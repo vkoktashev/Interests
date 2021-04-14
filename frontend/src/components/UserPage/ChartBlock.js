@@ -7,11 +7,11 @@ function ChartBlock({ stats }) {
 
 	useEffect(() => {
 		setChartData([]);
-		if (stats.games) {
+		if (stats?.games) {
 			let newData = [];
-			if (stats.games.total_spent_time > 0) newData.push({ name: "Часов в играх", value: stats.games.total_spent_time });
-			if (stats.movies.total_spent_time > 0) newData.push({ name: "Часов в фильмах", value: stats.movies.total_spent_time });
-			if (stats.episodes.total_spent_time > 0) newData.push({ name: "Часов в сериалах", value: stats.episodes.total_spent_time });
+			if (stats?.games?.total_spent_time > 0) newData.push({ name: "Часов в играх", value: stats?.games?.total_spent_time });
+			if (stats?.movies?.total_spent_time > 0) newData.push({ name: "Часов в фильмах", value: stats?.movies?.total_spent_time });
+			if (stats?.episodes?.total_spent_time > 0) newData.push({ name: "Часов в сериалах", value: stats?.episodes?.total_spent_time });
 			setChartData(newData);
 		}
 	}, [stats]);

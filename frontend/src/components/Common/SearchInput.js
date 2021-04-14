@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { observer } from "mobx-react";
 import SearchStore from "../../store/SearchStore";
 import { useHistory } from "react-router-dom";
@@ -9,12 +9,12 @@ const SearchInput = observer(({ onSubmit }) => {
 	let history = useHistory();
 	const { searchHints, hints } = SearchStore;
 
-	useEffect(() => {
-		console.log("ЖОПА");
-	}, [hints]);
-
 	return (
-		<form onSubmit={onSubmit}>
+		<form
+			onSubmit={(event) => {
+				onSubmit(event);
+				setQuery("");
+			}}>
 			<div className='searchInputDiv'>
 				<input
 					type='text'

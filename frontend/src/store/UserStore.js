@@ -4,8 +4,8 @@ import AuthStore from "./AuthStore";
 import * as userRequests from "../services/userRequests";
 
 class User {
-	user = { stats: {} };
-	userLogs = { log: [] };
+	user = {};
+	userLogs = {};
 	userFriendsLogs = { log: [] };
 	userState = "done";
 	userLogsState = "done";
@@ -18,10 +18,12 @@ class User {
 
 	requestUser = async (username) => {
 		this.userState = "pending";
+		this.user = {};
 		await AuthStore.checkAuthorization();
 		userRequests.getUserInfo(localStorage.getItem("token"), username).then(this.requestUserSuccess, this.requestUserFailure);
 	};
 	requestUserSuccess = (result) => {
+		console.log(result);
 		this.user = result;
 		this.userState = "done";
 	};
@@ -31,6 +33,7 @@ class User {
 
 	requestUserLogs = async (userID, page, resultsOnPage) => {
 		this.userLogsState = "pending";
+		this.userLogs = {};
 		await AuthStore.checkAuthorization();
 		userRequests.getUserLog(localStorage.getItem("token"), userID, page, resultsOnPage).then(this.requestLogsSuccess, this.requestLogsFailure);
 	};
@@ -39,7 +42,8 @@ class User {
 		this.userLogsState = "done";
 	};
 	requestLogsFailure = (error) => {
-		this.userLogsState = "error: " + error;
+		if (error.response.status === 403) this.userLogsState = "forbidden";
+		else this.userLogsState = "error: " + error;
 	};
 
 	requestUserFriendsLogs = async (userID, page, resultsOnPage) => {

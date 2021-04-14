@@ -339,6 +339,12 @@
   position: relative;
 }
 
+.searchInputDiv #searchInput:focus ~ .searchHints, .searchInputDiv .searchHints:active, .searchInputDiv .searchHints:hover {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
 .searchInputDiv .searchHints {
   z-index: 1200;
   position: absolute;
@@ -349,9 +355,7 @@
   background-color: #5a5a5a;
   color: white;
   border-radius: 1rem;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
+  display: none;
   -webkit-box-orient: vertical;
   -webkit-box-direction: normal;
       -ms-flex-direction: column;
@@ -766,6 +770,16 @@ li.episode:nth-child(even) {
 .settingsRow {
   font-size: 1.5em;
   cursor: pointer;
+}
+
+#privacySelect {
+  background-color: #1e1e1e;
+  color: #cfcfcf;
+  font-size: 1.2rem;
+  border-radius: 0.5rem;
+  margin-left: 1rem;
+  border: 1px solid;
+  padding: 2px 4px;
 }
 
 .saveSettingsButton {
