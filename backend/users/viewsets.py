@@ -349,7 +349,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except (UserFollow.DoesNotExist, TypeError):
             user_is_followed = False
 
-        if not is_user_available(request.user, user, user_is_followed):
+        if not is_user_available(request.user, user):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         stats = {}

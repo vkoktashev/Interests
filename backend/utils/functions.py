@@ -109,18 +109,17 @@ def objects_to_str(objects):
     return ', '.join(obj['name'] for obj in objects)
 
 
-def is_user_available(current_user, target_user, user_is_followed=None):
+def is_user_available(current_user, target_user):
     if current_user != target_user:
         if target_user.privacy == target_user.PRIVACY_NOBODY:
             return False
 
-        if user_is_followed is None:
-            try:
-                user_is_followed = UserFollow.objects.get(user=current_user, followed_user=target_user).is_following
-            except (UserFollow.DoesNotExist, TypeError):
-                user_is_followed = False
+        try:
+            current_user_is_followed = UserFollow.objects.get(user=target_user, followed_user=current_user).is_following
+        except (UserFollow.DoesNotExist, TypeError):
+            current_user_is_followed = False
 
-        if target_user.privacy == target_user.PRIVACY_FOLLOWED and not user_is_followed:
+        if target_user.privacy == target_user.PRIVACY_FOLLOWED and not current_user_is_followed:
             return False
 
     return True
