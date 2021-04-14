@@ -349,8 +349,10 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except (UserFollow.DoesNotExist, TypeError):
             user_is_followed = False
 
-        if not is_user_available(request.user, user):
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        is_available = is_user_available(request.user, user)
+
+        if not is_available:
+            return Response({'username': user.username, 'is_available': is_available})
 
         stats = {}
 
@@ -459,7 +461,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                              .filter(user=user, is_following=True).values('followed_user')) \
             .values('id', 'username')
 
-        response_data = {'is_followed': user_is_followed, 'followed_users': followed_users,
+        response_data = {'is_available': is_available, 'is_followed': user_is_followed,
+                         'followed_users': followed_users,
                          'games': games, 'movies': movies, 'shows': shows, 'stats': stats}
 
         serializer = UserInfoSerializer(user)
