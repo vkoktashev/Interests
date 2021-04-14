@@ -53,7 +53,7 @@ const UserPage = observer((props) => {
 			}
 		},
 		// eslint-disable-next-line
-		[loggedIn, userID]
+		[loggedIn, currentUser.username, user.username]
 	);
 
 	useEffect(() => {
