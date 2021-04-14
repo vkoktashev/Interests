@@ -77,7 +77,9 @@ const SettingsPage = observer((props) => {
 								<option value='Друзья'>Мои подписки</option>
 							</select>
 						</div>
-
+						<div className='settingsRow' hidden={!(settings.privacy !== privacySelect && privacySelect === "Никто")}>
+							Внимание! Полное закрытие профиля удалит вас из подписок других пользователей!
+						</div>
 						<button
 							className='saveSettingsButton'
 							disabled={!loggedIn}

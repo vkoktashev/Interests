@@ -1,4 +1,5 @@
 import React from "react";
+import { toJS } from "mobx";
 import { observer } from "mobx-react";
 import LoadingOverlay from "react-loading-overlay";
 import ShowStore from "../../store/ShowStore";
@@ -38,10 +39,12 @@ const SeasonsBlock = observer(({ showID, seasons, userWatchedShow }) => {
 		let episodes = [];
 		let seasons = [];
 		for (let season in showSeasons) {
-			for (let episode in showSeasons[season].episodes) {
-				episodes.push({ tmdb_id: showSeasons[season].episodes[episode].id, score: 0 });
-				if (seasons.indexOf(season) === -1) seasons.push(season);
-			}
+			console.log(toJS(showSeasons));
+			if (showSeasons[season].name !== "Спецматериалы")
+				for (let episode in showSeasons[season].episodes) {
+					episodes.push({ tmdb_id: showSeasons[season].episodes[episode].id, score: 0 });
+					if (seasons.indexOf(season) === -1) seasons.push(season);
+				}
 		}
 		setEpisodesStatus({ episodes }, showID, seasons);
 		setSaveEpisodes(false);
