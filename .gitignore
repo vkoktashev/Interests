@@ -2,3 +2,4 @@
 .vscode
 *.pyc
 frontend/.eslintcache
+backend/src/rawgpy/
