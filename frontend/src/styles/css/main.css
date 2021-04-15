@@ -1051,11 +1051,7 @@ a.logLink:hover, a.dataTable:hover {
 }
 
 .confirmPasswordForm {
-  margin-top: 10rem;
   color: #cfcfcf;
-  margin-left: auto;
-  margin-right: auto;
-  width: 30%;
 }
 
 .confirmPasswordLabel {
@@ -1084,16 +1080,17 @@ a.logLink:hover, a.dataTable:hover {
 }
 
 .confirmPasswordButton {
-  background-color: #a77edd !important;
+  background-color: #4F5DEA !important;
   color: white;
   font-size: 1.1rem;
   padding: 5px 30px;
   width: 12rem;
-  border-radius: 5px;
+  border-radius: 0.5rem;
+  border: none;
 }
 
 .confirmPasswordButton:disabled {
-  background-color: #5b1a81 !important;
+  background-color: #6c76e2 !important;
   color: #b1b1b1;
   font-size: 1.1rem;
   padding: 5px 30px;
@@ -1179,7 +1176,8 @@ input.form-control:-webkit-autofill {
 }
 
 .confirmButton {
-  background-color: #a77edd !important;
+  background-color: #4F5DEA !important;
+  border-radius: 0.5rem;
   color: white;
 }
 

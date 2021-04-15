@@ -58,7 +58,7 @@ const RegistrationForm = observer((props) => {
 										className='confirmButton'
 										disabled={password !== passwordConfirm || login.length < 1 || email.length < 1 || password.length < 1}
 										onClick={() => register(login, email, password)}>
-										Зарегистрироваться
+										{registrateState !== "pending" ? "Зарегистрироваться" : "Загрузка..."}
 									</MDBBtn>
 								</div>
 							</form>
