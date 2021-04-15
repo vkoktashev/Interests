@@ -41,7 +41,7 @@ const ResetPasswordForm = observer((props) => {
 
 								<div className='text-center mt-4'>
 									<MDBBtn type='submit' className='confirmButton'>
-										Сбросить
+										{resetPasswordState !== "pending" ? "Сбросить" : "Загрузка..."}
 									</MDBBtn>
 								</div>
 							</form>

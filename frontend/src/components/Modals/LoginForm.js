@@ -48,7 +48,7 @@ const LoginForm = observer((props) => {
 
 								<div className='text-center mt-4'>
 									<MDBBtn type='submit' className='confirmButton'>
-										Войти
+										{authState !== "pending" ? "Войти" : "Загрузка..."}
 									</MDBBtn>
 									<label
 										className='passwordResetLabel'
