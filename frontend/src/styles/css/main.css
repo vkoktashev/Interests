@@ -1051,11 +1051,7 @@ a.logLink:hover, a.dataTable:hover {
 }
 
 .confirmPasswordForm {
-  margin-top: 10rem;
   color: #cfcfcf;
-  margin-left: auto;
-  margin-right: auto;
-  width: 30%;
 }
 
 .confirmPasswordLabel {
