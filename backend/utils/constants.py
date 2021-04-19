@@ -1,7 +1,7 @@
 import rawgpy
 import tmdbsimple as tmdb
 
-rawg = rawgpy.RAWG("Interests. Contact us via your_interests@mail.ru")
+rawg = rawgpy.RAWG("b63e6d97a13e480890142f340650aefb")
 tmdb.API_KEY = 'ebf9e8e8a2be6bba6aacfa5c4c76f698'
 LANGUAGE = 'ru'
 
