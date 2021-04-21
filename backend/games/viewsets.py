@@ -14,13 +14,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from games.functions import get_game_new_fields, get_hltb_game_key, get_rawg_game_key
 from games.models import Game, UserGame, Genre, GameGenre
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer, GameSerializer
 from users.models import UserFollow
 from utils.constants import RAWG_UNAVAILABLE, ERROR, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, \
     GAME_NOT_FOUND, CACHE_TIMEOUT
 from utils.documentation import GAMES_SEARCH_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE
-from utils.functions import int_to_hours, get_page_size, int_to_minutes, update_fields_if_needed, get_rawg_game_key, \
+from utils.functions import int_to_hours, get_page_size, int_to_minutes, update_fields_if_needed, \
     objects_to_str
 from utils.openapi_params import query_param, page_param, page_size_param
 
@@ -100,28 +101,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except JSONDecodeError:
             return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        try:
-            results = get_hltb_search_result(rawg_game.get('name'))
-            hltb_game = max(results, key=lambda element: element.similarity).__dict__
-            hltb_game_name = hltb_game.get('game_name')
-            hltb_game_id = hltb_game.get('game_id')
-        except (ValueError, TypeError, ConnectionError):
-            hltb_game = None
-            hltb_game_name = ''
-            hltb_game_id = None
-
-        new_fields = {
-            'rawg_slug': rawg_game.get('slug'),
-            'rawg_name': rawg_game.get('name'),
-            'rawg_release_date': rawg_game.get('released'),
-            'rawg_tba': rawg_game.get('tba'),
-            'rawg_backdrop_path': rawg_game.get('background_image_additional')
-            if rawg_game.get('background_image_additional') is not None
-            else rawg_game.get('background_image'),
-            'rawg_poster_path': rawg_game.get('background_image'),
-            'hltb_name': hltb_game_name,
-            'hltb_id': hltb_game_id
-        }
+        hltb_game = get_hltb_game(rawg_game.get('name'))
+        new_fields = get_game_new_fields(rawg_game, hltb_game)
 
         with transaction.atomic():
             game, created = Game.objects.select_for_update().get_or_create(rawg_id=rawg_game.get('id'),
@@ -138,15 +119,9 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                                                  })
                 GameGenre.objects.get_or_create(genre=genre_obj, game=game)
 
-        rawg_game.update({'playtime': f'{rawg_game.get("playtime")} {int_to_hours(rawg_game.get("playtime"))}'})
-        translate_hltb_time(hltb_game, 'gameplay_main', 'gameplay_main_unit')
-        translate_hltb_time(hltb_game, 'gameplay_main_extra', 'gameplay_main_extra_unit')
-        translate_hltb_time(hltb_game, 'gameplay_completionist', 'gameplay_completionist_unit')
+        parsed_game = parse_game(rawg_game, hltb_game)
 
-        rawg_game = parse_game(rawg_game)
-        if hltb_game:
-            rawg_game.update({'hltb': hltb_game})
-        return Response(rawg_game)
+        return Response(parsed_game)
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserGameSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
@@ -261,28 +236,38 @@ def get_game_search_results(query, page, page_size):
     return results
 
 
-def get_hltb_search_result(game_name):
-    key = f'hltb_search_{game_name.replace(" ", "_")}'
-    results = cache.get(key, None)
-    if results is None:
-        results = HowLongToBeat(1).search(game_name.replace('’', '\''),
-                                          similarity_case_sensitive=False)
-        cache.set(key, results, CACHE_TIMEOUT)
-    return results
+def get_hltb_game(game_name):
+    key = get_hltb_game_key(game_name)
+    hltb_game = cache.get(key, None)
+
+    if hltb_game is None:
+        try:
+            results = HowLongToBeat(1).search(game_name.replace('’', '\''), similarity_case_sensitive=False)
+            hltb_game = max(results, key=lambda element: element.similarity).__dict__
+            cache.set(key, hltb_game, CACHE_TIMEOUT)
+        except (ValueError, TypeError):
+            hltb_game = None
+            cache.set(key, hltb_game, CACHE_TIMEOUT)
+        except ConnectionError:
+            hltb_game = None
+
+    return hltb_game
 
 
 def get_rawg_game(slug):
     returned_from_cache = True
     key = get_rawg_game_key(slug)
     rawg_game = cache.get(key, None)
+
     if rawg_game is None:
         rawg_game = rawg.get_game(slug).json
         cache.set(key, rawg_game, CACHE_TIMEOUT)
         returned_from_cache = False
+
     return rawg_game, returned_from_cache
 
 
-def parse_game(rawg_game):
+def parse_game(rawg_game, hltb_game=None):
     platforms = [obj['platform'] for obj in rawg_game['platforms']]
 
     new_game = {
@@ -299,6 +284,13 @@ def parse_game(rawg_game):
         'poster': rawg_game.get('background_image'),
         'release_date': '.'.join(reversed(rawg_game['released'].split('-')))
         if rawg_game.get('released') is not None else None,
+        'playtime': f'{rawg_game.get("playtime")} {int_to_hours(rawg_game.get("playtime"))}',
     }
+
+    if hltb_game is not None:
+        translate_hltb_time(hltb_game, 'gameplay_main', 'gameplay_main_unit')
+        translate_hltb_time(hltb_game, 'gameplay_main_extra', 'gameplay_main_extra_unit')
+        translate_hltb_time(hltb_game, 'gameplay_completionist', 'gameplay_completionist_unit')
+        new_game.update({'hltb': hltb_game})
 
     return new_game

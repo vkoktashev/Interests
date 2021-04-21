@@ -6,10 +6,10 @@ from django.core.cache import cache
 from django.db.models import Q
 
 from config.celery import app
+from movies.functions import get_movie_new_fields, get_tmdb_movie_key
 from movies.models import Movie
-from utils.constants import CACHE_TIMEOUT, LANGUAGE, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE, TMDB_BACKDROP_PATH_PREFIX, \
-    TMDB_POSTER_PATH_PREFIX
-from utils.functions import get_tmdb_movie_key, update_fields_if_needed
+from utils.constants import CACHE_TIMEOUT, LANGUAGE, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
+from utils.functions import update_fields_if_needed
 
 
 @app.on_after_finalize.connect
@@ -32,16 +32,6 @@ def update_upcoming_movies():
         key = get_tmdb_movie_key(tmdb_id)
         tmdb_movie = tmdb.Movies(tmdb_id).info(language=LANGUAGE)
         cache.set(key, tmdb_movie, CACHE_TIMEOUT)
-        new_fields = {
-            'imdb_id': tmdb_movie.get('imdb_id') if tmdb_movie.get('imdb_id') is not None else '',
-            'tmdb_original_name': tmdb_movie.get('original_title'),
-            'tmdb_name': tmdb_movie.get('title'),
-            'tmdb_runtime': tmdb_movie.get('runtime') if tmdb_movie.get('runtime') is not None else 0,
-            'tmdb_release_date': tmdb_movie.get('release_date') if tmdb_movie.get('release_date') != "" else None,
-            'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path']
-            if tmdb_movie.get('backdrop_path') is not None else '',
-            'tmdb_poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_movie['poster_path']
-            if tmdb_movie.get('poster_path') is not None else ''
-        }
+        new_fields = get_movie_new_fields(tmdb_movie)
         update_fields_if_needed(movie, new_fields)
         print(movie.tmdb_name)

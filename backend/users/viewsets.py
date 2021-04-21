@@ -33,9 +33,10 @@ from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
     USER_NOT_FOUND, EMAIL_ERROR, MINUTES_IN_HOUR, SITE_URL
 from utils.documentation import USER_SIGNUP_201_EXAMPLE, USER_SIGNUP_400_EXAMPLE, USER_LOG_200_EXAMPLE, \
     USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE
-from utils.functions import get_page_size, is_user_available
+from utils.functions import get_page_size
 from utils.models import Round
 from utils.openapi_params import page_param, page_size_param, query_param, uid64_param, token_param, reset_token_param
+from .functions import is_user_available
 from .models import User, UserFollow, UserLog, UserPasswordToken
 from .tokens import account_activation_token
 
