@@ -1,5 +1,4 @@
 .userPage
-    background-color: $backgroundColor
     color: $newText3
     margin-top: 30px
     margin-bottom: 30px
@@ -27,7 +26,7 @@
             background-position: center
             background-repeat: no-repeat
             background-size: cover
-            background-color: $activeBackgroundColor
+            background-color: $newBackground3
             border-radius: 4rem
             margin-right: 1rem
 
@@ -50,15 +49,14 @@
         color: $newText2
 
     .addFriendButton:active
-        color: white
+        color: $newText3
 
 a.logLink:link, a.logLink:visited, a.logLink:active, a.dataTable:link, a.dataTable:visited, a.dataTable:active
-    color: rgb(238, 238, 238)
-    font-weight: 500
+    color: $newText3
+    font-weight: 600
 
 a.logLink:hover, a.dataTable:hover
-    color: $activeColor
-    font-weight: 500
+    color: $newAccent2
 
 .logDay
     display: flex
@@ -91,23 +89,23 @@ a.logLink:hover, a.dataTable:hover
     margin-bottom: 20px
     margin-left: 10px
     width: 100px
-    background-color: $backgroundColor
-    border: 1px solid $textColor
-    color: $textColor
+    background-color: $newBackground2
+    border: 1px solid $newText2
+    color: $newText3
 
 .dataTable
-    color: $textColor
+    color: $newText3
     max-width: 100%
 
 .md-form input.active, .mdb-datatable-filter input, .dataTables_length select
-    color: $textColor !important
-    background-color: $backgroundColor !important
+    color: $newText3 !important
+    background-color: $newBackground2 !important
 
 .dataTables_paginate a
-    color: $textColor !important
+    color: $newText3 !important
 
 .dataTables_paginate li.active a, .dataTables_paginate li a:hover
-    background-color: $hoverLinkColor !important
+    background-color: $newAccent2 !important
 
 .table-striped tbody tr:nth-of-type(odd)
-    background-color: $backgroundColor
+    background-color: $newBackground2

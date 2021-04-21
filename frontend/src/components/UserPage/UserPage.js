@@ -69,7 +69,7 @@ const UserPage = observer((props) => {
 		<div className='contentPage'>
 			<div className='bg' />
 			<LoadingOverlay active={userState === "pending"} spinner text='Загрузка...'>
-				<div className='contentBody header'>
+				<div className='contentBody header dark'>
 					<div className='userHeader'>
 						<div className='userCard'>
 							<div className='userAvatar' style={{ backgroundImage: `url(${"http://upload.wikimedia.org/wikipedia/commons/f/f4/User_Avatar_2.png"})` }} />

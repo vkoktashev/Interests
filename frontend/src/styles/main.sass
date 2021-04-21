@@ -26,7 +26,7 @@ body
 
 .bg
     background-color: $newBackground1
-    color: $textColor
+    color: $newText3
     height: 100vh
     width: 100vw
     position: fixed
@@ -35,13 +35,6 @@ body
     background-position: center
     background-size: cover
     z-index: -1000
-
-.textureBG
-    background-size: auto
-    background-repeat: repeat
-    background-image: url("https://365psd.ru/images/backgrounds/bg-dark-4782.jpg")
-    height: 100vh
-    filter: none
 
 .rootPage
     display: flex
@@ -80,13 +73,13 @@ a
     font-weight: 400
 
 a:link, a:visited, a:active
-    color: $linkTextColor
+    color: $newText3
 
 a:hover
-    color: $activeColor
+    color: $newAccent2
 
 $sidebar-width: 250px
 $icon-size: 40px
-$sidebar-bg-color: $backgroundColor
+$sidebar-bg-color: $newBackground2
 
 @import "../../node_modules/react-pro-sidebar/dist/scss/styles.scss"

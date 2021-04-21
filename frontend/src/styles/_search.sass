@@ -20,7 +20,7 @@
         background-position: center
         background-repeat: no-repeat
         background-size: cover
-        background-color: gray
+        background-color: grey
         display: inline-block
         margin: 0
         border-top-left-radius: 10px
@@ -30,9 +30,9 @@
         padding: 10px
         text-align: center
         vertical-align: top
-        color: $linkTextColor
+        color: $newText3
         font-weight: 200
-        background-color: $activeBackgroundColor
+        background-color: $newBackground3
         height: 100px
         width: 50%
         display: inline-block
@@ -46,8 +46,8 @@
         height: 70%
 
 #searchInput2
-    color: $textColor
-    background-color: $backgroundColor
+    color: $newText3
+    background-color: $newBackground1
 
 .paginationButton
     position: absolute
@@ -56,13 +56,16 @@
     height: 100%
     display: inline-block
     vertical-align: top
-    color: $textColor
-    background-color: $backgroundColor
+    color: $newText3
+    background-color: $newBackground3
     border-radius: 5px
     border: none
 
 .paginationButton:hover
-    background-color: $activeBackgroundColor
+    background-color: $newBackground3
+
+.paginationButton:disabled
+    background-color: $newBackground1
 
 .paginationButton:active
     border: none
