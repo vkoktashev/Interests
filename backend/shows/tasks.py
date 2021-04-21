@@ -8,7 +8,8 @@ from requests import HTTPError
 
 from config.celery import app
 from shows.models import Show, Episode, UserShow, Season
-from utils.constants import LANGUAGE, CACHE_TIMEOUT, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE, TMDB_BACKDROP_PATH_PREFIX
+from utils.constants import LANGUAGE, CACHE_TIMEOUT, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE, TMDB_BACKDROP_PATH_PREFIX, \
+    TMDB_POSTER_PATH_PREFIX
 from utils.functions import get_tmdb_show_key, update_fields_if_needed, get_tmdb_season_key, \
     update_fields_if_needed_without_save
 
@@ -58,6 +59,8 @@ def update_shows():
             'tmdb_episode_run_time': tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0,
             'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path']
             if tmdb_show['backdrop_path'] else '',
+            'tmdb_poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_show['poster_path']
+            if tmdb_show.get('poster_path') is not None else '',
             'tmdb_release_date': tmdb_show['first_air_date'] if tmdb_show['first_air_date'] != "" else None,
             'tmdb_status': tmdb_show.get('status'),
             'tmdb_number_of_episodes': tmdb_show.get('number_of_episodes')

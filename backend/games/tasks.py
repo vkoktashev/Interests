@@ -35,7 +35,10 @@ def update_upcoming_games():
             'rawg_name': rawg_game.get('name'),
             'rawg_release_date': rawg_game.get('released'),
             'rawg_tba': rawg_game.get('tba'),
-            'rawg_backdrop_path': rawg_game.get('background_image')
+            'rawg_backdrop_path': rawg_game.get('background_image_additional')
+            if rawg_game.get('background_image_additional') is not None
+            else rawg_game.get('background_image'),
+            'rawg_poster_path': rawg_game.get('background_image')
         }
         update_fields_if_needed(game, new_fields)
         print(game.rawg_name)

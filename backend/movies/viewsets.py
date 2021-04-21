@@ -111,7 +111,9 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'tmdb_runtime': tmdb_movie.get('runtime') if tmdb_movie.get('runtime') is not None else 0,
             'tmdb_release_date': tmdb_movie.get('release_date') if tmdb_movie.get('release_date') != "" else None,
             'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path']
-            if tmdb_movie.get('backdrop_path') else ''
+            if tmdb_movie.get('backdrop_path') is not None else '',
+            'tmdb_poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_movie['poster_path']
+            if tmdb_movie.get('poster_path') is not None else ''
         }
 
         with transaction.atomic():

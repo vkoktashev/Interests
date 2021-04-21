@@ -118,6 +118,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'rawg_backdrop_path': rawg_game.get('background_image_additional')
             if rawg_game.get('background_image_additional') is not None
             else rawg_game.get('background_image'),
+            'rawg_poster_path': rawg_game.get('background_image'),
             'hltb_name': hltb_game_name,
             'hltb_id': hltb_game_id
         }

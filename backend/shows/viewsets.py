@@ -119,6 +119,8 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'tmdb_episode_run_time': tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0,
             'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path']
             if tmdb_show['backdrop_path'] else '',
+            'tmdb_poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_show['poster_path']
+            if tmdb_show.get('poster_path') is not None else '',
             'tmdb_release_date': tmdb_show['first_air_date'] if tmdb_show['first_air_date'] != "" else None,
             'tmdb_status': tmdb_show.get('status'),
             'tmdb_number_of_episodes': tmdb_show.get('number_of_episodes')
