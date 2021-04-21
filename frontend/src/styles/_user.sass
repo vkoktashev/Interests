@@ -1,6 +1,5 @@
 .userPage
-    background-color: $backgroundColor
-    color: $textColor
+    color: $newText3
     margin-top: 30px
     margin-bottom: 30px
     padding-left: 10px
@@ -13,50 +12,51 @@
     justify-content: space-between
     align-items: flex-start
     flex-wrap: wrap
+    background: $newBackground2
+    padding: 16px 24px 20px
+    border-radius: 8px
 
     .userCard
         display: flex
         flex-direction: row
 
         .userAvatar
-            height: 100px
-            width: 100px
+            height: 72px
+            width: 72px
             background-position: center
             background-repeat: no-repeat
             background-size: cover
-            background-color: $activeBackgroundColor
+            background-color: $newBackground3
             border-radius: 4rem
             margin-right: 1rem
 
         h2
-            font-weight: 500
+            @include headline5
 
-        p
-            font-size: 1rem
+        .subtitle
+            @include subtitle2
+            color: $newText2
 
     .addFriendButton
-        margin: 0.5rem
-        background-color: $mainColor
+        @include button
+        color: $newText3
+        background-color: $newAccent2
         border: none
-        color: $headerTextColor
-        padding: 0.5rem
-        text-align: center
-        text-decoration: none
-        border-radius: 0.5rem
+        padding: 8px
+        border-radius: 8px
 
     .addFriendButton:hover
-        color: $activeColor
+        color: $newText2
 
     .addFriendButton:active
-        color: white
+        color: $newText3
 
 a.logLink:link, a.logLink:visited, a.logLink:active, a.dataTable:link, a.dataTable:visited, a.dataTable:active
-    color: rgb(238, 238, 238)
-    font-weight: 500
+    color: $newText3
+    font-weight: 600
 
 a.logLink:hover, a.dataTable:hover
-    color: $activeColor
-    font-weight: 500
+    color: $newAccent2
 
 .logDay
     display: flex
@@ -89,23 +89,23 @@ a.logLink:hover, a.dataTable:hover
     margin-bottom: 20px
     margin-left: 10px
     width: 100px
-    background-color: $backgroundColor
-    border: 1px solid $textColor
-    color: $textColor
+    background-color: $newBackground2
+    border: 1px solid $newText2
+    color: $newText3
 
 .dataTable
-    color: $textColor
+    color: $newText3
     max-width: 100%
 
 .md-form input.active, .mdb-datatable-filter input, .dataTables_length select
-    color: $textColor !important
-    background-color: $backgroundColor !important
+    color: $newText3 !important
+    background-color: $newBackground2 !important
 
 .dataTables_paginate a
-    color: $textColor !important
+    color: $newText3 !important
 
 .dataTables_paginate li.active a, .dataTables_paginate li a:hover
-    background-color: $hoverLinkColor !important
+    background-color: $newAccent2 !important
 
 .table-striped tbody tr:nth-of-type(odd)
-    background-color: $backgroundColor
+    background-color: $newBackground2

@@ -110,6 +110,8 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except ConnectionError:
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
+        # todo вынести new_fields везде в отдельные методы
+        #  возможно создать методы для обновления моделей
         new_fields = {
             'imdb_id': tmdb_show.get('imdb_id') if tmdb_show.get('imdb_id') is not None else '',
             'tmdb_original_name': tmdb_show['original_name'],
@@ -117,7 +119,9 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'tmdb_episode_run_time': tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0,
             'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path']
             if tmdb_show['backdrop_path'] else '',
-            'tmdb_release_date': tmdb_show['first_air_date'] if tmdb_show['first_air_date'] != "" else None
+            'tmdb_release_date': tmdb_show['first_air_date'] if tmdb_show['first_air_date'] != "" else None,
+            'tmdb_status': tmdb_show.get('status'),
+            'tmdb_number_of_episodes': tmdb_show.get('number_of_episodes')
         }
 
         with transaction.atomic():
@@ -792,20 +796,10 @@ def get_episode(show_tmdb_id, season_number, episode_number):
 
 
 def translate_tmdb_status(tmdb_status):
-    if tmdb_status == 'Ended':
-        return 'Окончен'
-    elif tmdb_status == 'Returning Series':
-        return 'Продолжается'
-    elif tmdb_status == 'Pilot':
-        return 'Пилот'
-    elif tmdb_status == 'Canceled':
-        return 'Отменен'
-    elif tmdb_status == 'In Production':
-        return 'В производстве'
-    elif tmdb_status == 'Planned':
-        return 'Запланирован'
-    else:
-        return tmdb_status
+    for choice in Show.TMDB_STATUS_CHOICES:
+        if tmdb_status in choice:
+            return choice[1]
+    return tmdb_status
 
 
 def parse_show(tmdb_show):

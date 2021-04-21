@@ -32,7 +32,7 @@ def update_upcoming_movies():
         tmdb_movie = tmdb.Movies(tmdb_id).info(language=LANGUAGE)
         cache.set(key, tmdb_movie, CACHE_TIMEOUT)
         new_fields = {
-            'imdb_id': tmdb_movie.get('imdb_id'),
+            'imdb_id': tmdb_movie.get('imdb_id') if tmdb_movie.get('imdb_id') is not None else '',
             'tmdb_original_name': tmdb_movie.get('original_title'),
             'tmdb_name': tmdb_movie.get('title'),
             'tmdb_runtime': tmdb_movie.get('runtime'),
