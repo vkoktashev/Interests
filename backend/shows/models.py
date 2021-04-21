@@ -7,6 +7,22 @@ from users.models import UserScore, UserLogAbstract
 
 
 class Show(models.Model):
+    TMDB_STATUS_ENDED = 'Ended'
+    TMDB_STATUS_RETURNING_SERIES = 'Returning Series'
+    TMDB_STATUS_PILOT = 'Pilot'
+    TMDB_STATUS_CANCELED = 'Canceled'
+    TMDB_STATUS_IN_PRODUCTION = 'In Production'
+    TMDB_STATUS_PLANNED = 'Planned'
+
+    TMDB_STATUS_CHOICES = (
+        (TMDB_STATUS_ENDED, 'Завершился'),
+        (TMDB_STATUS_RETURNING_SERIES, 'Продолжается'),
+        (TMDB_STATUS_PILOT, 'Пилот'),
+        (TMDB_STATUS_CANCELED, 'Отменен'),
+        (TMDB_STATUS_IN_PRODUCTION, 'В производстве'),
+        (TMDB_STATUS_PLANNED, 'Планируется')
+    )
+
     imdb_id = models.CharField(max_length=20, blank=True)
     tmdb_id = models.IntegerField(unique=True)
     tmdb_original_name = models.CharField(max_length=200)
@@ -14,6 +30,8 @@ class Show(models.Model):
     tmdb_episode_run_time = models.IntegerField()
     tmdb_backdrop_path = models.CharField(max_length=200, blank=True)
     tmdb_release_date = models.DateField(null=True)
+    tmdb_status = models.CharField(max_length=30, blank=True, choices=TMDB_STATUS_CHOICES)
+    tmdb_number_of_episodes = models.IntegerField(default=0)
 
 
 class Season(models.Model):
