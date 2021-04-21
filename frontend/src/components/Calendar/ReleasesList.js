@@ -7,8 +7,8 @@ function ReleasesList({ calendar }) {
 	let history = useHistory();
 
 	const myStyle = {
-		backgroundColor: "rgb(30, 30, 30)",
-		color: "rgb(207, 207, 207)",
+		backgroundColor: "#191A1B",
+		color: "#F1F1FB",
 		border: "none",
 	};
 
@@ -100,7 +100,7 @@ function ReleasesList({ calendar }) {
 	}
 
 	return (
-		<Timeline style={myStyle} lineColor='rgb(100, 100, 100)'>
+		<Timeline style={myStyle} lineColor='#A6A6AB'>
 			{calendar?.map((day) => {
 				let date = new Date(day[0]);
 				return (

@@ -12,10 +12,10 @@ ul
     list-style-type: none
 
 li.episode:nth-child(odd)
-    background-color: $backgroundColor
+    background-color: $newBackground2
 
 li.episode:nth-child(even)
-    background-color: $activeBackgroundColor
+    background-color: $newBackground3
     border-radius: 5px
 
 .episodeRating
@@ -81,26 +81,26 @@ li.episode:nth-child(even)
     z-index: 1000
     text-align: center
     padding-top: 5px
-    background-color: $activeBackgroundColor
+    background-color: $newBackground3
 
 .saveEpisodesButton
     width: 150px
     height: 50px
-    background-color: $mainColor
-    color: $headerTextColor
+    background-color: $newAccent2
+    color: $newText3
     border-radius: 5px
 
 .saveEpisodesButton:hover
-    color: $textColor
-    background-color: $hoverLinkColor
+    background-color: $newAccent1
 
 .checkAllEpisodesButton
     margin-top: 10px
-    background-color: rgba(0, 0, 0, 0)
-    color: $linkTextColor
+    background-color: $newAccent2
+    color: $newText3
     font-weight: bolder
     border-style: solid
     border-radius: 5px
+    padding: 2px 8px
 
 .checkAllEpisodesButton:hover
-    color: $activeColor
+    background-color: $newAccent1

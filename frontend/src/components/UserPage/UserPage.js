@@ -12,7 +12,7 @@ import MovieBlock from "./MovieBlock";
 import UserLogBlock from "./UserLogBlock";
 import CategoriesTab from "../Common/CategoriesTab";
 import ShowBlock from "./ShowBlock";
-import ChartBlock from "./ChartBlock";
+import StatisticsBlock from "./StatisticsBlock";
 
 const LOG_ROWS_COUNT = 20;
 
@@ -24,14 +24,14 @@ const UserPage = observer((props) => {
 	const { user, userState, requestUser, setUserStatus, requestUserLogs, userLogs, userLogsState, requestUserFriendsLogs, userFriendsLogs, userFriendsLogsState } = UserStore;
 
 	let { userID, category } = useParams();
-	const [activeCategory, setActiveCategory] = useState("Профиль");
+	const [activeCategory, setActiveCategory] = useState("Лента");
 	const [lastActivity, setLastActivity] = useState("");
 
 	useEffect(
 		() => {
 			requestUser(userID);
 			requestUserLogs(userID, 1, LOG_ROWS_COUNT);
-			setActiveCategory("Профиль");
+			setActiveCategory("Лента");
 		},
 		// eslint-disable-next-line
 		[userID, requestUser, requestUserLogs]
@@ -40,7 +40,7 @@ const UserPage = observer((props) => {
 	useEffect(
 		() => {
 			if (category) setActiveCategory(category);
-			else setActiveCategory("Профиль");
+			else setActiveCategory("Лента");
 		},
 		// eslint-disable-next-line
 		[category]
@@ -67,15 +67,17 @@ const UserPage = observer((props) => {
 
 	return (
 		<div className='contentPage'>
-			<div className={"bg " + (!user.backdrop_path ? " textureBG" : "")} style={{ backgroundImage: user.backdrop_path ? `url(${user.backdrop_path})` : "" }} />
+			<div className='bg' />
 			<LoadingOverlay active={userState === "pending"} spinner text='Загрузка...'>
-				<div className='contentBody header'>
+				<div className='contentBody header dark'>
 					<div className='userHeader'>
 						<div className='userCard'>
 							<div className='userAvatar' style={{ backgroundImage: `url(${"http://upload.wikimedia.org/wikipedia/commons/f/f4/User_Avatar_2.png"})` }} />
 							<div>
 								<h2>{user.username}</h2>
-								<p hidden={!user.is_available}>Последняя активность {lastActivity}</p>
+								<div hidden={!user.is_available} className='subtitle'>
+									Последняя активность {lastActivity}
+								</div>
 							</div>
 						</div>
 
@@ -90,16 +92,14 @@ const UserPage = observer((props) => {
 					</div>
 
 					<CategoriesTab
-						categories={["Профиль", "Игры", "Фильмы", "Сериалы", "Друзья"]}
+						categories={["Лента", "Игры", "Фильмы", "Сериалы", "Статистика", "Друзья"]}
 						activeCategory={activeCategory}
 						onChangeCategory={(category) => {
 							setActiveCategory(category);
 						}}>
-						<div hidden={activeCategory !== "Профиль"}>
+						<div hidden={activeCategory !== "Лента"}>
 							<div hidden={!user.is_available}>
-								<h4>Моя активность: </h4>
 								<LoadingOverlay active={userLogsState === "pending" && userState !== "pending"} spinner text='Загрузка активности...'>
-									<ChartBlock stats={user.stats} />
 									<UserLogBlock logs={userLogs} onChangePage={(pageNumber) => requestUserLogs(userID, pageNumber, LOG_ROWS_COUNT)} />
 								</LoadingOverlay>
 							</div>
@@ -109,13 +109,16 @@ const UserPage = observer((props) => {
 							</h4>
 						</div>
 						<div hidden={activeCategory !== "Игры"}>
-							<GameBlock games={user.games} stats={user?.stats?.games} />
+							<GameBlock games={user.games} />
 						</div>
 						<div hidden={activeCategory !== "Фильмы"}>
-							<MovieBlock movies={user.movies} stats={user?.stats?.movies} />
+							<MovieBlock movies={user.movies} />
 						</div>
 						<div hidden={activeCategory !== "Сериалы"}>
-							<ShowBlock shows={user.shows} stats={user?.stats?.episodes} />
+							<ShowBlock shows={user.shows} />
+						</div>
+						<div hidden={activeCategory !== "Статистика"}>
+							<StatisticsBlock stats={user.stats} />
 						</div>
 						<div hidden={activeCategory !== "Друзья"}>
 							<FriendBlock users={user.followed_users ? user.followed_users : []} />
