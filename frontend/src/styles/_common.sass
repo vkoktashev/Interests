@@ -1,27 +1,25 @@
 
 .categoriesTabs
     max-width: 100%
-    margin-top: 15px
+    margin-top: 2rem
 
     .tabs
         white-space: pre
         overflow-x: auto
 
         .categoriesTab
-            background-color: $backgroundColor
-            color: $textColor
-            border-top-left-radius: 1rem
-            border-top-right-radius: 1rem
+            @include headline6
+            background-color: $newBackground1
+            color: $newText1
+            border-radius: 8px 8px 0px 0px
             border: none
             padding: 8px 16px
-            text-align: left
-            margin-left: 0px
-            margin-right: 0px
-            font-size: 21px
+            margin-left: 0px 0px
             outline: none
 
             &.active
-                background-color: $categoryTabActiveColor
+                color: $newText3
+                background-color: $newBackground2
 
         .categoriesTab:focus
             outline: 0 !important
@@ -34,10 +32,9 @@
             width: 100%
 
     .categoryContent
-        background-color: $categoryTabActiveColor
+        background-color: $newBackground2
         padding: 1rem
-        border-radius: 1rem
-        border-top-left-radius: 0
+        border-radius: 0px 8px 8px 8px
 
 .contentStatuses
     max-width: 100%

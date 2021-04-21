@@ -126,7 +126,7 @@
 
 .categoriesTabs {
   max-width: 100%;
-  margin-top: 15px;
+  margin-top: 2rem;
 }
 
 .categoriesTabs .tabs {
@@ -135,21 +135,25 @@
 }
 
 .categoriesTabs .tabs .categoriesTab {
-  background-color: #1e1e1e;
-  color: #cfcfcf;
-  border-top-left-radius: 1rem;
-  border-top-right-radius: 1rem;
+  font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
+  font-style: normal;
+  font-weight: normal;
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 29px;
+  letter-spacing: 0.15px;
+  background-color: #040405;
+  color: #2E2E2F;
+  border-radius: 8px 8px 0px 0px;
   border: none;
   padding: 8px 16px;
-  text-align: left;
-  margin-left: 0px;
-  margin-right: 0px;
-  font-size: 21px;
+  margin-left: 0px 0px;
   outline: none;
 }
 
 .categoriesTabs .tabs .categoriesTab.active {
-  background-color: #282828;
+  color: #F1F1FB;
+  background-color: #191A1B;
 }
 
 .categoriesTabs .tabs .categoriesTab:focus {
@@ -165,10 +169,9 @@
 }
 
 .categoriesTabs .categoryContent {
-  background-color: #282828;
+  background-color: #191A1B;
   padding: 1rem;
-  border-radius: 1rem;
-  border-top-left-radius: 0;
+  border-radius: 0px 8px 8px 8px;
 }
 
 .contentStatuses {
@@ -637,7 +640,7 @@ li.episode:nth-child(even) {
 }
 
 .contentPage .contentBody {
-  background-color: #1e1e1e;
+  background-color: #040405;
   padding: 1rem;
 }
 
@@ -886,7 +889,7 @@ li.episode {
 
 .userPage {
   background-color: #1e1e1e;
-  color: #cfcfcf;
+  color: #F1F1FB;
   margin-top: 30px;
   margin-bottom: 30px;
   padding-left: 10px;
@@ -910,6 +913,9 @@ li.episode {
           align-items: flex-start;
   -ms-flex-wrap: wrap;
       flex-wrap: wrap;
+  background: #191A1B;
+  padding: 16px 24px 20px;
+  border-radius: 8px;
 }
 
 .userHeader .userCard {
@@ -923,8 +929,8 @@ li.episode {
 }
 
 .userHeader .userCard .userAvatar {
-  height: 100px;
-  width: 100px;
+  height: 72px;
+  width: 72px;
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -934,26 +940,42 @@ li.episode {
 }
 
 .userHeader .userCard h2 {
-  font-weight: 500;
+  font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
+  font-style: normal;
+  font-weight: normal;
+  font-size: 26px;
+  line-height: 35px;
 }
 
-.userHeader .userCard p {
-  font-size: 1rem;
+.userHeader .userCard .subtitle {
+  font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
+  font-style: normal;
+  font-weight: normal;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 0.1px;
+  color: #A6A6AB;
 }
 
 .userHeader .addFriendButton {
-  margin: 0.5rem;
+  font-family: Open Sans;
+  font-style: normal;
+  font-weight: normal;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 19px;
+  letter-spacing: 1.25px;
+  text-transform: uppercase;
+  color: #F1F1FB;
   background-color: #4F5DEA;
   border: none;
-  color: white;
-  padding: 0.5rem;
-  text-align: center;
-  text-decoration: none;
-  border-radius: 0.5rem;
+  padding: 8px;
+  border-radius: 8px;
 }
 
 .userHeader .addFriendButton:hover {
-  color: #a77edd;
+  color: #A6A6AB;
 }
 
 .userHeader .addFriendButton:active {
@@ -1451,7 +1473,7 @@ body {
 }
 
 .bg {
-  background-color: #1e1e1e;
+  background-color: #040405;
   color: #cfcfcf;
   height: 100vh;
   width: 100vw;
