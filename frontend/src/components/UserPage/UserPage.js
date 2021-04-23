@@ -9,10 +9,10 @@ import LoadingOverlay from "react-loading-overlay";
 import GameBlock from "./GameBlock";
 import FriendBlock from "../Common/FriendBlock";
 import MovieBlock from "./MovieBlock";
-import UserLogBlock from "./UserLogBlock";
+import UserLogBlock from "./Logs/UserLogBlock";
 import CategoriesTab from "../Common/CategoriesTab";
 import ShowBlock from "./ShowBlock";
-import StatisticsBlock from "./StatisticsBlock";
+import StatisticsBlock from "./Statistics/StatisticsBlock";
 
 const LOG_ROWS_COUNT = 20;
 

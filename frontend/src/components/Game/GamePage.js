@@ -21,7 +21,7 @@ import Rating from "../Common/Rating";
  */
 const GamePage = observer((props) => {
 	const { game, gameState, requestGame, setGameStatus, userInfo, friendsInfo, userInfoState, requestUserInfo, anyError } = GameStore;
-	const { patchSettings, saveSettingsState } = CurrentUserStore;
+	const { saveSettingsState } = CurrentUserStore;
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
 
@@ -158,14 +158,6 @@ const GamePage = observer((props) => {
 							{/* <video width='800' height='450' controls='controls' poster={game.rawg?.clip?.preview} src={game.rawg?.clip?.clip} type='video' /> */}
 							<h3>Описание</h3>
 							<div dangerouslySetInnerHTML={{ __html: game.overview }} />
-							<button
-								className={"saveReviewButton"}
-								hidden={!loggedIn}
-								onClick={() => {
-									patchSettings({ backdrop_path: game.background });
-								}}>
-								Выбрать как фон профиля
-							</button>
 						</div>
 						<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
 						<div className='reviewBody' hidden={!loggedIn}>

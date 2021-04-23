@@ -21,7 +21,7 @@ import Rating from "../Common/Rating";
 const MoviePage = observer((props) => {
 	const { movie, movieState, requestMovie, setMovieStatus, userInfo, friendsInfo, userInfoState, requestUserInfo, anyError } = MovieStore;
 	const { loggedIn } = AuthStore;
-	const { patchSettings, saveSettingsState } = CurrentUserStore;
+	const { saveSettingsState } = CurrentUserStore;
 	const { openLoginForm } = PagesStore;
 
 	let { id } = useParams();
@@ -137,15 +137,6 @@ const MoviePage = observer((props) => {
 						<div>
 							<h3>Описание</h3>
 							<div dangerouslySetInnerHTML={{ __html: movie.overview }} />
-							<br />
-							<button
-								className={"saveReviewButton"}
-								hidden={!loggedIn}
-								onClick={() => {
-									patchSettings({ backdrop_path: movie.backdrop_path });
-								}}>
-								Выбрать как фон профиля
-							</button>
 						</div>
 						<div className='reviewBody' hidden={!loggedIn}>
 							<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>

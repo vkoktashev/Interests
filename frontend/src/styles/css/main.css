@@ -1,3 +1,4 @@
+@import url(c:\Users\vladi\Interests\frontend\node_modules\rc-pagination\assets\index.css);
 @-webkit-keyframes fadeIn {
   0% {
     opacity: 0;
@@ -8,7 +9,6 @@
     padding-left: 1rem;
   }
 }
-
 @keyframes fadeIn {
   0% {
     opacity: 0;
@@ -401,6 +401,55 @@
 .searchInputDiv .searchHints > * .searchHint:hover {
   color: #4F5DEA;
   background-color: #191A1B;
+}
+
+.customNUD {
+  margin-left: 1rem;
+  border-radius: 8px;
+  font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
+  font-style: normal;
+  font-weight: normal;
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 29px;
+  letter-spacing: 0.15px;
+  background-color: #3F4041;
+  color: #F1F1FB;
+}
+
+.customNUD input {
+  background-color: #3F4041;
+  color: #F1F1FB;
+  border: none;
+  outline: none;
+  width: 40px;
+  text-align: center;
+}
+
+.customNUD input[type=number] {
+  -webkit-appearance: textfield;
+          appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.customNUD input::-webkit-outer-spin-button, .customNUD input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.customNUD .minusButton {
+  background-color: #3F4041;
+  color: #F1F1FB;
+  border: none;
+  outline: none;
+  border-radius: 8px 0 0 8px;
+}
+
+.customNUD .plusButton {
+  background-color: #3F4041;
+  color: #F1F1FB;
+  border: none;
+  outline: none;
+  border-radius: 0 8px 8px 0;
 }
 
 .seasonBlock {
@@ -1047,6 +1096,373 @@ a.logLink:hover, a.dataTable:hover {
 
 .table-striped tbody tr:nth-of-type(odd) {
   background-color: #191A1B;
+}
+
+.itemRowsHeader {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
+  font-style: normal;
+  font-weight: normal;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 0.1px;
+  color: #A6A6AB;
+  margin-bottom: 1rem;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+}
+
+.itemRowsHeader .itemRowsHeaderLeft {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.itemRowsHeader .itemRowsHeaderLeft #searchUserItemsInput {
+  font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
+  font-style: normal;
+  font-weight: normal;
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 29px;
+  letter-spacing: 0.15px;
+  background-color: #3F4041;
+  color: #F1F1FB;
+  border: none;
+  border-radius: 8px;
+  width: 100%;
+  height: 38px;
+  outline: none;
+  -ms-flex-negative: 1;
+      flex-shrink: 1;
+}
+
+@media (max-width: 516px) {
+  .itemRowsHeader .itemRowsHeaderLeft #searchUserItemsInput {
+    width: 80%;
+  }
+}
+
+.itemRowsHeader .itemRowsHeaderLeft #searchUserItemsInput[type=text] {
+  padding-left: 1rem;
+}
+
+.itemRowsHeader .itemRowsHeaderLeft .mobileOpenButton {
+  background-color: #3F4041;
+  color: #F1F1FB;
+  border: none;
+  border-radius: 8px;
+  margin-left: 1rem;
+  padding: 4px 8px;
+  font-size: 20px;
+  height: 38px;
+  width: 40px;
+}
+
+@media (min-width: 516px) {
+  .itemRowsHeader .itemRowsHeaderLeft .mobileOpenButton {
+    display: none;
+  }
+}
+
+@media (max-width: 515px) {
+  .itemRowsHeader .itemRowsHeaderLeft .sortButtons {
+    margin-left: 0;
+    margin-top: 1rem;
+  }
+}
+
+.itemRowsHeader .itemRowsHeaderLeft .sortButtons .sortRowsButton {
+  background-color: #3F4041;
+  color: #F1F1FB;
+  border: none;
+  border-radius: 8px;
+  margin-left: 1rem;
+  padding: 4px 8px;
+  font-size: 20px;
+  height: 38px;
+}
+
+@media (max-width: 515px) {
+  .itemRowsHeader .itemRowsHeaderLeft .sortButtons .sortRowsButton:nth-child(1) {
+    margin-left: 0;
+  }
+}
+
+.itemRowsHeader .itemRowsHeaderLeft .sortButtons .sortRowsButton:nth-child(2) {
+  margin-right: 1rem;
+}
+
+.itemRowsHeader .itemRowsHeaderLeft:focus {
+  border: none;
+}
+
+.itemRowsHeader .itemRowsHeaderRight {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+}
+
+@media (max-width: 1080px) {
+  .itemRowsHeader .itemRowsHeaderRight {
+    margin-top: 1rem;
+  }
+}
+
+.itemRowsFooter {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+}
+
+.itemRowsFooter div {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.itemRows {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -ms-flex-negative: 2;
+      flex-shrink: 2;
+  min-width: 200px;
+  max-width: 100%;
+}
+
+.itemRows .itemBlock {
+  margin-bottom: 1rem;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: reverse;
+      -ms-flex-direction: column-reverse;
+          flex-direction: column-reverse;
+  border-radius: 8px;
+  max-width: 100%;
+}
+
+.itemRows .itemBlock .itemRow {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  background: #3F4041;
+  margin-top: 0;
+  border-radius: 0 8px;
+}
+
+@media (max-width: 900px) {
+  .itemRows .itemBlock .itemRow {
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+  }
+}
+
+.itemRows .itemBlock .itemRow .itemRowLeft {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  background: #4F5DEA;
+  -webkit-box-flex: 1;
+      -ms-flex-positive: 1;
+          flex-grow: 1;
+  -ms-flex-negative: 1;
+      flex-shrink: 1;
+}
+
+.itemRows .itemBlock .itemRow .itemRowLeft .itemPoster {
+  background-color: #3F4041;
+  width: 100px;
+  -ms-flex-negative: 0;
+      flex-shrink: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+}
+
+.itemRows .itemBlock .itemRow .itemRowLeft .itemName {
+  font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
+  font-style: normal;
+  font-weight: normal;
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 29px;
+  letter-spacing: 0.15px;
+  color: #F1F1FB;
+  padding: 10px 8px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+}
+
+.itemRows .itemBlock .itemRow .itemRowLeft .itemName:hover a {
+  color: #A6A6AB;
+}
+
+.itemRows .itemBlock .itemRow .itemRowRight {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: end;
+      -ms-flex-pack: end;
+          justify-content: flex-end;
+  background: #3F4041;
+  max-width: 100%;
+  -webkit-box-flex: 0;
+      -ms-flex-positive: 0;
+          flex-grow: 0;
+  -ms-flex-negative: 0;
+      flex-shrink: 0;
+  border-radius: 8px;
+}
+
+.itemRows .itemBlock .itemRow .itemRowRight > * {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  border-right: 1px solid #A6A6AB;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  padding: 8px;
+  font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
+  font-style: normal;
+  font-weight: normal;
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 29px;
+  letter-spacing: 0.15px;
+  width: 110px;
+}
+
+.itemRows .itemBlock .itemRow .itemRowRight > *:last-child {
+  border-right: none !important;
+}
+
+.itemRows .itemBlock .itemRow .itemRowRight .itemStatus {
+  font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
+  font-style: normal;
+  font-weight: normal;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 0.1px;
+  color: #F1F1FB;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  width: 140px;
+}
+
+.itemRows .itemBlock .itemRow .itemRowRight .itemStatus .itemStatusUser {
+  font-style: normal;
+  font-weight: bold;
+  font-size: 17px;
+  line-height: 23px;
+  text-align: center;
+  letter-spacing: 0.15px;
+  color: #4F5DEA;
+}
+
+.itemRows .itemBlock .itemRow .itemRowRight .itemScore i {
+  margin-left: 0.5rem;
+  color: #F2C94C;
+}
+
+.itemRows .itemBlock .itemRow .itemRowRight .itemTime i {
+  margin-left: 0.5rem;
+}
+
+.itemRows .itemBlock .itemReview {
+  font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
+  font-style: normal;
+  font-weight: normal;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 0.1px;
+  color: #F1F1FB;
+  padding: 1rem;
+  background: #040405;
+  width: 100%;
+  border-radius: 0 0 8px 8px;
+}
+
+.itemRows .itemBlock .itemReview .itemReviewUser {
+  font-family: Open Sans, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 19px;
+  letter-spacing: 0.25px;
+  color: #A6A6AB;
+}
+
+.itemRows .itemBlock .itemReview[style*="display: none"] ~ .itemRow {
+  border-radius: 8px;
 }
 
 .confirmPasswordForm {
@@ -2174,5 +2590,64 @@ a:hover {
 
 .react-slidedown.closed {
   display: none;
+}
+
+.rc-pagination-item, .rc-pagination-prev, .rc-pagination-next {
+  background: #191A1B !important;
+  border-radius: 8px !important;
+  border: none !important;
+}
+
+.rc-pagination-item button, .rc-pagination-prev button, .rc-pagination-next button {
+  background: #191A1B !important;
+  color: #F1F1FB !important;
+  border-radius: 8px !important;
+  border: none !important;
+}
+
+.rc-pagination-item-active {
+  background: #4F5DEA !important;
+  color: #F1F1FB !important;
+}
+
+.react-select-container {
+  width: 300px !important;
+  display: inline-block;
+  margin-left: 1rem;
+}
+
+@media (max-width: 814px) {
+  .react-select-container {
+    margin-left: 0;
+    display: block;
+    margin-top: 1rem;
+  }
+}
+
+.react-select-container .multiselect {
+  width: 300px !important;
+}
+
+.react-select-container .multiselect__control, .react-select-container .multiselect__menu {
+  background-color: #3F4041 !important;
+  color: #F1F1FB;
+  width: 300px !important;
+  border: none !important;
+  border-radius: 8px !important;
+}
+
+.react-select-container .multiselect__multi-value, .react-select-container .multiselect__multi-value__label {
+  color: #F1F1FB !important;
+  background-color: #4F5DEA !important;
+}
+
+.react-select-container .multiselect__option {
+  background-color: #191A1B !important;
+  color: #F1F1FB;
+  border: none !important;
+}
+
+.react-select-container .multiselect__option:hover {
+  background-color: #3F4041 !important;
 }
 /*# sourceMappingURL=main.css.map */

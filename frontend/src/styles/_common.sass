@@ -215,3 +215,38 @@
         .searchHint:hover
             color: $newAccent2
             background-color: $newBackground2
+
+.customNUD
+    margin-left: 1rem
+    border-radius: 8px
+    @include headline6
+    background-color: $newBackground3
+    color: $newText3
+
+    input
+        background-color: $newBackground3
+        color: $newText3
+        border: none
+        outline: none
+        width: 40px
+        text-align: center
+
+        &[type=number]
+            appearance: textfield
+            -moz-appearance: textfield
+        &::-webkit-outer-spin-button, &::-webkit-inner-spin-button
+            -webkit-appearance: none
+
+    .minusButton
+        background-color: $newBackground3
+        color: $newText3
+        border: none
+        outline: none
+        border-radius: 8px 0 0 8px
+
+    .plusButton
+        background-color: $newBackground3
+        color: $newText3
+        border: none
+        outline: none
+        border-radius: 0 8px 8px 0

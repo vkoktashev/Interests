@@ -83,3 +83,51 @@ $icon-size: 40px
 $sidebar-bg-color: $newBackground2
 
 @import "../../node_modules/react-pro-sidebar/dist/scss/styles.scss"
+@import "../../node_modules/rc-pagination/assets/index.css"
+
+.rc-pagination-item, .rc-pagination-prev, .rc-pagination-next
+    background: $newBackground2 !important
+    border-radius: 8px !important
+    border: none !important
+
+    button
+        background: $newBackground2 !important
+        color: $newText3 !important
+        border-radius: 8px !important
+        border: none !important
+
+.rc-pagination-item-active
+    background: $newAccent2 !important
+    color: $newText3 !important
+
+.react-select-container
+    width: 300px !important
+    display: inline-block
+    margin-left: 1rem
+
+    @media (max-width: 814px)
+        margin-left: 0
+        display: block
+        margin-top: 1rem
+
+    .multiselect
+        width: 300px !important
+
+    .multiselect__control, .multiselect__menu
+        background-color: $newBackground3 !important
+        color: $newText3
+        width: 300px !important
+        border: none !important
+        border-radius: 8px !important
+
+    .multiselect__multi-value, .multiselect__multi-value__label
+        color: $newText3 !important
+        background-color: $newAccent2 !important
+
+    .multiselect__option
+        background-color: $newBackground2 !important
+        color: $newText3
+        border: none !important
+
+        &:hover
+            background-color: $newBackground3 !important
