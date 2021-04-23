@@ -2,7 +2,6 @@ import decimal
 
 from django.db.models import DecimalField, IntegerField, CharField
 
-from users.models import UserFollow
 from utils.openapi_params import DEFAULT_PAGE_SIZE
 
 
@@ -66,60 +65,16 @@ def get_page_size(page_size):
     return page_size
 
 
-def update_fields_if_needed(obj, new_fields):
+def update_fields_if_needed(obj, new_fields, need_save=True):
     fields_to_update = []
     for key, value in new_fields.items():
         if str(value) != str(getattr(obj, key)):
             obj.__setattr__(key, value)
             fields_to_update.append(key)
 
-    obj.save(update_fields=fields_to_update)
-
-
-def update_fields_if_needed_without_save(obj, new_fields):
-    fields_to_update = []
-    for key, value in new_fields.items():
-        if str(value) != str(getattr(obj, key)):
-            obj.__setattr__(key, value)
-            fields_to_update.append(key)
-
-
-# cache keys
-def get_rawg_game_key(slug):
-    return f'game_{slug}'
-
-
-def get_tmdb_movie_key(tmdb_id):
-    return f'movie_{tmdb_id}'
-
-
-def get_tmdb_show_key(tmdb_id):
-    return f'show_{tmdb_id}'
-
-
-def get_tmdb_season_key(show_tmdb_id, season_number):
-    return f'show_{show_tmdb_id}_season_{season_number}'
-
-
-def get_tmdb_episode_key(show_tmdb_id, season_number, episode_number):
-    return f'show_{show_tmdb_id}_season_{season_number}_episode_{episode_number}'
+    if need_save:
+        obj.save(update_fields=fields_to_update)
 
 
 def objects_to_str(objects):
     return ', '.join(obj['name'] for obj in objects)
-
-
-def is_user_available(current_user, target_user):
-    if current_user != target_user:
-        if target_user.privacy == target_user.PRIVACY_NOBODY:
-            return False
-
-        try:
-            current_user_is_followed = UserFollow.objects.get(user=target_user, followed_user=current_user).is_following
-        except (UserFollow.DoesNotExist, TypeError):
-            current_user_is_followed = False
-
-        if target_user.privacy == target_user.PRIVACY_FOLLOWED and not current_user_is_followed:
-            return False
-
-    return True

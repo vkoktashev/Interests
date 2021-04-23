@@ -18,6 +18,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from movies.models import Genre
+from shows.functions import get_show_new_fields, get_season_new_fields, get_tmdb_show_key, \
+    get_tmdb_season_key, get_tmdb_episode_key, get_episodes_to_create_update_delete
 from shows.models import UserShow, Show, UserSeason, Season, UserEpisode, Episode, ShowGenre, EpisodeLog, ShowLog
 from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpisodeSerializer, \
     FollowedUserShowSerializer, FollowedUserSeasonSerializer, FollowedUserEpisodeSerializer, \
@@ -28,8 +30,7 @@ from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, D
     TMDB_POSTER_PATH_PREFIX, TMDB_STILL_PATH_PREFIX, EPISODE_WATCHED_SCORE, DEFAULT_PAGE_SIZE
 from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
     SEASON_RETRIEVE_200_EXAMPLE
-from utils.functions import update_fields_if_needed, get_tmdb_show_key, get_tmdb_episode_key, get_tmdb_season_key, \
-    objects_to_str, update_fields_if_needed_without_save, get_page_size
+from utils.functions import update_fields_if_needed, objects_to_str, get_page_size
 from utils.openapi_params import query_param, page_param
 
 
@@ -110,19 +111,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except ConnectionError:
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        # todo вынести new_fields везде в отдельные методы
-        #  возможно создать методы для обновления моделей
-        new_fields = {
-            'imdb_id': tmdb_show.get('imdb_id') if tmdb_show.get('imdb_id') is not None else '',
-            'tmdb_original_name': tmdb_show['original_name'],
-            'tmdb_name': tmdb_show['name'],
-            'tmdb_episode_run_time': tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0,
-            'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path']
-            if tmdb_show['backdrop_path'] else '',
-            'tmdb_release_date': tmdb_show['first_air_date'] if tmdb_show['first_air_date'] != "" else None,
-            'tmdb_status': tmdb_show.get('status'),
-            'tmdb_number_of_episodes': tmdb_show.get('number_of_episodes')
-        }
+        new_fields = get_show_new_fields(tmdb_show)
 
         with transaction.atomic():
             show, created = Show.objects.select_for_update().get_or_create(tmdb_id=tmdb_show['id'],
@@ -324,7 +313,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                     data.update({'review': current_user_episode_review})
                 if data.get('score') is None:
                     data.update({'score': current_user_episode_score})
-                update_fields_if_needed_without_save(current_user_episode, data)
+                update_fields_if_needed(current_user_episode, data, need_save=False)
                 existed_user_episodes.append(current_user_episode)
                 existed_user_episodes_data.append(data)
 
@@ -492,59 +481,22 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         tmdb_season.update(show_info)
 
-        new_fields = {
-            'tmdb_season_number': tmdb_season.get('season_number'),
-            'tmdb_name': tmdb_season.get('name'),
-            'tmdb_show_id': tmdb_season.get('show').get('id')
-        }
+        new_fields = get_season_new_fields(tmdb_season, tmdb_season.get('show').get('id'))
 
-        with transaction.atomic():
-            season, created = Season.objects.select_for_update().get_or_create(tmdb_id=tmdb_season.get('id'),
-                                                                               defaults=new_fields)
-            if not created and not returned_from_cache:
-                update_fields_if_needed(season, new_fields)
+        season, created = Season.objects.get_or_create(tmdb_id=tmdb_season.get('id'),
+                                                       defaults=new_fields)
+        if not created and not returned_from_cache:
+            update_fields_if_needed(season, new_fields)
 
-        with transaction.atomic():
-            episodes = tmdb_season.get('episodes')
-            existed_episodes = Episode.objects.select_related('tmdb_season') \
-                .select_for_update().filter(tmdb_season=season)
-            episodes_to_create = []
-            episodes_to_update = []
-            episodes_to_delete_pks = []
-            for existed_episode in existed_episodes:
-                exists = False
-                for episode in episodes:
-                    if episode['id'] == existed_episode.tmdb_id:
-                        exists = True
-                        episode['exists'] = True
-                        new_fields = {
-                            'tmdb_episode_number': episode.get('episode_number'),
-                            'tmdb_season': season,
-                            'tmdb_name': episode.get('name'),
-                            'tmdb_release_date': episode.get('air_date') if episode.get('air_date') != "" else None
-                        }
-                        update_fields_if_needed_without_save(existed_episode, new_fields)
-                        episodes_to_update.append(existed_episode)
-                        break
+        episodes = tmdb_season.get('episodes')
+        existed_episodes = Episode.objects.select_related('tmdb_season').filter(tmdb_season=season)
+        episodes_to_create, episodes_to_update, episodes_to_delete_pks = \
+            get_episodes_to_create_update_delete(existed_episodes, episodes, season.id)
 
-                if not exists:
-                    episodes_to_delete_pks.append(existed_episode.pk)
-
-            for episode in episodes:
-                if episode.get('exists'):
-                    del episode['exists']
-                else:
-                    episodes_to_create.append(Episode(tmdb_id=episode.get('id'),
-                                                      tmdb_episode_number=episode.get('episode_number'),
-                                                      tmdb_season=season,
-                                                      tmdb_release_date=episode.get('air_date')
-                                                      if episode.get('air_date') != "" else None,
-                                                      tmdb_name=episode.get('name')))
-
-            Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
-            Episode.objects.bulk_update(episodes_to_update,
-                                        ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date'])
-            Episode.objects.bulk_create(episodes_to_create)
+        Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
+        Episode.objects.bulk_update(episodes_to_update,
+                                    ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date'])
+        Episode.objects.bulk_create(episodes_to_create)
 
         return Response(parse_season(tmdb_season))
 

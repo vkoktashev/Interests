@@ -22,7 +22,7 @@ import ScoreBlock from "../Common/ScoreBlock";
 const ShowPage = observer((props) => {
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
-	const { patchSettings, saveSettingsState } = CurrentUserStore;
+	const { saveSettingsState } = CurrentUserStore;
 	const { requestShow, show, showState, setShowStatus, requestShowUserInfo, userInfo, friendsInfo, userInfoState, anyError } = ShowStore;
 
 	let { id } = useParams();
@@ -149,15 +149,6 @@ const ShowPage = observer((props) => {
 						<div>
 							<h3>Описание</h3>
 							<div dangerouslySetInnerHTML={{ __html: show.overview }} />
-							<br />
-							<button
-								className={"saveReviewButton"}
-								hidden={!loggedIn}
-								onClick={() => {
-									patchSettings({ backdrop_path: show.backdrop_path });
-								}}>
-								Выбрать как фон профиля
-							</button>
 						</div>
 						<div className='showSeasonsBody'>
 							<h3 style={{ paddingTop: "15px" }}>Список серий</h3>

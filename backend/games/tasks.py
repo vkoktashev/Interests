@@ -3,11 +3,13 @@ from datetime import datetime
 from celery.schedules import crontab
 from django.core.cache import cache
 from django.db.models import Q
+from howlongtobeatpy import HowLongToBeat
 
 from config.celery import app
+from games.functions import get_hltb_game_key, get_game_new_fields, get_rawg_game_key
 from games.models import Game
 from utils.constants import rawg, CACHE_TIMEOUT, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
-from utils.functions import get_rawg_game_key, update_fields_if_needed
+from utils.functions import update_fields_if_needed
 
 
 @app.on_after_finalize.connect
@@ -27,15 +29,21 @@ def update_upcoming_games():
 
     for game in games:
         slug = game.rawg_slug
-        key = get_rawg_game_key(slug)
+        rawg_key = get_rawg_game_key(slug)
+        hltb_key = get_hltb_game_key(game.rawg_name)
+
         rawg_game = rawg.get_game(slug).json
-        cache.set(key, rawg_game, CACHE_TIMEOUT)
-        new_fields = {
-            'rawg_slug': rawg_game.get('slug'),
-            'rawg_name': rawg_game.get('name'),
-            'rawg_release_date': rawg_game.get('released'),
-            'rawg_tba': rawg_game.get('tba'),
-            'rawg_backdrop_path': rawg_game.get('background_image')
-        }
+        try:
+            results = HowLongToBeat(1).search(game.rawg_name.replace('’', '\''), similarity_case_sensitive=False)
+            hltb_game = max(results, key=lambda element: element.similarity).__dict__
+            cache.set(hltb_key, hltb_game, CACHE_TIMEOUT)
+        except (ValueError, TypeError):
+            hltb_game = None
+            cache.set(hltb_key, hltb_game, CACHE_TIMEOUT)
+        except ConnectionError:
+            hltb_game = None
+
+        cache.set(rawg_key, rawg_game, CACHE_TIMEOUT)
+        new_fields = get_game_new_fields(rawg_game, hltb_game)
         update_fields_if_needed(game, new_fields)
         print(game.rawg_name)

@@ -29,6 +29,7 @@ class Show(models.Model):
     tmdb_name = models.CharField(max_length=200)
     tmdb_episode_run_time = models.IntegerField()
     tmdb_backdrop_path = models.CharField(max_length=200, blank=True)
+    tmdb_poster_path = models.CharField(max_length=200, blank=True)
     tmdb_release_date = models.DateField(null=True)
     tmdb_status = models.CharField(max_length=30, blank=True, choices=TMDB_STATUS_CHOICES)
     tmdb_number_of_episodes = models.IntegerField(default=0)
