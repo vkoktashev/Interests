@@ -282,7 +282,7 @@
 
 .md-form label.active {
   color: #A6A6AB !important;
-  background-color: #040405 !important;
+  background-color: #191A1B !important;
 }
 
 .metacritic {
@@ -404,7 +404,6 @@
 }
 
 .customNUD {
-  margin-left: 1rem;
   border-radius: 8px;
   font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
   font-style: normal;
@@ -413,8 +412,8 @@
   font-size: 21px;
   line-height: 29px;
   letter-spacing: 0.15px;
-  background-color: #3F4041;
   color: #F1F1FB;
+  margin-left: 1rem;
 }
 
 .customNUD input {

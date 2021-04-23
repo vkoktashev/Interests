@@ -109,7 +109,7 @@ function ItemBlock({ items, statuses, fields }) {
 					onChange={(e) => {
 						setPage(e);
 					}}
-					defaultCurrent={1}
+					current={page}
 				/>
 				<div></div>
 			</div>
