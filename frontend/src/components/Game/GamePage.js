@@ -15,13 +15,14 @@ import FriendsActivity from "../Common/FriendsActivity";
 import TimeToBeat from "./TimeToBeat";
 import ScoreBlock from "../Common/ScoreBlock";
 import Rating from "../Common/Rating";
+import TimeDatalist from "./TimeDatalist";
+import InputNumber from "../Common/InputNumber";
 
 /**
  * Основная страница приложения
  */
 const GamePage = observer((props) => {
 	const { game, gameState, requestGame, setGameStatus, userInfo, friendsInfo, userInfoState, requestUserInfo, anyError } = GameStore;
-	const { saveSettingsState } = CurrentUserStore;
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
 
@@ -73,35 +74,12 @@ const GamePage = observer((props) => {
 	useEffect(() => {
 		if (anyError) toast.error(anyError);
 	}, [anyError]);
-	useEffect(() => {
-		if (saveSettingsState.startsWith("error:")) toast.error(`Ошибка фона! ${saveSettingsState}`);
-		else if (saveSettingsState === "saved") toast.success(`Фон установлен!`);
-	}, [saveSettingsState]);
 
 	function setClearUI() {
 		setReview("");
 		setSpentTime("");
 		setUserStatus("Не играл");
 		setUserRate(0);
-	}
-
-	function getTimeToBeatDatalist() {
-		if (game.hltb) {
-			return (
-				<datalist id='timesList'>
-					<option value={strToFloat(game.hltb?.gameplay_main_extra)} className='testil' />
-					<option value={strToFloat(game.hltb?.gameplay_main)} />
-					<option value={strToFloat(game.hltb?.gameplay_completionist)} />
-				</datalist>
-			);
-		}
-		return null;
-	}
-
-	function strToFloat(str) {
-		if (str & (str !== -1))
-			if (str.indexOf("½") + 1) return parseFloat(str) + 0.5;
-			else return parseFloat(str);
 	}
 
 	return (
@@ -120,7 +98,7 @@ const GamePage = observer((props) => {
 								<p>Дата релиза: {game.release_date}</p>
 								<p>Жанр: {game.genres}</p>
 								<p>Платформы: {game.platforms}</p>
-								<TimeToBeat hltbInfo={game.hltb} />
+								<TimeToBeat hltbInfo={game.hltb || game.playtime} />
 							</div>
 							<LoadingOverlay active={userInfoState === "pending" && gameState !== "pending"} spinner text='Загрузка...'>
 								<Rating
@@ -159,19 +137,19 @@ const GamePage = observer((props) => {
 							<h3>Описание</h3>
 							<div dangerouslySetInnerHTML={{ __html: game.overview }} />
 						</div>
-						<h3 style={{ paddingTop: "10px" }}>Отзывы</h3>
-						<div className='reviewBody' hidden={!loggedIn}>
-							<LoadingOverlay active={userInfoState === "pending" && gameState !== "pending"} spinner text='Загрузка...'>
-								<MDBInput type='textarea' id='reviewInput' label='Ваш отзыв' value={review} onChange={(event) => setReview(event.target.value)} outline />
-								<MDBInput
-									type='number'
-									id='spentTimeInput'
-									label='Время прохождения (часы)'
-									list='timesList'
-									value={spentTime}
-									onChange={(event) => setSpentTime(event.target.value)}
-								/>
-								{getTimeToBeatDatalist()}
+						<h3 style={{ paddingTop: "10px" }}>Отзыв</h3>
+						<LoadingOverlay active={userInfoState === "pending" && gameState !== "pending"} spinner text='Загрузка...'>
+							<div className='reviewBody' hidden={!loggedIn}>
+								<div className='reviewBlock'>
+									Ваш отзыв
+									<textarea type='textarea' id='reviewInput' value={review} onChange={(event) => setReview(event.target.value)} />
+								</div>
+
+								<div className='spentTimeBlock'>
+									Время прохождения (часы)
+									<InputNumber id='spentTimeInput' value={spentTime} min={0} onChange={(value) => setSpentTime(value)} />
+									<TimeDatalist hltbInfo={game.hltb || game.playtime} setValue={(value) => setSpentTime(value)} />
+								</div>
 								<button
 									className={"saveReviewButton"}
 									disabled={!loggedIn | (userStatus === "Не играл")}
@@ -184,8 +162,8 @@ const GamePage = observer((props) => {
 									}}>
 									Сохранить
 								</button>
-							</LoadingOverlay>
-						</div>
+							</div>
+						</LoadingOverlay>
 						<div className='additionalBody'></div>
 						<div className='friendsBlock' hidden={!loggedIn | (friendsInfo?.length < 1)}>
 							<h4>Отзывы друзей</h4>

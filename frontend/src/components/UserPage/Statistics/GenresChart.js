@@ -21,7 +21,7 @@ function ChartBlock({ chartData, hidden }) {
 					</Bar>
 				</BarChart>
 			) : (
-				<BarChart width={Math.min(chartData.length * 100, document.body.clientWidth - 50)} height={300} data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 15 }}>
+				<BarChart width={Math.min(chartData.length * 100, document.body.clientWidth - 50)} height={300} data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
 					<XAxis dataKey='name' tickLine={false} tick={{ fill: "rgb(238, 238, 238)" }} interval={0} angle={-10} tickMargin={15} />
 					<YAxis domain={[0, "dataMax"]} tick={{ fill: "rgb(238, 238, 238)" }} />
 					<Tooltip

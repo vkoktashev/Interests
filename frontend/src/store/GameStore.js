@@ -24,6 +24,7 @@ class Game {
 	};
 	requestGameSuccess = (result) => {
 		this.game = result;
+		console.log(result);
 		this.gameState = "done";
 	};
 	requestGameFailure = (error) => {
