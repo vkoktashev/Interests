@@ -3,7 +3,7 @@ import { MDBIcon } from "mdbreact";
 
 function TimeDatalist({ hltbInfo, setValue }) {
 	function strToFloat(text) {
-		let cleanStr = text?.replace("часов", "");
+		let cleanStr = text;
 		if (cleanStr && cleanStr !== -1)
 			if (cleanStr.indexOf("½") + 1) return parseFloat(cleanStr) + 0.5;
 			else return parseFloat(cleanStr);
@@ -19,7 +19,7 @@ function TimeDatalist({ hltbInfo, setValue }) {
 				<MDBIcon far icon='clock' className='light-green-text' />
 				{strToFloat(hltbInfo?.gameplay_main ? hltbInfo?.gameplay_main : hltbInfo)}
 			</div>
-			<div className='timeData' hidden={!hltbInfo?.gameplay_completionist} onClick={() => setValue(hltbInfo?.gameplay_completionist)}>
+			<div className='timeData' hidden={!hltbInfo?.gameplay_completionist} onClick={() => setValue(strToFloat(hltbInfo?.gameplay_completionist))}>
 				<MDBIcon far icon='clock' className='red-text' />
 				{strToFloat(hltbInfo?.gameplay_completionist)}
 			</div>
