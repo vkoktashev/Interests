@@ -5,7 +5,6 @@ import CurrentUserStore from "../../store/CurrentUserStore";
 import { toast } from "react-toastify";
 
 import LoadingOverlay from "react-loading-overlay";
-import SettingsCheckbox from "./SettingsCheckbox";
 
 const SettingsPage = observer((props) => {
 	const { loggedIn, user } = AuthStore;

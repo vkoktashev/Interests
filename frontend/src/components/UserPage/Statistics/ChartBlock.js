@@ -18,7 +18,7 @@ function ChartBlock({ stats }) {
 
 	return (
 		<div hidden={chartData.length < 1}>
-			<PieChart width={350} height={250} hidden={chartData.length < 1}>
+			<PieChart width={350} height={260} hidden={chartData.length < 1}>
 				<Pie dataKey='value' data={chartData} cx='50%' cy='50%' outerRadius={80} fill='#8884d8' labelLine={true} label minAngle={5}>
 					{chartData.map((entry, index) => (
 						<Cell fill={COLORS[index]} key={index} />

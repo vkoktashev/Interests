@@ -82,9 +82,88 @@
             background-color: $newBackground1
 
         .reviewBody
-            width: 39rem
             max-width: 100%
-            padding-right: 1rem
+            display: flex
+            flex-direction: column
+            position: relative
+
+            #reviewInput, #spentTimeInput
+                max-width: 100%
+                margin-bottom: 1rem
+                color: $newText3
+                background-color: $newBackground3
+                border: none
+                border-radius: 8px
+                outline: none
+
+            .reviewBlock
+                display: flex
+                flex-direction: column
+
+                #reviewInput
+                    width: 500px
+                    padding-left: 0.5rem
+
+            .spentTimeBlock
+                display: flex
+                flex-direction: column
+                align-items: flex-start
+
+                #spentTimeInput
+                    margin-left: 0
+
+                #spentTimeInput:hover ~ .timeDatalist, .timeDatalist:active, .timeDatalist:hover
+                    display: flex
+
+                .timeDatalist
+                    z-index: 1200
+                    position: absolute
+                    top: 165px
+                    left: 0
+                    width: 100px
+                    background-color: $newBackground3
+                    color: $newText3
+                    border-radius: 8px
+                    display: none
+                    flex-direction: column
+                    overflow-y: auto
+                    max-height: 70vh
+
+                .timeDatalist > *
+                    display: flex
+                    flex-direction: column
+
+                .timeData
+                    padding: 0.5rem
+                    border-radius: 0.5rem
+                    display: flex
+                    flex-direction: row
+                    justify-content: center
+                    align-items: center
+                    flex-wrap: wrap
+                    cursor: pointer
+
+                    &:hover
+                        color: $newAccent2
+                        background-color: $newBackground2
+
+                    i
+                        margin-right: 0.3rem
+
+        .saveReviewButton
+            background-color: $newAccent2
+            color: $newText3
+            width: 150px
+            height: 40px
+            border: none
+            padding: 4px 8px
+            text-align: center
+            text-decoration: none
+            margin-top: 1rem
+            margin-bottom: 20px
+            margin-right: 1rem
+            font-size: 16px
+            border-radius: 8px
 
         .friendsBlock
             position: relative
@@ -98,19 +177,9 @@
             vertical-align: top
             margin-top: 1.5rem
 
-.saveReviewButton
-    background-color: $newAccent2
-    color: $newText3
-    border: none
-    padding: 4px 8px
-    text-align: center
-    text-decoration: none
-    margin-top: 0px
-    margin-bottom: 20px
-    margin-right: 1rem
-    font-size: 16px
-    border-radius: 8px
-
 .saveReviewButton:hover
     background-color: $newAccent1
     color: $newText2
+
+#spentTimeInput:focus ~ .timeDatalist, .timeDatalist:active, .timeDatalist:hover
+    display: flex
