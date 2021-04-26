@@ -19,12 +19,6 @@ const App = observer((props) => {
 
 	useEffect(
 		() => {
-			window.addEventListener("scroll", function () {
-				console.log("привет");
-				var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-				if (scrollTop > 100) console.log("привет");
-			});
-
 			checkAuthorization();
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
