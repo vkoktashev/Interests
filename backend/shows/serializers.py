@@ -2,11 +2,8 @@ from rest_framework import serializers
 
 from shows.models import UserShow, UserSeason, UserEpisode, ShowLog, SeasonLog, EpisodeLog, Episode, Show, Season
 from users.serializers import FollowedUserSerializer
+from utils.constants import LOG_TYPE_SHOW, LOG_TYPE_SEASON, LOG_TYPE_EPISODE
 from utils.serializers import ChoicesField
-
-TYPE_SHOW = 'show'
-TYPE_SEASON = 'season'
-TYPE_EPISODE = 'episode'
 
 
 class UserShowSerializer(serializers.ModelSerializer):
@@ -71,7 +68,7 @@ class ShowLogSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_type(show_log):
-        return TYPE_SHOW
+        return LOG_TYPE_SHOW
 
     @staticmethod
     def get_target(show_log):
@@ -103,7 +100,7 @@ class SeasonLogSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_type(season_log):
-        return TYPE_SEASON
+        return LOG_TYPE_SEASON
 
     @staticmethod
     def get_target(season_log):
@@ -137,7 +134,7 @@ class EpisodeLogSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_type(episode_log):
-        return TYPE_EPISODE
+        return LOG_TYPE_EPISODE
 
     @staticmethod
     def get_target(episode_log):
