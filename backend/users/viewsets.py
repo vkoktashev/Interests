@@ -579,7 +579,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
     @action(detail=False, methods=['get', 'patch'], permission_classes=[IsAuthenticated])
     def user_settings(self, request):
-        if request.method == 'get':
+        if request.method == 'GET':
             serializer = SettingsSerializer(request.user)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -637,10 +637,9 @@ def get_logs(user_query, page_size, page_number):
 
     paginator = Paginator(union_logs, page_size)
     paginator_page = paginator.get_page(page)
-    # print(paginator.count)
 
     results = serialize_logs(paginator_page.object_list)
-    return results, paginator_page.has_next()
+    return results, paginator.count
 
 
 def get_user_by_id(user_id, current_user):
