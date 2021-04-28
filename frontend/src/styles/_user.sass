@@ -65,7 +65,8 @@ a.logLink:hover, a.dataTable:hover
         display: flex
         flex-direction: column
         flex-wrap: wrap
-        flex-shrink: 2
+        flex-shrink: 1
+        flex-grow: 1
         min-width: 200px
         max-width: 90%
 
@@ -73,6 +74,21 @@ a.logLink:hover, a.dataTable:hover
             margin-bottom: 0.5rem
             margin-top: 0px
             flex-wrap: wrap
+
+            &:hover > .deleteLogButton
+                display: inline-block
+                margin: 0
+                
+            .deleteLogButton
+                background-color: $newBackground2
+                margin-left: 2px
+                padding: 0 8px
+                display: none
+
+            .deleteLogButton:hover
+                background-color: $newBackground1
+                color: $newAccent2
+
 
 .logPaginationButton
     margin-top: 10px

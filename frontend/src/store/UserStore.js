@@ -2,7 +2,6 @@ import { makeAutoObservable } from "mobx";
 //import remotedev from "mobx-remotedev";
 import AuthStore from "./AuthStore";
 import * as userRequests from "../services/userRequests";
-
 class User {
 	user = {};
 	userLogs = {};
@@ -40,6 +39,22 @@ class User {
 		this.userLogsState = "done";
 	};
 	requestLogsFailure = (error) => {
+		if (error.response.status === 403) this.userLogsState = "forbidden";
+		else this.userLogsState = "error: " + error;
+	};
+	deleteUserLog = async (logType, logID) => {
+		this.userLogsState = "pending";
+		await AuthStore.checkAuthorization();
+		userRequests.deleteUserLog(localStorage.getItem("token"), this.user.id, logType, logID).then(() => this.deleteUserLogSuccess(logType, logID), this.deleteUserLogFailure);
+	};
+	deleteUserLogSuccess = (logType, logID) => {
+		let newLogs = this.userLogs.log.filter((log) => {
+			return !(log.id === logID && log.type === logType);
+		});
+		this.userLogs = { ...this.userLogs, log: newLogs };
+		this.userLogsState = "done";
+	};
+	deleteUserLogFailure = (error) => {
 		if (error.response.status === 403) this.userLogsState = "forbidden";
 		else this.userLogsState = "error: " + error;
 	};
