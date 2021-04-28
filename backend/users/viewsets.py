@@ -249,9 +249,9 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             if not is_user_available(request.user, user):
                 return Response(status=status.HTTP_403_FORBIDDEN)
 
-            results, num_pages = get_logs((user,), request.GET.get('page_size'), request.GET.get('page'))
+            results, count = get_logs((user,), request.GET.get('page_size'), request.GET.get('page'))
 
-            return Response({'log': results, 'num_pages': num_pages})
+            return Response({'log': results, 'count': count})
 
         else:
             if request.user != user:
@@ -308,9 +308,9 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_log(self, request, *args, **kwargs):
         user_follow_query = UserFollow.objects.filter(user=request.user, is_following=True).values('followed_user')
-        results, num_pages = get_logs(user_follow_query, request.GET.get('page_size'), request.GET.get('page'))
+        results, count = get_logs(user_follow_query, request.GET.get('page_size'), request.GET.get('page'))
 
-        return Response({'log': results, 'num_pages': num_pages})
+        return Response({'log': results, 'count': count})
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def release_calendar(self, request, *args, **kwargs):
@@ -639,7 +639,7 @@ def get_logs(user_query, page_size, page_number):
     paginator_page = paginator.get_page(page)
 
     results = serialize_logs(paginator_page.object_list)
-    return results, paginator.num_pages
+    return results, paginator.count
 
 
 def get_user_by_id(user_id, current_user):
