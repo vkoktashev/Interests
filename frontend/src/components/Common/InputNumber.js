@@ -28,8 +28,10 @@ function InputNumber({ value, max, min, onChange, id, dataList }) {
 				+
 			</button>
 			<div className='dataList'>
-				{dataList?.map((data) => (
-					<div onClick={() => onChange(parseFloat(data))}>{data}</div>
+				{dataList?.map((data, counter) => (
+					<div key={counter} onClick={() => onChange(parseFloat(data))}>
+						{data}
+					</div>
 				))}
 			</div>
 		</div>

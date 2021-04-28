@@ -66,6 +66,18 @@ export async function getUserLog(token, userID, page, resultsOnPage) {
 }
 
 /**
+ * Запрос к бд, получающий лог пользователя
+ * @param {string} userID ID пользователя
+ * @param {string} page страница
+ * @param {int} resultsOnPage количество результатов на странице
+ */
+export async function deleteUserLog(token, userID, logType, logID) {
+	var AuthStr = "Bearer " + token;
+	const res = await axios.delete(USER_INFO_URL + userID + "/log/", { data: { type: logType, id: logID }, headers: { Authorization: AuthStr } });
+	return res;
+}
+
+/**
  * Запрос к бд, получающий лог друзей пользователя
  * @param {string} userID ID пользователя
  * @param {int} page страница

@@ -44,6 +44,7 @@ class UserEpisodeInSeasonSerializer(UserEpisodeSerializer):
 
 class ShowStatsSerializer(UserShowSerializer):
     spent_time = serializers.DecimalField(max_digits=7, decimal_places=1)
+    watched_episodes_count = serializers.IntegerField()
 
     class Meta:
         model = UserShow
