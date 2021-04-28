@@ -21,7 +21,7 @@ const LOG_ROWS_COUNT = 20;
  */
 const UserPage = observer((props) => {
 	const { loggedIn, currentUser } = AuthStore;
-	const { user, userState, requestUser, setUserStatus, requestUserLogs, userLogs, userLogsState, requestUserFriendsLogs, userFriendsLogs, userFriendsLogsState } = UserStore;
+	const { user, userState, requestUser, setUserStatus, requestUserLogs, userLogs, userLogsState, requestUserFriendsLogs, userFriendsLogs, userFriendsLogsState, deleteUserLog } = UserStore;
 
 	let { userID, category } = useParams();
 	const [activeCategory, setActiveCategory] = useState("Лента");
@@ -100,7 +100,12 @@ const UserPage = observer((props) => {
 						<div hidden={activeCategory !== "Лента"}>
 							<div hidden={!user.is_available}>
 								<LoadingOverlay active={userLogsState === "pending" && userState !== "pending"} spinner text='Загрузка активности...'>
-									<UserLogBlock logs={userLogs} onChangePage={(pageNumber) => requestUserLogs(userID, pageNumber, LOG_ROWS_COUNT)} />
+									<UserLogBlock
+										logs={userLogs}
+										onChangePage={(pageNumber) => requestUserLogs(userID, pageNumber, LOG_ROWS_COUNT)}
+										currentUser={loggedIn && currentUser.username === user.username}
+										onDeleteLog={deleteUserLog}
+									/>
 								</LoadingOverlay>
 							</div>
 							<h4 hidden={user.is_available || userState === "pending"}>

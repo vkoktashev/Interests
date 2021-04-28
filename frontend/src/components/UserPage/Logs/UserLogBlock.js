@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { MDBIcon } from "mdbreact";
 import LogRow from "./LogRow";
 
-function UserLogBlock({ logs, showUsername, onChangePage }) {
+function UserLogBlock({ logs, showUsername, onChangePage, currentUser, onDeleteLog }) {
 	const [logsByDay, setLogsByDay] = useState([]);
 	const [currentPage, setCurrentPage] = useState(1);
 
@@ -42,7 +42,7 @@ function UserLogBlock({ logs, showUsername, onChangePage }) {
 					<h5 className='logDate'>{dayLog.date.toLocaleDateString("ru-RU")}</h5>
 					<div className='logRows'>
 						{dayLog.logs.map((log) => (
-							<LogRow log={log} showUsername={showUsername} key={log.id + log.created} />
+							<LogRow log={log} showUsername={showUsername} key={log.id + log.created} currentUser={currentUser} onDeleteLog={onDeleteLog} />
 						))}
 					</div>
 				</div>
