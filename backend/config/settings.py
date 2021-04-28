@@ -1,11 +1,11 @@
 import os
 from datetime import timedelta
 
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = '3^a%5=f#(3eyozrxer7)$mz#pk158#9+pm3#j#++p99_if9ee('
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-DEBUG = os.environ.get('DEBUG', '').lower() == 'true'
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -63,7 +63,7 @@ SWAGGER_SETTINGS = {
 SITE_ID = 1
 
 INTERNAL_IPS = [
-    os.environ.get('INTERNAL_IP', '')
+    # '127.0.0.1'
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -105,8 +105,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'interests',
-        'USER': os.environ['DB_USER'],
-        'PASSWORD': os.environ['DB_PASSWORD'],
+        'USER': 'postgres',
+        'PASSWORD': '8080',
+        # 'HOST': '35.193.124.214', #prod
+        # 'PORT': '5454' #prod
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -136,8 +138,8 @@ LOGIN_URL = 'users/auth/login'
 
 EMAIL_USE_SSL = True
 EMAIL_HOST = 'smtp.mail.ru'
-EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
-EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+EMAIL_HOST_USER = 'info@interests.fun'
+EMAIL_HOST_PASSWORD = 'IUIIyfpo3^a8'
 EMAIL_PORT = 465
 
 SIMPLE_JWT = {
