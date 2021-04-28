@@ -16,7 +16,16 @@ function GameBlock({ games }) {
 				};
 			})}
 			statuses={["Буду играть", "Играю", "Дропнул", "Прошел"]}
-			fields={["score", "spent_time"]}
+			fields={[
+				{ label: "Ссылка", key: "link" },
+				{ label: "Название", key: "name" },
+				{ label: "Статус", key: "status" },
+				{ label: "Оценка", key: "score" },
+				{ label: "Отзыв", key: "review" },
+				{ label: "Время прохождения", key: "spent_time" },
+				{ label: "Картинка", key: "poster" },
+			]}
+			name={"Игры"}
 		/>
 	);
 }

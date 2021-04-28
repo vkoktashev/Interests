@@ -6,7 +6,7 @@ import PagesStore from "../../store/PagesStore";
 import ShowStore from "../../store/ShowStore";
 import CurrentUserStore from "../../store/CurrentUserStore";
 
-import { MDBIcon, MDBInput } from "mdbreact";
+import { MDBIcon } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
 import { toast } from "react-toastify";
 

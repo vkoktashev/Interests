@@ -39,17 +39,7 @@
 
     .addFriendButton
         @include button
-        color: $newText3
-        background-color: $newAccent2
-        border: none
         padding: 8px
-        border-radius: 8px
-
-    .addFriendButton:hover
-        color: $newText2
-
-    .addFriendButton:active
-        color: $newText3
 
 a.logLink:link, a.logLink:visited, a.logLink:active, a.dataTable:link, a.dataTable:visited, a.dataTable:active
     color: $newText3
@@ -92,6 +82,9 @@ a.logLink:hover, a.dataTable:hover
     background-color: $newBackground2
     border: 1px solid $newText2
     color: $newText3
+
+    &:disabled
+        background-color: $newBackground1
 
 .dataTable
     color: $newText3
@@ -143,9 +136,6 @@ a.logLink:hover, a.dataTable:hover
 
         .mobileOpenButton
             background-color: $newBackground3
-            color: $newText3
-            border: none
-            border-radius: 8px
             margin-left: 1rem
             padding: 4px 8px
             font-size: 20px
@@ -162,9 +152,6 @@ a.logLink:hover, a.dataTable:hover
 
             .sortRowsButton
                 background-color: $newBackground3
-                color: $newText3
-                border: none
-                border-radius: 8px
                 margin-left: 1rem
                 padding: 4px 8px
                 font-size: 20px
@@ -190,6 +177,7 @@ a.logLink:hover, a.dataTable:hover
 .itemRowsFooter
     display: flex
     justify-content: space-between
+    flex-wrap: wrap
 
     div
         display: flex
