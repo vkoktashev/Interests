@@ -20,6 +20,23 @@
   }
 }
 
+button {
+  background-color: #4F5DEA;
+  color: #F1F1FB;
+  border: none;
+  outline: none;
+  border-radius: 8px;
+}
+
+button:hover {
+  background-color: #241DDC;
+}
+
+button:disabled {
+  background-color: #0D1254;
+  color: #A6A6AB;
+}
+
 .categoriesTabs {
   max-width: 100%;
   margin-top: 2rem;
@@ -75,6 +92,7 @@
   text-align: center;
   margin: 0px;
   font-size: 1rem;
+  border-radius: 0;
 }
 
 .contentStatuses .contentStatus.active {
@@ -82,13 +100,13 @@
 }
 
 .contentStatuses .contentStatus:first-child {
-  border-top-left-radius: 5px;
-  border-bottom-left-radius: 5px;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
 }
 
 .contentStatuses .contentStatus:last-child {
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
 .friendsCards {
@@ -316,6 +334,7 @@
   letter-spacing: 0.15px;
   color: #F1F1FB;
   margin-left: 1rem;
+  position: relative;
 }
 
 .customNUD input {
@@ -323,7 +342,7 @@
   color: #F1F1FB;
   border: none;
   outline: none;
-  width: 50px;
+  min-width: 30px;
   text-align: center;
 }
 
@@ -337,20 +356,72 @@
   -webkit-appearance: none;
 }
 
+.customNUD input:hover ~ .dataList {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
 .customNUD .minusButton {
   background-color: #3F4041;
-  color: #F1F1FB;
-  border: none;
-  outline: none;
   border-radius: 8px 0 0 8px;
 }
 
 .customNUD .plusButton {
   background-color: #3F4041;
-  color: #F1F1FB;
-  border: none;
-  outline: none;
   border-radius: 0 8px 8px 0;
+}
+
+.customNUD .dataList {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  width: 100%;
+  display: none;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  background-color: #3F4041;
+  color: #F1F1FB;
+  border-radius: 8px;
+}
+
+.customNUD .dataList:active, .customNUD .dataList:hover {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.customNUD .dataList div {
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.customNUD .dataList div:hover {
+  color: #4F5DEA;
+  background-color: #191A1B;
+}
+
+.customNUD .dataList div i {
+  margin-right: 0.3rem;
 }
 
 .calendarHeader {
@@ -421,6 +492,7 @@
 .react-calendar button {
   background-color: #191A1B;
   color: #F1F1FB !important;
+  border-radius: 0;
 }
 
 .react-calendar button:active,
@@ -525,19 +597,7 @@
   line-height: 19px;
   letter-spacing: 1.25px;
   text-transform: uppercase;
-  color: #F1F1FB;
-  background-color: #4F5DEA;
-  border: none;
   padding: 8px;
-  border-radius: 8px;
-}
-
-.userHeader .addFriendButton:hover {
-  color: #A6A6AB;
-}
-
-.userHeader .addFriendButton:active {
-  color: #F1F1FB;
 }
 
 a.logLink:link, a.logLink:visited, a.logLink:active, a.dataTable:link, a.dataTable:visited, a.dataTable:active {
@@ -605,6 +665,10 @@ a.logLink:hover, a.dataTable:hover {
   background-color: #191A1B;
   border: 1px solid #A6A6AB;
   color: #F1F1FB;
+}
+
+.logPaginationButton:disabled {
+  background-color: #040405;
 }
 
 .dataTable {
@@ -697,9 +761,6 @@ a.logLink:hover, a.dataTable:hover {
 
 .itemRowsHeader .itemRowsHeaderLeft .mobileOpenButton {
   background-color: #3F4041;
-  color: #F1F1FB;
-  border: none;
-  border-radius: 8px;
   margin-left: 1rem;
   padding: 4px 8px;
   font-size: 20px;
@@ -722,9 +783,6 @@ a.logLink:hover, a.dataTable:hover {
 
 .itemRowsHeader .itemRowsHeaderLeft .sortButtons .sortRowsButton {
   background-color: #3F4041;
-  color: #F1F1FB;
-  border: none;
-  border-radius: 8px;
   margin-left: 1rem;
   padding: 4px 8px;
   font-size: 20px;
@@ -771,6 +829,8 @@ a.logLink:hover, a.dataTable:hover {
   -webkit-box-pack: justify;
       -ms-flex-pack: justify;
           justify-content: space-between;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
 }
 
 .itemRowsFooter div {
@@ -1103,27 +1163,11 @@ li.episode:nth-child(even) {
 .saveEpisodesButton {
   width: 150px;
   height: 50px;
-  background-color: #4F5DEA;
-  color: #F1F1FB;
-  border-radius: 5px;
-}
-
-.saveEpisodesButton:hover {
-  background-color: #241DDC;
 }
 
 .checkAllEpisodesButton {
   margin-top: 10px;
-  background-color: #4F5DEA;
-  color: #F1F1FB;
-  font-weight: bolder;
-  border-style: solid;
-  border-radius: 5px;
   padding: 2px 8px;
-}
-
-.checkAllEpisodesButton:hover {
-  background-color: #241DDC;
 }
 
 .contentPage {
@@ -1276,84 +1320,13 @@ li.episode:nth-child(even) {
   margin-left: 0;
 }
 
-.contentPage .contentBody .reviewBody .spentTimeBlock #spentTimeInput:hover ~ .timeDatalist, .contentPage .contentBody .reviewBody .spentTimeBlock .timeDatalist:active, .contentPage .contentBody .reviewBody .spentTimeBlock .timeDatalist:hover {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-}
-
-.contentPage .contentBody .reviewBody .spentTimeBlock .timeDatalist {
-  z-index: 1200;
-  position: absolute;
-  top: 165px;
-  left: 0;
-  width: 100px;
-  background-color: #3F4041;
-  color: #F1F1FB;
-  border-radius: 8px;
-  display: none;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
-  overflow-y: auto;
-  max-height: 70vh;
-}
-
-.contentPage .contentBody .reviewBody .spentTimeBlock .timeDatalist > * {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
-}
-
-.contentPage .contentBody .reviewBody .spentTimeBlock .timeData {
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: horizontal;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: row;
-          flex-direction: row;
-  -webkit-box-pack: center;
-      -ms-flex-pack: center;
-          justify-content: center;
-  -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
-  -ms-flex-wrap: wrap;
-      flex-wrap: wrap;
-  cursor: pointer;
-}
-
-.contentPage .contentBody .reviewBody .spentTimeBlock .timeData:hover {
-  color: #4F5DEA;
-  background-color: #191A1B;
-}
-
-.contentPage .contentBody .reviewBody .spentTimeBlock .timeData i {
-  margin-right: 0.3rem;
-}
-
 .contentPage .contentBody .saveReviewButton {
-  background-color: #4F5DEA;
-  color: #F1F1FB;
   width: 150px;
   height: 40px;
-  border: none;
   padding: 4px 8px;
-  text-align: center;
-  text-decoration: none;
   margin-top: 1rem;
   margin-bottom: 20px;
   margin-right: 1rem;
-  font-size: 16px;
-  border-radius: 8px;
 }
 
 .contentPage .contentBody .friendsBlock {
@@ -1368,17 +1341,6 @@ li.episode:nth-child(even) {
   display: inline-block;
   vertical-align: top;
   margin-top: 1.5rem;
-}
-
-.saveReviewButton:hover {
-  background-color: #241DDC;
-  color: #A6A6AB;
-}
-
-#spentTimeInput:focus ~ .timeDatalist, .timeDatalist:active, .timeDatalist:hover {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
 }
 
 .searchCardsGroup {
@@ -1444,10 +1406,7 @@ li.episode:nth-child(even) {
   height: 100%;
   display: inline-block;
   vertical-align: top;
-  color: #F1F1FB;
   background-color: #3F4041;
-  border-radius: 5px;
-  border: none;
 }
 
 .paginationButton:hover {
@@ -1456,10 +1415,6 @@ li.episode:nth-child(even) {
 
 .paginationButton:disabled {
   background-color: #040405;
-}
-
-.paginationButton:active {
-  border: none;
 }
 
 .reslutsBlock {
@@ -1490,18 +1445,10 @@ li.episode:nth-child(even) {
 }
 
 .saveSettingsButton {
-  background-color: #4F5DEA;
-  border: none;
-  color: #F1F1FB;
   padding: 4px 8px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
   margin-top: 15px;
   margin-bottom: 20px;
-  cursor: pointer;
   font-size: 1.1rem;
-  border-radius: 8px;
 }
 
 .episodeRowRate {
@@ -1608,22 +1555,9 @@ li.episode {
 }
 
 .confirmPasswordButton {
-  background-color: #4F5DEA !important;
-  color: #F1F1FB;
   font-size: 1.1rem;
   padding: 5px 30px;
   width: 12rem;
-  border-radius: 0.5rem;
-  border: none;
-}
-
-.confirmPasswordButton:disabled {
-  background-color: #0D1254 !important;
-  color: #A6A6AB;
-  font-size: 1.1rem;
-  padding: 5px 30px;
-  width: 12rem;
-  border-radius: 5px;
 }
 
 .confirmEmailSuccess,

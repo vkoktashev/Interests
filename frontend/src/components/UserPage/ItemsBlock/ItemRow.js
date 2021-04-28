@@ -25,7 +25,7 @@ function ItemRow({ data, fields }) {
 						<div>{data.score}/10</div>
 						<MDBIcon icon='star' />
 					</div>
-					{!fields.includes("spent_time") ? (
+					{fields.find(field => field.key === 'spent_time') === undefined ? (
 						""
 					) : (
 						<div className='itemTime'>

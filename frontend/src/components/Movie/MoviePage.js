@@ -6,7 +6,6 @@ import AuthStore from "../../store/AuthStore";
 import PagesStore from "../../store/PagesStore";
 import CurrentUserStore from "../../store/CurrentUserStore";
 
-import { MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
 import { toast } from "react-toastify";
 

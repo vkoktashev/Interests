@@ -15,7 +15,15 @@ function MovieBlock({ movies }) {
 				};
 			})}
 			statuses={["Буду смотреть", "Дропнул", "Посмотрел"]}
-			fields={["score"]}
+			fields={[
+				{ label: "Ссылка", key: "link" },
+				{ label: "Название", key: "name" },
+				{ label: "Статус", key: "status" },
+				{ label: "Оценка", key: "score" },
+				{ label: "Отзыв", key: "review" },
+				{ label: "Картинка", key: "poster" },
+			]}
+			name={"Фильмы"}
 		/>
 	);
 }
