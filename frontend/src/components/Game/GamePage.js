@@ -4,9 +4,7 @@ import { observer } from "mobx-react";
 import GameStore from "../../store/GameStore";
 import AuthStore from "../../store/AuthStore";
 import PagesStore from "../../store/PagesStore";
-import CurrentUserStore from "../../store/CurrentUserStore";
 
-import { MDBInput } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
 import { toast } from "react-toastify";
 
@@ -15,7 +13,6 @@ import FriendsActivity from "../Common/FriendsActivity";
 import TimeToBeat from "./TimeToBeat";
 import ScoreBlock from "../Common/ScoreBlock";
 import Rating from "../Common/Rating";
-import TimeDatalist from "./TimeDatalist";
 import InputNumber from "../Common/InputNumber";
 
 /**
@@ -80,6 +77,22 @@ const GamePage = observer((props) => {
 		setSpentTime("");
 		setUserStatus("Не играл");
 		setUserRate(0);
+	}
+
+	function strToFloat(text) {
+		let cleanStr = text;
+		if (cleanStr && cleanStr !== -1)
+			if (cleanStr.indexOf("½") + 1) return parseFloat(cleanStr) + 0.5;
+			else return parseFloat(cleanStr);
+	}
+
+	function hltbToDatalist(hltbInfo) {
+		let newData = [];
+		if (!(!hltbInfo || hltbInfo === "0 часов" || hltbInfo?.gameplay_main === -1)) newData.push(strToFloat(hltbInfo?.gameplay_main ? hltbInfo?.gameplay_main : hltbInfo));
+		if (hltbInfo?.gameplay_main_extra !== -1) newData.push(strToFloat(hltbInfo?.gameplay_main_extra));
+		if (hltbInfo?.gameplay_completionist !== -1) newData.push(strToFloat(hltbInfo?.gameplay_completionist));
+
+		return newData;
 	}
 
 	return (
@@ -147,8 +160,7 @@ const GamePage = observer((props) => {
 
 								<div className='spentTimeBlock'>
 									Время прохождения (часы)
-									<InputNumber id='spentTimeInput' value={spentTime} min={0} onChange={(value) => setSpentTime(value)} />
-									<TimeDatalist hltbInfo={game.hltb || game.playtime} setValue={(value) => setSpentTime(value)} />
+									<InputNumber id='spentTimeInput' value={spentTime} min={0} max={100000} onChange={(value) => setSpentTime(value)} dataList={hltbToDatalist(game.hltb)} />
 								</div>
 								<button
 									className={"saveReviewButton"}
