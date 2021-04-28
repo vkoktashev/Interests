@@ -249,9 +249,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             if not is_user_available(request.user, user):
                 return Response(status=status.HTTP_403_FORBIDDEN)
 
-            filters = get_filters(request.query_params.get('filters[]'))
             results, count = get_logs((user,), request.GET.get('page_size'), request.GET.get('page'),
-                                      request.GET.get('query', ''), filters)
+                                      request.GET.get('query', ''), request.query_params.getlist('filters[]'))
 
             return Response({'log': results, 'count': count})
 
@@ -310,9 +309,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_log(self, request, *args, **kwargs):
         user_follow_query = UserFollow.objects.filter(user=request.user, is_following=True).values('followed_user')
-        filters = get_filters(request.query_params.get('filters[]'))
         results, count = get_logs(user_follow_query, request.GET.get('page_size'), request.GET.get('page'),
-                                  request.GET.get('query', ''), filters)
+                                  request.GET.get('query', ''), request.query_params.getlist('filters[]'))
 
         return Response({'log': results, 'count': count})
 
@@ -678,14 +676,6 @@ def get_user_by_id(user_id, current_user):
         raise User.DoesNotExist()
 
     return user
-
-
-def get_filters(filters_query):
-    if filters_query is not None:
-        filters = filters_query.split(',')
-    else:
-        filters = (TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, TYPE_USER)
-    return filters
 
 
 class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):
