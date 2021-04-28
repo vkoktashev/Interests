@@ -107,8 +107,8 @@ DATABASES = {
         'NAME': 'interests',
         'USER': os.environ['DB_USER'],
         'PASSWORD': os.environ['DB_PASSWORD'],
-        'HOST': os.environ['DB_HOST'],
-        'PORT': os.environ['DB_PORT'],
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
