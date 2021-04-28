@@ -30,8 +30,8 @@ from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogS
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer, \
     UserInfoSerializer, SettingsSerializer
 from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
-    USER_NOT_FOUND, EMAIL_ERROR, MINUTES_IN_HOUR, SITE_URL, LOG_TYPE_GAME, LOG_TYPE_MOVIE, LOG_TYPE_SHOW, \
-    LOG_TYPE_SEASON, LOG_TYPE_EPISODE, LOG_TYPE_USER, CANNOT_DELETE_ANOTHER_USER_LOG, WRONG_LOG_TYPE, LOG_NOT_FOUND
+    USER_NOT_FOUND, EMAIL_ERROR, MINUTES_IN_HOUR, SITE_URL, TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, \
+    TYPE_SEASON, TYPE_EPISODE, TYPE_USER, CANNOT_DELETE_ANOTHER_USER_LOG, WRONG_LOG_TYPE, LOG_NOT_FOUND
 from utils.documentation import USER_SIGNUP_201_EXAMPLE, USER_SIGNUP_400_EXAMPLE, USER_LOG_200_EXAMPLE, \
     USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE
 from utils.functions import get_page_size
@@ -249,7 +249,10 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             if not is_user_available(request.user, user):
                 return Response(status=status.HTTP_403_FORBIDDEN)
 
-            results, count = get_logs((user,), request.GET.get('page_size'), request.GET.get('page'))
+            results, count = get_logs((user,), request.GET.get('page_size'), request.GET.get('page'),
+                                      request.GET.get('query', ''),
+                                      request.query_params.getlist('filters',
+                                                                   (TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, TYPE_USER)))
 
             return Response({'log': results, 'count': count})
 
@@ -260,17 +263,17 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             log_id = request.data.get('id')
             log_type = request.data.get('type')
 
-            if log_type == LOG_TYPE_GAME:
+            if log_type == TYPE_GAME:
                 Model = GameLog
-            elif log_type == LOG_TYPE_MOVIE:
+            elif log_type == TYPE_MOVIE:
                 Model = MovieLog
-            elif log_type == LOG_TYPE_SHOW:
+            elif log_type == TYPE_SHOW:
                 Model = ShowLog
-            elif log_type == LOG_TYPE_SEASON:
+            elif log_type == TYPE_SEASON:
                 Model = SeasonLog
-            elif log_type == LOG_TYPE_EPISODE:
+            elif log_type == TYPE_EPISODE:
                 Model = EpisodeLog
-            elif log_type == LOG_TYPE_USER:
+            elif log_type == TYPE_USER:
                 Model = UserLog
             else:
                 return Response({ERROR: WRONG_LOG_TYPE}, status=status.HTTP_400_BAD_REQUEST)
@@ -618,19 +621,36 @@ def serialize_logs(logs):
     return results
 
 
-def get_logs(user_query, page_size, page_number):
+def get_logs(user_query, page_size, page_number, search_query, filters):
     page_size = get_page_size(page_size)
     page = page_number
 
-    game_logs = GameLog.objects.select_related('user', 'game').filter(user__in=user_query)
-    movie_logs = MovieLog.objects.select_related('user', 'movie').filter(user__in=user_query)
-    show_logs = ShowLog.objects.select_related('user', 'show').filter(user__in=user_query)
-    season_logs = SeasonLog.objects.select_related('user', 'season__tmdb_show').filter(user__in=user_query)
-    episode_logs = EpisodeLog.objects.select_related(
-        'user', 'episode', 'episode__tmdb_season',
-        'episode__tmdb_season__tmdb_show'
-    ).filter(user__in=user_query)
-    user_logs = UserLog.objects.select_related('user', 'followed_user').filter(user__in=user_query)
+    game_logs = movie_logs = show_logs = season_logs = episode_logs = user_logs = []
+
+    for user_filter in filters:
+        if user_filter == TYPE_GAME:
+            game_logs = GameLog.objects.select_related('user', 'game') \
+                .filter(user__in=user_query, game__rawg_name__icontains=search_query)
+        elif user_filter == TYPE_MOVIE:
+            movie_logs = MovieLog.objects.select_related('user', 'movie').filter(user__in=user_query) \
+                .filter(Q(movie__tmdb_name__icontains=search_query) |
+                        Q(movie__tmdb_original_name__icontains=search_query))
+        elif user_filter == TYPE_SHOW:
+            show_logs = ShowLog.objects.select_related('user', 'show').filter(user__in=user_query) \
+                .filter(Q(show__tmdb_name__icontains=search_query) |
+                        Q(show__tmdb_original_name__icontains=search_query))
+            season_logs = SeasonLog.objects.select_related('user', 'season__tmdb_show').filter(user__in=user_query) \
+                .filter(Q(season__tmdb_show__tmdb_name__icontains=search_query) |
+                        Q(season__tmdb_show__tmdb_original_name__icontains=search_query))
+            episode_logs = EpisodeLog.objects.select_related(
+                'user', 'episode', 'episode__tmdb_season',
+                'episode__tmdb_season__tmdb_show'
+            ).filter(user__in=user_query) \
+                .filter(Q(episode__tmdb_season__tmdb_show__tmdb_name__icontains=search_query) |
+                        Q(episode__tmdb_season__tmdb_show__tmdb_original_name__icontains=search_query))
+        elif user_filter == TYPE_USER:
+            user_logs = UserLog.objects.select_related('user', 'followed_user').filter(user__in=user_query) \
+                .filter(followed_user__username__icontains=search_query)
 
     union_logs = sorted(chain(game_logs, movie_logs, show_logs, season_logs, episode_logs, user_logs),
                         key=lambda obj: obj.created, reverse=True)

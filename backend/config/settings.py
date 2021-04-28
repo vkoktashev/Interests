@@ -63,7 +63,7 @@ SWAGGER_SETTINGS = {
 SITE_ID = 1
 
 INTERNAL_IPS = [
-    # '127.0.0.1'
+     '127.0.0.1'
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True

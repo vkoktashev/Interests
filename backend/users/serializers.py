@@ -9,7 +9,7 @@ from movies.models import Movie
 from shows.models import Show
 from users.models import User, UserFollow, UserLog
 from utils.constants import USER_USERNAME_EXISTS, USER_EMAIL_EXISTS, USERNAME_CONTAINS_ILLEGAL_CHARACTERS, \
-    WRONG_BACKDROP_PATH, LOG_TYPE_USER
+    WRONG_BACKDROP_PATH, TYPE_USER
 from utils.serializers import ChoicesField
 
 
@@ -90,7 +90,7 @@ class UserLogSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_type(user_log):
-        return LOG_TYPE_USER
+        return TYPE_USER
 
     @staticmethod
     def get_target(user_log):

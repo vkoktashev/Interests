@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from games.models import UserGame, GameLog, Game
 from users.serializers import FollowedUserSerializer
-from utils.constants import LOG_TYPE_GAME
+from utils.constants import TYPE_GAME
 from utils.serializers import ChoicesField
 
 
@@ -51,7 +51,7 @@ class GameLogSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_type(game_log):
-        return LOG_TYPE_GAME
+        return TYPE_GAME
 
     @staticmethod
     def get_target(game_log):
