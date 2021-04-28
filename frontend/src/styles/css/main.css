@@ -668,6 +668,7 @@ a.logLink:hover, a.dataTable:hover {
 .logDay .logRows .logRow .deleteLogButton {
   background-color: #191A1B;
   margin-left: 2px;
+  padding: 0 8px;
   display: none;
 }
 
