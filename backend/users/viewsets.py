@@ -311,7 +311,10 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_log(self, request, *args, **kwargs):
         user_follow_query = UserFollow.objects.filter(user=request.user, is_following=True).values('followed_user')
-        results, count = get_logs(user_follow_query, request.GET.get('page_size'), request.GET.get('page'))
+        results, count = get_logs(user_follow_query, request.GET.get('page_size'), request.GET.get('page'),
+                                  request.GET.get('query', ''),
+                                  request.query_params.getlist('filters',
+                                                               (TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, TYPE_USER)))
 
         return Response({'log': results, 'count': count})
 
