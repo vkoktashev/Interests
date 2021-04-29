@@ -48,7 +48,7 @@ function ItemBlock({ items, statuses, fields, name }) {
 		<div>
 			<div className='itemRowsHeader'>
 				<div className='itemRowsHeaderLeft'>
-					<div>
+					<div className='firstRow'>
 						<input
 							type='text'
 							placeholder='Поиск'
@@ -99,8 +99,8 @@ function ItemBlock({ items, statuses, fields, name }) {
 				</div>
 			</div>
 			<div className='itemRows'>
-				{filteredItems?.slice((page - 1) * pageSize, page * pageSize).map((item) => (
-					<ItemRow data={item} fields={fields} />
+				{filteredItems?.slice((page - 1) * pageSize, page * pageSize).map((item, counter) => (
+					<ItemRow data={item} fields={fields} key={counter} />
 				))}
 			</div>
 			<div className='itemRowsFooter'>

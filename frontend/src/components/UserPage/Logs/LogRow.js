@@ -206,7 +206,8 @@ function LogRow({ log, showUsername, currentUser, onDeleteLog }) {
 
 	function parseDate(date) {
 		let newDate = new Date(date);
-		return newDate.toLocaleTimeString("ru-RU");
+		let options = { hour: "numeric", minute: "numeric" };
+		return newDate.toLocaleTimeString("ru-RU", options);
 	}
 
 	return (

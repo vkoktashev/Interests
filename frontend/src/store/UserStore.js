@@ -15,6 +15,11 @@ class User {
 		makeAutoObservable(this);
 	}
 
+	get isCurrentUser() {
+		console.log(parseInt(this.user.id), parseInt(AuthStore.user.id));
+		return AuthStore.loggedIn && parseInt(this.user.id) === parseInt(AuthStore.user.id);
+	}
+
 	requestUser = async (username) => {
 		this.userState = "pending";
 		await AuthStore.checkAuthorization();
@@ -22,17 +27,16 @@ class User {
 	};
 	requestUserSuccess = (result) => {
 		this.user = result;
-		console.log(result);
 		this.userState = "done";
 	};
 	requestUserFailure = (error) => {
 		this.userState = "error: " + error;
 	};
 
-	requestUserLogs = async (userID, page, resultsOnPage) => {
+	requestUserLogs = async (userID, page, resultsOnPage, query, filters) => {
 		this.userLogsState = "pending";
 		await AuthStore.checkAuthorization();
-		userRequests.getUserLog(localStorage.getItem("token"), userID, page, resultsOnPage).then(this.requestLogsSuccess, this.requestLogsFailure);
+		userRequests.getUserLog(localStorage.getItem("token"), userID, page, resultsOnPage, query, filters).then(this.requestLogsSuccess, this.requestLogsFailure);
 	};
 	requestLogsSuccess = (result) => {
 		this.userLogs = result;
@@ -59,10 +63,10 @@ class User {
 		else this.userLogsState = "error: " + error;
 	};
 
-	requestUserFriendsLogs = async (userID, page, resultsOnPage) => {
+	requestUserFriendsLogs = async (userID, page, resultsOnPage, query, filters) => {
 		this.userFriendsLogsState = "pending";
 		await AuthStore.checkAuthorization();
-		userRequests.getUserFriendsLog(localStorage.getItem("token"), userID, page, resultsOnPage).then(this.requestFriendsLogsSuccess, this.requestFriendsLogsFailure);
+		userRequests.getUserFriendsLog(localStorage.getItem("token"), userID, page, resultsOnPage, query, filters).then(this.requestFriendsLogsSuccess, this.requestFriendsLogsFailure);
 	};
 	requestFriendsLogsSuccess = (result) => {
 		this.userFriendsLogs = result;
