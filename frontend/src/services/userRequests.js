@@ -52,14 +52,14 @@ export async function setUserStatus(token, is_following, userID) {
  * @param {string} page страница
  * @param {int} resultsOnPage количество результатов на странице
  */
-export async function getUserLog(token, userID, page, resultsOnPage) {
+export async function getUserLog(token, userID, page, resultsOnPage, query, filters) {
 	let data;
 	if (token) {
 		var AuthStr = "Bearer " + token;
-		const res = await axios.get(USER_INFO_URL + userID + "/log/", { params: { page: page, page_size: resultsOnPage }, headers: { Authorization: AuthStr } });
+		const res = await axios.get(USER_INFO_URL + userID + "/log/", { params: { page: page, page_size: resultsOnPage, query: query, filters: filters }, headers: { Authorization: AuthStr } });
 		data = res.data;
 	} else {
-		const res = await axios.get(USER_INFO_URL + userID + "/log/", { params: { page: page, page_size: resultsOnPage } });
+		const res = await axios.get(USER_INFO_URL + userID + "/log/", { params: { page: page, page_size: resultsOnPage, query: query, filters: filters } });
 		data = res.data;
 	}
 	return data;
@@ -83,10 +83,10 @@ export async function deleteUserLog(token, userID, logType, logID) {
  * @param {int} page страница
  * @param {int} resultsOnPage количество результатов на странице
  */
-export async function getUserFriendsLog(token, userID, page, resultsOnPage) {
+export async function getUserFriendsLog(token, userID, page, resultsOnPage, query, filters) {
 	let data;
 	var AuthStr = "Bearer " + token;
-	const res = await axios.get(USER_INFO_URL + "friends_log/", { params: { page: page, page_size: resultsOnPage }, headers: { Authorization: AuthStr } });
+	const res = await axios.get(USER_INFO_URL + "friends_log/", { params: { page: page, page_size: resultsOnPage, query: query, filters: filters }, headers: { Authorization: AuthStr } });
 	data = res.data;
 	return data;
 }

@@ -15,7 +15,12 @@ function GameBlock({ games }) {
 					poster: game.game.rawg_backdrop_path,
 				};
 			})}
-			statuses={["Буду играть", "Играю", "Дропнул", "Прошел"]}
+			statuses={[
+				{ value: "Буду играть", label: "Буду играть" },
+				{ value: "Играю", label: "Играю" },
+				{ value: "Дропнул", label: "Дропнул" },
+				{ value: "Прошел", label: "Прошел" },
+			]}
 			fields={[
 				{ label: "Ссылка", key: "link" },
 				{ label: "Название", key: "name" },

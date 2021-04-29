@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from movies.models import UserMovie, MovieLog, Movie
 from users.serializers import FollowedUserSerializer
-from utils.constants import LOG_TYPE_MOVIE
+from utils.constants import TYPE_MOVIE
 from utils.serializers import ChoicesField
 
 
@@ -51,7 +51,7 @@ class MovieLogSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_type(movie_log):
-        return LOG_TYPE_MOVIE
+        return TYPE_MOVIE
 
     @staticmethod
     def get_target(movie_log):

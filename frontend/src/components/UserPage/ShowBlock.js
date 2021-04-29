@@ -15,7 +15,12 @@ function ShowBlock({ shows }) {
 					spent_time: show.spent_time,
 				};
 			})}
-			statuses={["Буду смотреть", "Смотрю", "Дропнул", "Посмотрел"]}
+			statuses={[
+				{ value: "Буду смотреть", label: "Буду смотреть" },
+				{ value: "Смотрю", label: "Смотрю" },
+				{ value: "Дропнул", label: "Дропнул" },
+				{ value: "Посмотрел", label: "Посмотрел" },
+			]}
 			fields={[
 				{ label: "Ссылка", key: "link" },
 				{ label: "Название", key: "name" },
