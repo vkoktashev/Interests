@@ -220,7 +220,7 @@ function LogRow({ log, showUsername, currentUser, onDeleteLog }) {
 			{(log.type === "user") | (log.action_type === "episodes") | (log.action_result === "0") | (log.action_result === "-1") ? "" : ":"}&thinsp;
 			{actionResultToStr(log.action_type, log.action_result, log.type)}
 			<button
-				hidden={!currentUser}
+				hidden={!currentUser || showUsername}
 				className='deleteLogButton'
 				onClick={(event) => {
 					onDeleteLog(log.type, log.id);
