@@ -300,6 +300,7 @@ button:disabled {
           align-items: center;
   -ms-flex-wrap: wrap;
       flex-wrap: wrap;
+  color: #F1F1FB;
 }
 
 .searchInputDiv .searchHints > * .searchHint img {
