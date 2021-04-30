@@ -11,12 +11,12 @@ function StatisticsBlock({ stats }) {
 		if (genres) {
 			let newData = [];
 			let counter = 0;
-			for (let genre in genres)
+			for (let genre in genres.sort((a, b) => (a.spent_time_percent > b.spent_time_percent ? -1 : 1)))
 				if (genres[genre].spent_time_percent > 2 && counter < 11) {
 					newData.push({ name: genres[genre].name, Процент: genres[genre].spent_time_percent });
 					counter++;
 				}
-			return newData.sort((a, b) => (a["Процент"] > b["Процент"] ? -1 : 1));
+			return newData;
 		}
 		return [];
 	}
