@@ -20,6 +20,23 @@
   }
 }
 
+button {
+  background-color: #4F5DEA;
+  color: #F1F1FB;
+  border: none;
+  outline: none;
+  border-radius: 8px;
+}
+
+button:hover {
+  background-color: #241DDC;
+}
+
+button:disabled {
+  background-color: #0D1254;
+  color: #A6A6AB;
+}
+
 .categoriesTabs {
   max-width: 100%;
   margin-top: 2rem;
@@ -75,6 +92,7 @@
   text-align: center;
   margin: 0px;
   font-size: 1rem;
+  border-radius: 0;
 }
 
 .contentStatuses .contentStatus.active {
@@ -82,13 +100,13 @@
 }
 
 .contentStatuses .contentStatus:first-child {
-  border-top-left-radius: 5px;
-  border-bottom-left-radius: 5px;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
 }
 
 .contentStatuses .contentStatus:last-child {
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
 .friendsCards {
@@ -282,6 +300,7 @@
           align-items: center;
   -ms-flex-wrap: wrap;
       flex-wrap: wrap;
+  color: #F1F1FB;
 }
 
 .searchInputDiv .searchHints > * .searchHint img {
@@ -316,6 +335,7 @@
   letter-spacing: 0.15px;
   color: #F1F1FB;
   margin-left: 1rem;
+  position: relative;
 }
 
 .customNUD input {
@@ -323,7 +343,7 @@
   color: #F1F1FB;
   border: none;
   outline: none;
-  width: 50px;
+  min-width: 30px;
   text-align: center;
 }
 
@@ -337,20 +357,72 @@
   -webkit-appearance: none;
 }
 
+.customNUD input:hover ~ .dataList {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
 .customNUD .minusButton {
   background-color: #3F4041;
-  color: #F1F1FB;
-  border: none;
-  outline: none;
   border-radius: 8px 0 0 8px;
 }
 
 .customNUD .plusButton {
   background-color: #3F4041;
-  color: #F1F1FB;
-  border: none;
-  outline: none;
   border-radius: 0 8px 8px 0;
+}
+
+.customNUD .dataList {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  width: 100%;
+  display: none;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  background-color: #3F4041;
+  color: #F1F1FB;
+  border-radius: 8px;
+}
+
+.customNUD .dataList:active, .customNUD .dataList:hover {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.customNUD .dataList div {
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.customNUD .dataList div:hover {
+  color: #4F5DEA;
+  background-color: #191A1B;
+}
+
+.customNUD .dataList div i {
+  margin-right: 0.3rem;
 }
 
 .calendarHeader {
@@ -421,6 +493,7 @@
 .react-calendar button {
   background-color: #191A1B;
   color: #F1F1FB !important;
+  border-radius: 0;
 }
 
 .react-calendar button:active,
@@ -525,19 +598,7 @@
   line-height: 19px;
   letter-spacing: 1.25px;
   text-transform: uppercase;
-  color: #F1F1FB;
-  background-color: #4F5DEA;
-  border: none;
   padding: 8px;
-  border-radius: 8px;
-}
-
-.userHeader .addFriendButton:hover {
-  color: #A6A6AB;
-}
-
-.userHeader .addFriendButton:active {
-  color: #F1F1FB;
 }
 
 a.logLink:link, a.logLink:visited, a.logLink:active, a.dataTable:link, a.dataTable:visited, a.dataTable:active {
@@ -547,6 +608,92 @@ a.logLink:link, a.logLink:visited, a.logLink:active, a.dataTable:link, a.dataTab
 
 a.logLink:hover, a.dataTable:hover {
   color: #4F5DEA;
+}
+
+.logs .logsHeader {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  margin-bottom: 1rem;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  color: #A6A6AB;
+  gap: 1rem;
+}
+
+.logs .logsHeader .logsHeaderLeft {
+  display: -webkit-inline-box;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  max-width: 100%;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.logs .logsHeader .logsHeaderLeft .firstRow {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  margin-right: 1rem;
+}
+
+.logs .logsHeader .logsHeaderLeft .firstRow .searchUserLogsInput {
+  font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
+  font-style: normal;
+  font-weight: normal;
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 29px;
+  letter-spacing: 0.15px;
+  background-color: #3F4041;
+  color: #F1F1FB;
+  border: none;
+  border-radius: 8px;
+  width: 100%;
+  height: 38px;
+  outline: none;
+  -ms-flex-negative: 1;
+      flex-shrink: 1;
+}
+
+.logs .logsHeader .logsHeaderLeft .firstRow .searchUserLogsInput[type=text] {
+  padding-left: 1rem;
+}
+
+.logs .logsHeader .logsHeaderLeft .firstRow .mobileOpenButton {
+  background-color: #3F4041;
+  margin-left: 1rem;
+  padding: 4px 8px;
+  font-size: 20px;
+  height: 38px;
+  width: 40px;
+}
+
+@media (min-width: 746px) {
+  .logs .logsHeader .logsHeaderLeft .firstRow .mobileOpenButton {
+    display: none;
+  }
+}
+
+.logs .logsHeader .pageSizeBlock {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: end;
+      -ms-flex-pack: end;
+          justify-content: flex-end;
 }
 
 .logDay {
@@ -584,8 +731,11 @@ a.logLink:hover, a.dataTable:hover {
           flex-direction: column;
   -ms-flex-wrap: wrap;
       flex-wrap: wrap;
-  -ms-flex-negative: 2;
-      flex-shrink: 2;
+  -ms-flex-negative: 1;
+      flex-shrink: 1;
+  -webkit-box-flex: 1;
+      -ms-flex-positive: 1;
+          flex-grow: 1;
   min-width: 200px;
   max-width: 90%;
 }
@@ -597,14 +747,21 @@ a.logLink:hover, a.dataTable:hover {
       flex-wrap: wrap;
 }
 
-.logPaginationButton {
-  margin-top: 10px;
-  margin-bottom: 20px;
-  margin-left: 10px;
-  width: 100px;
+.logDay .logRows .logRow:hover > .deleteLogButton {
+  display: inline-block;
+  margin: 0;
+}
+
+.logDay .logRows .logRow .deleteLogButton {
   background-color: #191A1B;
-  border: 1px solid #A6A6AB;
-  color: #F1F1FB;
+  margin-left: 2px;
+  padding: 0 8px;
+  display: none;
+}
+
+.logDay .logRows .logRow .deleteLogButton:hover {
+  background-color: #040405;
+  color: #4F5DEA;
 }
 
 .dataTable {
@@ -640,13 +797,6 @@ a.logLink:hover, a.dataTable:hover {
   -webkit-box-pack: justify;
       -ms-flex-pack: justify;
           justify-content: space-between;
-  font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
-  font-style: normal;
-  font-weight: normal;
-  font-weight: 600;
-  font-size: 15px;
-  line-height: 20px;
-  letter-spacing: 0.1px;
   color: #A6A6AB;
   margin-bottom: 1rem;
   -ms-flex-wrap: wrap;
@@ -654,19 +804,23 @@ a.logLink:hover, a.dataTable:hover {
 }
 
 .itemRowsHeader .itemRowsHeaderLeft {
+  display: -webkit-inline-box;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  max-width: 100%;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.itemRowsHeader .itemRowsHeaderLeft .firstRow {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
-  -webkit-box-orient: horizontal;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: row;
-          flex-direction: row;
-  -ms-flex-wrap: wrap;
-      flex-wrap: wrap;
-  max-width: 100%;
+  margin-right: 1rem;
 }
 
-.itemRowsHeader .itemRowsHeaderLeft #searchUserItemsInput {
+.itemRowsHeader .itemRowsHeaderLeft .firstRow #searchUserItemsInput {
   font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
   font-style: normal;
   font-weight: normal;
@@ -686,20 +840,17 @@ a.logLink:hover, a.dataTable:hover {
 }
 
 @media (max-width: 516px) {
-  .itemRowsHeader .itemRowsHeaderLeft #searchUserItemsInput {
+  .itemRowsHeader .itemRowsHeaderLeft .firstRow #searchUserItemsInput {
     width: 80%;
   }
 }
 
-.itemRowsHeader .itemRowsHeaderLeft #searchUserItemsInput[type=text] {
+.itemRowsHeader .itemRowsHeaderLeft .firstRow #searchUserItemsInput[type=text] {
   padding-left: 1rem;
 }
 
-.itemRowsHeader .itemRowsHeaderLeft .mobileOpenButton {
+.itemRowsHeader .itemRowsHeaderLeft .firstRow .mobileOpenButton {
   background-color: #3F4041;
-  color: #F1F1FB;
-  border: none;
-  border-radius: 8px;
   margin-left: 1rem;
   padding: 4px 8px;
   font-size: 20px;
@@ -708,36 +859,24 @@ a.logLink:hover, a.dataTable:hover {
 }
 
 @media (min-width: 516px) {
-  .itemRowsHeader .itemRowsHeaderLeft .mobileOpenButton {
+  .itemRowsHeader .itemRowsHeaderLeft .firstRow .mobileOpenButton {
     display: none;
   }
 }
 
-@media (max-width: 515px) {
-  .itemRowsHeader .itemRowsHeaderLeft .sortButtons {
-    margin-left: 0;
-    margin-top: 1rem;
-  }
+.itemRowsHeader .itemRowsHeaderLeft .sortButtons {
+  -ms-flex-negative: 0;
+      flex-shrink: 0;
 }
 
 .itemRowsHeader .itemRowsHeaderLeft .sortButtons .sortRowsButton {
   background-color: #3F4041;
-  color: #F1F1FB;
-  border: none;
-  border-radius: 8px;
-  margin-left: 1rem;
   padding: 4px 8px;
   font-size: 20px;
   height: 38px;
 }
 
-@media (max-width: 515px) {
-  .itemRowsHeader .itemRowsHeaderLeft .sortButtons .sortRowsButton:nth-child(1) {
-    margin-left: 0;
-  }
-}
-
-.itemRowsHeader .itemRowsHeaderLeft .sortButtons .sortRowsButton:nth-child(2) {
+.itemRowsHeader .itemRowsHeaderLeft .sortButtons .sortRowsButton:nth-child(1) {
   margin-right: 1rem;
 }
 
@@ -771,6 +910,8 @@ a.logLink:hover, a.dataTable:hover {
   -webkit-box-pack: justify;
       -ms-flex-pack: justify;
           justify-content: space-between;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
 }
 
 .itemRowsFooter div {
@@ -1103,27 +1244,11 @@ li.episode:nth-child(even) {
 .saveEpisodesButton {
   width: 150px;
   height: 50px;
-  background-color: #4F5DEA;
-  color: #F1F1FB;
-  border-radius: 5px;
-}
-
-.saveEpisodesButton:hover {
-  background-color: #241DDC;
 }
 
 .checkAllEpisodesButton {
   margin-top: 10px;
-  background-color: #4F5DEA;
-  color: #F1F1FB;
-  font-weight: bolder;
-  border-style: solid;
-  border-radius: 5px;
   padding: 2px 8px;
-}
-
-.checkAllEpisodesButton:hover {
-  background-color: #241DDC;
 }
 
 .contentPage {
@@ -1276,84 +1401,13 @@ li.episode:nth-child(even) {
   margin-left: 0;
 }
 
-.contentPage .contentBody .reviewBody .spentTimeBlock #spentTimeInput:hover ~ .timeDatalist, .contentPage .contentBody .reviewBody .spentTimeBlock .timeDatalist:active, .contentPage .contentBody .reviewBody .spentTimeBlock .timeDatalist:hover {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-}
-
-.contentPage .contentBody .reviewBody .spentTimeBlock .timeDatalist {
-  z-index: 1200;
-  position: absolute;
-  top: 165px;
-  left: 0;
-  width: 100px;
-  background-color: #3F4041;
-  color: #F1F1FB;
-  border-radius: 8px;
-  display: none;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
-  overflow-y: auto;
-  max-height: 70vh;
-}
-
-.contentPage .contentBody .reviewBody .spentTimeBlock .timeDatalist > * {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
-}
-
-.contentPage .contentBody .reviewBody .spentTimeBlock .timeData {
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: horizontal;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: row;
-          flex-direction: row;
-  -webkit-box-pack: center;
-      -ms-flex-pack: center;
-          justify-content: center;
-  -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
-  -ms-flex-wrap: wrap;
-      flex-wrap: wrap;
-  cursor: pointer;
-}
-
-.contentPage .contentBody .reviewBody .spentTimeBlock .timeData:hover {
-  color: #4F5DEA;
-  background-color: #191A1B;
-}
-
-.contentPage .contentBody .reviewBody .spentTimeBlock .timeData i {
-  margin-right: 0.3rem;
-}
-
 .contentPage .contentBody .saveReviewButton {
-  background-color: #4F5DEA;
-  color: #F1F1FB;
   width: 150px;
   height: 40px;
-  border: none;
   padding: 4px 8px;
-  text-align: center;
-  text-decoration: none;
   margin-top: 1rem;
   margin-bottom: 20px;
   margin-right: 1rem;
-  font-size: 16px;
-  border-radius: 8px;
 }
 
 .contentPage .contentBody .friendsBlock {
@@ -1368,17 +1422,6 @@ li.episode:nth-child(even) {
   display: inline-block;
   vertical-align: top;
   margin-top: 1.5rem;
-}
-
-.saveReviewButton:hover {
-  background-color: #241DDC;
-  color: #A6A6AB;
-}
-
-#spentTimeInput:focus ~ .timeDatalist, .timeDatalist:active, .timeDatalist:hover {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
 }
 
 .searchCardsGroup {
@@ -1444,10 +1487,7 @@ li.episode:nth-child(even) {
   height: 100%;
   display: inline-block;
   vertical-align: top;
-  color: #F1F1FB;
   background-color: #3F4041;
-  border-radius: 5px;
-  border: none;
 }
 
 .paginationButton:hover {
@@ -1456,10 +1496,6 @@ li.episode:nth-child(even) {
 
 .paginationButton:disabled {
   background-color: #040405;
-}
-
-.paginationButton:active {
-  border: none;
 }
 
 .reslutsBlock {
@@ -1490,18 +1526,10 @@ li.episode:nth-child(even) {
 }
 
 .saveSettingsButton {
-  background-color: #4F5DEA;
-  border: none;
-  color: #F1F1FB;
   padding: 4px 8px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
   margin-top: 15px;
   margin-bottom: 20px;
-  cursor: pointer;
   font-size: 1.1rem;
-  border-radius: 8px;
 }
 
 .episodeRowRate {
@@ -1608,22 +1636,9 @@ li.episode {
 }
 
 .confirmPasswordButton {
-  background-color: #4F5DEA !important;
-  color: #F1F1FB;
   font-size: 1.1rem;
   padding: 5px 30px;
   width: 12rem;
-  border-radius: 0.5rem;
-  border: none;
-}
-
-.confirmPasswordButton:disabled {
-  background-color: #0D1254 !important;
-  color: #A6A6AB;
-  font-size: 1.1rem;
-  padding: 5px 30px;
-  width: 12rem;
-  border-radius: 5px;
 }
 
 .confirmEmailSuccess,
@@ -2725,43 +2740,34 @@ a:hover {
 }
 
 .react-select-container {
-  width: 300px !important;
+  width: 300px;
   display: inline-block;
-  margin-left: 1rem;
-}
-
-@media (max-width: 814px) {
-  .react-select-container {
-    margin-left: 0;
-    display: block;
-    margin-top: 1rem;
-  }
 }
 
 .react-select-container .multiselect {
-  width: 300px !important;
+  width: 300px;
 }
 
 .react-select-container .multiselect__control, .react-select-container .multiselect__menu {
-  background-color: #3F4041 !important;
+  background-color: #3F4041;
   color: #F1F1FB;
-  width: 300px !important;
-  border: none !important;
-  border-radius: 8px !important;
+  width: 300px;
+  border: none;
+  border-radius: 8px;
 }
 
 .react-select-container .multiselect__multi-value, .react-select-container .multiselect__multi-value__label {
-  color: #F1F1FB !important;
-  background-color: #4F5DEA !important;
+  color: #F1F1FB;
+  background-color: #4F5DEA;
 }
 
 .react-select-container .multiselect__option {
-  background-color: #191A1B !important;
+  background-color: #191A1B;
   color: #F1F1FB;
-  border: none !important;
+  border: none;
 }
 
 .react-select-container .multiselect__option:hover {
-  background-color: #3F4041 !important;
+  background-color: #3F4041;
 }
 /*# sourceMappingURL=main.css.map */

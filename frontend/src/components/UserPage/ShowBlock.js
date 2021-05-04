@@ -15,8 +15,22 @@ function ShowBlock({ shows }) {
 					spent_time: show.spent_time,
 				};
 			})}
-			statuses={["Буду смотреть", "Смотрю", "Дропнул", "Посмотрел"]}
-			fields={["score", "spent_time"]}
+			statuses={[
+				{ value: "Буду смотреть", label: "Буду смотреть" },
+				{ value: "Смотрю", label: "Смотрю" },
+				{ value: "Дропнул", label: "Дропнул" },
+				{ value: "Посмотрел", label: "Посмотрел" },
+			]}
+			fields={[
+				{ label: "Ссылка", key: "link" },
+				{ label: "Название", key: "name" },
+				{ label: "Статус", key: "status" },
+				{ label: "Оценка", key: "score" },
+				{ label: "Отзыв", key: "review" },
+				{ label: "Время просмотра", key: "spent_time" },
+				{ label: "Картинка", key: "poster" },
+			]}
+			name={"Сериалы"}
 		/>
 	);
 }

@@ -30,7 +30,8 @@ from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogS
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer, \
     UserInfoSerializer, SettingsSerializer
 from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
-    USER_NOT_FOUND, EMAIL_ERROR, MINUTES_IN_HOUR, SITE_URL
+    USER_NOT_FOUND, EMAIL_ERROR, MINUTES_IN_HOUR, SITE_URL, TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, \
+    TYPE_SEASON, TYPE_EPISODE, TYPE_USER, CANNOT_DELETE_ANOTHER_USER_LOG, WRONG_LOG_TYPE, LOG_NOT_FOUND
 from utils.documentation import USER_SIGNUP_201_EXAMPLE, USER_SIGNUP_400_EXAMPLE, USER_LOG_200_EXAMPLE, \
     USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE
 from utils.functions import get_page_size
@@ -193,7 +194,7 @@ class AuthViewSet(GenericViewSet):
 
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
-    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
+    @swagger_auto_schema(method='get', manual_parameters=[page_param, page_size_param],
                          responses={
                              status.HTTP_200_OK: openapi.Response(
                                  description=status.HTTP_200_OK,
@@ -214,7 +215,28 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                  }
                              )
                          })
-    @action(detail=True, methods=['get'])
+    @swagger_auto_schema(method='delete',
+                         responses={
+                             status.HTTP_204_NO_CONTENT: openapi.Response(
+                                 description=status.HTTP_204_NO_CONTENT,
+                                 examples={
+                                     "application/json": None
+                                 }
+                             ),
+                             status.HTTP_400_BAD_REQUEST: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": {ERROR: WRONG_LOG_TYPE}
+                                 }
+                             ),
+                             status.HTTP_404_NOT_FOUND: openapi.Response(
+                                 description=status.HTTP_200_OK,
+                                 examples={
+                                     "application/json": {ERROR: LOG_NOT_FOUND}
+                                 }
+                             )
+                         })
+    @action(detail=True, methods=['get', 'delete'])
     def log(self, request, *args, **kwargs):
         try:
             user = get_user_by_id(kwargs.get('pk'), request.user)
@@ -223,12 +245,47 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except User.DoesNotExist:
             return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
-        if not is_user_available(request.user, user):
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        if request.method == 'GET':
+            if not is_user_available(request.user, user):
+                return Response(status=status.HTTP_403_FORBIDDEN)
 
-        results, has_next_page = get_logs((user,), request.GET.get('page_size'), request.GET.get('page'))
+            results, count = get_logs((user,), request.GET.get('page_size'), request.GET.get('page'),
+                                      request.GET.get('query', ''),
+                                      request.query_params.getlist('filters[]',
+                                                                   (TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, TYPE_USER)))
 
-        return Response({'log': results, 'has_next_page': has_next_page})
+            return Response({'log': results, 'count': count})
+
+        else:
+            if request.user != user:
+                return Response({ERROR: CANNOT_DELETE_ANOTHER_USER_LOG}, status=status.HTTP_403_FORBIDDEN)
+
+            log_id = request.data.get('id')
+            log_type = request.data.get('type')
+
+            if log_type == TYPE_GAME:
+                Model = GameLog
+            elif log_type == TYPE_MOVIE:
+                Model = MovieLog
+            elif log_type == TYPE_SHOW:
+                Model = ShowLog
+            elif log_type == TYPE_SEASON:
+                Model = SeasonLog
+            elif log_type == TYPE_EPISODE:
+                Model = EpisodeLog
+            elif log_type == TYPE_USER:
+                Model = UserLog
+            else:
+                return Response({ERROR: WRONG_LOG_TYPE}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                Model.objects.get(id=log_id, user=user).delete()
+            except ValueError:
+                return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
+            except Model.DoesNotExist:
+                return Response({ERROR: LOG_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
                          responses={
@@ -254,9 +311,12 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_log(self, request, *args, **kwargs):
         user_follow_query = UserFollow.objects.filter(user=request.user, is_following=True).values('followed_user')
-        results, has_next_page = get_logs(user_follow_query, request.GET.get('page_size'), request.GET.get('page'))
+        results, count = get_logs(user_follow_query, request.GET.get('page_size'), request.GET.get('page'),
+                                  request.GET.get('query', ''),
+                                  request.query_params.getlist('filters[]',
+                                                               (TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, TYPE_USER)))
 
-        return Response({'log': results, 'has_next_page': has_next_page})
+        return Response({'log': results, 'count': count})
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def release_calendar(self, request, *args, **kwargs):
@@ -525,7 +585,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
     @action(detail=False, methods=['get', 'patch'], permission_classes=[IsAuthenticated])
     def user_settings(self, request):
-        if request.method == 'get':
+        if request.method == 'GET':
             serializer = SettingsSerializer(request.user)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -564,19 +624,36 @@ def serialize_logs(logs):
     return results
 
 
-def get_logs(user_query, page_size, page_number):
+def get_logs(user_query, page_size, page_number, search_query, filters):
     page_size = get_page_size(page_size)
     page = page_number
 
-    game_logs = GameLog.objects.select_related('user', 'game').filter(user__in=user_query)
-    movie_logs = MovieLog.objects.select_related('user', 'movie').filter(user__in=user_query)
-    show_logs = ShowLog.objects.select_related('user', 'show').filter(user__in=user_query)
-    season_logs = SeasonLog.objects.select_related('user', 'season__tmdb_show').filter(user__in=user_query)
-    episode_logs = EpisodeLog.objects.select_related(
-        'user', 'episode', 'episode__tmdb_season',
-        'episode__tmdb_season__tmdb_show'
-    ).filter(user__in=user_query)
-    user_logs = UserLog.objects.select_related('user', 'followed_user').filter(user__in=user_query)
+    game_logs = movie_logs = show_logs = season_logs = episode_logs = user_logs = []
+
+    for user_filter in filters:
+        if user_filter == TYPE_GAME:
+            game_logs = GameLog.objects.select_related('user', 'game') \
+                .filter(user__in=user_query, game__rawg_name__icontains=search_query)
+        elif user_filter == TYPE_MOVIE:
+            movie_logs = MovieLog.objects.select_related('user', 'movie').filter(user__in=user_query) \
+                .filter(Q(movie__tmdb_name__icontains=search_query) |
+                        Q(movie__tmdb_original_name__icontains=search_query))
+        elif user_filter == TYPE_SHOW:
+            show_logs = ShowLog.objects.select_related('user', 'show').filter(user__in=user_query) \
+                .filter(Q(show__tmdb_name__icontains=search_query) |
+                        Q(show__tmdb_original_name__icontains=search_query))
+            season_logs = SeasonLog.objects.select_related('user', 'season__tmdb_show').filter(user__in=user_query) \
+                .filter(Q(season__tmdb_show__tmdb_name__icontains=search_query) |
+                        Q(season__tmdb_show__tmdb_original_name__icontains=search_query))
+            episode_logs = EpisodeLog.objects.select_related(
+                'user', 'episode', 'episode__tmdb_season',
+                'episode__tmdb_season__tmdb_show'
+            ).filter(user__in=user_query) \
+                .filter(Q(episode__tmdb_season__tmdb_show__tmdb_name__icontains=search_query) |
+                        Q(episode__tmdb_season__tmdb_show__tmdb_original_name__icontains=search_query))
+        elif user_filter == TYPE_USER:
+            user_logs = UserLog.objects.select_related('user', 'followed_user').filter(user__in=user_query) \
+                .filter(followed_user__username__icontains=search_query)
 
     union_logs = sorted(chain(game_logs, movie_logs, show_logs, season_logs, episode_logs, user_logs),
                         key=lambda obj: obj.created, reverse=True)
@@ -585,7 +662,7 @@ def get_logs(user_query, page_size, page_number):
     paginator_page = paginator.get_page(page)
 
     results = serialize_logs(paginator_page.object_list)
-    return results, paginator_page.has_next()
+    return results, paginator.count
 
 
 def get_user_by_id(user_id, current_user):

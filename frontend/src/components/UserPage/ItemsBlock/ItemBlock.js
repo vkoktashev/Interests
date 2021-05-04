@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { CSVLink } from "react-csv";
 import InputNumber from "../../Common/InputNumber";
 import SelectMulti from "../../Common/SelectMulti";
 import ItemRow from "./ItemRow";
@@ -6,7 +7,7 @@ import { MDBIcon } from "mdbreact";
 import Pagination from "rc-pagination";
 import useWindowDimensions from "../../../hooks/useWindowDimensions";
 
-function ItemBlock({ items, statuses, fields }) {
+function ItemBlock({ items, statuses, fields, name }) {
 	const [query, setQuery] = useState("");
 	const [pageSize, setPageSize] = useState(10);
 	const [page, setPage] = useState(1);
@@ -47,7 +48,7 @@ function ItemBlock({ items, statuses, fields }) {
 		<div>
 			<div className='itemRowsHeader'>
 				<div className='itemRowsHeaderLeft'>
-					<div>
+					<div className='firstRow'>
 						<input
 							type='text'
 							placeholder='Поиск'
@@ -65,7 +66,7 @@ function ItemBlock({ items, statuses, fields }) {
 					<div className='sortButtons' hidden={collapse && width <= 515}>
 						<button
 							className='sortRowsButton'
-							hidden={!fields.includes("score")}
+							hidden={fields.find((field) => field.key === "score") === undefined}
 							onClick={() => {
 								sortItems("score", true);
 								setSortIsAsc(!sortIsAsc);
@@ -74,7 +75,7 @@ function ItemBlock({ items, statuses, fields }) {
 						</button>
 						<button
 							className='sortRowsButton'
-							hidden={!fields.includes("spent_time")}
+							hidden={fields.find((field) => field.key === "spent_time") === undefined}
 							onClick={() => {
 								sortItems("spent_time", true);
 								setSortIsAsc(!sortIsAsc);
@@ -94,12 +95,12 @@ function ItemBlock({ items, statuses, fields }) {
 
 				<div className='itemRowsHeaderRight' hidden={collapse && width <= 515}>
 					Записей на странице
-					<InputNumber value={pageSize} max={100} min={1} onChange={(value) => setPageSize(value)} />
+					<InputNumber value={pageSize} max={100} min={1} onChange={(value) => setPageSize(value)} dataList={[5, 10, 25, 50, 100]} />
 				</div>
 			</div>
 			<div className='itemRows'>
-				{filteredItems?.slice((page - 1) * pageSize, page * pageSize).map((item) => (
-					<ItemRow data={item} fields={fields} />
+				{filteredItems?.slice((page - 1) * pageSize, page * pageSize).map((item, counter) => (
+					<ItemRow data={item} fields={fields} key={counter} />
 				))}
 			</div>
 			<div className='itemRowsFooter'>
@@ -111,7 +112,9 @@ function ItemBlock({ items, statuses, fields }) {
 					}}
 					current={page}
 				/>
-				<div></div>
+				<CSVLink data={items ? items : []} headers={fields} separator={";"} filename={`interests ${name}.csv`}>
+					Скачать CSV
+				</CSVLink>
 			</div>
 		</div>
 	);

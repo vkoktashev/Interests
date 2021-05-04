@@ -3,7 +3,7 @@ import { useHistory } from "react-router-dom";
 import Rating from "react-rating";
 import { MDBIcon } from "mdbreact";
 
-function LogRow({ log, showUsername }) {
+function LogRow({ log, showUsername, currentUser, onDeleteLog }) {
 	let history = useHistory();
 
 	function translateActionType(action, actionResult) {
@@ -206,7 +206,8 @@ function LogRow({ log, showUsername }) {
 
 	function parseDate(date) {
 		let newDate = new Date(date);
-		return newDate.toLocaleTimeString("ru-RU");
+		let options = { hour: "numeric", minute: "numeric" };
+		return newDate.toLocaleTimeString("ru-RU", options);
 	}
 
 	return (
@@ -218,6 +219,14 @@ function LogRow({ log, showUsername }) {
 			{nameToLink(log.target, log.type, log.target_id)}
 			{(log.type === "user") | (log.action_type === "episodes") | (log.action_result === "0") | (log.action_result === "-1") ? "" : ":"}&thinsp;
 			{actionResultToStr(log.action_type, log.action_result, log.type)}
+			<button
+				hidden={!currentUser || showUsername}
+				className='deleteLogButton'
+				onClick={(event) => {
+					onDeleteLog(log.type, log.id);
+				}}>
+				x
+			</button>
 		</div>
 	);
 }

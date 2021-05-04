@@ -14,14 +14,25 @@ import CategoriesTab from "../Common/CategoriesTab";
 import ShowBlock from "./ShowBlock";
 import StatisticsBlock from "./Statistics/StatisticsBlock";
 
-const LOG_ROWS_COUNT = 20;
-
 /**
  * Основная страница приложения
  */
 const UserPage = observer((props) => {
 	const { loggedIn, currentUser } = AuthStore;
-	const { user, userState, requestUser, setUserStatus, requestUserLogs, userLogs, userLogsState, requestUserFriendsLogs, userFriendsLogs, userFriendsLogsState } = UserStore;
+	const {
+		user,
+		userState,
+		requestUser,
+		setUserStatus,
+		requestUserLogs,
+		userLogs,
+		userLogsState,
+		requestUserFriendsLogs,
+		userFriendsLogs,
+		userFriendsLogsState,
+		deleteUserLog,
+		isCurrentUser,
+	} = UserStore;
 
 	let { userID, category } = useParams();
 	const [activeCategory, setActiveCategory] = useState("Лента");
@@ -30,11 +41,10 @@ const UserPage = observer((props) => {
 	useEffect(
 		() => {
 			requestUser(userID);
-			requestUserLogs(userID, 1, LOG_ROWS_COUNT);
 			setActiveCategory("Лента");
 		},
 		// eslint-disable-next-line
-		[userID, requestUser, requestUserLogs]
+		[userID, requestUser]
 	);
 
 	useEffect(
@@ -44,16 +54,6 @@ const UserPage = observer((props) => {
 		},
 		// eslint-disable-next-line
 		[category]
-	);
-
-	useEffect(
-		() => {
-			if (loggedIn && currentUser.username === user.username) {
-				requestUserFriendsLogs(userID, 1, LOG_ROWS_COUNT);
-			}
-		},
-		// eslint-disable-next-line
-		[loggedIn, currentUser.username, user.username]
 	);
 
 	useEffect(() => {
@@ -82,7 +82,7 @@ const UserPage = observer((props) => {
 						</div>
 
 						<button
-							hidden={currentUser.username === user.username || !user.is_available}
+							hidden={isCurrentUser || !user.is_available}
 							className='addFriendButton'
 							onClick={() => {
 								setUserStatus({ is_following: user.is_followed ? false : true }, user.id);
@@ -100,7 +100,7 @@ const UserPage = observer((props) => {
 						<div hidden={activeCategory !== "Лента"}>
 							<div hidden={!user.is_available}>
 								<LoadingOverlay active={userLogsState === "pending" && userState !== "pending"} spinner text='Загрузка активности...'>
-									<UserLogBlock logs={userLogs} onChangePage={(pageNumber) => requestUserLogs(userID, pageNumber, LOG_ROWS_COUNT)} />
+									<UserLogBlock userID={userID} logs={userLogs} requestUserLogs={requestUserLogs} currentUser={isCurrentUser} onDeleteLog={deleteUserLog} logsType={"user"} />
 								</LoadingOverlay>
 							</div>
 							<h4 hidden={user.is_available || userState === "pending"}>
@@ -124,8 +124,8 @@ const UserPage = observer((props) => {
 							<FriendBlock users={user.followed_users ? user.followed_users : []} />
 							<div hidden={currentUser.username !== user.username}>
 								<h4>Активность друзей: </h4>
-								<LoadingOverlay active={userFriendsLogsState === "pending" && !userState === "pending"} spinner text='Загрузка активности...'>
-									<UserLogBlock logs={userFriendsLogs} onChangePage={(pageNumber) => requestUserFriendsLogs(userID, pageNumber, LOG_ROWS_COUNT)} showUsername={true} />
+								<LoadingOverlay active={userFriendsLogsState === "pending" && userState !== "pending"} spinner text='Загрузка активности...'>
+									<UserLogBlock userID={userID} logs={userFriendsLogs} requestUserLogs={requestUserFriendsLogs} currentUser={isCurrentUser} showUsername={true} logsType={"userFriends"} />
 								</LoadingOverlay>
 							</div>
 						</div>

@@ -9,10 +9,8 @@ from movies.models import Movie
 from shows.models import Show
 from users.models import User, UserFollow, UserLog
 from utils.constants import USER_USERNAME_EXISTS, USER_EMAIL_EXISTS, USERNAME_CONTAINS_ILLEGAL_CHARACTERS, \
-    WRONG_BACKDROP_PATH
+    WRONG_BACKDROP_PATH, TYPE_USER
 from utils.serializers import ChoicesField
-
-TYPE_USER = 'user'
 
 
 class UserSerializer(serializers.ModelSerializer):

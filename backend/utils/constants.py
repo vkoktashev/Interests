@@ -5,6 +5,13 @@ rawg = rawgpy.RAWG("b63e6d97a13e480890142f340650aefb")
 tmdb.API_KEY = 'ebf9e8e8a2be6bba6aacfa5c4c76f698'
 LANGUAGE = 'ru'
 
+TYPE_GAME = 'game'
+TYPE_MOVIE = 'movie'
+TYPE_SHOW = 'show'
+TYPE_SEASON = 'season'
+TYPE_EPISODE = 'episode'
+TYPE_USER = 'user'
+
 DEFAULT_PAGE_NUMBER = 1
 DEFAULT_PAGE_SIZE = 5
 
@@ -40,3 +47,6 @@ SEASON_NOT_FOUND = 'Сезон не найден.'
 EPISODE_NOT_FOUND = 'Эпизод не найден.'
 EMAIL_ERROR = 'Возникла проблема с отправкой письма, попробуйте позже.'
 WRONG_BACKDROP_PATH = 'Недопустимый фон профиля.'
+CANNOT_DELETE_ANOTHER_USER_LOG = 'Нельзя удалять логи других пользователей.'
+WRONG_LOG_TYPE = 'Недопустимый тип логов.'
+LOG_NOT_FOUND = 'Лог не найден.'

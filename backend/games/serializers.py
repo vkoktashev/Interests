@@ -2,9 +2,8 @@ from rest_framework import serializers
 
 from games.models import UserGame, GameLog, Game
 from users.serializers import FollowedUserSerializer
+from utils.constants import TYPE_GAME
 from utils.serializers import ChoicesField
-
-TYPE_GAME = 'game'
 
 
 class UserGameSerializer(serializers.ModelSerializer):

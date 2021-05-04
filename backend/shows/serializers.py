@@ -2,11 +2,8 @@ from rest_framework import serializers
 
 from shows.models import UserShow, UserSeason, UserEpisode, ShowLog, SeasonLog, EpisodeLog, Episode, Show, Season
 from users.serializers import FollowedUserSerializer
+from utils.constants import TYPE_SHOW, TYPE_SEASON, TYPE_EPISODE
 from utils.serializers import ChoicesField
-
-TYPE_SHOW = 'show'
-TYPE_SEASON = 'season'
-TYPE_EPISODE = 'episode'
 
 
 class UserShowSerializer(serializers.ModelSerializer):
@@ -47,6 +44,7 @@ class UserEpisodeInSeasonSerializer(UserEpisodeSerializer):
 
 class ShowStatsSerializer(UserShowSerializer):
     spent_time = serializers.DecimalField(max_digits=7, decimal_places=1)
+    watched_episodes_count = serializers.IntegerField()
 
     class Meta:
         model = UserShow
