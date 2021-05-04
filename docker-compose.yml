@@ -20,6 +20,8 @@ services:
       CELERY_BROKER_URL: 'redis://redis:6379'
       CELERY_RESULT_BACKEND: 'redis://redis:6379'
       DATABASE_URL: 'db2'
+    volumes:
+      - /etc/letsencrypt/live/yourapp.ru/:/etc/letsencrypt/live/yourapp.ru/
     ports:
       - "8001:8001"
     depends_on:
@@ -31,6 +33,9 @@ services:
     build: ./frontend
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt/:/etc/letsencrypt/
     depends_on:
       - back
     restart: always
