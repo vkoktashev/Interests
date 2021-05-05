@@ -19,9 +19,9 @@ SITE_URL = 'interests.fun'
 CACHE_TIMEOUT = 60 * 60 * 10
 LAST_ACTIVITY_INTERVAL_SECS = 60 * 10
 
-TMDB_BACKDROP_PATH_PREFIX = 'http://image.tmdb.org/t/p/w1920_and_h800_multi_faces'
-TMDB_POSTER_PATH_PREFIX = 'http://image.tmdb.org/t/p/w600_and_h900_bestv2'
-TMDB_STILL_PATH_PREFIX = 'http://image.tmdb.org/t/p/w1920_and_h1080_bestv2'
+TMDB_BACKDROP_PATH_PREFIX = 'https://image.tmdb.org/t/p/w1920_and_h800_multi_faces'
+TMDB_POSTER_PATH_PREFIX = 'https://image.tmdb.org/t/p/w600_and_h900_bestv2'
+TMDB_STILL_PATH_PREFIX = 'https://image.tmdb.org/t/p/w1920_and_h1080_bestv2'
 EPISODE_NOT_WATCHED_SCORE = -1
 EPISODE_WATCHED_SCORE = 0
 MINUTES_IN_HOUR = 60

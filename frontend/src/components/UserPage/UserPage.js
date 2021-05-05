@@ -18,7 +18,7 @@ import StatisticsBlock from "./Statistics/StatisticsBlock";
  * Основная страница приложения
  */
 const UserPage = observer((props) => {
-	const { loggedIn, currentUser } = AuthStore;
+	const { currentUser } = AuthStore;
 	const {
 		user,
 		userState,
