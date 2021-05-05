@@ -35,10 +35,10 @@ export async function getShowSeason(token, showID, seasonNumber) {
 	let data;
 	if (token) {
 		var AuthStr = "Bearer " + token;
-		const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber, { headers: { Authorization: AuthStr } });
+		const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/", { headers: { Authorization: AuthStr } });
 		data = res.data;
 	} else {
-		const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber);
+		const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/");
 		data = res.data;
 	}
 	return data;
@@ -56,10 +56,10 @@ export async function getShowEpisode(token, showID, seasonNumber, episodeNumber)
 	let data;
 	if (token) {
 		var AuthStr = "Bearer " + token;
-		const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/episode/" + episodeNumber, { headers: { Authorization: AuthStr } });
+		const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/episode/" + episodeNumber + "/", { headers: { Authorization: AuthStr } });
 		data = res.data;
 	} else {
-		const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/episode/" + episodeNumber);
+		const res = await axios.get(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/episode/" + episodeNumber + "/");
 		data = res.data;
 	}
 	return data;
