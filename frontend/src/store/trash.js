@@ -108,7 +108,6 @@ function parseMovie(movie) {
 		let newDate = mas[2] + "." + mas[1] + "." + mas[0];
 		newMovie.date = newDate;
 	}
-	console.log(movie);
 	return newMovie;
 }
 
@@ -202,7 +201,6 @@ function parseSeason(show) {
 		let newDate = mas[2] + "." + mas[1] + "." + mas[0];
 		newShow.date = newDate;
 	}
-	console.log(newShow);
 	return newShow;
 }
 
@@ -225,6 +223,5 @@ function parseEpisode(show) {
 		let newDate = mas[2] + "." + mas[1] + "." + mas[0];
 		newShow.date = newDate;
 	}
-	console.log(show);
 	return newShow;
 }

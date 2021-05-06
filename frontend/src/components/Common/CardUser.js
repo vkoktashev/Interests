@@ -12,7 +12,7 @@ function CardUser({ user }) {
 				e.preventDefault();
 			}}
 			className='cardUser'>
-			<div className='cardUserImage' style={{ backgroundImage: `url(${"http://upload.wikimedia.org/wikipedia/commons/f/f4/User_Avatar_2.png"})` }} />
+			<div className='cardUserImage' style={{ backgroundImage: `url(${"https://upload.wikimedia.org/wikipedia/commons/f/f4/User_Avatar_2.png"})` }} />
 			<div className='cardUserText'>
 				<h4>{user.username}</h4>
 			</div>
