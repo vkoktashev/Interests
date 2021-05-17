@@ -72,7 +72,7 @@ const UserPage = observer((props) => {
 				<div className='contentBody header dark'>
 					<div className='userHeader'>
 						<div className='userCard'>
-							<div className='userAvatar' style={{ backgroundImage: `url(${"http://upload.wikimedia.org/wikipedia/commons/f/f4/User_Avatar_2.png"})` }} />
+							<div className='userAvatar' style={{ backgroundImage: `url(${"https://upload.wikimedia.org/wikipedia/commons/f/f4/User_Avatar_2.png"})` }} />
 							<div>
 								<h2>{user.username}</h2>
 								<div hidden={!user.is_available} className='subtitle'>
