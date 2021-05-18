@@ -16,7 +16,6 @@ class User {
 	}
 
 	get isCurrentUser() {
-		console.log(parseInt(this.user.id), parseInt(AuthStore.user.id));
 		return AuthStore.loggedIn && parseInt(this.user.id) === parseInt(AuthStore.user.id);
 	}
 

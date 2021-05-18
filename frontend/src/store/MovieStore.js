@@ -24,7 +24,6 @@ class Movie {
 	};
 	requestMovieSuccess = (result) => {
 		this.movie = result;
-		console.log(result);
 		this.movieState = "done";
 	};
 	requestMovieFailure = (error) => {

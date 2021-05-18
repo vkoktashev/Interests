@@ -133,7 +133,6 @@ class Show {
 	};
 	requestEpisodeUserInfoSuccess = (result) => {
 		this.userInfoState = "done";
-		console.log({ ...result.user_info, user_watched_show: result.user_watched_show });
 		this.userInfo = { ...result.user_info, user_watched_show: result.user_watched_show };
 		this.friendsInfo = result.friends_info;
 	};
