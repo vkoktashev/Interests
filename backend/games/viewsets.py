@@ -27,6 +27,8 @@ from utils.openapi_params import query_param, page_param, page_size_param
 
 
 class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
+    queryset = Game.objects.all()
+
     @swagger_auto_schema(manual_parameters=[query_param, page_param, page_size_param],
                          responses={
                              status.HTTP_200_OK: openapi.Response(
