@@ -27,6 +27,8 @@ from utils.openapi_params import query_param, page_param, page_size_param
 
 
 class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
+    queryset = Game.objects.all()
+
     @swagger_auto_schema(manual_parameters=[query_param, page_param, page_size_param],
                          responses={
                              status.HTTP_200_OK: openapi.Response(
@@ -137,7 +139,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 user_info = None
 
             user_follow_query = UserFollow.objects.filter(user=request.user, is_following=True).values('followed_user')
-            followed_user_games = UserGame.objects.filter(user__in=user_follow_query, game=game)
+            followed_user_games = UserGame.objects.filter(user__in=user_follow_query, game=game) \
+                .exclude(status=UserGame.STATUS_NOT_PLAYED)
             serializer = FollowedUserGameSerializer(followed_user_games, many=True)
             friends_info = serializer.data
         except Game.DoesNotExist:

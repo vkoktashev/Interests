@@ -1,5 +1,6 @@
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.db.models import UniqueConstraint, Deferrable
 from django.utils import timezone
 
 from movies.models import Genre
@@ -53,7 +54,11 @@ class Episode(models.Model):
     tmdb_release_date = models.DateField(null=True)
 
     class Meta:
-        unique_together = (("tmdb_season", "tmdb_episode_number"),)
+        UniqueConstraint(
+            name='unique_season_episode_number',
+            fields=['tmdb_season", "tmdb_episode_number'],
+            deferrable=Deferrable.DEFERRED,
+        )
 
 
 class UserShow(UserScore):
