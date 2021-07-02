@@ -14,31 +14,31 @@ export const CONFIRM_URL = BACKEND_URL + "users/auth/confirm_email/";
 export const RESET_PASSWORD_URL = BACKEND_URL + "users/auth/password_reset/";
 /**Адрес подтверждения сброса пароля */
 export const CONFIRM_PASSWORD_URL = BACKEND_URL + "users/auth/confirm_password_reset/";
-/**Адрес сохранения настроек */
-export const USER_SETTINGS_URL = BACKEND_URL + "users/user/user_settings/";
 /**Адрес запроса игры */
-export const GET_GAME_URL = BACKEND_URL + "games/game/";
+export const GET_GAME_URL = "games/game/";
 /**Адрес поиска игр */
-export const SEARCH_GAMES_URL = BACKEND_URL + "games/search/rawg/";
+export const SEARCH_GAMES_URL = "games/search/rawg/";
 /**Адрес быстрого поиска игр */
-export const SEARCH_GAMES_FAST_URL = BACKEND_URL + "games/search/";
+export const SEARCH_GAMES_FAST_URL = "games/search/";
 /**Адрес запроса фильма */
-export const GET_MOVIE_URL = BACKEND_URL + "movies/movie/";
+export const GET_MOVIE_URL = "movies/movie/";
 /**Адрес поиска фильмов */
-export const SEARCH_MOVIES_URL = BACKEND_URL + "movies/search/tmdb/";
+export const SEARCH_MOVIES_URL = "movies/search/tmdb/";
 /**Адрес быстрого поиска игр */
-export const SEARCH_MOVIES_FAST_URL = BACKEND_URL + "movies/search/";
+export const SEARCH_MOVIES_FAST_URL = "movies/search/";
 /**Адрес запроса сериала */
-export const GET_SHOW_URL = BACKEND_URL + "shows/show/";
+export const GET_SHOW_URL = "shows/show/";
 /**Адрес поиска сериалов */
-export const SEARCH_SHOWS_URL = BACKEND_URL + "shows/search/tmdb/";
+export const SEARCH_SHOWS_URL = "shows/search/tmdb/";
 /**Адрес юыстрого поиска сериалов */
-export const SEARCH_SHOWS_FAST_URL = BACKEND_URL + "shows/search/";
+export const SEARCH_SHOWS_FAST_URL = "shows/search/";
 /**Адрес запроса непросмотренных серий */
-export const GET_UNWATCHED_EPISODES_URL = BACKEND_URL + "shows/show/unwatched_episodes/";
+export const GET_UNWATCHED_EPISODES_URL = "shows/show/unwatched_episodes/";
 /**Адрес получения информации о пользователе */
-export const USER_INFO_URL = BACKEND_URL + "users/user/";
+export const USER_INFO_URL = "users/user/";
 /**Адрес получения календаря релизов пользователя */
-export const USER_CALENDAR_URL = BACKEND_URL + "users/user/release_calendar/";
+export const USER_CALENDAR_URL = "users/user/release_calendar/";
 /**Адрес поиска пользователей */
-export const SEARCH_USERS_URL = BACKEND_URL + "users/search/";
+export const SEARCH_USERS_URL = "users/search/";
+/**Адрес сохранения настроек */
+export const USER_SETTINGS_URL = "users/user/user_settings/";
