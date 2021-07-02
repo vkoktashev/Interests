@@ -18,7 +18,7 @@ export async function getShow(id) {
  * @returns {object} Информация о сериале
  */
 export async function getShowSeason(showID, seasonNumber) {
-	const res = await api.get(GET_SHOW_URL + showID + "/season/" + seasonNumber);
+	const res = await api.get(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/");
 	return res.data;
 }
 
@@ -30,7 +30,7 @@ export async function getShowSeason(showID, seasonNumber) {
  * @returns {object} Информация о сериале
  */
 export async function getShowEpisode(showID, seasonNumber, episodeNumber) {
-	const res = await api.get(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/episode/" + episodeNumber);
+	const res = await api.get(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/episode/" + episodeNumber + "/");
 	return res.data;
 }
 

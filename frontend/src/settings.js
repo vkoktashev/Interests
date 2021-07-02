@@ -30,7 +30,7 @@ export const SEARCH_MOVIES_FAST_URL = "movies/search/";
 export const GET_SHOW_URL = "shows/show/";
 /**Адрес поиска сериалов */
 export const SEARCH_SHOWS_URL = "shows/search/tmdb/";
-/**Адрес юыстрого поиска сериалов */
+/**Адрес быстрого поиска сериалов */
 export const SEARCH_SHOWS_FAST_URL = "shows/search/";
 /**Адрес запроса непросмотренных серий */
 export const GET_UNWATCHED_EPISODES_URL = "shows/show/unwatched_episodes/";
