@@ -1,0 +1,57 @@
+@import ../../../../styles/colors
+@import ../../../../styles/fonts
+.user-logs
+    &__header
+        display: flex
+        flex-direction: row
+        justify-content: space-between
+        margin-bottom: 1rem
+        flex-wrap: wrap
+        color: $newText2
+        gap: 1rem
+
+    &__header-left
+        display: inline-flex
+        max-width: 100%
+        flex-wrap: wrap
+        gap: 1rem
+
+    &__header-first-row
+        display: flex
+        margin-right: 1rem
+
+    &__search-input
+        @include headline6
+        background-color: $newBackground3
+        color: $newText3
+        border: none
+        border-radius: 8px
+        width: 100%
+        height: 38px
+        outline: none
+        flex-shrink: 1
+
+        &[type=text]
+            padding-left: 1rem
+
+    &__mobile-expand
+        border: none
+        border-radius: 8px
+        color: $newText3 
+        background-color: $newBackground3
+        margin-left: 1rem
+        padding: 4px 8px
+        font-size: 20px
+        height: 38px
+        width: 40px
+
+        @media (min-width: 746px)
+            display: none
+
+    &__page-size
+        display: flex
+        flex-direction: row
+        justify-content: flex-end
+    
+    &__page-size-label
+        margin-right: 5px

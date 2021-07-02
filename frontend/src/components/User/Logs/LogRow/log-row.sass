@@ -1,0 +1,24 @@
+@import ../../../../styles/colors
+.log-row
+    flex-wrap: wrap
+
+    &:hover > &__delete-button
+        display: inline-block !important
+        margin: 0
+
+    &__link
+        font-weight: 600
+
+    &__delete-button
+        border: none
+        border-radius: 8px
+        color: $newText3
+        background-color: $newBackground2
+        margin-left: 2px
+        padding: 0 8px
+        display: none
+
+        &:hover
+            background-color: $newBackground3
+            color: $newText3
+
