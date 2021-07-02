@@ -16,15 +16,11 @@ import Routes from "./Routes";
 import "react-toastify/dist/ReactToastify.css";
 
 const App = observer((props) => {
-	const { checkAuthorization } = AuthStore;
+	const { checkAuth } = AuthStore;
 
-	useEffect(
-		() => {
-			checkAuthorization();
-		},
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[]
-	);
+	useEffect(() => {
+		checkAuth();
+	}, [checkAuth]);
 
 	return (
 		<div className='app'>

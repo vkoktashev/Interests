@@ -1,6 +1,5 @@
 import { makeAutoObservable } from "mobx";
 //import remotedev from "mobx-remotedev";
-import AuthStore from "./AuthStore";
 import * as userRequests from "../services/userRequests";
 import * as showRequests from "../services/showRequests";
 
@@ -18,10 +17,8 @@ class CurrentUser {
 	}
 
 	requestCalendar = async () => {
-		if (AuthStore.checkAuthorization()) {
-			this.calendarState = "pending";
-			userRequests.getUserCalendar(localStorage.getItem("token")).then(this.requestCalendarSuccess, this.requestCalendarFailure);
-		}
+		this.calendarState = "pending";
+		userRequests.getUserCalendar().then(this.requestCalendarSuccess, this.requestCalendarFailure);
 	};
 	requestCalendarSuccess = (result) => {
 		this.calendar = result;
@@ -32,10 +29,8 @@ class CurrentUser {
 	};
 
 	requestSettings = async () => {
-		if (AuthStore.checkAuthorization()) {
-			this.settingsState = "pending";
-			userRequests.getUserSettings(localStorage.getItem("token")).then(this.requestSettingsSuccess, this.requestSettingsFailure);
-		}
+		this.settingsState = "pending";
+		userRequests.getUserSettings().then(this.requestSettingsSuccess, this.requestSettingsFailure);
 	};
 	requestSettingsSuccess = (result) => {
 		this.settings = result;
@@ -46,10 +41,8 @@ class CurrentUser {
 	};
 
 	requestUnwatched = async () => {
-		if (AuthStore.checkAuthorization()) {
-			this.unwatchedState = "pending";
-			showRequests.getUnwatchedEpisodes(localStorage.getItem("token")).then(this.requestUnwatchedSuccess, this.requestUnwatchedFailure);
-		}
+		this.unwatchedState = "pending";
+		showRequests.getUnwatchedEpisodes().then(this.requestUnwatchedSuccess, this.requestUnwatchedFailure);
 	};
 	requestUnwatchedSuccess = (result) => {
 		this.unwatched = result;
@@ -60,10 +53,8 @@ class CurrentUser {
 	};
 
 	patchSettings = async (settings) => {
-		if (AuthStore.checkAuthorization()) {
-			this.saveSettingsState = "pending";
-			userRequests.patchUserSettings(localStorage.getItem("token"), settings).then(this.patchSettingsSuccess, this.patchSettingsFailure);
-		}
+		this.saveSettingsState = "pending";
+		userRequests.patchUserSettings(settings).then(this.patchSettingsSuccess, this.patchSettingsFailure);
 	};
 	patchSettingsReset = () => {
 		this.saveSettingsState = "done";

@@ -1,27 +1,14 @@
-import axios from "axios";
+import api from "../http";
 import { USER_INFO_URL, SEARCH_USERS_URL, USER_CALENDAR_URL, USER_SETTINGS_URL } from "../settings";
-
-axios.defaults.headers.common = {
-	"Content-Type": "application/json;charset=UTF-8",
-};
 
 /**
  * Запрос к бд, получающий информацию о пользователе
- * @param {string} token Токен доступа
  * @param {string} userID ID пользователя
  * @returns {object} Информация о пользователе
  */
-export async function getUserInfo(token, userID) {
-	let data;
-	if (token) {
-		var AuthStr = "Bearer " + token;
-		const res = await axios.get(USER_INFO_URL + userID + "/", { headers: { Authorization: AuthStr } });
-		data = res.data;
-	} else {
-		const res = await axios.get(USER_INFO_URL + userID + "/");
-		data = res.data;
-	}
-	return data;
+export async function getUserInfo(userID) {
+	const res = await api.get(USER_INFO_URL + userID + "/");
+	return res.data;
 }
 
 /**
@@ -29,21 +16,18 @@ export async function getUserInfo(token, userID) {
  * @param {string} query Поисковый запрос
  */
 export async function searchUsers(query) {
-	const res = await axios.get(SEARCH_USERS_URL, { params: { query: query } });
+	const res = await api.get(SEARCH_USERS_URL, { params: { query: query } });
 	return res.data;
 }
 
 /**
  * Запрос на изменение статуса пользовтеля (добавить в друзья и тд)
- * @param {string} token Токен доступа
  * @param {boolean} is_following Статус фильма
  * @param {string} userID ID пользовтеля
  */
-export async function setUserStatus(token, is_following, userID) {
-	var AuthStr = "Bearer " + token;
-	const res = await axios.put(USER_INFO_URL + userID + "/follow/", is_following, { headers: { Authorization: AuthStr } });
-	if (res.status === 204 || res.status === 200 || res.status === 201) return res.data;
-	else return null;
+export async function setUserStatus(is_following, userID) {
+	const res = await api.put(USER_INFO_URL + userID + "/follow/", is_following);
+	return res.data;
 }
 
 /**
@@ -52,17 +36,9 @@ export async function setUserStatus(token, is_following, userID) {
  * @param {string} page страница
  * @param {int} resultsOnPage количество результатов на странице
  */
-export async function getUserLog(token, userID, page, resultsOnPage, query, filters) {
-	let data;
-	if (token) {
-		var AuthStr = "Bearer " + token;
-		const res = await axios.get(USER_INFO_URL + userID + "/log/", { params: { page: page, page_size: resultsOnPage, query: query, filters: filters }, headers: { Authorization: AuthStr } });
-		data = res.data;
-	} else {
-		const res = await axios.get(USER_INFO_URL + userID + "/log/", { params: { page: page, page_size: resultsOnPage, query: query, filters: filters } });
-		data = res.data;
-	}
-	return data;
+export async function getUserLog(userID, page, resultsOnPage, query, filters) {
+	const res = await api.get(USER_INFO_URL + userID + "/log/", { params: { page: page, page_size: resultsOnPage, query: query, filters: filters } });
+	return res.data;
 }
 
 /**
@@ -71,9 +47,8 @@ export async function getUserLog(token, userID, page, resultsOnPage, query, filt
  * @param {string} page страница
  * @param {int} resultsOnPage количество результатов на странице
  */
-export async function deleteUserLog(token, userID, logType, logID) {
-	var AuthStr = "Bearer " + token;
-	const res = await axios.delete(USER_INFO_URL + userID + "/log/", { data: { type: logType, id: logID }, headers: { Authorization: AuthStr } });
+export async function deleteUserLog(userID, logType, logID) {
+	const res = await api.delete(USER_INFO_URL + userID + "/log/", { data: { type: logType, id: logID } });
 	return res;
 }
 
@@ -83,43 +58,31 @@ export async function deleteUserLog(token, userID, logType, logID) {
  * @param {int} page страница
  * @param {int} resultsOnPage количество результатов на странице
  */
-export async function getUserFriendsLog(token, userID, page, resultsOnPage, query, filters) {
-	let data;
-	var AuthStr = "Bearer " + token;
-	const res = await axios.get(USER_INFO_URL + "friends_log/", { params: { page: page, page_size: resultsOnPage, query: query, filters: filters }, headers: { Authorization: AuthStr } });
-	data = res.data;
-	return data;
+export async function getUserFriendsLog(page, resultsOnPage, query, filters) {
+	const res = await api.get(USER_INFO_URL + "friends_log/", { params: { page: page, page_size: resultsOnPage, query: query, filters: filters } });
+	return res.data;
 }
 
 /**
  * Запрос к бд, получающий календарь релизов пользователя
  */
-export async function getUserCalendar(token) {
-	let data;
-	var AuthStr = "Bearer " + token;
-	const res = await axios.get(USER_CALENDAR_URL, { headers: { Authorization: AuthStr } });
-	data = res.data;
-	return data;
+export async function getUserCalendar() {
+	const res = await api.get(USER_CALENDAR_URL);
+	return res.data;
 }
 
 /**
  * Запрос к бд, получающий настройки пользователя
  */
-export async function getUserSettings(token) {
-	let data;
-	var AuthStr = "Bearer " + token;
-	const res = await axios.get(USER_SETTINGS_URL, { headers: { Authorization: AuthStr } });
-	data = res.data;
-	return data;
+export async function getUserSettings() {
+	const res = await api.get(USER_SETTINGS_URL);
+	return res.data;
 }
 
 /**
  * Запрос к бд, изменяющий настройки пользователя
  */
-export async function patchUserSettings(token, settings) {
-	let data;
-	var AuthStr = "Bearer " + token;
-	const res = await axios.patch(USER_SETTINGS_URL, settings, { headers: { Authorization: AuthStr } });
-	data = res.data;
-	return data;
+export async function patchUserSettings(settings) {
+	const res = await api.patch(USER_SETTINGS_URL, settings);
+	return res.data;
 }

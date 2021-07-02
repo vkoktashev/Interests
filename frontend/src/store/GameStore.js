@@ -1,6 +1,5 @@
 import { makeAutoObservable } from "mobx";
 //import remotedev from "mobx-remotedev";
-import AuthStore from "./AuthStore";
 import * as gameRequests from "../services/gameRequests";
 
 class Game {
@@ -19,8 +18,7 @@ class Game {
 
 	requestGame = async (id) => {
 		this.gameState = "pending";
-		await AuthStore.checkAuthorization();
-		gameRequests.getGame(localStorage.getItem("token"), id).then(this.requestGameSuccess, this.requestGameFailure);
+		gameRequests.getGame(id).then(this.requestGameSuccess, this.requestGameFailure);
 	};
 	requestGameSuccess = (result) => {
 		this.game = result;
@@ -32,8 +30,7 @@ class Game {
 
 	requestUserInfo = async (slug) => {
 		this.userInfoState = "pending";
-		await AuthStore.checkAuthorization();
-		gameRequests.getGameUserInfo(localStorage.getItem("token"), slug).then(this.requestUserInfoSuccess, this.requestUserInfoFailure);
+		gameRequests.getGameUserInfo(slug).then(this.requestUserInfoSuccess, this.requestUserInfoFailure);
 	};
 	requestUserInfoSuccess = (result) => {
 		this.userInfo = result.user_info;
@@ -45,10 +42,8 @@ class Game {
 	};
 
 	setGameStatus = async (userInfo) => {
-		if (await AuthStore.checkAuthorization()) {
-			this.setStatusState = "pending";
-			gameRequests.setGameStatus(localStorage.getItem("token"), this.game.slug, userInfo).then(this.setGameStatusSuccess, this.setGameStatusFailure);
-		}
+		this.setStatusState = "pending";
+		gameRequests.setGameStatus(this.game.slug, userInfo).then(this.setGameStatusSuccess, this.setGameStatusFailure);
 	};
 	setGameStatusSuccess = (result) => {
 		this.setStatusState = "done";

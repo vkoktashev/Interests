@@ -1,6 +1,5 @@
-import { makeAutoObservable, runInAction } from "mobx";
+import { makeAutoObservable } from "mobx";
 //import remotedev from "mobx-remotedev";
-import AuthStore from "./AuthStore";
 import * as showRequests from "../services/showRequests";
 
 class Show {
@@ -23,8 +22,7 @@ class Show {
 
 	requestShow = async (id) => {
 		this.showState = "pending";
-		await AuthStore.checkAuthorization();
-		showRequests.getShow(localStorage.getItem("token"), id).then(this.requestShowSuccess, this.requestShowFailure);
+		showRequests.getShow(id).then(this.requestShowSuccess, this.requestShowFailure);
 	};
 	requestShowSuccess = (result) => {
 		this.show = result;
@@ -36,8 +34,7 @@ class Show {
 
 	requestSeason = async (showID, seasonNumber) => {
 		this.showState = "pending";
-		await AuthStore.checkAuthorization();
-		showRequests.getShowSeason(localStorage.getItem("token"), showID, seasonNumber).then(this.requestSeasonSuccess, this.requestSeasonFailure);
+		showRequests.getShowSeason(showID, seasonNumber).then(this.requestSeasonSuccess, this.requestSeasonFailure);
 	};
 	requestSeasonSuccess = (result) => {
 		this.show = result;
@@ -50,8 +47,7 @@ class Show {
 	requestSeasons = async (showID, seasonNumber) => {
 		this.showSeasonsState[seasonNumber] = "pending";
 		this.showSeasons[seasonNumber] = {};
-		await AuthStore.checkAuthorization();
-		showRequests.getShowSeason(localStorage.getItem("token"), showID, seasonNumber).then(
+		showRequests.getShowSeason(showID, seasonNumber).then(
 			(res) => this.requestSeasonsSuccess(res, seasonNumber),
 			(res) => this.requestSeasonsFailure(res, seasonNumber)
 		);
@@ -66,8 +62,7 @@ class Show {
 
 	requestEpisode = async (showID, seasonNumber, episodeNumber) => {
 		this.showState = "pending";
-		await AuthStore.checkAuthorization();
-		showRequests.getShowEpisode(localStorage.getItem("token"), showID, seasonNumber, episodeNumber).then(this.requestEpisodeSuccess, this.requestEpisodeFailure);
+		showRequests.getShowEpisode(showID, seasonNumber, episodeNumber).then(this.requestEpisodeSuccess, this.requestEpisodeFailure);
 	};
 	requestEpisodeSuccess = (result) => {
 		this.show = result;
@@ -79,9 +74,7 @@ class Show {
 
 	requestShowUserInfo = async (id) => {
 		this.userInfoState = "pending";
-		if (await AuthStore.checkAuthorization()) {
-			showRequests.getShowUserInfo(localStorage.getItem("token"), id).then(this.requestShowUserInfoSuccess, this.requestShowUserInfoFailure);
-		}
+		showRequests.getShowUserInfo(id).then(this.requestShowUserInfoSuccess, this.requestShowUserInfoFailure);
 	};
 	requestShowUserInfoSuccess = (result) => {
 		this.userInfo = result.user_info;
@@ -93,10 +86,8 @@ class Show {
 	};
 
 	requestSeasonUserInfo = async (showID, seasonID) => {
-		if (await AuthStore.checkAuthorization()) {
-			runInAction(() => (this.userInfoState = "pending"));
-			showRequests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then(this.requestSeasonUserInfoSuccess, this.requestSeasonUserInfoFailure);
-		}
+		this.userInfoState = "pending";
+		showRequests.getShowSeasonUserInfo(showID, seasonID).then(this.requestSeasonUserInfoSuccess, this.requestSeasonUserInfoFailure);
 	};
 	requestSeasonUserInfoSuccess = (result) => {
 		this.userInfo = { ...result.user_info, user_watched_show: result.user_watched_show, episodes: result.episodes_user_info };
@@ -109,13 +100,11 @@ class Show {
 
 	requestSeasonsUserInfo = async (showID, seasonID) => {
 		this.showSeasonsUserInfo[seasonID] = {};
-		if (await AuthStore.checkAuthorization()) {
-			runInAction(() => (this.showSeasonsUserInfoState[seasonID] = "pending"));
-			showRequests.getShowSeasonUserInfo(localStorage.getItem("token"), showID, seasonID).then(
-				(res) => this.requestSeasonsUserInfoSuccess(res, seasonID),
-				(res) => this.requestSeasonsUserInfoFailure(res, seasonID)
-			);
-		}
+		this.showSeasonsUserInfoState[seasonID] = "pending";
+		showRequests.getShowSeasonUserInfo(showID, seasonID).then(
+			(res) => this.requestSeasonsUserInfoSuccess(res, seasonID),
+			(res) => this.requestSeasonsUserInfoFailure(res, seasonID)
+		);
 	};
 	requestSeasonsUserInfoSuccess = (result, seasonID) => {
 		this.showSeasonsUserInfoState[seasonID] = "done";
@@ -126,10 +115,8 @@ class Show {
 	};
 
 	requestEpisodeUserInfo = async (showID, seasonID, episodeID) => {
-		if (await AuthStore.checkAuthorization()) {
-			runInAction(() => (this.userInfoState = "pending"));
-			showRequests.getShowEpisodeUserInfo(localStorage.getItem("token"), showID, seasonID, episodeID).then(this.requestEpisodeUserInfoSuccess, this.requestEpisodeUserInfoFailure);
-		}
+		this.userInfoState = "pending";
+		showRequests.getShowEpisodeUserInfo(showID, seasonID, episodeID).then(this.requestEpisodeUserInfoSuccess, this.requestEpisodeUserInfoFailure);
 	};
 	requestEpisodeUserInfoSuccess = (result) => {
 		this.userInfoState = "done";
@@ -141,10 +128,8 @@ class Show {
 	};
 
 	setShowStatus = async (userInfo) => {
-		if (await AuthStore.checkAuthorization()) {
-			this.setStatusState = "pending";
-			showRequests.setShowStatus(localStorage.getItem("token"), this.show.id, userInfo).then(this.setShowStatusSuccess, this.setShowStatusFailure);
-		}
+		this.setStatusState = "pending";
+		showRequests.setShowStatus(this.show.id, userInfo).then(this.setShowStatusSuccess, this.setShowStatusFailure);
 	};
 	setShowStatusSuccess = (result) => {
 		this.setStatusState = "done";
@@ -154,20 +139,16 @@ class Show {
 	};
 
 	setSeasonStatus = async (userInfo, showID, seasonNumber) => {
-		if (await AuthStore.checkAuthorization()) {
-			runInAction(() => (this.setStatusState = "pending"));
-			showRequests.setShowSeasonStatus(localStorage.getItem("token"), showID, seasonNumber, userInfo).then(this.setShowStatusSuccess, this.setShowStatusFailure);
-		}
+		this.setStatusState = "pending";
+		showRequests.setShowSeasonStatus(showID, seasonNumber, userInfo).then(this.setShowStatusSuccess, this.setShowStatusFailure);
 	};
 
 	setEpisodesStatus = async (episodesList, showID, seasonsToUpdate = []) => {
-		if (await AuthStore.checkAuthorization()) {
-			runInAction(() => (this.setStatusState = "pending"));
-			showRequests.setShowEpisodesStatus(localStorage.getItem("token"), showID, episodesList).then((result) => {
-				if (seasonsToUpdate) for (let season in seasonsToUpdate) this.requestSeasonsUserInfo(showID, seasonsToUpdate[season]);
-				this.setShowStatusSuccess();
-			}, this.setShowStatusFailure);
-		}
+		this.setStatusState = "pending";
+		showRequests.setShowEpisodesStatus(showID, episodesList).then((result) => {
+			if (seasonsToUpdate) for (let season in seasonsToUpdate) this.requestSeasonsUserInfo(showID, seasonsToUpdate[season]);
+			this.setShowStatusSuccess();
+		}, this.setShowStatusFailure);
 	};
 
 	getShowSeason = (seasonNumber) => {

@@ -1,6 +1,5 @@
 import { makeAutoObservable } from "mobx";
 //import remotedev from "mobx-remotedev";
-import AuthStore from "./AuthStore";
 import * as movieRequests from "../services/movieRequests";
 
 class Movie {
@@ -19,8 +18,7 @@ class Movie {
 
 	requestMovie = async (id) => {
 		this.movieState = "pending";
-		await AuthStore.checkAuthorization();
-		movieRequests.getMovie(localStorage.getItem("token"), id).then(this.requestMovieSuccess, this.requestMovieFailure);
+		movieRequests.getMovie(id).then(this.requestMovieSuccess, this.requestMovieFailure);
 	};
 	requestMovieSuccess = (result) => {
 		this.movie = result;
@@ -32,8 +30,7 @@ class Movie {
 
 	requestUserInfo = async (id) => {
 		this.userInfoState = "pending";
-		await AuthStore.checkAuthorization();
-		movieRequests.getMovieUserInfo(localStorage.getItem("token"), id).then(this.requestUserInfoSuccess, this.requestUserInfoFailure);
+		movieRequests.getMovieUserInfo(id).then(this.requestUserInfoSuccess, this.requestUserInfoFailure);
 	};
 	requestUserInfoSuccess = (result) => {
 		this.userInfo = result.user_info;
@@ -45,10 +42,8 @@ class Movie {
 	};
 
 	setMovieStatus = async (userInfo) => {
-		if (await AuthStore.checkAuthorization()) {
-			this.setStatusState = "pending";
-			movieRequests.setMovieStatus(localStorage.getItem("token"), this.movie.id, userInfo).then(this.setMovieStatusSuccess, this.setMovieStatusFailure);
-		}
+		this.setStatusState = "pending";
+		movieRequests.setMovieStatus(this.movie.id, userInfo).then(this.setMovieStatusSuccess, this.setMovieStatusFailure);
 	};
 	setMovieStatusSuccess = (result) => {
 		this.setStatusState = "done";

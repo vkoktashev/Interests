@@ -5,7 +5,7 @@ import { MDBIcon } from "mdbreact";
 import classnames from "classnames";
 import "./log-row.sass";
 
-function LogRow({ log, showUsername, currentUser, onDeleteLog, className }) {
+function LogRow({ log, showUsername, onDeleteLog, className }) {
 	let history = useHistory();
 
 	function translateActionType(action, actionResult) {
@@ -222,8 +222,7 @@ function LogRow({ log, showUsername, currentUser, onDeleteLog, className }) {
 			{(log.type === "user") | (log.action_type === "episodes") | (log.action_result === "0") | (log.action_result === "-1") ? "" : ":"}&thinsp;
 			{actionResultToStr(log.action_type, log.action_result, log.type)}
 			<button
-				hidden={!currentUser || showUsername}
-				className='log-row__delete-button'
+				className={classnames("log-row__delete-button", showUsername ? "log-row__delete-button_hidden" : "")}
 				onClick={(event) => {
 					onDeleteLog(log.type, log.id);
 				}}>
