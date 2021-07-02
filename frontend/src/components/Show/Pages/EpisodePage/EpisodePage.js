@@ -7,7 +7,7 @@ import ShowStore from "../../../../store/ShowStore";
 import PagesStore from "../../../../store/PagesStore";
 
 import { toast } from "react-toastify";
-import { MDBIcon, MDBInput } from "mdbreact";
+import { MDBIcon } from "mdbreact";
 import LoadingOverlay from "react-loading-overlay";
 
 import Rating from "react-rating";
