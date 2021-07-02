@@ -1,0 +1,35 @@
+
+@import ../../../styles/colors
+@import ../../../styles/mixins
+
+.settings-page
+    @include default-page
+
+    &__header
+        margin-bottom: 2rem
+
+    &__settings-row
+        font-size: 1.5em
+        cursor: pointer
+
+    &__settings-checkbox
+        display: inline-block
+        
+    &__settings-select
+        background-color: $newBackground2
+        color: $newText3
+        font-size: 1.2rem
+        border-radius: 0.5rem
+        margin-left: 1rem
+        border: 1px solid
+        padding: 2px 4px
+
+    &__save-button
+        padding: 4px 8px
+        margin-top: 15px
+        margin-bottom: 20px
+        font-size: 1.1rem
+        background-color: $newAccent2
+        color: $newText3
+        border: none
+        border-radius: 0.5rem

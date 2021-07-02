@@ -1,0 +1,35 @@
+@import ../../../styles/colors
+@import ../../../styles/fonts
+
+.categories-tabs
+    max-width: 100%
+    margin-top: 2rem
+
+    &__body
+        white-space: pre
+        overflow-x: auto
+
+    &__content
+        background-color: $newBackground2
+        padding: 1rem
+        border-radius: 0px 8px 8px 8px
+    
+    &__tab
+        @include headline6
+        background-color: $newBackground1
+        color: $newText1
+        border-radius: 8px 8px 0px 0px
+        border: none
+        padding: 8px 16px
+        margin-left: 0px 0px
+        outline: none
+
+        &:focus
+            outline: 0 !important
+        
+        &:hover
+            background-color: $newBackground2
+
+        &_active
+            color: $newText3
+            background-color: $newBackground2

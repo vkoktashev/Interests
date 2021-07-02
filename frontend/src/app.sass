@@ -1,0 +1,33 @@
+@import "./styles/colors"
+@import "./styles/fonts"
+
+#root, html, body
+    height: 100%
+
+.app
+    background-color: $newBackground1
+    padding-top: 4rem
+    overflow-x: hidden
+    height: 100%
+    
+    &__body
+        width: 100vw
+        display: flex
+        flex-direction: row
+        flex-wrap: wrap
+        justify-content: center
+        height: 100%
+        
+body
+    margin: 0
+    background-color: $newBackground1
+    font-family: $font-stack
+    -webkit-font-smoothing: antialiased
+    -moz-osx-font-smoothing: grayscale
+    
+a
+    &:link, &:visited, &:active
+        color: $newText3
+
+    &:hover
+        color: $newAccent2
