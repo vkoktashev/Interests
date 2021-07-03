@@ -23,19 +23,11 @@ export async function getToken(username, password) {
  * Функция обновления токена
  */
 export async function updateToken(refreshToken) {
-	if ((typeof refreshToken !== "undefined") & (refreshToken != null)) {
-		try {
-			const res = await axios.post(urls.REFRESH_TOKEN_URL, { refresh: refreshToken });
-			let userData = jwt_decode(res.data.access);
-			let user = { username: userData.username, id: userData.user_id, email: userData.email };
+	const res = await axios.post(urls.REFRESH_TOKEN_URL, { refresh: refreshToken });
+	let userData = jwt_decode(res.data.access);
+	let user = { username: userData.username, id: userData.user_id, email: userData.email };
 
-			return { token: res.data.access, user: user };
-		} catch (e) {
-			console.log("axios error: " + e);
-			return null;
-		}
-	}
-	return null;
+	return { token: res.data.access, user: user };
 }
 
 export async function registration(username, email, password) {
