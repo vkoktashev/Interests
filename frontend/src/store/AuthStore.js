@@ -103,12 +103,7 @@ class Auth {
 	checkAuthSuccess = (res) => {
 		localStorage.setItem("token", res?.token);
 		this.loggedIn = true;
-
-		this.user = {
-			username: res?.user?.username,
-			email: res?.user?.email,
-			id: res?.user?.id,
-		};
+		this.user = res.user;
 		this.authState = "done";
 	};
 
