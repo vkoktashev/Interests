@@ -19,7 +19,7 @@ import "./season-page.sass";
  */
 const SeasonPage = observer((props) => {
 	const { loggedIn } = AuthStore;
-	const { requestSeason, show, showState, setSeasonStatus, setSeasonReview, setEpisodesStatus, requestSeasonUserInfo, userInfo, userInfoState, friendsInfo, setStatusState } = ShowStore;
+	const { requestSeason, show, showState, setSeasonStatus, setSeasonReview, setEpisodesStatus, requestSeasonUserInfo, userInfo, userInfoState, friendsInfo } = ShowStore;
 	const { openLoginForm, setSaveEpisodes, saveEpisodesBlockIsOpen } = PagesStore;
 
 	let history = useHistory();
