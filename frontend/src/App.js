@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
-import { BrowserRouter as Router } from "react-router-dom";
+import { BrowserRouter as Router, Route } from "react-router-dom";
+import { QueryParamProvider } from "use-query-params";
 import { observer } from "mobx-react";
 import AuthStore from "./store/AuthStore";
 import "./app.sass";
@@ -26,10 +27,12 @@ const App = observer((props) => {
 		<div className='app'>
 			<div className='app__body'>
 				<Router>
-					<Navbar />
-					<Sidebar />
-					<Routes />
-					<Footer className='app__footer' />
+					<QueryParamProvider ReactRouterRoute={Route}>
+						<Navbar />
+						<Sidebar />
+						<Routes />
+						<Footer className='app__footer' />
+					</QueryParamProvider>
 				</Router>
 			</div>
 			<ToastContainer position='top-center' hideProgressBar newestOnTop closeOnClick autoClose={3000} />

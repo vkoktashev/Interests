@@ -98,7 +98,7 @@ class Auth {
 	 */
 	checkAuth = async () => {
 		this.authState = "pending";
-		auth.updateToken(localStorage.getItem("refreshToken")).then(this.checkAuthSuccess, this.authFailure);
+		auth.updateToken(localStorage.getItem("refreshToken")).then(this.checkAuthSuccess, this.resetAuthorization);
 	};
 	checkAuthSuccess = (res) => {
 		localStorage.setItem("token", res?.token);

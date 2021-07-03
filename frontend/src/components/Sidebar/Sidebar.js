@@ -47,10 +47,10 @@ const Sidebar = observer((props) => {
 				</MenuItem>
 				<MenuItem icon={<MDBIcon icon='user-friends' />}>
 					<a
-						href={`/user/${user.id}/Друзья`}
+						href={`/user/${user.id}?сategory=Друзья`}
 						onClick={(event) => {
 							event.preventDefault();
-							history.push(`/user/${user?.id}/Друзья`);
+							history.push(`/user/${user?.id}?сategory=Друзья`);
 							toggleSidebarIfSmallScreen();
 						}}>
 						Друзья
