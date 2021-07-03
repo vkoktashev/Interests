@@ -53,12 +53,12 @@ const Navbar = observer((props) => {
 			<div className={classnames("navbar__right", collapse && width <= 600 ? "navbar__right_collapsed" : "")}>
 				<div
 					onClick={() => {
-						history.push(`/user/${user.id}`);
+						history.push(`/user/${user?.id}`);
 						toggleIfSmallScreen();
 					}}
 					className='navbar__user-button'
 					hidden={!loggedIn}>
-					<MDBIcon icon='user-circle' /> {user.username}
+					<MDBIcon icon='user-circle' /> {user?.username}
 				</div>
 				<div onClick={openLoginForm} className='navbar__user-button' hidden={loggedIn}>
 					<MDBIcon icon='sign-in-alt' /> Войти
