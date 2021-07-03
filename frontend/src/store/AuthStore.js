@@ -31,6 +31,7 @@ class Auth {
 		this.authState = "done";
 	};
 	authFailure = (error) => {
+		this.resetAuthorization();
 		this.authState = "error: " + error.response.data.detail;
 	};
 
@@ -102,7 +103,12 @@ class Auth {
 	checkAuthSuccess = (res) => {
 		localStorage.setItem("token", res?.token);
 		this.loggedIn = true;
-		this.user = res?.user;
+
+		this.user = {
+			username: res?.user?.username,
+			email: res?.user?.email,
+			id: res?.user?.id,
+		};
 		this.authState = "done";
 	};
 

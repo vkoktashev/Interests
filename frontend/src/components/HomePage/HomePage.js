@@ -26,13 +26,13 @@ const HomePage = observer((props) => {
 				<h5>
 					В{" "}
 					<a
-						href={"/user/" + user.id}
+						href={"/user/" + user?.id}
 						onClick={(e) => {
 							e.preventDefault();
 							if (!loggedIn) {
 								openLoginForm();
 							} else {
-								history.push("/user/" + user.id);
+								history.push("/user/" + user?.id);
 							}
 						}}>
 						профиле

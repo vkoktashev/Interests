@@ -29,7 +29,7 @@ const RegisterForm = observer((props) => {
 								<p className='note note-danger register-form__fail' hidden={!registrateState.startsWith("error:")}>
 									{registrateState}
 								</p>
-								<p className='note note-success register-form__success' hidden={user.email === ""}>
+								<p className='note note-success register-form__success' hidden={user?.email === ""}>
 									{user.login}, добро пожаловать! Осталось только подтвердить вашу почту
 								</p>
 								<h4>Регистрация</h4>

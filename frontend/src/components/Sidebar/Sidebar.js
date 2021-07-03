@@ -36,10 +36,10 @@ const Sidebar = observer((props) => {
 			<Menu iconShape='round' hidden={!loggedIn}>
 				<MenuItem icon={<MDBIcon icon='user-circle' />}>
 					<a
-						href={`/user/${user.id}`}
+						href={`/user/${user?.id}`}
 						onClick={(event) => {
 							event.preventDefault();
-							history.push(`/user/${user.id}`);
+							history.push(`/user/${user?.id}`);
 							toggleSidebarIfSmallScreen();
 						}}>
 						Профиль
@@ -50,7 +50,7 @@ const Sidebar = observer((props) => {
 						href={`/user/${user.id}/Друзья`}
 						onClick={(event) => {
 							event.preventDefault();
-							history.push(`/user/${user.id}/Друзья`);
+							history.push(`/user/${user?.id}/Друзья`);
 							toggleSidebarIfSmallScreen();
 						}}>
 						Друзья
