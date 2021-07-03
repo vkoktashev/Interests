@@ -19,7 +19,7 @@ import "./season-page.sass";
  */
 const SeasonPage = observer((props) => {
 	const { loggedIn } = AuthStore;
-	const { requestSeason, show, showState, setSeasonStatus, setEpisodesStatus, requestSeasonUserInfo, userInfo, userInfoState, friendsInfo, setStatusState } = ShowStore;
+	const { requestSeason, show, showState, setSeasonStatus, setSeasonReview, setEpisodesStatus, requestSeasonUserInfo, userInfo, userInfoState, friendsInfo } = ShowStore;
 	const { openLoginForm, setSaveEpisodes, saveEpisodesBlockIsOpen } = PagesStore;
 
 	let history = useHistory();
@@ -87,9 +87,6 @@ const SeasonPage = observer((props) => {
 	useEffect(() => {
 		if (userInfoState.startsWith("error:")) toast.error(`Ошибка загрузки пользовательской информации! ${userInfoState}`);
 	}, [userInfoState]);
-	useEffect(() => {
-		if (setStatusState.startsWith("error:")) toast.error(`Ошибка сохранения! ${setStatusState}`);
-	}, [setStatusState]);
 
 	function getEpisodeByID(episodes, id) {
 		for (let episode in episodes) if (episodes[episode].tmdb_id === id) return episodes[episode];
@@ -156,7 +153,7 @@ const SeasonPage = observer((props) => {
 										className='season-page__review-save-button'
 										hidden={!loggedIn | !userInfo?.user_watched_show}
 										onClick={() => {
-											setSeasonStatus({ review: document.getElementById("reviewInput").value }, show_id, show.season_number);
+											setSeasonReview({ review: review }, show_id, show.season_number);
 										}}>
 										Сохранить
 									</button>

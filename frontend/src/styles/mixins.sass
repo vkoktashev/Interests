@@ -127,6 +127,7 @@
         @include default-input
         margin-bottom: 1rem
         width: 500px
+        max-width: 100%
 
     &__review-time
         display: flex
@@ -143,6 +144,17 @@
         margin-bottom: 20px
         margin-right: 1rem
     
+    &__review-save-message
+        background-color: $newAccent2
+        width: 500px
+        max-width: 100%
+        padding: 3px 5px
+        border-radius: 8px
+        display: none
+
+        &_active
+            display: inline
+
     &__friends
         position: relative
         max-width: 100%

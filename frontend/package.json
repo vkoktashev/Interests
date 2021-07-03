@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@material-ui/icons": "^4.11.2",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
@@ -15,6 +16,7 @@
     "mobx-react": "^7.1.0",
     "mobx-remotedev": "^0.3.6",
     "node-sass": "^6.0.0",
+    "query-string": "^7.0.1",
     "rc-pagination": "^3.1.6",
     "react": "^16.14.0",
     "react-calendar": "^3.3.1",
@@ -27,7 +29,8 @@
     "react-scripts": "^4.0.1",
     "react-select": "^4.3.0",
     "react-toastify": "^6.0.8",
-    "recharts": "1.8.5"
+    "recharts": "1.8.5",
+    "use-query-params": "^1.2.2"
   },
   "scripts": {
     "start": "react-scripts start",

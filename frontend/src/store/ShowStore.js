@@ -1,6 +1,7 @@
 import { makeAutoObservable } from "mobx";
 //import remotedev from "mobx-remotedev";
 import * as showRequests from "../services/showRequests";
+import { toast } from "react-toastify";
 
 class Show {
 	show = {};
@@ -15,6 +16,7 @@ class Show {
 	showSeasonsUserInfoState = {};
 
 	setStatusState = "done";
+	setStatusToast = null;
 
 	constructor() {
 		makeAutoObservable(this);
@@ -138,9 +140,28 @@ class Show {
 		this.setStatusState = "error: " + error;
 	};
 
+	setShowReview = async (userInfo) => {
+		this.setStatusState = "pendingReview";
+		this.setStatusToast = toast("Сохраняем отзыв...", { autoClose: false, type: toast.TYPE.INFO, position: "bottom-center" });
+		showRequests.setShowStatus(this.show.id, userInfo).then(this.setShowReviewSuccess, this.setShowReviewFailure);
+	};
+	setShowReviewSuccess = () => {
+		toast.update(this.setStatusToast, { render: "Отзыв сохранен!", type: toast.TYPE.SUCCESS, autoClose: 1000 });
+		this.setStatusState = "done";
+	};
+	setShowReviewFailure = (error) => {
+		toast.update(this.setStatusToast, { render: "Ошибка сохранения отзыва!", type: toast.TYPE.ERROR, autoClose: 1000 });
+		this.setStatusState = "error: " + error;
+	};
+
 	setSeasonStatus = async (userInfo, showID, seasonNumber) => {
 		this.setStatusState = "pending";
 		showRequests.setShowSeasonStatus(showID, seasonNumber, userInfo).then(this.setShowStatusSuccess, this.setShowStatusFailure);
+	};
+	setSeasonReview = async (userInfo, showID, seasonNumber) => {
+		this.setStatusState = "pendingReview";
+		this.setStatusToast = toast("Сохраняем отзыв...", { autoClose: false, type: toast.TYPE.INFO, position: "bottom-center" });
+		showRequests.setShowSeasonStatus(showID, seasonNumber, userInfo).then(this.setShowReviewSuccess, this.setShowReviewFailure);
 	};
 
 	setEpisodesStatus = async (episodesList, showID, seasonsToUpdate = []) => {

@@ -24,7 +24,7 @@ const ShowPage = observer((props) => {
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
 	const { saveSettingsState } = CurrentUserStore;
-	const { requestShow, show, showState, setShowStatus, requestShowUserInfo, userInfo, friendsInfo, userInfoState, anyError } = ShowStore;
+	const { requestShow, show, showState, setShowStatus, setShowReview, requestShowUserInfo, userInfo, friendsInfo, userInfoState, anyError } = ShowStore;
 
 	let { id } = useParams();
 	const [review, setReview] = useState("");
@@ -164,7 +164,7 @@ const ShowPage = observer((props) => {
 										if (!loggedIn) {
 											openLoginForm();
 										} else {
-											setShowStatus({ review: review });
+											setShowReview({ review: review });
 										}
 									}}>
 									Сохранить

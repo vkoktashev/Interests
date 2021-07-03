@@ -20,7 +20,7 @@ import InputNumber from "../../Common/InputNumber/InputNumber";
  * Основная страница приложения
  */
 const GamePage = observer((props) => {
-	const { game, gameState, requestGame, setGameStatus, userInfo, friendsInfo, userInfoState, requestUserInfo, anyError } = GameStore;
+	const { game, gameState, requestGame, setGameStatus, setGameReview, userInfo, friendsInfo, userInfoState, requestUserInfo, anyError } = GameStore;
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
 
@@ -170,7 +170,7 @@ const GamePage = observer((props) => {
 										if (!loggedIn) {
 											openLoginForm();
 										} else {
-											setGameStatus({ review: review, spent_time: spentTime });
+											setGameReview({ review: review, spent_time: spentTime });
 										}
 									}}>
 									Сохранить
