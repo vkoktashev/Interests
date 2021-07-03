@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Route } from "react-router-dom";
 import { QueryParamProvider } from "use-query-params";
 import { observer } from "mobx-react";
 import AuthStore from "./store/AuthStore";
-import "./app.sass";
 
 import Navbar from "./components/Navbar/Navbar";
 import Footer from "./components/Footer/Footer";
@@ -15,6 +14,7 @@ import { ToastContainer } from "react-toastify";
 
 import Routes from "./Routes";
 import "react-toastify/dist/ReactToastify.css";
+import "./app.sass";
 
 const App = observer((props) => {
 	const { checkAuth } = AuthStore;

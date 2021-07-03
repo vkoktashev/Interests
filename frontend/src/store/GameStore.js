@@ -1,6 +1,7 @@
 import { makeAutoObservable } from "mobx";
 //import remotedev from "mobx-remotedev";
 import * as gameRequests from "../services/gameRequests";
+import { toast } from "react-toastify";
 
 class Game {
 	game = {};
@@ -11,6 +12,7 @@ class Game {
 	userInfoState = "done";
 
 	setStatusState = "done";
+	setStatusToast = null;
 
 	constructor() {
 		makeAutoObservable(this);
@@ -52,10 +54,23 @@ class Game {
 		this.setStatusState = "error: " + error;
 	};
 
+	setGameReview = async (userInfo) => {
+		this.setStatusState = "pendingReview";
+		this.setStatusToast = toast("Сохраняем отзыв...", { autoClose: false, type: toast.TYPE.INFO, position: "bottom-center" });
+		gameRequests.setGameStatus(this.game.slug, userInfo).then(this.setGameReviewSuccess, this.setGameReviewFailure);
+	};
+	setGameReviewSuccess = () => {
+		toast.update(this.setStatusToast, { render: "Отзыв сохранен!", type: toast.TYPE.SUCCESS, autoClose: 1000 });
+		this.setStatusState = "done";
+	};
+	setGameReviewFailure = (error) => {
+		toast.update(this.setStatusToast, { render: "Ошибка сохранения отзыва!", type: toast.TYPE.ERROR, autoClose: 1000 });
+		this.setStatusState = "error: " + error;
+	};
+
 	get anyError() {
 		if (this.gameState.startsWith("error:")) return this.gameState;
 		if (this.userInfoState.startsWith("error:")) return this.userInfoState;
-		if (this.setStatusState.startsWith("error:")) return this.setStatusState;
 		return null;
 	}
 }

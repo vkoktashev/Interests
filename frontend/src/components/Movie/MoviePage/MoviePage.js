@@ -19,7 +19,7 @@ import "./movie-page.sass";
  * Основная страница приложения
  */
 const MoviePage = observer((props) => {
-	const { movie, movieState, requestMovie, setMovieStatus, userInfo, friendsInfo, userInfoState, requestUserInfo, anyError } = MovieStore;
+	const { movie, movieState, requestMovie, setMovieStatus, setMovieReview, userInfo, friendsInfo, userInfoState, requestUserInfo, anyError } = MovieStore;
 	const { loggedIn } = AuthStore;
 	const { saveSettingsState } = CurrentUserStore;
 	const { openLoginForm } = PagesStore;
@@ -149,7 +149,7 @@ const MoviePage = observer((props) => {
 									className='movie-page__review-save-button'
 									disabled={!loggedIn | (userStatus === "Не смотрел")}
 									onClick={() => {
-										setMovieStatus({ review: review });
+										setMovieReview({ review: review });
 									}}>
 									Сохранить
 								</button>
