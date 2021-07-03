@@ -1,0 +1,35 @@
+@import ../../../styles/colors
+
+.modal2
+    width: 100%
+    height: 100%
+    position: fixed
+    top: 0
+    left: 0
+    display: flex
+    align-items: center
+    align-content: center
+    justify-content: center
+    overflow: auto
+    z-index: 1030
+    transition: .55s visibility
+
+    &__backdrop
+        position: absolute
+        top: 0
+        left: 0
+        z-index: 1040
+        width: 100vw
+        height: 100vh
+        background-color: #000
+        opacity: 70%
+
+    &__content
+        position: absolute
+        width: 300px
+        z-index: 1100
+        background-color: $newBackground2
+        overflow: hidden
+        padding: 1.5rem
+        color: $newText3
+        border-radius: 8px

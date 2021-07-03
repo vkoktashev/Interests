@@ -28,9 +28,15 @@
             color: $newText3 !important
     
     &__auth-button
-        background-color: $newAccent2 !important
+        background-color: $newAccent2
         border-radius: 5px
         color: $newText3
+        outline: none
+        border: none
+        padding: 0.8rem 1rem
+
+        &:disabled
+            background-color: $newAccent3
     
     &__success, &__fail
         color: black
