@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { observer } from "mobx-react";
+import classnames from "classnames";
 import CurrentUserStore from "../../../store/CurrentUserStore";
 import AuthStore from "../../../store/AuthStore";
 
@@ -42,15 +43,9 @@ const CalendarPage = observer(() => {
 			return (
 				<div className='calendar-day'>
 					<div className='calendar-day__body'>
-						<div className='calendar-day__games' hidden={!(day?.games?.length > 0)}>
-							{day?.games?.length}
-						</div>
-						<div className='calendar-day__movies' hidden={!(day?.movies?.length > 0)}>
-							{day?.movies?.length}
-						</div>
-						<div className='calendar-day__episodes' hidden={!(day?.episodes?.length > 0)}>
-							{day?.episodes?.length}
-						</div>
+						<div className={classnames("calendar-day__games", !day?.games?.length > 0 ? "calendar-day__hidden" : "")}>{day?.games?.length}</div>
+						<div className={classnames("calendar-day__movies", !day?.movies?.length > 0 ? "calendar-day__hidden" : "")}>{day?.movies?.length}</div>
+						<div className={classnames("calendar-day__episodes", !day?.episodes?.length > 0 ? "calendar-day__hidden" : "")}>{day?.episodes?.length}</div>
 					</div>
 				</div>
 			);

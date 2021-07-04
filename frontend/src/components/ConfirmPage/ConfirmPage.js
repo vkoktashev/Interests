@@ -34,9 +34,9 @@ const ConfirmPage = observer((props) => {
 
 	return (
 		<div className='confirm-page'>
-			<h1 hidden={confirmEmailState !== "done"} className='confirm-page__success'>
+			<h2 hidden={confirmEmailState !== "done"} className='confirm-page__success'>
 				Ваша почта подтверждена!
-			</h1>
+			</h2>
 		</div>
 	);
 });

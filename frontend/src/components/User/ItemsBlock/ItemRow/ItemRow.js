@@ -1,5 +1,5 @@
 import React from "react";
-import { MDBIcon } from "mdbreact";
+import { FaStar, FaClock } from "react-icons/fa";
 import "./item-row.sass";
 
 function ItemRow({ data, fields }) {
@@ -24,14 +24,14 @@ function ItemRow({ data, fields }) {
 					</div>
 					<div className='item-row__score'>
 						<div>{data.score}/10</div>
-						<MDBIcon icon='star' className='item-row__score-icon' />
+						<FaStar className='item-row__score-icon' />
 					</div>
 					{fields.find((field) => field.key === "spent_time") === undefined ? (
 						""
 					) : (
 						<div className='item-row__time'>
 							<div>{data.spent_time}</div>
-							<MDBIcon icon='clock' className='item-row__time-icon' />
+							<FaClock className='item-row__time-icon' />
 						</div>
 					)}
 				</div>

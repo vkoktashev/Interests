@@ -50,7 +50,7 @@ const SettingsPage = observer((props) => {
 
 				<LoadingOverlay active={settingsState === "pending" || saveSettingsState === "pending"} spinner text='Загрузка...'>
 					<div>
-						<h3>Подписка на почтовые уведомления:</h3>
+						<h3 className='settings-page__subheader'>Подписка на почтовые уведомления:</h3>
 						<div className='settings-page__settings-row' onClick={() => setGameNotifInput(!gameNotifInput)}>
 							<input type='checkbox' className='settings-page__settings-checkbox' checked={gameNotifInput} onChange={(event) => setGameNotifInput(event.target.checked)} />
 							{" релиз новых игр"}

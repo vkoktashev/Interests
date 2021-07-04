@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { observer } from "mobx-react";
 import SearchStore from "../../../store/SearchStore";
 import { useHistory } from "react-router-dom";
-import { MDBIcon } from "mdbreact";
+import { MdVideogameAsset, MdLocalMovies, MdLiveTv } from "react-icons/md";
 import classnames from "classnames";
 import "./search-input.sass";
 
@@ -30,9 +30,9 @@ const SearchInput = observer(({ onSubmit, className }) => {
 					searchHints(event.target.value);
 				}}
 			/>
-			<div className='search-input__hints' hidden={query === "" || !(hints.games.length > 0 || hints.movies.length > 0 || hints.shows.length > 0)}>
+			<div className={classnames("search-input__hints", query === "" || !(hints.games.length > 0 || hints.movies.length > 0 || hints.shows.length > 0) ? "search-input__hints_hidden" : "")}>
 				<div hidden={!hints.games.length > 0}>
-					<MDBIcon icon='gamepad' />
+					<MdVideogameAsset />
 					{hints.games.map((hint, key) => (
 						<a
 							key={key}
@@ -50,7 +50,7 @@ const SearchInput = observer(({ onSubmit, className }) => {
 					))}
 				</div>
 				<div hidden={!hints.movies.length > 0}>
-					<MDBIcon icon='film' />
+					<MdLocalMovies />
 					{hints.movies.map((hint, key) => (
 						<a
 							key={key}
@@ -68,7 +68,7 @@ const SearchInput = observer(({ onSubmit, className }) => {
 					))}
 				</div>
 				<div hidden={!hints.shows.length > 0}>
-					<MDBIcon icon='tv' />
+					<MdLiveTv />
 					{hints.shows.map((hint, key) => (
 						<a
 							key={key}

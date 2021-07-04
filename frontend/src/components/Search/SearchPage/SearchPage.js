@@ -3,7 +3,7 @@ import { useParams, useHistory } from "react-router-dom";
 import { observer } from "mobx-react";
 import SearchStore from "../../../store/SearchStore";
 
-import { MDBIcon } from "mdbreact";
+import { FaSearch } from "react-icons/fa";
 
 import LoadingOverlay from "react-loading-overlay";
 import { toast } from "react-toastify";
@@ -70,7 +70,7 @@ const SearchPage = observer((props) => {
 						return false;
 					}}>
 					<h1>Поиск</h1>
-					<MDBIcon icon='search' className='search-page__name-icon' />
+					<FaSearch className='search-page__name-icon' />
 					<input className='search-page__name-input' type='text' placeholder='Найти' id='searchInput2' value={queryText} onChange={(event) => setQueryText(event.target.value)} />
 				</form>
 				<CategoriesTab

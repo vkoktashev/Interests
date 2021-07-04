@@ -90,7 +90,7 @@ const ShowPage = observer((props) => {
 				<div className='show-page__body'>
 					<div className='show-page__header'>
 						<div className='show-page__poster'>
-							<img src={show.poster_path} className='img-fluid' alt='' />
+							<img src={show.poster_path} className='show-page__poster-img' alt='' />
 						</div>
 						<div className='show-page__info'>
 							<h1 className='show-page__info-header'>{show.name}</h1>
@@ -143,15 +143,15 @@ const ShowPage = observer((props) => {
 					</div>
 					<div className='show-page__overview'>
 						<div>
-							<h3>Описание</h3>
+							<h3 className='show-page__overview-header'>Описание</h3>
 							<div dangerouslySetInnerHTML={{ __html: show.overview }} />
 						</div>
 						<div className='show-page__seasons'>
-							<h3>Список серий</h3>
+							<h3 className='show-page__seasons-header'>Список серий</h3>
 							<SeasonsBlock showID={show.id} seasons={show.seasons} userWatchedShow={userStatus !== "Не смотрел"} />
 						</div>
 						<div className='show-page__review' hidden={!loggedIn}>
-							<h3 style={{ paddingTop: "10px" }}>Отзыв</h3>
+							<h3 className='show-page__review-header'>Отзыв</h3>
 							<LoadingOverlay active={userInfoState === "pending" && !showState === "pending"} spinner text='Загрузка...'>
 								<div className='show-page__review'>
 									Ваш отзыв

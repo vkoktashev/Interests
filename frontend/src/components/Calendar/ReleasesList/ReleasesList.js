@@ -1,7 +1,7 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
 import { Timeline, TimelineEvent } from "react-event-timeline";
-import { MDBIcon } from "mdbreact";
+import { MdVideogameAsset, MdLocalMovies, MdLiveTv, MdApps } from "react-icons/md";
 
 function ReleasesList({ calendar }) {
 	let history = useHistory();
@@ -69,10 +69,10 @@ function ReleasesList({ calendar }) {
 	}
 
 	function getIconForDay(day) {
-		if ((day.games?.length > 0) & !(day.movies?.length > 0) & !(day.episodes?.length > 0)) return <MDBIcon icon='gamepad' />;
-		else if ((day.movies?.length > 0) & !(day.games?.length > 0) & !(day.episodes?.length > 0)) return <MDBIcon icon='film' />;
-		else if ((day.episodes?.length > 0) & !(day.movies?.length > 0) & !(day.games?.length > 0)) return <MDBIcon icon='tv' />;
-		else return <MDBIcon icon='dice-d6' />;
+		if ((day.games?.length > 0) & !(day.movies?.length > 0) & !(day.episodes?.length > 0)) return <MdVideogameAsset />;
+		else if ((day.movies?.length > 0) & !(day.games?.length > 0) & !(day.episodes?.length > 0)) return <MdLocalMovies />;
+		else if ((day.episodes?.length > 0) & !(day.movies?.length > 0) & !(day.games?.length > 0)) return <MdLiveTv />;
+		else return <MdApps />;
 	}
 
 	function dateDiff(date) {

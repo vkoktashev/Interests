@@ -7,7 +7,7 @@ import useWindowDimensions from "../../hooks/useWindowDimensions";
 import SearchInput from "../Common/SearchInput/SearchInput";
 import classnames from "classnames";
 
-import { MDBIcon } from "mdbreact";
+import { FaBars, FaAngleUp, FaAngleDown, FaUserCircle, FaSignInAlt } from "react-icons/fa";
 import "./navbar.sass";
 
 const Navbar = observer((props) => {
@@ -30,14 +30,12 @@ const Navbar = observer((props) => {
 	return (
 		<div className='navbar'>
 			<div className='navbar__left'>
-				<div onClick={toggleSidebar} className='navbar__sidebar-button'>
-					<MDBIcon icon='bars' />
-				</div>
+				<FaBars onClick={toggleSidebar} className='navbar__sidebar-button' />
 				<div onClick={() => history.push("/")} className='navbar__logo'>
 					Interests
 				</div>
 				<div onClick={toggleCollapse} className='navbar__collapse-button'>
-					{collapse ? <MDBIcon icon='angle-down' /> : <MDBIcon icon='angle-up' />}
+					{collapse ? <FaAngleDown /> : <FaAngleUp />}
 				</div>
 			</div>
 			<div className={classnames("navbar__center", collapse && width <= 600 ? "navbar__center_collapsed" : "")}>
@@ -58,10 +56,10 @@ const Navbar = observer((props) => {
 					}}
 					className='navbar__user-button'
 					hidden={!loggedIn}>
-					<MDBIcon icon='user-circle' /> {user?.username}
+					<FaUserCircle /> {user?.username}
 				</div>
 				<div onClick={openLoginForm} className='navbar__user-button' hidden={loggedIn}>
-					<MDBIcon icon='sign-in-alt' /> Войти
+					<FaSignInAlt /> Войти
 				</div>
 			</div>
 		</div>

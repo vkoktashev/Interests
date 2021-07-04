@@ -76,8 +76,8 @@ const SeasonBlock = observer(
 							history.push("/show/" + showID + "/season/" + seasonNumber);
 							e.preventDefault();
 						}}
-						className='season-block__name'>
-						<h5> {showSeason?.name} </h5>
+						className='season-block__link'>
+						<h5 className='season-block__name'> {showSeason?.name} </h5>
 					</a>
 					<div hidden={!loggedIn || !userWatchedShow} className='season-block__rate'>
 						<Rating

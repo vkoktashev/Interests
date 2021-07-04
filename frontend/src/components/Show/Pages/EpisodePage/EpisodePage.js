@@ -7,7 +7,7 @@ import ShowStore from "../../../../store/ShowStore";
 import PagesStore from "../../../../store/PagesStore";
 
 import { toast } from "react-toastify";
-import { MDBIcon } from "mdbreact";
+import { FaStar, FaRegStar, FaEyeSlash, FaEye } from "react-icons/fa";
 import LoadingOverlay from "react-loading-overlay";
 
 import Rating from "react-rating";
@@ -114,8 +114,8 @@ const EpisodePage = observer((props) => {
 									<Rating
 										start={-1}
 										stop={10}
-										emptySymbol={[<MDBIcon icon='eye-slash' />].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <MDBIcon far icon='star' size='1x' style={{ fontSize: "25px" }} />))}
-										fullSymbol={[<MDBIcon icon='eye' />].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <MDBIcon icon='star' size='1x' style={{ fontSize: "25px" }} title={n} />))}
+										emptySymbol={[<FaEyeSlash />].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaRegStar style={{ fontSize: "25px" }} />))}
+										fullSymbol={[<FaEye />].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaStar style={{ fontSize: "25px" }} title={n} />))}
 										initialRating={userRate}
 										onChange={(score) => {
 											if (!loggedIn) {
