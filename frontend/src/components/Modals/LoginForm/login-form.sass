@@ -5,6 +5,9 @@
     color: $newText3
     text-align: center
 
+    &__header
+        margin-bottom: 1rem
+
     &__input
         display: block
         width: 100%
@@ -15,6 +18,8 @@
         border: 1px solid $newBackground3   
         border-radius: 5px  
         padding: 5px
+        margin-bottom: 1rem
+        transition: border-color 0.5s
 
         &:focus
             background-color: $newBackground2
@@ -46,4 +51,8 @@
             cursor: pointer
         
     &__fail
-        color: black
+        background: $newAccent2
+        color: $newText3
+        border-radius: 8px
+        padding: 5px
+        margin-bottom: 5px

@@ -15,9 +15,7 @@ function CardUser({ user, className }) {
 			}}
 			className={classnames("card-user", className)}>
 			<div className='card-user__image' style={{ backgroundImage: `url(${"https://upload.wikimedia.org/wikipedia/commons/f/f4/User_Avatar_2.png"})` }} />
-			<div className='card-user__text'>
-				<h4>{user.username}</h4>
-			</div>
+			<div className='card-user__text'>{user.username}</div>
 		</a>
 	);
 }

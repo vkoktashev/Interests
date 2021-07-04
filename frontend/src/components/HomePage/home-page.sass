@@ -1,5 +1,30 @@
 @import ../../styles/colors
 @import ../../styles/mixins
+@import ../../styles/fonts
 
 .home-page
     @include default-page
+
+    &__header
+        margin-bottom: 1rem
+        font-weight: normal
+        font-weight: 500
+    
+    &__header-secondary
+        @include headline6
+        margin-bottom: 0.5rem
+        margin-top: 1rem
+        font-weight: 600
+    
+    &__text
+        @include body1
+        margin-bottom: 5px
+        font-weight: 300
+        font-size: 1.15rem
+
+    &__link
+        font-weight: 500
+        
+        
+        
+        

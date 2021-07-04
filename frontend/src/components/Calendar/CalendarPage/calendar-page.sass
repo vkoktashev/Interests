@@ -5,7 +5,9 @@
     @include default-page
     
     &__header
-        margin-bottom: 2rem
+        margin-bottom: 1rem
+        font-weight: 300
+        font-size: 2rem
 
 .calendar-day
     padding: 0
@@ -30,6 +32,9 @@
 
     &__episodes
         background-color: $calendarEpisodesColor
+    
+    &__hidden
+        display: none
 
 .react-calendar
     display: inline-block

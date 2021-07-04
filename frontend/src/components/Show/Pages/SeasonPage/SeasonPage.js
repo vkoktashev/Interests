@@ -163,7 +163,7 @@ const SeasonPage = observer((props) => {
 					</div>
 					<div className='season-page__overview'>
 						<div>
-							<h3>Описание</h3>
+							<h3 className='season-page__overview-header'>Описание</h3>
 							<div dangerouslySetInnerHTML={{ __html: show.overview }} />
 						</div>
 						<div className='season-page__episodes'>

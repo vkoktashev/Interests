@@ -148,7 +148,7 @@ const GamePage = observer((props) => {
 					<div className='game-page__overview'>
 						<div>
 							{/* <video width='800' height='450' controls='controls' poster={game.rawg?.clip?.preview} src={game.rawg?.clip?.clip} type='video' /> */}
-							<h3>Описание</h3>
+							<h3 className='game-page__overview-header'>Описание</h3>
 							<div dangerouslySetInnerHTML={{ __html: game.overview }} />
 						</div>
 						<h3 className='game-page__review-header'>Отзыв</h3>

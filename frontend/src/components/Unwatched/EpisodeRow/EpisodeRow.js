@@ -1,7 +1,7 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
 import Rating from "react-rating";
-import { MDBIcon } from "mdbreact";
+import { FaStar, FaRegStar, FaEyeSlash, FaEye } from "react-icons/fa";
 import "./episode-row.sass";
 
 function DetailedEpisodeRow({ episode, showID, seasonNumber, setShowEpisodeUserStatus, loggedIn }) {
@@ -19,8 +19,8 @@ function DetailedEpisodeRow({ episode, showID, seasonNumber, setShowEpisodeUserS
 				<Rating
 					start={-1}
 					stop={10}
-					emptySymbol={[<MDBIcon icon='eye-slash' />].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <MDBIcon far icon='star' size='1x' />))}
-					fullSymbol={[<MDBIcon icon='eye' />].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <MDBIcon icon='star' size='1x' title={n} />))}
+					emptySymbol={[<FaEyeSlash />].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaRegStar />))}
+					fullSymbol={[<FaEye />].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaStar title={n} />))}
 					readonly={!loggedIn}
 					initialRating={-1}
 					onChange={(score) => {

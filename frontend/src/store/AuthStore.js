@@ -110,6 +110,7 @@ class Auth {
 		this.loggedIn = false;
 		this.user = { username: "", id: null, email: "" };
 		localStorage.removeItem("token");
+		this.authState = "done";
 	};
 
 	get currentUser() {

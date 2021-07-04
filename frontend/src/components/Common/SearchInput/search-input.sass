@@ -16,7 +16,8 @@
             padding-left: 1rem
 
     &__input:focus ~ &__hints, &__hints:active, &__hints:hover
-        display: flex
+        visibility: visible
+        opacity: 1
 
     &__hints
         z-index: 1200
@@ -28,10 +29,16 @@
         background-color: $newBackground3
         color: $newText3
         border-radius: 1rem
-        display: none
         flex-direction: column
         overflow-y: auto
         max-height: 70vh
+        transition: opacity 0.3s linear
+        visibility: hidden
+        opacity: 0
+
+        &_hidden
+            visibility: hidden !important
+            opacity: 0 !important
 
     &__hints > *
         display: flex

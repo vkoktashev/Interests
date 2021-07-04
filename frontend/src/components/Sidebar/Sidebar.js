@@ -3,7 +3,8 @@ import { useHistory } from "react-router-dom";
 import { observer } from "mobx-react";
 import AuthStore from "../../store/AuthStore";
 import PagesStore from "../../store/PagesStore";
-import { MDBIcon } from "mdbreact";
+import { FaSignInAlt, FaUserCircle, FaUserFriends, FaCalendar, FaSignOutAlt, FaUserPlus, FaArrowRight, FaArrowLeft } from "react-icons/fa";
+import { MdLiveTv, MdSettings } from "react-icons/md";
 import useWindowDimensions from "../../hooks/useWindowDimensions";
 import "./sidebar.sass";
 
@@ -34,7 +35,7 @@ const Sidebar = observer((props) => {
 	return (
 		<ProSidebar className='sidebar' collapsed={sidebarIsCollapsed} hidden={!sidebarIsToggled}>
 			<Menu iconShape='round' hidden={!loggedIn}>
-				<MenuItem icon={<MDBIcon icon='user-circle' />}>
+				<MenuItem icon={<FaUserCircle />}>
 					<a
 						href={`/user/${user?.id}`}
 						onClick={(event) => {
@@ -45,7 +46,7 @@ const Sidebar = observer((props) => {
 						Профиль
 					</a>
 				</MenuItem>
-				<MenuItem icon={<MDBIcon icon='user-friends' />}>
+				<MenuItem icon={<FaUserFriends />}>
 					<a
 						href={`/user/${user.id}?сategory=Друзья`}
 						onClick={(event) => {
@@ -57,7 +58,7 @@ const Sidebar = observer((props) => {
 					</a>
 				</MenuItem>
 
-				<MenuItem icon={<MDBIcon icon='tv' />}>
+				<MenuItem icon={<MdLiveTv />}>
 					<a
 						href={`/unwatched`}
 						onClick={(event) => {
@@ -68,7 +69,7 @@ const Sidebar = observer((props) => {
 						Непросмотренное
 					</a>
 				</MenuItem>
-				<MenuItem icon={<MDBIcon icon='calendar-day' />}>
+				<MenuItem icon={<FaCalendar />}>
 					<a
 						href={`/calendar`}
 						onClick={(event) => {
@@ -79,7 +80,7 @@ const Sidebar = observer((props) => {
 						Календарь
 					</a>
 				</MenuItem>
-				<MenuItem icon={<MDBIcon icon='cog' />}>
+				<MenuItem icon={<MdSettings />}>
 					<a
 						href={`/settings`}
 						onClick={(event) => {
@@ -90,7 +91,7 @@ const Sidebar = observer((props) => {
 						Настройки
 					</a>
 				</MenuItem>
-				<MenuItem icon={<MDBIcon icon='sign-out-alt' />}>
+				<MenuItem icon={<FaSignOutAlt />}>
 					<a
 						href={`/`}
 						onClick={(event) => {
@@ -102,7 +103,7 @@ const Sidebar = observer((props) => {
 				</MenuItem>
 			</Menu>
 			<Menu iconShape='round' hidden={loggedIn}>
-				<MenuItem icon={<MDBIcon icon='sign-in-alt' />}>
+				<MenuItem icon={<FaSignInAlt />}>
 					<a
 						href={`/`}
 						onClick={(event) => {
@@ -113,7 +114,7 @@ const Sidebar = observer((props) => {
 						Войти
 					</a>
 				</MenuItem>
-				<MenuItem icon={<MDBIcon icon='user-plus' />}>
+				<MenuItem icon={<FaUserPlus />}>
 					<a
 						href={`/`}
 						onClick={(event) => {
@@ -127,7 +128,7 @@ const Sidebar = observer((props) => {
 			</Menu>
 			<SidebarFooter>
 				<Menu iconShape='round'>
-					<MenuItem icon={sidebarIsCollapsed ? <MDBIcon icon='arrow-right' /> : <MDBIcon icon='arrow-left' />} onClick={collapseSidebar}>
+					<MenuItem icon={sidebarIsCollapsed ? <FaArrowRight /> : <FaArrowLeft />} onClick={collapseSidebar}>
 						Свернуть
 					</MenuItem>
 				</Menu>

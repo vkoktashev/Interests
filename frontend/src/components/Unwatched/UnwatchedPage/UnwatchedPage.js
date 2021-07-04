@@ -29,7 +29,7 @@ const UnwatchedPage = observer((props) => {
 	return (
 		<div className='unwatched-page'>
 			<div className='unwatched-page__body'>
-				<h1>Непросмотренные серии</h1>
+				<h1 className='unwatched-page__header'>Непросмотренные серии</h1>
 				<LoadingOverlay active={unwatchedState === "pending"} spinner text='Загрузка...'>
 					{unwatched.map((show) => (
 						<ShowBlock show={show} setShowEpisodeUserStatus={setEpisodesStatus} loggedIn={loggedIn} key={show.id} className='unwatched-page__show-block' />

@@ -27,8 +27,8 @@ const LoginForm = observer((props) => {
 					event.preventDefault();
 					tryAuth(login, password);
 				}}>
-				<p className='h4 text-center mb-4'>Войти</p>
-				<p className='note note-danger login-form__fail' hidden={!authState.startsWith("error:")}>
+				<h2 className='login-form__header'>Войти</h2>
+				<p className='login-form__fail' hidden={!authState.startsWith("error:")}>
 					{authState}
 				</p>
 

@@ -24,7 +24,7 @@ const ConfirmPasswordPage = observer((props) => {
 						event.preventDefault();
 						confirmPassword(token, password);
 					}}>
-					<p className='h4'>Обновить пароль</p>
+					<h4 className='confirm-password-page__header'>Обновить пароль</h4>
 					<p className='note note-danger confirm-password-page__fail' hidden={!confirmPasswordState.startsWith("error:")}>
 						{confirmPasswordState}
 					</p>

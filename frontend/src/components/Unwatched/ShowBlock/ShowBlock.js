@@ -30,7 +30,7 @@ function ShowBlock({ loggedIn, show, setShowEpisodeUserStatus, className }) {
 					history.push("/show/" + show.tmdb_id);
 					e.preventDefault();
 				}}>
-				<h4>{show?.tmdb_name}</h4>
+				<h4 className='show-block__name'>{show?.tmdb_name}</h4>
 			</a>
 
 			{show?.seasons.map((season, counter) => {

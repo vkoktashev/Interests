@@ -21,13 +21,13 @@ const RegisterForm = observer((props) => {
 	return (
 		<Modal isOpen={RegistrateFormIsOpen} toggle={closeRegistrateForm} className='register-form'>
 			<form>
-				<p className='note note-danger register-form__fail' hidden={!registrateState.startsWith("error:")}>
+				<p className='register-form__fail' hidden={!registrateState.startsWith("error:")}>
 					{registrateState}
 				</p>
-				<p className='note note-success register-form__success' hidden={user?.email === ""}>
+				<p className='register-form__success' hidden={user?.email === ""}>
 					{user.login}, добро пожаловать! Осталось только подтвердить вашу почту
 				</p>
-				<h4>Регистрация</h4>
+				<h2 className='register-form__header'> Регистрация</h2>
 
 				<label htmlFor='loginInput'>Никнейм</label>
 				<input type='text' id='loginInput' className='register-form__input' value={login} onChange={(event) => setLogin(event.target.value)} />

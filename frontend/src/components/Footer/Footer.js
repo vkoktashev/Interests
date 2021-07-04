@@ -1,5 +1,5 @@
 import React from "react";
-import { MDBIcon } from "mdbreact";
+import { FaVk, FaDiscord } from "react-icons/fa";
 import classnames from "classnames";
 import "./footer.sass";
 
@@ -15,10 +15,10 @@ function Footer({ className }) {
 				<div className='footer__social-block'>
 					<p>Следите за нами в социальных сетях, чтобы оставаться в курсе последних событий!</p>
 					<a href='https://vk.com/interests_fun' className='footer__social-link'>
-						<MDBIcon fab icon='vk' />
+						<FaVk />
 					</a>
 					<a href='https://discord.gg/wXkUF5tKee' className='footer__social-link'>
-						<MDBIcon fab icon='discord' />
+						<FaDiscord />
 					</a>
 				</div>
 				<div className='footer__social-block'>

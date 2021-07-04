@@ -1,7 +1,6 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
-import Rating from "react-rating";
-import { MDBIcon } from "mdbreact";
+import Rating from "../Rating/Rating";
 import classnames from "classnames";
 import "./friends-activity.sass";
 
@@ -21,16 +20,7 @@ function FriendActivity({ info, className }) {
 				</a>
 			</h5>
 			<div className='friend-activity__info'>
-				<Rating
-					stop={10}
-					emptySymbol={<MDBIcon far icon='star' size='1x' />}
-					fullSymbol={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-						<MDBIcon icon='star' size='1x' title={n} />
-					))}
-					initialRating={info.score}
-					className='friend-activity__info-text'
-					readonly={true}
-				/>
+				<Rating initialRating={info.score} className='friend-activity__info-text' readonly={true} />
 				<p className='friend-activity__info-text'>Статус: {info.status} </p>
 				<p className='friend-activity__info-text' hidden={!info.spent_time}>
 					Время проходения: {info.spent_time} {intToHours(info.spent_time)}

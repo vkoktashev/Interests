@@ -3,7 +3,7 @@ import { CSVLink } from "react-csv";
 import InputNumber from "../../../Common/InputNumber/InputNumber";
 import SelectMulti from "../../../Common/SelectMulti/SelectMulti";
 import ItemRow from "../ItemRow/ItemRow";
-import { MDBIcon } from "mdbreact";
+import { FaAngleDown, FaAngleUp, FaStar, FaClock, FaArrowsAltV } from "react-icons/fa";
 import Pagination from "rc-pagination";
 import useWindowDimensions from "../../../../hooks/useWindowDimensions";
 import "./item-block.sass";
@@ -61,7 +61,7 @@ function ItemBlock({ items, statuses, fields, name }) {
 							}}
 						/>
 						<button className='item-block__mobile-expand' onClick={toggleCollapse}>
-							{collapse ? <MDBIcon icon='angle-down' /> : <MDBIcon icon='angle-up' />}
+							{collapse ? <FaAngleDown /> : <FaAngleUp />}
 						</button>
 					</div>
 					<div className='item-block__sort-buttons' hidden={collapse && width <= 515}>
@@ -72,7 +72,7 @@ function ItemBlock({ items, statuses, fields, name }) {
 								sortItems("score", true);
 								setSortIsAsc(!sortIsAsc);
 							}}>
-							<MDBIcon icon='star' /> <MDBIcon icon='arrows-alt-v' />
+							<FaStar /> <FaArrowsAltV />
 						</button>
 						<button
 							className='item-block__sort-button'
@@ -81,7 +81,7 @@ function ItemBlock({ items, statuses, fields, name }) {
 								sortItems("spent_time", true);
 								setSortIsAsc(!sortIsAsc);
 							}}>
-							<MDBIcon icon='clock' /> <MDBIcon icon='arrows-alt-v' />
+							<FaClock /> <FaArrowsAltV />
 						</button>
 					</div>
 					<SelectMulti

@@ -22,24 +22,20 @@ const ResetPasswordForm = observer((props) => {
 					event.preventDefault();
 					resetPassword(email);
 				}}>
-				<p className='h4 text-center mb-4'>Сбросить пароль</p>
-				<p className='note note-danger reset-password-form__fail' hidden={!resetPasswordState.startsWith("error:")}>
+				<h2 className='reset-password-form__header'>Сбросить пароль</h2>
+				<p className='reset-password-form__fail' hidden={!resetPasswordState.startsWith("error:")}>
 					{resetPasswordState}
 				</p>
-				<p className='note note-success reset-password-form__success' hidden={resetPasswordState !== "done"}>
+				<p className='reset-password-form__success' hidden={resetPasswordState !== "done"}>
 					На вашу почту отправлено письмо
 				</p>
 
-				<label htmlFor='emailInput' className='grey-text'>
-					Почта
-				</label>
+				<label htmlFor='emailInput'>Почта</label>
 				<input type='text' id='emailInput' className='reset-password-form__input' value={email} onChange={(event) => setEmail(event.target.value)} />
 
-				<div className='text-center mt-4'>
-					<button type='submit' className='reset-password-form__button'>
-						{resetPasswordState !== "pending" ? "Сбросить" : "Загрузка..."}
-					</button>
-				</div>
+				<button type='submit' className='reset-password-form__button'>
+					{resetPasswordState !== "pending" ? "Сбросить" : "Загрузка..."}
+				</button>
 			</form>
 		</Modal>
 	);

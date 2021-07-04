@@ -1,7 +1,6 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
-import Rating from "react-rating";
-import { MDBIcon } from "mdbreact";
+import Rating from "../../../Common/Rating/Rating";
 import classnames from "classnames";
 import "./log-row.sass";
 
@@ -178,18 +177,7 @@ function LogRow({ log, showUsername, onDeleteLog, className }) {
 	function actionResultToStr(actionType, actionResult, target) {
 		switch (actionType) {
 			case "score":
-				if ((target !== "episode") | (actionResult > 0))
-					return (
-						<Rating
-							stop={10}
-							emptySymbol={<MDBIcon far icon='star' size='1x' />}
-							fullSymbol={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-								<MDBIcon icon='star' size='1x' title={n} />
-							))}
-							initialRating={actionResult}
-							readonly={true}
-						/>
-					);
+				if ((target !== "episode") | (actionResult > 0)) return <Rating initialRating={actionResult} readonly={true} />;
 				else return "";
 			case "status":
 				return '"' + actionResult + '"';

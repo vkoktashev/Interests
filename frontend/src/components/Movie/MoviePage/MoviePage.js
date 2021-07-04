@@ -88,7 +88,7 @@ const MoviePage = observer((props) => {
 				<div className='movie-page__body'>
 					<div className='movie-page__header'>
 						<div className='movie-page__poster'>
-							<img src={movie.poster_path} className='img-fluid' alt='' />
+							<img src={movie.poster_path} className='movie-page__poster-img' alt='' />
 						</div>
 						<div className='movie-page__info'>
 							<h1 className='movie-page__info-header'>{movie.name}</h1>
@@ -135,7 +135,7 @@ const MoviePage = observer((props) => {
 					</div>
 					<div className='movie-page__overview'>
 						<div>
-							<h3>Описание</h3>
+							<h3 className='game-page__overview-header'>Описание</h3>
 							<div dangerouslySetInnerHTML={{ __html: movie.overview }} />
 						</div>
 						<h3 className='movie-page__review-header'>Отзыв</h3>

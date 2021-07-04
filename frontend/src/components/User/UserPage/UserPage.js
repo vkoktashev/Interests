@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { observer } from "mobx-react";
 import AuthStore from "../../../store/AuthStore";
 import UserStore from "../../../store/UserStore";
-import { MDBIcon } from "mdbreact";
+import { FaLock } from "react-icons/fa";
 import { useQueryParam, StringParam, withDefault } from "use-query-params";
 
 import LoadingOverlay from "react-loading-overlay";
@@ -79,7 +79,7 @@ const UserPage = observer((props) => {
 								</LoadingOverlay>
 							</div>
 							<h4 hidden={user.is_available || userState === "pending"}>
-								<MDBIcon icon='lock' style={{ marginRight: "1rem" }} />
+								<FaLock style={{ marginRight: "1rem" }} />
 								Профиль скрыт настройками приватности
 							</h4>
 						</div>
@@ -98,7 +98,7 @@ const UserPage = observer((props) => {
 						<div hidden={activeCategory !== "Друзья"}>
 							<FriendBlock users={user.followed_users ? user.followed_users : []} />
 							<div hidden={currentUser.username !== user.username}>
-								<h4>Активность друзей: </h4>
+								<h4 className='user-page__friends-header'>Активность друзей: </h4>
 								<LoadingOverlay active={userFriendsLogsState === "pending" && userState !== "pending"} spinner text='Загрузка активности...'>
 									<UserLogs userID={userID} logs={userFriendsLogs} requestUserLogs={requestUserFriendsLogs} currentUser={isCurrentUser} showUsername={true} logsType={"userFriends"} />
 								</LoadingOverlay>
