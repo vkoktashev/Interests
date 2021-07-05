@@ -110,7 +110,7 @@ const MoviePage = observer((props) => {
 										setUserRate(score);
 										setMovieStatus({ score: score });
 									}}
-									size='1.5rem'
+									className='movie-page__rating'
 								/>
 								<StatusButtonGroup
 									statuses={["Не смотрел", "Буду смотреть", "Дропнул", "Посмотрел"]}

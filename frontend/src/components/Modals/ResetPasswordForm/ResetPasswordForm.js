@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
+import useInput from "../../../hooks/useInput";
 import { observer } from "mobx-react";
 import AuthStore from "../../../store/AuthStore";
 import PagesStore from "../../../store/PagesStore";
@@ -13,14 +14,14 @@ const ResetPasswordForm = observer((props) => {
 	const { resetPassword, resetPasswordState } = AuthStore;
 	const { ResetPasswordFormIsOpen, closeResetPasswordForm } = PagesStore;
 
-	const [email, setEmail] = useState("");
+	const email = useInput("");
 
 	return (
 		<Modal isOpen={ResetPasswordFormIsOpen} toggle={closeResetPasswordForm} className='reset-password-form'>
 			<form
 				onSubmit={(event) => {
 					event.preventDefault();
-					resetPassword(email);
+					resetPassword(email.value);
 				}}>
 				<h2 className='reset-password-form__header'>Сбросить пароль</h2>
 				<p className='reset-password-form__fail' hidden={!resetPasswordState.startsWith("error:")}>
@@ -31,7 +32,7 @@ const ResetPasswordForm = observer((props) => {
 				</p>
 
 				<label htmlFor='emailInput'>Почта</label>
-				<input type='text' id='emailInput' className='reset-password-form__input' value={email} onChange={(event) => setEmail(event.target.value)} />
+				<input type='text' id='emailInput' className='reset-password-form__input' {...email} />
 
 				<button type='submit' className='reset-password-form__button'>
 					{resetPasswordState !== "pending" ? "Сбросить" : "Загрузка..."}

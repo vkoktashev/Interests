@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import Rating from "react-rating";
-import { FaStar, FaRegStar, FaEyeSlash, FaEye } from "react-icons/fa";
+import Rating from "../../../Common/Rating/Rating";
+
 import "./detail-episode-row.sass";
 
 function DetailEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, userInfo, checkAll, userWatchedShow, setSaveEpisodes }) {
@@ -47,10 +47,7 @@ function DetailEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, use
 			<p className='detail-episode-row__date'>{parseDate(episode.air_date)}</p>
 			<div hidden={!loggedIn || !userWatchedShow} className='detail-episode-row__rate'>
 				<Rating
-					start={-1}
-					stop={10}
-					emptySymbol={[<FaEyeSlash />].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaRegStar />))}
-					fullSymbol={[<FaEye />].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaStar title={n} />))}
+					withEye={true}
 					readonly={!loggedIn}
 					initialRating={userRate}
 					onChange={(score) => {

@@ -122,7 +122,7 @@ const GamePage = observer((props) => {
 										setUserRate(score);
 										setGameStatus({ score: score });
 									}}
-									size='1.5rem'
+									className='game-page__rating'
 								/>
 								<StatusButtonGroup
 									statuses={["Не играл", "Буду играть", "Играю", "Дропнул", "Прошел"]}

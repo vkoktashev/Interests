@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import useInput from "../../../hooks/useInput";
 import { useParams, useHistory } from "react-router-dom";
 import { observer } from "mobx-react";
 import SearchStore from "../../../store/SearchStore";
@@ -6,7 +7,6 @@ import SearchStore from "../../../store/SearchStore";
 import { FaSearch } from "react-icons/fa";
 
 import LoadingOverlay from "react-loading-overlay";
-import { toast } from "react-toastify";
 import GameCards from "../SearchCards/GameCards";
 import MovieCards from "../SearchCards/MovieCards";
 import ShowCards from "../SearchCards/ShowCards";
@@ -14,50 +14,43 @@ import UserCards from "../SearchCards/UserCards";
 import CategoriesTab from "../../Common/CategoriesTab/CategoriesTab";
 
 import "./search-page.sass";
+import useScroll from "../../../hooks/useScroll";
 
 /**
  * Основная страница приложения
  */
 const SearchPage = observer((props) => {
-	const { gamesState, searchGames, games, moviesState, searchMovies, movies, showsState, searchShows, shows, usersState, searchUsers, users } = SearchStore;
+	const store = SearchStore;
 
 	let history = useHistory();
 	let { query } = useParams();
-	const [queryText, setQueryText] = useState("");
-	const [gamesPage, setGamesPage] = useState(1);
-	const [moviesPage, setMoviesPage] = useState(1);
-	const [showsPage, setShowsPage] = useState(1);
+	const queryText = useInput("");
 
-	const [activeCategory, setActiveCategory] = useState("Всё");
+	const parentRef = useRef();
+	const childRef = useRef();
+	// eslint-disable-next-line
+	const intersected = useScroll(parentRef, childRef, () => fetchItems());
+
+	const [activeCategory, setActiveCategory] = useState("Игры");
+
+	function fetchItems() {
+		if (activeCategory === "Игры") store.nextGames();
+		if (activeCategory === "Фильмы") store.nextMovies();
+		if (activeCategory === "Сериалы") store.nextShows();
+	}
 
 	useEffect(
 		() => {
-			if (activeCategory === "Всё" || activeCategory === "Игры") searchGames(query, 1, 6);
-			if (activeCategory === "Всё" || activeCategory === "Фильмы") searchMovies(query, 1);
-			if (activeCategory === "Всё" || activeCategory === "Сериалы") searchShows(query, 1);
-			if (activeCategory === "Всё" || activeCategory === "Пользователи") searchUsers(query);
-			setQueryText(query);
+			if (activeCategory === "Игры") store.searchGames(query);
+			if (activeCategory === "Фильмы") store.searchMovies(query);
+			if (activeCategory === "Сериалы") store.searchShows(query);
+			if (activeCategory === "Пользователи") store.searchUsers(query);
+			queryText.setValue(query);
 			document.title = "Поиск";
-			setGamesPage(1);
-			setMoviesPage(1);
-			setShowsPage(1);
 		},
 		// eslint-disable-next-line
-		[query, searchGames, searchMovies, searchUsers, searchShows, activeCategory]
+		[query, activeCategory]
 	);
-
-	useEffect(() => {
-		if (gamesState.startsWith("error:")) toast.error(`Ошибка поиска игр! ${gamesState}`);
-	}, [gamesState]);
-	useEffect(() => {
-		if (moviesState.startsWith("error:")) toast.error(`Ошибка поиска фильмов! ${moviesState}`);
-	}, [moviesState]);
-	useEffect(() => {
-		if (showsState.startsWith("error:")) toast.error(`Ошибка поиска серилов! ${showsState}`);
-	}, [showsState]);
-	useEffect(() => {
-		if (usersState.startsWith("error:")) toast.error(`Ошибка поиска пользователей! ${usersState}`);
-	}, [usersState]);
 
 	return (
 		<div className='search-page'>
@@ -66,58 +59,38 @@ const SearchPage = observer((props) => {
 					className='search-page__form'
 					onSubmit={(event) => {
 						event.preventDefault();
-						history.push("/search/" + document.getElementById("searchInput2").value);
+						history.push("/search/" + queryText.value);
 						return false;
 					}}>
 					<h1>Поиск</h1>
 					<FaSearch className='search-page__name-icon' />
-					<input className='search-page__name-input' type='text' placeholder='Найти' id='searchInput2' value={queryText} onChange={(event) => setQueryText(event.target.value)} />
+					<input className='search-page__name-input' type='text' placeholder='Найти' {...queryText} />
 				</form>
 				<CategoriesTab
-					categories={["Всё", "Игры", "Фильмы", "Сериалы", "Пользователи"]}
+					categories={["Игры", "Фильмы", "Сериалы", "Пользователи"]}
 					activeCategory={activeCategory}
 					onChangeCategory={(category) => {
 						setActiveCategory(category);
 					}}>
-					<LoadingOverlay active={gamesState === "pending"} spinner text='Ищем игры...'>
-						<GameCards
-							games={games}
-							gamesPage={gamesPage}
-							onPaginate={(page) => {
-								setGamesPage(page);
-								searchGames(query, page, 6);
-							}}
-							hidden={activeCategory !== "Всё" && activeCategory !== "Игры"}
-						/>
-					</LoadingOverlay>
+					<div className='search-page__results' ref={parentRef}>
+						<LoadingOverlay active={store.gamesState === "pending"} spinner text='Ищем игры...'>
+							<GameCards games={store.games.values} hidden={activeCategory !== "Игры"} />
+						</LoadingOverlay>
 
-					<LoadingOverlay active={moviesState === "pending"} spinner text='Ищем фильмы...'>
-						<MovieCards
-							movies={movies}
-							moviesPage={moviesPage}
-							onPaginate={(page) => {
-								setMoviesPage(page);
-								searchMovies(query, page);
-							}}
-							hidden={activeCategory !== "Всё" && activeCategory !== "Фильмы"}
-						/>
-					</LoadingOverlay>
+						<LoadingOverlay active={store.moviesState === "pending"} spinner text='Ищем фильмы...'>
+							<MovieCards movies={store.movies.values} hidden={activeCategory !== "Фильмы"} />
+						</LoadingOverlay>
 
-					<LoadingOverlay active={showsState === "pending"} spinner text='Ищем сериалы...'>
-						<ShowCards
-							shows={shows}
-							showsPage={showsPage}
-							onPaginate={(page) => {
-								setShowsPage(page);
-								searchShows(query, page);
-							}}
-							hidden={activeCategory !== "Всё" && activeCategory !== "Сериалы"}
-						/>
-					</LoadingOverlay>
+						<LoadingOverlay active={store.showsState === "pending"} spinner text='Ищем сериалы...'>
+							<ShowCards shows={store.shows.values} hidden={activeCategory !== "Сериалы"} />
+						</LoadingOverlay>
 
-					<LoadingOverlay active={usersState === "pending"} spinner text='Ищем пользователей...'>
-						<UserCards users={users} hidden={activeCategory !== "Всё" && activeCategory !== "Пользователи"} />
-					</LoadingOverlay>
+						<LoadingOverlay active={store.usersState === "pending"} spinner text='Ищем пользователей...'>
+							<UserCards users={store.users.values} hidden={activeCategory !== "Всё" && activeCategory !== "Пользователи"} />
+						</LoadingOverlay>
+
+						<div ref={childRef} style={{ height: 20 }} />
+					</div>
 				</CategoriesTab>
 			</div>
 		</div>

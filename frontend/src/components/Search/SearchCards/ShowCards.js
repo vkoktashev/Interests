@@ -1,14 +1,14 @@
 import React, { useMemo } from "react";
 import SearchCardsBlock from "./SearchCardsBlock/SearchCardsBlock";
 
-function ShowCards({ shows, showsPage, onPaginate, hidden }) {
+function ShowCards({ shows, hidden }) {
 	const objects = useMemo(
 		() =>
 			shows?.reduce((newObjects, show) => {
 				let object = {
 					name: show.name,
 					id: show.id,
-					poster: `url(${"http://image.tmdb.org/t/p/w600_and_h900_bestv2" + show.poster_path})`,
+					poster: `url(${"http://image.tmdb.org/t/p/w300" + show.backdrop_path})`,
 					link: "/show/" + show.id,
 				};
 
@@ -24,7 +24,7 @@ function ShowCards({ shows, showsPage, onPaginate, hidden }) {
 		[shows]
 	);
 
-	return <SearchCardsBlock name='Сериалы' hidden={hidden} objects={objects} currentPage={showsPage} onPaginate={onPaginate} hasNextPage={objects.length > 19} />;
+	return <SearchCardsBlock name='Сериалы' hidden={hidden} objects={objects} />;
 }
 
 export default ShowCards;

@@ -1,4 +1,5 @@
 import { makeAutoObservable } from "mobx";
+import { toast } from "react-toastify";
 //import remotedev from "mobx-remotedev";
 import * as userRequests from "../services/userRequests";
 import * as gameRequests from "../services/gameRequests";
@@ -6,12 +7,11 @@ import * as movieRequests from "../services/movieRequests";
 import * as showRequests from "../services/showRequests";
 
 class Search {
-	games = [];
-	movies = [];
-	shows = [];
-	users = [];
-	hints = { games: [], shows: [], movies: [] };
-	currentQuery = "";
+	games = { values: [], page: 1, query: "" };
+	movies = { values: [], page: 1, query: "" };
+	shows = { values: [], page: 1, query: "" };
+	users = { values: [], page: 1 };
+	hints = { games: [], shows: [], movies: [], query: "" };
 	gamesState = "done";
 	moviesState = "done";
 	showsState = "done";
@@ -22,8 +22,8 @@ class Search {
 	}
 
 	searchHints = async (query) => {
-		if (this.currentQuery !== query) {
-			this.currentQuery = query;
+		if (this.hints.query !== query) {
+			this.hints.currentQuery = query;
 			gameRequests.searchGamesFast(query).then(this.searchGamesHintsSuccess);
 			movieRequests.searchMoviesFast(query).then(this.searchMoviesHintsSuccess);
 			showRequests.searchShowsFast(query).then(this.searchShowsHintsSuccess);
@@ -39,39 +39,81 @@ class Search {
 		this.hints.shows = result;
 	};
 
-	searchGames = async (query, page, gamesCount) => {
+	searchGames = async (query) => {
 		this.gamesState = "pending";
-		gameRequests.searchGames(query, page, gamesCount).then(this.searchGamesSuccess, this.searchGamesFailure);
+		gameRequests.searchGames(query, 1, 20).then((res) => this.searchGamesSuccess(res, query), this.searchGamesFailure);
 	};
-	searchGamesSuccess = (result) => {
-		this.games = result;
+	searchGamesSuccess = (result, query) => {
+		this.games = { values: result, page: 1, query, isEnd: result.length < 20 };
 		this.gamesState = "done";
 	};
 	searchGamesFailure = (error) => {
+		toast.error(`Ошибка поиска игр! ${error}`);
+		this.gamesState = "error: " + error;
+	};
+	nextGames = async () => {
+		if (this.gamesState === "pending" || this.games.isEnd) return;
+		this.gamesState = "pending";
+		gameRequests.searchGames(this.games.query, this.games.page + 1, 20).then(this.nextGamesSuccess, this.nextGamesFailure);
+	};
+	nextGamesSuccess = (result) => {
+		this.games = { values: [...this.games.values, ...result], page: this.games.page + 1, query: this.games.query, isEnd: result.length < 20 };
+		this.gamesState = "done";
+	};
+	nextGamesFailure = (error) => {
+		toast.error(`Ошибка поиска игр! ${error}`);
 		this.gamesState = "error: " + error;
 	};
 
-	searchMovies = async (query, page) => {
+	searchMovies = async (query) => {
 		this.moviesState = "pending";
-		movieRequests.searchMovies(query, page).then(this.searchMoviesSuccess, this.searchMoviesFailure);
+		movieRequests.searchMovies(query, 1).then((res) => this.searchMoviesSuccess(res, query), this.searchMoviesFailure);
 	};
-	searchMoviesSuccess = (result) => {
-		this.movies = result.results;
+	searchMoviesSuccess = (result, query) => {
+		this.movies = { values: result.results, page: 1, query, isEnd: result.page === result.total_pages };
 		this.moviesState = "done";
 	};
 	searchMoviesFailure = (error) => {
+		toast.error(`Ошибка поиска фильмов! ${error}`);
+		this.moviesState = "error: " + error;
+	};
+	nextMovies = async () => {
+		if (this.moviesState === "pending" || this.movies.isEnd) return;
+		this.moviesState = "pending";
+		movieRequests.searchMovies(this.movies.query, this.movies.page + 1, 10).then(this.nextMoviesSuccess, this.nextMoviesFailure);
+	};
+	nextMoviesSuccess = (result) => {
+		this.movies = { values: [...this.movies.values, ...result?.results], page: this.movies.page + 1, query: this.movies.query, isEnd: result.page === result.total_pages };
+		this.moviesState = "done";
+	};
+	nextMoviesFailure = (error) => {
+		toast.error(`Ошибка поиска фильмов! ${error}`);
 		this.moviesState = "error: " + error;
 	};
 
 	searchShows = async (query, page) => {
 		this.showsState = "pending";
-		showRequests.searchShows(query, page).then(this.searchShowsSuccess, this.searchShowsFailure);
+		showRequests.searchShows(query, page).then((res) => this.searchShowsSuccess(res, query), this.searchShowsFailure);
 	};
-	searchShowsSuccess = (result) => {
-		this.shows = result.results;
+	searchShowsSuccess = (result, query) => {
+		this.shows = { values: result.results, page: 1, query, isEnd: result.page === result.total_pages };
 		this.showsState = "done";
 	};
 	searchShowsFailure = (error) => {
+		toast.error(`Ошибка поиска серилов! ${error}`);
+		this.showsState = "error: " + error;
+	};
+	nextShows = async () => {
+		if (this.showsState === "pending" || this.shows.isEnd) return;
+		this.showsState = "pending";
+		showRequests.searchShows(this.shows.query, this.shows.page + 1).then(this.nextShowsSuccess, this.nextShowsFailure);
+	};
+	nextShowsSuccess = (result) => {
+		this.shows = { values: [...this.shows.values, ...result.results], page: this.shows.page + 1, query: this.shows.query, isEnd: result.page === result.total_pages };
+		this.showsState = "done";
+	};
+	nextShowsFailure = (error) => {
+		toast.error(`Ошибка поиска сериалов! ${error}`);
 		this.showsState = "error: " + error;
 	};
 
@@ -80,10 +122,11 @@ class Search {
 		userRequests.searchUsers(query).then(this.searchUsersSuccess, this.searchUsersFailure);
 	};
 	searchUsersSuccess = (result) => {
-		this.users = result;
+		this.users = { values: result, page: 1 };
 		this.usersState = "done";
 	};
 	searchUsersFailure = (error) => {
+		toast.error(`Ошибка поиска пользователей! ${error}`);
 		this.usersState = "error: " + error;
 	};
 }

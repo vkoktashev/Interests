@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
+import useInput from "../../../hooks/useInput";
 import { observer } from "mobx-react";
 import AuthStore from "../../../store/AuthStore";
 import PagesStore from "../../../store/PagesStore";
@@ -13,8 +14,8 @@ const LoginForm = observer((props) => {
 	const { tryAuth, authState } = AuthStore;
 	const { LoginFormIsOpen, closeLoginForm, openResetPasswordForm, openRegistrateForm } = PagesStore;
 
-	const [password, setPassword] = useState("");
-	const [login, setLogin] = useState("");
+	const password = useInput("");
+	const login = useInput("");
 
 	useEffect(() => {
 		if (authState === "done") closeLoginForm();
@@ -25,7 +26,7 @@ const LoginForm = observer((props) => {
 			<form
 				onSubmit={(event) => {
 					event.preventDefault();
-					tryAuth(login, password);
+					tryAuth(login.value, password.value);
 				}}>
 				<h2 className='login-form__header'>Войти</h2>
 				<p className='login-form__fail' hidden={!authState.startsWith("error:")}>
@@ -35,12 +36,12 @@ const LoginForm = observer((props) => {
 				<label htmlFor='loginInput' className='grey-text'>
 					Логин
 				</label>
-				<input type='text' id='loginInput' className='login-form__input' value={login} onChange={(event) => setLogin(event.target.value)} />
+				<input type='text' id='loginInput' className='login-form__input' {...login} />
 
 				<label htmlFor='passwordInput' className='grey-text'>
 					Пароль
 				</label>
-				<input type='password' id='passwordInput' className='login-form__input' value={password} onChange={(event) => setPassword(event.target.value)} />
+				<input type='password' id='passwordInput' className='login-form__input' {...password} />
 
 				<div className='text-center mt-4'>
 					<button type='submit' className='login-form__auth-button'>

@@ -117,7 +117,7 @@ const ShowPage = observer((props) => {
 											setShowStatus({ score: score });
 										}
 									}}
-									size='1.5rem'
+									className='show-page__rating'
 								/>
 								<StatusButtonGroup
 									loggedIn={loggedIn}

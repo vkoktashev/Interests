@@ -1,13 +1,16 @@
 @import ../../../../styles/colors
 
 .search-card
-    width: 500px
+    width: 540px
     max-width: 100%
-    height: 100px
+    height: 140px
     display: inline-block
 
+    &:hover
+        color: $newAccent2
+
     &__poster
-        height: 100px
+        height: 140px
         width: 50%
         background-position: center
         background-repeat: no-repeat
@@ -22,10 +25,9 @@
         padding: 10px
         text-align: center
         vertical-align: top
-        color: $newText3
         font-weight: 200
         background-color: $newBackground3
-        height: 100px
+        height: 140px
         width: 50%
         display: inline-block
         margin: 0
@@ -36,3 +38,8 @@
         overflow: hidden
         text-overflow: ellipsis
         height: 70%
+        font-size: 1.3rem
+        transition: color 0.3s linear
+
+    &__date
+        transition: color 0.3s linear
