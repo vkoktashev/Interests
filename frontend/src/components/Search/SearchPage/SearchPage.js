@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import useInput from "../../../hooks/useInput";
 import { useParams, useHistory } from "react-router-dom";
 import { observer } from "mobx-react";
 import SearchStore from "../../../store/SearchStore";
@@ -23,7 +24,7 @@ const SearchPage = observer((props) => {
 
 	let history = useHistory();
 	let { query } = useParams();
-	const [queryText, setQueryText] = useState("");
+	const queryText = useInput("");
 	const [gamesPage, setGamesPage] = useState(1);
 	const [moviesPage, setMoviesPage] = useState(1);
 	const [showsPage, setShowsPage] = useState(1);
@@ -32,11 +33,11 @@ const SearchPage = observer((props) => {
 
 	useEffect(
 		() => {
-			if (activeCategory === "Всё" || activeCategory === "Игры") searchGames(query, 1, 6);
+			if (activeCategory === "Всё" || activeCategory === "Игры") searchGames(query, 1, 10);
 			if (activeCategory === "Всё" || activeCategory === "Фильмы") searchMovies(query, 1);
 			if (activeCategory === "Всё" || activeCategory === "Сериалы") searchShows(query, 1);
 			if (activeCategory === "Всё" || activeCategory === "Пользователи") searchUsers(query);
-			setQueryText(query);
+			queryText.setValue(query);
 			document.title = "Поиск";
 			setGamesPage(1);
 			setMoviesPage(1);
@@ -66,12 +67,12 @@ const SearchPage = observer((props) => {
 					className='search-page__form'
 					onSubmit={(event) => {
 						event.preventDefault();
-						history.push("/search/" + document.getElementById("searchInput2").value);
+						history.push("/search/" + queryText.value);
 						return false;
 					}}>
 					<h1>Поиск</h1>
 					<FaSearch className='search-page__name-icon' />
-					<input className='search-page__name-input' type='text' placeholder='Найти' id='searchInput2' value={queryText} onChange={(event) => setQueryText(event.target.value)} />
+					<input className='search-page__name-input' type='text' placeholder='Найти' {...queryText} />
 				</form>
 				<CategoriesTab
 					categories={["Всё", "Игры", "Фильмы", "Сериалы", "Пользователи"]}

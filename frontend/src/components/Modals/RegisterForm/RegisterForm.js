@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import { observer } from "mobx-react";
+import classnames from "classnames";
+import useInput from "../../../hooks/useInput";
 import AuthStore from "../../../store/AuthStore";
 import PagesStore from "../../../store/PagesStore";
 import Modal from "../../Common/Modal/Modal";
@@ -13,10 +15,10 @@ const RegisterForm = observer((props) => {
 	const { register, registrateState, user } = AuthStore;
 	const { RegistrateFormIsOpen, closeRegistrateForm } = PagesStore;
 
-	const [passwordConfirm, setPasswordConfirm] = useState("");
-	const [password, setPassword] = useState("");
-	const [email, setEmail] = useState("");
-	const [login, setLogin] = useState("");
+	const passwordConfirm = useInput("");
+	const password = useInput("");
+	const email = useInput("");
+	const login = useInput("");
 
 	return (
 		<Modal isOpen={RegistrateFormIsOpen} toggle={closeRegistrateForm} className='register-form'>
@@ -30,30 +32,28 @@ const RegisterForm = observer((props) => {
 				<h2 className='register-form__header'> Регистрация</h2>
 
 				<label htmlFor='loginInput'>Никнейм</label>
-				<input type='text' id='loginInput' className='register-form__input' value={login} onChange={(event) => setLogin(event.target.value)} />
+				<input type='text' id='loginInput' className='register-form__input' {...login} />
 
 				<label htmlFor='emailInput'>Электронная почта</label>
-				<input type='email' id='emailInput' className='register-form__input' value={email} onChange={(event) => setEmail(event.target.value)} />
+				<input type='email' id='emailInput' className='register-form__input' {...email} />
 
 				<label htmlFor='passwordInput'>Пароль</label>
-				<input type='password' id='passwordInput' className='register-form__input' value={password} onChange={(event) => setPassword(event.target.value)} />
+				<input type='password' id='passwordInput' {...password} className='register-form__input' />
 
 				<label htmlFor='passwordConfirmInput'>Подтверждение пароля</label>
 				<input
 					type='password'
 					id='passwordConfirmInput'
-					className='register-form__input'
-					style={passwordConfirm === password ? { outlineColor: "green" } : { outlineColor: "red" }}
-					value={passwordConfirm}
-					onChange={(event) => setPasswordConfirm(event.target.value)}
+					{...passwordConfirm}
+					className={classnames("register-form__input", !passwordConfirm.value ? "" : passwordConfirm.value === password.value ? "register-form__input_right" : "register-form__input_wrong")}
 				/>
 
 				<div className='text-center mt-4'>
 					<button
 						type='button'
 						className='register-form__auth-button'
-						disabled={password !== passwordConfirm || login.length < 1 || email.length < 1 || password.length < 1}
-						onClick={() => register(login, email, password)}>
+						disabled={password.value !== passwordConfirm.value || login.value.length < 1 || email.value.length < 1 || password.value.length < 1}
+						onClick={() => register(login.value, email.value, password.value)}>
 						{registrateState !== "pending" ? "Зарегистрироваться" : "Загрузка..."}
 					</button>
 				</div>
