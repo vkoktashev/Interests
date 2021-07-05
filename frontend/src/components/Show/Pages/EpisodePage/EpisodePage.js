@@ -7,10 +7,9 @@ import ShowStore from "../../../../store/ShowStore";
 import PagesStore from "../../../../store/PagesStore";
 
 import { toast } from "react-toastify";
-import { FaStar, FaRegStar, FaEyeSlash, FaEye } from "react-icons/fa";
 import LoadingOverlay from "react-loading-overlay";
 
-import Rating from "react-rating";
+import Rating from "../../../Common/Rating/Rating";
 import FriendsActivity from "../../../Common/FriendsActivity/FriendsActivity";
 import ScoreBlock from "../../../Common/ScoreBlock/ScoreBlock";
 import "./episode-page.sass";
@@ -112,10 +111,7 @@ const EpisodePage = observer((props) => {
 							<div hidden={!loggedIn | !userInfo?.user_watched_show}>
 								<LoadingOverlay active={userInfoState === "pending" && !showState === "pending"} spinner text='Загрузка...'>
 									<Rating
-										start={-1}
-										stop={10}
-										emptySymbol={[<FaEyeSlash />].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaRegStar style={{ fontSize: "25px" }} />))}
-										fullSymbol={[<FaEye />].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaStar style={{ fontSize: "25px" }} title={n} />))}
+										withEye={true}
 										initialRating={userRate}
 										onChange={(score) => {
 											if (!loggedIn) {
@@ -125,6 +121,7 @@ const EpisodePage = observer((props) => {
 												setEpisodesStatus({ episodes: [{ tmdb_id: show.id, score: score }] }, show_id);
 											}
 										}}
+										className='episode-page__rating'
 									/>
 									<div className='episode-page__review'>
 										Ваш отзыв

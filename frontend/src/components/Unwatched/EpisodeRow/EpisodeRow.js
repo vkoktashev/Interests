@@ -1,7 +1,6 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
-import Rating from "react-rating";
-import { FaStar, FaRegStar, FaEyeSlash, FaEye } from "react-icons/fa";
+import Rating from "../../Common/Rating/Rating";
 import "./episode-row.sass";
 
 function DetailedEpisodeRow({ episode, showID, seasonNumber, setShowEpisodeUserStatus, loggedIn }) {
@@ -17,10 +16,7 @@ function DetailedEpisodeRow({ episode, showID, seasonNumber, setShowEpisodeUserS
 			<p className='episode-row__date'>{parseDate(episode.tmdb_release_date)}</p>
 			<div hidden={!loggedIn} className='episode-row__rate'>
 				<Rating
-					start={-1}
-					stop={10}
-					emptySymbol={[<FaEyeSlash />].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaRegStar />))}
-					fullSymbol={[<FaEye />].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaStar title={n} />))}
+					withEye={true}
 					readonly={!loggedIn}
 					initialRating={-1}
 					onChange={(score) => {

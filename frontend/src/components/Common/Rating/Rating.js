@@ -1,15 +1,14 @@
 import React from "react";
-import { FaStar, FaRegStar } from "react-icons/fa";
+import { FaStar, FaRegStar, FaEyeSlash, FaEye } from "react-icons/fa";
 import Rating from "react-rating";
 
-function RatingBlock({ initialRating, readonly, onChange, size, className }) {
+function RatingBlock({ initialRating, readonly, onChange, className, withEye }) {
 	return (
 		<Rating
+			start={withEye ? -1 : 0}
 			stop={10}
-			emptySymbol={<FaRegStar style={{ fontSize: size }} />}
-			fullSymbol={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-				<FaStar style={{ fontSize: size }} title={n} />
-			))}
+			emptySymbol={(withEye ? [<FaEyeSlash />] : []).concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaRegStar />))}
+			fullSymbol={(withEye ? [<FaEye />] : []).concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaStar title={n} />))}
 			initialRating={initialRating}
 			readonly={readonly}
 			onChange={onChange}

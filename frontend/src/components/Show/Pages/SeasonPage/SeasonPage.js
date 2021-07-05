@@ -143,7 +143,7 @@ const SeasonPage = observer((props) => {
 												setSeasonStatus({ score: score }, show_id, show.season_number);
 											}
 										}}
-										size='1.5rem'
+										className='season-page__rating'
 									/>
 									<div className='season-page__review'>
 										Ваш отзыв
