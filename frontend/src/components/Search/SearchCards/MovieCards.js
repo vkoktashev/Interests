@@ -1,14 +1,14 @@
 import React, { useMemo } from "react";
 import SearchCardsBlock from "./SearchCardsBlock/SearchCardsBlock";
 
-function MovieCards({ movies, moviesPage, onPaginate, hidden }) {
+function MovieCards({ movies, hidden }) {
 	const objects = useMemo(
 		() =>
 			movies?.reduce((newObjects, movie) => {
 				let object = {
 					name: movie.title,
 					id: movie.id,
-					poster: `url(${"http://image.tmdb.org/t/p/w600_and_h900_bestv2" + movie.poster_path})`,
+					poster: `url(${"http://image.tmdb.org/t/p/w300" + movie.backdrop_path})`,
 					link: "/movie/" + movie.id,
 				};
 
@@ -24,7 +24,7 @@ function MovieCards({ movies, moviesPage, onPaginate, hidden }) {
 		[movies]
 	);
 
-	return <SearchCardsBlock name='Фильмы' hidden={hidden} objects={objects} currentPage={moviesPage} onPaginate={onPaginate} hasNextPage={objects.length > 19} />;
+	return <SearchCardsBlock name='Фильмы' hidden={hidden} objects={objects} />;
 }
 
 export default MovieCards;

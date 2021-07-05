@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import SearchCardsBlock from "./SearchCardsBlock/SearchCardsBlock";
 
-function GameCards({ games, gamesPage, onPaginate, hidden }) {
+function GameCards({ games, hidden }) {
 	const objects = useMemo(
 		() =>
 			games?.reduce((newObjects, game) => {
@@ -24,7 +24,7 @@ function GameCards({ games, gamesPage, onPaginate, hidden }) {
 		[games]
 	);
 
-	return <SearchCardsBlock name='Игры' hidden={hidden} objects={objects} currentPage={gamesPage} onPaginate={onPaginate} hasNextPage={objects.length === 6} />;
+	return <SearchCardsBlock name='Игры' hidden={hidden} objects={objects} />;
 }
 
 export default GameCards;
