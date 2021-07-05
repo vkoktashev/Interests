@@ -28,15 +28,18 @@ function ItemBlock({ items, statuses, fields, name }) {
 				items
 					?.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()) && (statusFilters.includes(item.status) || statusFilters.length < 1))
 					.sort((a, b) => {
+						let field1, field2;
 						if (sort.type === "number") {
-							if (parseFloat(a[sort.field]) > parseFloat(b[sort.field])) return sort.isAsc ? 1 : -1;
-							if (parseFloat(a[sort.field]) < parseFloat(b[sort.field])) return sort.isAsc ? -1 : 1;
-							return 0;
+							field1 = parseFloat(a[sort.field]);
+							field2 = parseFloat(b[sort.field]);
 						} else {
-							if (a[sort.field] > b[sort.field]) return sort.isAsc ? 1 : -1;
-							if (a[sort.field] < b[sort.field]) return sort.isAsc ? -1 : 1;
-							return 0;
+							field1 = a[sort.field];
+							field2 = b[sort.field];
 						}
+
+						if (field1 > field2) return sort.isAsc ? 1 : -1;
+						if (field1 < field2) return sort.isAsc ? -1 : 1;
+						return 0;
 					})
 			);
 		},
