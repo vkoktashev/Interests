@@ -12,8 +12,8 @@ function ItemBlock({ items, statuses, fields, name }) {
 	const [query, setQuery] = useState("");
 	const [pageSize, setPageSize] = useState(10);
 	const [page, setPage] = useState(1);
-	const [filteredItems, setFilteresItems] = useState([]);
-	const [sortIsAsc, setSortIsAsc] = useState(false);
+	const [filteredItems, setFilteredItems] = useState([]);
+	const [sort, setSort] = useState({});
 	const [statusFilters, setStatusFilters] = useState([]);
 	const [collapse, setCollapse] = useState(true);
 	const { width } = useWindowDimensions();
@@ -24,26 +24,28 @@ function ItemBlock({ items, statuses, fields, name }) {
 
 	useEffect(
 		() => {
-			setFilteresItems(items?.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()) && (statusFilters.includes(item.status) || statusFilters.length < 1)));
+			setFilteredItems(
+				items
+					?.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()) && (statusFilters.includes(item.status) || statusFilters.length < 1))
+					.sort((a, b) => {
+						let field1, field2;
+						if (sort.type === "number") {
+							field1 = parseFloat(a[sort.field]);
+							field2 = parseFloat(b[sort.field]);
+						} else {
+							field1 = a[sort.field];
+							field2 = b[sort.field];
+						}
+
+						if (field1 > field2) return sort.isAsc ? 1 : -1;
+						if (field1 < field2) return sort.isAsc ? -1 : 1;
+						return 0;
+					})
+			);
 		},
 		// eslint-disable-next-line
-		[items, page, pageSize, query, statusFilters]
+		[items, query, statusFilters, sort]
 	);
-
-	function sortItems(field, isNumber) {
-		let newItems = items
-			?.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()) && (statusFilters.includes(item.status) || statusFilters.length < 1))
-			.sort((a, b) => {
-				if (isNumber ? parseFloat(a[field]) > parseFloat(b[field]) : a[field] > b[field]) {
-					return sortIsAsc ? 1 : -1;
-				}
-				if (isNumber ? parseFloat(a[field]) < parseFloat(b[field]) : a[field] < b[field]) {
-					return sortIsAsc ? -1 : 1;
-				}
-				return 0;
-			});
-		setFilteresItems(newItems);
-	}
 
 	return (
 		<div className='item-block'>
@@ -69,8 +71,7 @@ function ItemBlock({ items, statuses, fields, name }) {
 							className='item-block__sort-button'
 							hidden={fields.find((field) => field.key === "score") === undefined}
 							onClick={() => {
-								sortItems("score", true);
-								setSortIsAsc(!sortIsAsc);
+								setSort({ field: "score", type: "number", isAsc: !sort.isAsc });
 							}}>
 							<FaStar /> <FaArrowsAltV />
 						</button>
@@ -78,8 +79,7 @@ function ItemBlock({ items, statuses, fields, name }) {
 							className='item-block__sort-button'
 							hidden={fields.find((field) => field.key === "spent_time") === undefined}
 							onClick={() => {
-								sortItems("spent_time", true);
-								setSortIsAsc(!sortIsAsc);
+								setSort({ field: "spent_time", type: "number", isAsc: !sort.isAsc });
 							}}>
 							<FaClock /> <FaArrowsAltV />
 						</button>

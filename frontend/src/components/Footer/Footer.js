@@ -9,8 +9,8 @@ function Footer({ className }) {
 			<div className='footer__body'>
 				<div>
 					<h2 className='footer__name'>Interests</h2>
-					<p>info@interests.fun</p>
-					2020-2021
+					<p className='footer__email'>info@interests.fun</p>
+					<p className='footer__date'>2020-2021</p>
 				</div>
 				<div className='footer__social-block'>
 					<p>Следите за нами в социальных сетях, чтобы оставаться в курсе последних событий!</p>
@@ -22,7 +22,7 @@ function Footer({ className }) {
 					</a>
 				</div>
 				<div className='footer__social-block'>
-					<h5>Сайт был разработан при поддержке</h5>
+					<p>Сайт был разработан при поддержке</p>
 					<a href='https://rawg.io/' className='footer__rawg-logo'>
 						RAWG
 					</a>
