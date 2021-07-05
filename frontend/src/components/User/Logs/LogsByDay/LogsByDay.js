@@ -38,7 +38,9 @@ function UserLogs({ logs, showUsername, currentUser, onDeleteLog }) {
 		<div className='logs-by-day'>
 			{logsByDay.map((dayLog, counter) => (
 				<div key={counter} className='logs-by-day__day'>
-					<div className='logs-by-day__date'>{dayLog.date.toLocaleDateString("ru-RU")}</div>
+					<div className='logs-by-day__date'>
+						{dayLog.date.toLocaleDateString("ru-RU", { year: dayLog.date.getFullYear() === new Date().getFullYear() ? undefined : "numeric", month: "numeric", day: "numeric" })}
+					</div>
 					<div className='logs-by-day__logs'>
 						{dayLog.logs.map((log) => (
 							<LogRow log={log} showUsername={showUsername} key={log.id + log.created} currentUser={currentUser} onDeleteLog={onDeleteLog} className='logs-by-day__log' />
