@@ -70,7 +70,7 @@ class Search {
 		movieRequests.searchMovies(query, 1).then((res) => this.searchMoviesSuccess(res, query), this.searchMoviesFailure);
 	};
 	searchMoviesSuccess = (result, query) => {
-		this.movies = { values: result.results, page: 1, query, isEnd: result.page === result.total_pages };
+		this.movies = { values: result.results, page: 1, query, isEnd: result.page === result.total_pages || result.total_pages === 0 };
 		this.moviesState = "done";
 	};
 	searchMoviesFailure = (error) => {
@@ -96,7 +96,7 @@ class Search {
 		showRequests.searchShows(query, page).then((res) => this.searchShowsSuccess(res, query), this.searchShowsFailure);
 	};
 	searchShowsSuccess = (result, query) => {
-		this.shows = { values: result.results, page: 1, query, isEnd: result.page === result.total_pages };
+		this.shows = { values: result.results, page: 1, query, isEnd: result.page === result.total_pages || result.total_pages === 0 };
 		this.showsState = "done";
 	};
 	searchShowsFailure = (error) => {
