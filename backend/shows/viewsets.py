@@ -483,7 +483,8 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         new_fields = get_season_new_fields(tmdb_season, tmdb_season.get('show').get('id'))
 
-        season, created = Season.objects.get_or_create(tmdb_id=tmdb_season.get('id'),
+        season, created = Season.objects.get_or_create(tmdb_show_id=tmdb_season.get('show').get('id'),
+                                                       tmdb_season_number=tmdb_season.get('season_number'),
                                                        defaults=new_fields)
         if not created and not returned_from_cache:
             update_fields_if_needed(season, new_fields)
