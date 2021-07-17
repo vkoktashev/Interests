@@ -12,8 +12,8 @@ function ShowCards({ shows, hidden }) {
 					link: "/show/" + show.id,
 				};
 
-				if (show.release_date) {
-					let mas = show.release_date.split("-");
+				if (show.first_air_date) {
+					let mas = show.first_air_date.split("-");
 					let newDate = mas[2] + "." + mas[1] + "." + mas[0];
 					object.release_date = newDate;
 				} else object.release_date = "";
