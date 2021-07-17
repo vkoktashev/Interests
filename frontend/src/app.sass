@@ -3,9 +3,6 @@
 @import ./styles/fonts
 @import ./styles/toast
 
-#root, html, body
-    height: 100%
-
 .app
     background-color: $newBackground1
     padding-top: 4rem
@@ -19,24 +16,3 @@
         flex-wrap: wrap
         justify-content: center
         height: 100%
-        
-body
-    margin: 0
-    background-color: $newBackground1
-    font-family: $font-stack
-    font-weight: 300
-    -webkit-font-smoothing: antialiased
-    -moz-osx-font-smoothing: grayscale
-    
-a
-    &:link, &:visited, &:active
-        color: $newText3
-
-    &:hover
-        color: $newAccent2
-
-h1, h2, h3, h4, h5, h6
-    font-weight: 600
-    
-button
-    cursor: pointer
