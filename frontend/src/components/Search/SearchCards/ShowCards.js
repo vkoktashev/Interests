@@ -10,6 +10,7 @@ function ShowCards({ shows, hidden }) {
 					id: show.id,
 					poster: `url(${"http://image.tmdb.org/t/p/w300" + show.backdrop_path})`,
 					link: "/show/" + show.id,
+					overview: show.overview,
 				};
 
 				if (show.first_air_date) {
