@@ -23,6 +23,20 @@ function SearchCard({ info, className }) {
 					<p className='search-card__date'>{info.release_date}</p>
 				</div>
 			</a>
+			<div className='search-card__wrapper'>
+				<p className='search-card__genres' hidden={!info.genres}>
+					Жанр: {info.genres}
+				</p>
+				<p className='search-card__tags' hidden={!info.tags}>
+					Теги: {info.tags}
+				</p>
+				<p className='search-card__platfroms' hidden={!info.platforms}>
+					Платформы: {info.platforms}
+				</p>
+				<p className='search-card__overview' hidden={!info.overview}>
+					{info.overview}
+				</p>
+			</div>
 		</div>
 	);
 }

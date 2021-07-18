@@ -10,6 +10,7 @@ function MovieCards({ movies, hidden }) {
 					id: movie.id,
 					poster: `url(${"http://image.tmdb.org/t/p/w300" + movie.backdrop_path})`,
 					link: "/movie/" + movie.id,
+					overview: movie.overview,
 				};
 
 				if (movie.release_date) {
