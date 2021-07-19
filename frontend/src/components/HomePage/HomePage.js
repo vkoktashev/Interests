@@ -1,7 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
-import AuthStore from "../../store/AuthStore";
-import PagesStore from "../../store/PagesStore";
+import AuthStore from "store/AuthStore";
+import PagesStore from "store/PagesStore";
 import { useHistory } from "react-router-dom";
 import "./home-page.sass";
 

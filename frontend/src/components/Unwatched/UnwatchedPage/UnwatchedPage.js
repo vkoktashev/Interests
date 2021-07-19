@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { observer } from "mobx-react";
-import AuthStore from "../../../store/AuthStore";
-import CurrentUserStore from "../../../store/CurrentUserStore";
-import ShowStore from "../../../store/ShowStore";
+import AuthStore from "store/AuthStore";
+import CurrentUserStore from "store/CurrentUserStore";
+import ShowStore from "store/ShowStore";
 import "./unwatched-page.sass";
 
 import { toast } from "react-toastify";

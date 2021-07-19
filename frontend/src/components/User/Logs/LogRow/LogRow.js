@@ -1,6 +1,6 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
-import Rating from "../../../Common/Rating/Rating";
+import Rating from "components/Common/Rating/Rating";
 import classnames from "classnames";
 import "./log-row.sass";
 

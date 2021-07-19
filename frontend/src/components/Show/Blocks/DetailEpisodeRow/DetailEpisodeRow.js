@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import Rating from "../../../Common/Rating/Rating";
+import Rating from "components/Common/Rating/Rating";
 
 import "./detail-episode-row.sass";
 

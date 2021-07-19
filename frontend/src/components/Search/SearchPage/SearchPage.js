@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import useInput from "../../../hooks/useInput";
+import useInput from "hooks/useInput";
 import { useParams, useHistory } from "react-router-dom";
 import { observer } from "mobx-react";
-import SearchStore from "../../../store/SearchStore";
+import SearchStore from "store/SearchStore";
 
 import { FaSearch } from "react-icons/fa";
 
@@ -11,10 +11,10 @@ import GameCards from "../SearchCards/GameCards";
 import MovieCards from "../SearchCards/MovieCards";
 import ShowCards from "../SearchCards/ShowCards";
 import UserCards from "../SearchCards/UserCards";
-import CategoriesTab from "../../Common/CategoriesTab/CategoriesTab";
+import CategoriesTab from "components/Common/CategoriesTab/CategoriesTab";
 
 import "./search-page.sass";
-import useScroll from "../../../hooks/useScroll";
+import useScroll from "hooks/useScroll";
 
 /**
  * Основная страница приложения

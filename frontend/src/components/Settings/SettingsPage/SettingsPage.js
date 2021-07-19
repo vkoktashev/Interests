@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { observer } from "mobx-react";
-import AuthStore from "../../../store/AuthStore";
-import CurrentUserStore from "../../../store/CurrentUserStore";
+import AuthStore from "store/AuthStore";
+import CurrentUserStore from "store/CurrentUserStore";
 import { toast } from "react-toastify";
 
 import LoadingOverlay from "react-loading-overlay";

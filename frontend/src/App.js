@@ -2,17 +2,17 @@ import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import { QueryParamProvider } from "use-query-params";
 import { observer } from "mobx-react";
-import AuthStore from "./store/AuthStore";
+import AuthStore from "store/AuthStore";
 
-import Navbar from "./components/Navbar/Navbar";
-import Footer from "./components/Footer/Footer";
-import Sidebar from "./components/Sidebar/Sidebar";
-import LoginForm from "./components/Modals/LoginForm/LoginForm";
-import RegisterForm from "./components/Modals/RegisterForm/RegisterForm";
-import ResetPasswordForm from "./components/Modals/ResetPasswordForm/ResetPasswordForm";
+import Navbar from "components/Navbar/Navbar";
+import Footer from "components/Footer/Footer";
+import Sidebar from "components/Sidebar/Sidebar";
+import LoginForm from "components/Modals/LoginForm/LoginForm";
+import RegisterForm from "components/Modals/RegisterForm/RegisterForm";
+import ResetPasswordForm from "components/Modals/ResetPasswordForm/ResetPasswordForm";
 import { ToastContainer } from "react-toastify";
 
-import Routes from "./Routes";
+import Routes from "Routes";
 import "react-toastify/dist/ReactToastify.css";
 import "./app.sass";
 

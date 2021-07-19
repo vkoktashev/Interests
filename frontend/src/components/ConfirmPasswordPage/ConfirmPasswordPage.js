@@ -1,7 +1,7 @@
 import React from "react";
-import useInput from "../../hooks/useInput";
+import useInput from "hooks/useInput";
 import { observer } from "mobx-react";
-import AuthStore from "../../store/AuthStore";
+import AuthStore from "store/AuthStore";
 import "./confirm-password-page.sass";
 
 /**

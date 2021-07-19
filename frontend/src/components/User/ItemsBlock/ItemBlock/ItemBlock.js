@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { CSVLink } from "react-csv";
-import InputNumber from "../../../Common/InputNumber/InputNumber";
-import SelectMulti from "../../../Common/SelectMulti/SelectMulti";
+import InputNumber from "components/Common/InputNumber/InputNumber";
+import SelectMulti from "components/Common/SelectMulti/SelectMulti";
 import ItemRow from "../ItemRow/ItemRow";
 import { FaAngleDown, FaAngleUp, FaStar, FaClock, FaArrowsAltV } from "react-icons/fa";
 import Pagination from "rc-pagination";
-import useWindowDimensions from "../../../../hooks/useWindowDimensions";
+import useWindowDimensions from "hooks/useWindowDimensions";
 import "./item-block.sass";
 
 function ItemBlock({ items, statuses, fields, name }) {

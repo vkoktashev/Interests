@@ -1,10 +1,10 @@
 import React from "react";
 import { observer } from "mobx-react";
 import classnames from "classnames";
-import useInput from "../../../hooks/useInput";
-import AuthStore from "../../../store/AuthStore";
-import PagesStore from "../../../store/PagesStore";
-import Modal from "../../Common/Modal/Modal";
+import useInput from "hooks/useInput";
+import AuthStore from "store/AuthStore";
+import PagesStore from "store/PagesStore";
+import Modal from "components/Common/Modal/Modal";
 import "./register-form.sass";
 
 /**

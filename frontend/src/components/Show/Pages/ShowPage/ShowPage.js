@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { observer } from "mobx-react";
-import AuthStore from "../../../../store/AuthStore";
-import PagesStore from "../../../../store/PagesStore";
-import ShowStore from "../../../../store/ShowStore";
-import CurrentUserStore from "../../../../store/CurrentUserStore";
+import AuthStore from "store/AuthStore";
+import PagesStore from "store/PagesStore";
+import ShowStore from "store/ShowStore";
+import CurrentUserStore from "store/CurrentUserStore";
 
 import LoadingOverlay from "react-loading-overlay";
 import { toast } from "react-toastify";
 
-import Rating from "../../../Common/Rating/Rating";
-import StatusButtonGroup from "../../../Common/StatusButtonGroup/StatusButtonGroup";
-import FriendsActivity from "../../../Common/FriendsActivity/FriendsActivity";
+import Rating from "components/Common/Rating/Rating";
+import StatusButtonGroup from "components/Common/StatusButtonGroup/StatusButtonGroup";
+import FriendsActivity from "components/Common/FriendsActivity/FriendsActivity";
 import SeasonsBlock from "../../Blocks/SeasonsBlock/SeasonsBlock";
-import ScoreBlock from "../../../Common/ScoreBlock/ScoreBlock";
+import ScoreBlock from "components/Common/ScoreBlock/ScoreBlock";
 
 import "./show-page.sass";
 

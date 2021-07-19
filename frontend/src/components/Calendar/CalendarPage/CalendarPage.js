@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { observer } from "mobx-react";
 import classnames from "classnames";
-import CurrentUserStore from "../../../store/CurrentUserStore";
-import AuthStore from "../../../store/AuthStore";
+import CurrentUserStore from "store/CurrentUserStore";
+import AuthStore from "store/AuthStore";
 
 import { toast } from "react-toastify";
 import Calendar from "react-calendar";

@@ -2,20 +2,20 @@ import React from "react";
 import { Route, Switch } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 
-import HomePage from "./components/HomePage/HomePage";
-import GamePage from "./components/Game/GamePage/GamePage";
-import MoviePage from "./components/Movie/MoviePage/MoviePage";
-import ShowPage from "./components/Show/Pages/ShowPage/ShowPage";
-import SeasonPage from "./components/Show/Pages/SeasonPage/SeasonPage";
-import EpisodePage from "./components/Show/Pages/EpisodePage/EpisodePage";
-import SearchPage from "./components/Search/SearchPage/SearchPage";
-import ConfirmPage from "./components/ConfirmPage/ConfirmPage";
-import ConfirmPasswordPage from "./components/ConfirmPasswordPage/ConfirmPasswordPage";
-import UserPage from "./components/User/UserPage/UserPage";
-import CalendarPage from "./components/Calendar/CalendarPage/CalendarPage";
-import SettingsPage from "./components/Settings/SettingsPage/SettingsPage";
-import UnwatchedPage from "./components/Unwatched/UnwatchedPage/UnwatchedPage";
-import NotFoundPage from "./components/NotFoundPage/NotFoundPage";
+import HomePage from "components/HomePage/HomePage";
+import GamePage from "components/Game/GamePage/GamePage";
+import MoviePage from "components/Movie/MoviePage/MoviePage";
+import ShowPage from "components/Show/Pages/ShowPage/ShowPage";
+import SeasonPage from "components/Show/Pages/SeasonPage/SeasonPage";
+import EpisodePage from "components/Show/Pages/EpisodePage/EpisodePage";
+import SearchPage from "components/Search/SearchPage/SearchPage";
+import ConfirmPage from "components/ConfirmPage/ConfirmPage";
+import ConfirmPasswordPage from "components/ConfirmPasswordPage/ConfirmPasswordPage";
+import UserPage from "components/User/UserPage/UserPage";
+import CalendarPage from "components/Calendar/CalendarPage/CalendarPage";
+import SettingsPage from "components/Settings/SettingsPage/SettingsPage";
+import UnwatchedPage from "components/Unwatched/UnwatchedPage/UnwatchedPage";
+import NotFoundPage from "components/NotFoundPage/NotFoundPage";
 
 class Routes extends React.Component {
 	render() {
