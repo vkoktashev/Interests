@@ -26,9 +26,11 @@
 		"react-select": "^4.3.0",
 		"react-toastify": "^6.0.8",
 		"recharts": "1.8.5",
+		"source-map-explorer": "^2.5.2",
 		"use-query-params": "^1.2.2"
 	},
 	"scripts": {
+		"analyze": "source-map-explorer 'build/static/js/*.js'",
 		"start": "react-scripts start",
 		"build": "react-scripts build",
 		"test": "react-scripts test",

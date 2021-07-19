@@ -11,7 +11,8 @@ import "react-calendar/dist/Calendar.css";
 import DayInfo from "../DayInfo/DayInfo";
 import ReleasesList from "../ReleasesList/ReleasesList";
 
-import "./calendar-page.sass";
+import styles from "./calendar-page.module.sass";
+import "./react-calendar.sass";
 
 const CalendarPage = observer(() => {
 	const { loggedIn } = AuthStore;
@@ -41,11 +42,11 @@ const CalendarPage = observer(() => {
 		if (view === "month" && formatDate(date) in calendar) {
 			let day = calendar[formatDate(date)];
 			return (
-				<div className='calendar-day'>
-					<div className='calendar-day__body'>
-						<div className={classnames("calendar-day__games", !day?.games?.length > 0 ? "calendar-day__hidden" : "")}>{day?.games?.length}</div>
-						<div className={classnames("calendar-day__movies", !day?.movies?.length > 0 ? "calendar-day__hidden" : "")}>{day?.movies?.length}</div>
-						<div className={classnames("calendar-day__episodes", !day?.episodes?.length > 0 ? "calendar-day__hidden" : "")}>{day?.episodes?.length}</div>
+				<div className={styles.calendarDay}>
+					<div className={styles.calendarDayBody}>
+						<div className={classnames(styles.calendarDayGames, !day?.games?.length > 0 ? styles.calendarDayHidden : "")}>{day?.games?.length}</div>
+						<div className={classnames(styles.calendarDayMovies, !day?.movies?.length > 0 ? styles.calendarDayHidden : "")}>{day?.movies?.length}</div>
+						<div className={classnames(styles.calendarDayEpisodes, !day?.episodes?.length > 0 ? styles.calendarDayHidden : "")}>{day?.episodes?.length}</div>
 					</div>
 				</div>
 			);
@@ -54,9 +55,9 @@ const CalendarPage = observer(() => {
 	}
 
 	return (
-		<div className='calendar-page'>
-			<div className='calendar-page__body'>
-				<h1 className='calendar-page__header'>Календарь релизов</h1>
+		<div className={styles.calendarPage}>
+			<div>
+				<h1 className={styles.pageHeader}>Календарь релизов</h1>
 				<LoadingOverlay active={calendarState === "pending"} spinner text='Загрузка...'>
 					{/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? <DayInfo day={currentDay} date={value} /> : ""}
 					<Calendar onChange={onChange} value={value} defaultView='month' minDetail='decade' locale='ru-RU' minDate={new Date()} tileContent={dateToTile} />

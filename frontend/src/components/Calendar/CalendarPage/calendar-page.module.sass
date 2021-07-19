@@ -1,0 +1,39 @@
+@import styles/colors
+@import styles/mixins
+
+.calendarPage
+    @include default-page
+    
+    .pageHeader
+        margin-bottom: 1rem
+        font-weight: 300
+        font-size: 2rem
+
+.calendarDay
+    padding: 0
+    text-align: center
+
+    &Body
+        height: auto
+        margin-top: 10px
+
+        > *
+            display: inline-block
+            color: $newText3
+            padding: 0.25rem
+            height: auto
+            text-align: center
+
+    &Games
+        background-color: $calendarGamesColor
+
+    &Movies
+        background-color: $calendarMoviesColor
+
+    &Episodes
+        background-color: $calendarEpisodesColor
+    
+    &Hidden
+        display: none
+
+
