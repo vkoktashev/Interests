@@ -1,11 +1,11 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
 import { observer } from "mobx-react";
-import AuthStore from "../../store/AuthStore";
-import PagesStore from "../../store/PagesStore";
+import AuthStore from "store/AuthStore";
+import PagesStore from "store/PagesStore";
 import { FaSignInAlt, FaUserCircle, FaUserFriends, FaCalendar, FaSignOutAlt, FaUserPlus, FaArrowRight, FaArrowLeft } from "react-icons/fa";
 import { MdLiveTv, MdSettings } from "react-icons/md";
-import useWindowDimensions from "../../hooks/useWindowDimensions";
+import useWindowDimensions from "hooks/useWindowDimensions";
 import "./sidebar.sass";
 
 import {

@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { observer } from "mobx-react";
-import PagesStore from "../../store/PagesStore";
-import AuthStore from "../../store/AuthStore";
-import useWindowDimensions from "../../hooks/useWindowDimensions";
-import SearchInput from "../Common/SearchInput/SearchInput";
+import PagesStore from "store/PagesStore";
+import AuthStore from "store/AuthStore";
+import useWindowDimensions from "hooks/useWindowDimensions";
+import SearchInput from "components/Common/SearchInput/SearchInput";
 import classnames from "classnames";
 
 import { FaBars, FaAngleUp, FaAngleDown, FaUserCircle, FaSignInAlt } from "react-icons/fa";

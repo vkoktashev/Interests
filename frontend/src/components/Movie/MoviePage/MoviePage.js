@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { observer } from "mobx-react";
-import MovieStore from "../../../store/MovieStore";
-import AuthStore from "../../../store/AuthStore";
-import PagesStore from "../../../store/PagesStore";
-import CurrentUserStore from "../../../store/CurrentUserStore";
+import MovieStore from "store/MovieStore";
+import AuthStore from "store/AuthStore";
+import PagesStore from "store/PagesStore";
+import CurrentUserStore from "store/CurrentUserStore";
 
 import LoadingOverlay from "react-loading-overlay";
 import { toast } from "react-toastify";
 
-import StatusButtonGroup from "../../Common/StatusButtonGroup/StatusButtonGroup";
-import FriendsActivity from "../../Common/FriendsActivity/FriendsActivity";
-import ScoreBlock from "../../Common/ScoreBlock/ScoreBlock";
-import Rating from "../../Common/Rating/Rating";
+import StatusButtonGroup from "components/Common/StatusButtonGroup/StatusButtonGroup";
+import FriendsActivity from "components/Common/FriendsActivity/FriendsActivity";
+import ScoreBlock from "components/Common/ScoreBlock/ScoreBlock";
+import Rating from "components/Common/Rating/Rating";
 import "./movie-page.sass";
 
 /**

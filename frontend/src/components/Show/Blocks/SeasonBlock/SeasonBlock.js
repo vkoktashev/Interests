@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { observer } from "mobx-react";
 import { computed } from "mobx";
-import AuthStore from "../../../../store/AuthStore";
-import ShowStore from "../../../../store/ShowStore";
-import PagesStore from "../../../../store/PagesStore";
+import AuthStore from "store/AuthStore";
+import ShowStore from "store/ShowStore";
+import PagesStore from "store/PagesStore";
 
 import LoadingOverlay from "react-loading-overlay";
 import DetailEpisodeRow from "../DetailEpisodeRow/DetailEpisodeRow";
-import Rating from "../../../Common/Rating/Rating";
+import Rating from "components/Common/Rating/Rating";
 import classnames from "classnames";
 import "./season-block.sass";
 

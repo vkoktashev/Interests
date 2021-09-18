@@ -1,40 +1,4 @@
-@import ../../../styles/colors
-@import ../../../styles/mixins
-
-.calendar-page
-    @include default-page
-    
-    &__header
-        margin-bottom: 1rem
-        font-weight: 300
-        font-size: 2rem
-
-.calendar-day
-    padding: 0
-    text-align: center
-
-    &__body
-        height: auto
-        margin-top: 10px
-
-        > *
-            display: inline-block
-            color: $newText3
-            padding: 0.25rem
-            height: auto
-            text-align: center
-
-    &__games
-        background-color: $calendarGamesColor
-
-    &__movies
-        background-color: $calendarMoviesColor
-
-    &__episodes
-        background-color: $calendarEpisodesColor
-    
-    &__hidden
-        display: none
+@import styles/colors
 
 .react-calendar
     display: inline-block

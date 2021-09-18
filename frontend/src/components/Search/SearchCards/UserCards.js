@@ -1,5 +1,5 @@
 import React from "react";
-import FriendBlock from "../../Common/FriendBlock/FriendBlock";
+import FriendBlock from "components/Common/FriendBlock/FriendBlock";
 
 function UserCards({ users, hidden }) {
 	return (
