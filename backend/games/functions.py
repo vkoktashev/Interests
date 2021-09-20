@@ -12,7 +12,7 @@ def get_game_new_fields(rawg_game, hltb_game=None):
         poster_path = ''
 
     result = {
-        'rawg_slug': rawg_game.get('slug'),
+        'rawg_id': rawg_game.get('id'),
         'rawg_name': rawg_game.get('name'),
         'rawg_release_date': rawg_game.get('released'),
         'rawg_tba': rawg_game.get('tba'),
