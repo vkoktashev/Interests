@@ -7,6 +7,7 @@ import { FaAngleDown, FaAngleUp, FaStar, FaClock, FaArrowsAltV } from "react-ico
 import Pagination from "rc-pagination";
 import useWindowDimensions from "hooks/useWindowDimensions";
 import "./item-block.sass";
+import { arrayExtensions } from "mobx/dist/internal";
 
 function ItemBlock({ items, statuses, fields, name }) {
 	const [query, setQuery] = useState("");
@@ -99,11 +100,11 @@ function ItemBlock({ items, statuses, fields, name }) {
 					<InputNumber value={pageSize} max={100} min={1} onChange={(value) => setPageSize(value)} dataList={[5, 10, 25, 50, 100]} />
 				</div>
 			</div>
-			<div className='item-block__rows'>
+			<ul className='item-block__rows'>
 				{filteredItems?.slice((page - 1) * pageSize, page * pageSize).map((item, counter) => (
 					<ItemRow data={item} fields={fields} key={counter} />
 				))}
-			</div>
+			</ul>
 			<div className='item-block__footer'>
 				<Pagination
 					total={filteredItems?.length}

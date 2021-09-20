@@ -4,7 +4,7 @@ import "./item-row.sass";
 
 function ItemRow({ data, fields }) {
 	return (
-		<div className='item-row'>
+		<li className='item-row'>
 			<div className='item-row__review' style={{ display: data.review ? "block" : "none" }}>
 				Отзыв
 				<div className='item-row__review-body'>{data.review}</div>
@@ -36,7 +36,7 @@ function ItemRow({ data, fields }) {
 					)}
 				</div>
 			</div>
-		</div>
+		</li>
 	);
 }
 
