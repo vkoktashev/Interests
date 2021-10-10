@@ -2,7 +2,7 @@ wheel
 Django
 django-cors-headers
 djangorestframework
-djangorestframework_simplejwt
+djangorestframework_simplejwt==4.6.0
 django-createsuperuser
 django-debug-toolbar
 Pillow
