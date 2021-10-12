@@ -19,7 +19,7 @@ from movies.models import Movie, UserMovie, Genre, MovieGenre
 from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer, MovieSerializer
 from users.models import UserFollow
 from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, CACHE_TIMEOUT, \
-    TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, DEFAULT_PAGE_SIZE
+    TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, DEFAULT_PAGE_SIZE, YOUTUBE_PREFIX
 from utils.documentation import MOVIES_SEARCH_200_EXAMPLE, MOVIE_RETRIEVE_200_EXAMPLE
 from utils.functions import update_fields_if_needed, objects_to_str, get_page_size
 from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER
@@ -97,6 +97,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             tmdb_cast_crew = get_cast_crew(kwargs.get('tmdb_id'))
             tmdb_movie['cast'] = tmdb_cast_crew.get('cast')
             tmdb_movie['crew'] = tmdb_cast_crew.get('crew')
+            tmdb_movie['videos'] = get_tmdb_movie_videos(kwargs.get('tmdb_id'))
         except HTTPError as e:
             error_code = int(e.args[0].split(' ', 1)[0])
             if error_code == 404:
@@ -226,6 +227,21 @@ def get_tmdb_movie(tmdb_id):
     return tmdb_movie, returned_from_cache
 
 
+def get_tmdb_movie_videos(tmdb_id):
+    key = f'movie_{tmdb_id}_videos'
+    tmdb_movie_videos = cache.get(key, None)
+    if tmdb_movie_videos is None:
+        tmdb_movie_videos = tmdb.Movies(tmdb_id).videos(language=LANGUAGE)['results']
+        tmdb_movie_videos = [x for x in tmdb_movie_videos if x['site'] == 'YouTube']
+        for index, video in enumerate(tmdb_movie_videos):
+            tmdb_movie_videos[index] = {
+                'name': video['name'],
+                'url': YOUTUBE_PREFIX + video['key']
+            }
+        cache.set(key, tmdb_movie_videos, CACHE_TIMEOUT)
+    return tmdb_movie_videos
+
+
 def get_cast_crew(tmdb_id):
     key = f'movie_{tmdb_id}_cast_crew'
     tmdb_cast_crew = cache.get(key, None)
@@ -258,6 +274,7 @@ def parse_movie(tmdb_movie):
         'production_companies': objects_to_str(tmdb_movie['production_companies']),
         'cast': objects_to_str(tmdb_movie['cast'][:5]),
         'directors': objects_to_str(directors),
+        'videos': tmdb_movie.get('videos')
     }
 
     return new_movie

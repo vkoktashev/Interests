@@ -27,7 +27,7 @@ from shows.serializers import UserShowSerializer, UserSeasonSerializer, UserEpis
 from users.models import UserFollow
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
     SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, TMDB_BACKDROP_PATH_PREFIX, \
-    TMDB_POSTER_PATH_PREFIX, TMDB_STILL_PATH_PREFIX, EPISODE_WATCHED_SCORE, DEFAULT_PAGE_SIZE
+    TMDB_POSTER_PATH_PREFIX, TMDB_STILL_PATH_PREFIX, EPISODE_WATCHED_SCORE, DEFAULT_PAGE_SIZE, YOUTUBE_PREFIX
 from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
     SEASON_RETRIEVE_200_EXAMPLE
 from utils.functions import update_fields_if_needed, objects_to_str, get_page_size
@@ -103,6 +103,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     def retrieve(self, request, *args, **kwargs):
         try:
             tmdb_show, returned_from_cache = get_show(kwargs.get('tmdb_id'))
+            tmdb_show['videos'] = get_tmdb_show_videos(kwargs.get('tmdb_id'))
         except HTTPError as e:
             error_code = int(e.args[0].split(' ', 1)[0])
             if error_code == 404:
@@ -728,6 +729,21 @@ def get_show(tmdb_id):
     return tmdb_show, returned_from_cache
 
 
+def get_tmdb_show_videos(tmdb_id):
+    key = f'show_{tmdb_id}_videos'
+    tmdb_show_videos = cache.get(key, None)
+    if tmdb_show_videos is None:
+        tmdb_show_videos = tmdb.TV(tmdb_id).videos(language=LANGUAGE)['results']
+        tmdb_show_videos = [x for x in tmdb_show_videos if x['site'] == 'YouTube']
+        for index, video in enumerate(tmdb_show_videos):
+            tmdb_show_videos[index] = {
+                'name': video['name'],
+                'url': YOUTUBE_PREFIX + video['key']
+            }
+        cache.set(key, tmdb_show_videos, CACHE_TIMEOUT)
+    return tmdb_show_videos
+
+
 def get_season(show_tmdb_id, season_number):
     returned_from_cache = True
     key = get_tmdb_season_key(show_tmdb_id, season_number)
@@ -776,7 +792,9 @@ def parse_show(tmdb_show):
         if tmdb_show.get('first_air_date') is not None else None,
         'last_air_date': '.'.join(reversed(tmdb_show['last_air_date'].split('-')))
         if tmdb_show.get('last_air_date') is not None else None,
+        'videos': tmdb_show.get('videos'),
         'seasons': tmdb_show['seasons'],
+
     }
 
     return new_show
