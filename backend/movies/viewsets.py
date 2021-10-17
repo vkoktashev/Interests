@@ -108,19 +108,13 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         new_fields = get_movie_new_fields(tmdb_movie)
 
-        with transaction.atomic():
-            movie, created = Movie.objects.select_for_update().get_or_create(tmdb_id=tmdb_movie.get('id'),
-                                                                             defaults=new_fields)
-            if not created and not returned_from_cache:
-                update_fields_if_needed(movie, new_fields)
+        movie, created = Movie.objects.select_for_update().get_or_create(tmdb_id=tmdb_movie.get('id'),
+                                                                         defaults=new_fields)
+        if not created and not returned_from_cache:
+            update_fields_if_needed(movie, new_fields)
 
         if created or not returned_from_cache:
-            for genre in tmdb_movie.get('genres'):
-                genre_obj, created = Genre.objects.get_or_create(tmdb_id=genre.get('id'),
-                                                                 defaults={
-                                                                     'tmdb_name': genre.get('name')
-                                                                 })
-                MovieGenre.objects.get_or_create(genre=genre_obj, movie=movie)
+            update_movie_genres(movie, tmdb_movie)
 
         return Response(parse_movie(tmdb_movie))
 
@@ -205,6 +199,25 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+def update_movie_genres(movie: Movie, tmdb_movie: dict) -> None:
+    existing_movie_genres = MovieGenre.objects.filter(movie=movie)
+    new_movie_genres = []
+    movie_genres_to_delete_ids = []
+
+    for genre in tmdb_movie.get('genres'):
+        genre_obj, created = Genre.objects.get_or_create(tmdb_id=genre.get('id'),
+                                                         defaults={
+                                                             'tmdb_name': genre.get('name')
+                                                         })
+        new_movie_genres.append(MovieGenre.objects.get_or_create(genre=genre_obj, movie=movie))
+
+    for existing_movie_genre in existing_movie_genres:
+        if existing_movie_genre not in new_movie_genres:
+            movie_genres_to_delete_ids.append(existing_movie_genre.id)
+
+    MovieGenre.objects.filter(id__in=movie_genres_to_delete_ids).delete()
 
 
 def get_movie_search_results(query, page):

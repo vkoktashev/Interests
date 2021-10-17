@@ -19,10 +19,16 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('debug/', include(debug_toolbar.urls)),
     path('users/', include('users.urls')),
     path('games/', include('games.urls')),
     path('movies/', include('movies.urls')),
     path('shows/', include('shows.urls')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+if settings.DEBUG:
+    import debug_toolbar
+
+    urlpatterns += [
+        path('debug/', include(debug_toolbar.urls)),
+    ]

@@ -114,19 +114,13 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         new_fields = get_show_new_fields(tmdb_show)
 
-        with transaction.atomic():
-            show, created = Show.objects.select_for_update().get_or_create(tmdb_id=tmdb_show['id'],
-                                                                           defaults=new_fields)
-            if not created and not returned_from_cache:
-                update_fields_if_needed(show, new_fields)
+        show, created = Show.objects.select_for_update().get_or_create(tmdb_id=tmdb_show['id'],
+                                                                       defaults=new_fields)
+        if not created and not returned_from_cache:
+            update_fields_if_needed(show, new_fields)
 
         if created or not returned_from_cache:
-            for genre in tmdb_show.get('genres'):
-                genre_obj, created = Genre.objects.get_or_create(tmdb_id=genre.get('id'),
-                                                                 defaults={
-                                                                     'tmdb_name': genre.get('name')
-                                                                 })
-                ShowGenre.objects.get_or_create(genre=genre_obj, show=show)
+            update_show_genres()
 
         return Response(parse_show(tmdb_show))
 
@@ -690,6 +684,25 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response({'user_info': user_info,
                          'friends_info': friends_info,
                          'user_watched_show': user_watched_show(show, request.user)})
+
+
+def update_show_genres(show: Show, tmdb_show: dict) -> None:
+    existing_show_genres = ShowGenre.objects.filter(show=show)
+    new_show_genres = []
+    show_genres_to_delete_ids = []
+
+    for genre in tmdb_show.get('genres'):
+        genre_obj, created = Genre.objects.get_or_create(tmdb_id=genre.get('id'),
+                                                         defaults={
+                                                             'tmdb_name': genre.get('name')
+                                                         })
+        new_show_genres.append(ShowGenre.objects.get_or_create(genre=genre_obj, show=show))
+
+    for existing_show_genre in existing_show_genres:
+        if existing_show_genre not in new_show_genres:
+            show_genres_to_delete_ids.append(existing_show_genre.id)
+
+    ShowGenre.objects.filter(id__in=show_genres_to_delete_ids).delete()
 
 
 def user_watched_show(show, user):

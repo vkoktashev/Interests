@@ -20,7 +20,6 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'rest_framework',
     'corsheaders',
-    'debug_toolbar',
     'drf_yasg',
 
     # our apps
@@ -40,7 +39,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'users.middleware.LastUserActivityMiddleware',
 ]
 
@@ -62,9 +60,12 @@ SWAGGER_SETTINGS = {
 
 SITE_ID = 1
 
-INTERNAL_IPS = [
-     '127.0.0.1'
-]
+if DEBUG:
+    INSTALLED_APPS += ['debug_toolbar', ]
+    MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware', ]
+    INTERNAL_IPS = [
+        '127.0.0.1',
+    ]
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
