@@ -1,5 +1,3 @@
-/** Время жизни токена в миллисекундах, после истечения которого будет запрошен новый токен*/
-export const TOKEN_LIFETIME = 86000000;
 /**Адрес сервера*/
 export const BACKEND_URL = "http://localhost:8000/";
 //export const BACKEND_URL = "https://interests.fun/api/";
