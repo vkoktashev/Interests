@@ -598,7 +598,7 @@ def calculate_movies_stats(user: User) -> dict:
         'count': watched_movies.count(),
         'total_spent_time': movies_total_spent_time,
         'genres': movies_genres_spent_time,
-        'year': watched_movies_by_year
+        'years': watched_movies_by_year
     }}
     return result
 
@@ -632,7 +632,7 @@ def calculate_shows_stats(user: User) -> dict:
         'count': watched_episodes.count(),
         'total_spent_time': shows_total_spent_time,
         'genres': shows_genres_spent_time,
-        'year': watched_shows_by_years
+        'years': watched_shows_by_years
     }}
     return result
 
