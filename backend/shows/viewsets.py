@@ -102,7 +102,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     })
     def retrieve(self, request, *args, **kwargs):
         try:
-            tmdb_show, returned_from_cache = get_show(kwargs.get('tmdb_id'))
+            tmdb_show, returned_from_cache = get_tmdb_show(kwargs.get('tmdb_id'))
             tmdb_show['videos'] = get_tmdb_show_videos(kwargs.get('tmdb_id'))
         except HTTPError as e:
             error_code = int(e.args[0].split(' ', 1)[0])
@@ -114,19 +114,13 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         new_fields = get_show_new_fields(tmdb_show)
 
-        with transaction.atomic():
-            show, created = Show.objects.select_for_update().get_or_create(tmdb_id=tmdb_show['id'],
-                                                                           defaults=new_fields)
-            if not created and not returned_from_cache:
-                update_fields_if_needed(show, new_fields)
+        show, created = Show.objects.filter().get_or_create(tmdb_id=tmdb_show['id'],
+                                                            defaults=new_fields)
+        if not created and not returned_from_cache:
+            update_fields_if_needed(show, new_fields)
 
         if created or not returned_from_cache:
-            for genre in tmdb_show.get('genres'):
-                genre_obj, created = Genre.objects.get_or_create(tmdb_id=genre.get('id'),
-                                                                 defaults={
-                                                                     'tmdb_name': genre.get('name')
-                                                                 })
-                ShowGenre.objects.get_or_create(genre=genre_obj, show=show)
+            update_show_genres(show, tmdb_show)
 
         return Response(parse_show(tmdb_show))
 
@@ -692,6 +686,26 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                          'user_watched_show': user_watched_show(show, request.user)})
 
 
+def update_show_genres(show: Show, tmdb_show: dict) -> None:
+    existing_show_genres = ShowGenre.objects.filter(show=show)
+    new_show_genres = []
+    show_genres_to_delete_ids = []
+
+    for genre in tmdb_show.get('genres'):
+        genre_obj, created = Genre.objects.get_or_create(tmdb_id=genre.get('id'),
+                                                         defaults={
+                                                             'tmdb_name': genre.get('name')
+                                                         })
+        show_genre_obj, created = ShowGenre.objects.get_or_create(genre=genre_obj, show=show)
+        new_show_genres.append(show_genre_obj)
+
+    for existing_show_genre in existing_show_genres:
+        if existing_show_genre not in new_show_genres:
+            show_genres_to_delete_ids.append(existing_show_genre.id)
+
+    ShowGenre.objects.filter(id__in=show_genres_to_delete_ids).delete()
+
+
 def user_watched_show(show, user):
     if show is None:
         return False
@@ -718,7 +732,7 @@ def get_show_search_results(query, page):
     return results
 
 
-def get_show(tmdb_id):
+def get_tmdb_show(tmdb_id):
     returned_from_cache = True
     key = get_tmdb_show_key(tmdb_id)
     tmdb_show = cache.get(key, None)

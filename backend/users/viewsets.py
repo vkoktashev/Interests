@@ -7,7 +7,8 @@ from smtplib import SMTPAuthenticationError
 from django.contrib.postgres.search import TrigramSimilarity
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
-from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField
+from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, QuerySet
+from django.db.models.functions import ExtractYear
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from drf_yasg import openapi
@@ -417,68 +418,24 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         stats = {}
 
-        # games
         user_games = UserGame.objects.select_related('game') \
             .exclude(status=UserGame.STATUS_NOT_PLAYED) \
             .filter(user=user) \
             .order_by('-updated_at')
         serializer = GameStatsSerializer(user_games, many=True)
         games = serializer.data
-        # games stats
-        if user_games.exists():
-            games_total_spent_time = user_games.aggregate(total_spent_time=Sum('spent_time'))['total_spent_time']
 
-            games_genres_spent_time = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED) \
-                .filter(user=user) \
-                .values(name=F('game__gamegenre__genre__rawg_name')) \
-                .annotate(spent_time_percent=Sum('spent_time'))
+        stats.update(calculate_games_stats(user_games, user))
 
-            if games_total_spent_time > 0:
-                for genre in games_genres_spent_time:
-                    genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 / games_total_spent_time, 1)
-
-        else:
-            games_total_spent_time = 0
-            games_genres_spent_time = []
-
-        stats.update({'games': {
-            'count': user_games.count(),
-            'total_spent_time': games_total_spent_time,
-            'genres': games_genres_spent_time
-        }})
-
-        # movies
         user_movies = UserMovie.objects.select_related('movie') \
             .exclude(status=UserMovie.STATUS_NOT_WATCHED) \
             .filter(user=user) \
             .order_by('-updated_at')
         serializer = MovieStatsSerializer(user_movies, many=True)
         movies = serializer.data
-        # movies stats
-        watched_movies = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_WATCHED)
-        if watched_movies.exists():
-            movies_total_spent_time = watched_movies.aggregate(total_time_spent=Sum('movie__tmdb_runtime')) \
-                .get('total_time_spent')
 
-            movies_genres_spent_time = watched_movies.values(name=F('movie__moviegenre__genre__tmdb_name')) \
-                .annotate(spent_time_percent=Sum('movie__tmdb_runtime'))
+        stats.update(calculate_movies_stats(user))
 
-            for genre in movies_genres_spent_time:
-                genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 /
-                                                    movies_total_spent_time, 1)
-
-            movies_total_spent_time = round(movies_total_spent_time / MINUTES_IN_HOUR, 1)
-        else:
-            movies_total_spent_time = 0
-            movies_genres_spent_time = []
-
-        stats.update({'movies': {
-            'count': watched_movies.count(),
-            'total_spent_time': movies_total_spent_time,
-            'genres': movies_genres_spent_time
-        }})
-
-        # shows
         user_shows = UserShow.objects.select_related('show') \
             .exclude(status=UserShow.STATUS_NOT_WATCHED) \
             .filter(user=user) \
@@ -492,30 +449,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         serializer = ShowStatsSerializer(user_shows, many=True)
         shows = serializer.data
-        # shows stats
-        watched_episodes = UserEpisode.objects.exclude(score=-1).filter(user=user)
-        if watched_episodes.exists():
-            shows_total_spent_time = watched_episodes.aggregate(
-                total_spent_time=Sum('episode__tmdb_season__tmdb_show__tmdb_episode_run_time'))['total_spent_time']
 
-            shows_genres_spent_time = watched_episodes. \
-                values(name=F('episode__tmdb_season__tmdb_show__showgenre__genre__tmdb_name')) \
-                .annotate(spent_time_percent=Sum('episode__tmdb_season__tmdb_show__tmdb_episode_run_time'))
-
-            for genre in shows_genres_spent_time:
-                genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 /
-                                                    shows_total_spent_time, 1)
-
-            shows_total_spent_time = round(shows_total_spent_time / MINUTES_IN_HOUR, 1)
-        else:
-            shows_total_spent_time = 0
-            shows_genres_spent_time = []
-
-        stats.update({'episodes': {
-            'count': watched_episodes.count(),
-            'total_spent_time': shows_total_spent_time,
-            'genres': shows_genres_spent_time
-        }})
+        stats.update(calculate_shows_stats(user))
 
         # followed_users
         followed_users = User.objects.filter(id__in=UserFollow.objects
@@ -603,6 +538,103 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                     .update(is_following=False)
 
             return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+def calculate_games_stats(user_games: QuerySet, user: User) -> dict:
+    if user_games.exists():
+        games_total_spent_time = user_games.aggregate(total_spent_time=Sum('spent_time'))['total_spent_time']
+
+        games_genres_spent_time = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED) \
+            .filter(user=user) \
+            .values(name=F('game__gamegenre__genre__rawg_name')) \
+            .annotate(spent_time_percent=Sum('spent_time'))
+
+        if games_total_spent_time > 0:
+            for genre in games_genres_spent_time:
+                genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 / games_total_spent_time, 1)
+
+        completed_games_by_years = user_games.filter(status=UserGame.STATUS_COMPLETED) \
+            .annotate(year=ExtractYear('game__rawg_release_date')).values('year') \
+            .annotate(count=Count('id')).exclude(year=None).order_by()
+    else:
+        games_total_spent_time = 0
+        games_genres_spent_time = []
+        completed_games_by_years = []
+
+    result = {'games': {
+        'count': user_games.count(),
+        'total_spent_time': games_total_spent_time,
+        'genres': games_genres_spent_time,
+        'years': completed_games_by_years
+    }}
+
+    return result
+
+
+def calculate_movies_stats(user: User) -> dict:
+    watched_movies = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_WATCHED)
+    if watched_movies.exists():
+        movies_total_spent_time = watched_movies.aggregate(total_time_spent=Sum('movie__tmdb_runtime')) \
+            .get('total_time_spent')
+
+        movies_genres_spent_time = watched_movies.values(name=F('movie__moviegenre__genre__tmdb_name')) \
+            .annotate(spent_time_percent=Sum('movie__tmdb_runtime'))
+
+        for genre in movies_genres_spent_time:
+            genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 /
+                                                movies_total_spent_time, 1)
+
+        movies_total_spent_time = round(movies_total_spent_time / MINUTES_IN_HOUR, 1)
+
+        watched_movies_by_year = watched_movies.annotate(year=ExtractYear('movie__tmdb_release_date')) \
+            .values('year').annotate(count=Count('id')).exclude(year=None).order_by()
+
+    else:
+        movies_total_spent_time = 0
+        movies_genres_spent_time = []
+        watched_movies_by_year = []
+
+    result = {'movies': {
+        'count': watched_movies.count(),
+        'total_spent_time': movies_total_spent_time,
+        'genres': movies_genres_spent_time,
+        'years': watched_movies_by_year
+    }}
+    return result
+
+
+def calculate_shows_stats(user: User) -> dict:
+    watched_episodes = UserEpisode.objects.exclude(score=-1).filter(user=user)
+    if watched_episodes.exists():
+        shows_total_spent_time = watched_episodes.aggregate(
+            total_spent_time=Sum('episode__tmdb_season__tmdb_show__tmdb_episode_run_time'))['total_spent_time']
+
+        shows_genres_spent_time = watched_episodes. \
+            values(name=F('episode__tmdb_season__tmdb_show__showgenre__genre__tmdb_name')) \
+            .annotate(spent_time_percent=Sum('episode__tmdb_season__tmdb_show__tmdb_episode_run_time'))
+
+        for genre in shows_genres_spent_time:
+            genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 /
+                                                shows_total_spent_time, 1)
+
+        shows_total_spent_time = round(shows_total_spent_time / MINUTES_IN_HOUR, 1)
+
+        watched_shows_by_years = UserShow.objects.filter(user=user) \
+            .filter(Q(status=UserShow.STATUS_WATCHED) | Q(status=UserShow.STATUS_WATCHING)) \
+            .annotate(year=ExtractYear('show__tmdb_release_date')) \
+            .values('year').annotate(count=Count('id')).exclude(year=None).order_by()
+    else:
+        shows_total_spent_time = 0
+        shows_genres_spent_time = []
+        watched_shows_by_years = []
+
+    result = {'episodes': {
+        'count': watched_episodes.count(),
+        'total_spent_time': shows_total_spent_time,
+        'genres': shows_genres_spent_time,
+        'years': watched_shows_by_years
+    }}
+    return result
 
 
 def serialize_logs(logs):

@@ -106,20 +106,13 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         hltb_game = get_hltb_game(rawg_game.get('name'))
         new_fields = get_game_new_fields(rawg_game, hltb_game)
 
-        with transaction.atomic():
-            game, created = Game.objects.select_for_update().get_or_create(rawg_slug=rawg_game.get('slug'),
-                                                                           defaults=new_fields)
-            if not created and not returned_from_cache:
-                update_fields_if_needed(game, new_fields)
+        game, created = Game.objects.filter().get_or_create(rawg_slug=rawg_game.get('slug'),
+                                                            defaults=new_fields)
+        if not created and not returned_from_cache:
+            update_fields_if_needed(game, new_fields)
 
         if created or not returned_from_cache:
-            for genre in rawg_game.get('genres'):
-                genre_obj, created = Genre.objects.get_or_create(rawg_id=genre.get('id'),
-                                                                 defaults={
-                                                                     'rawg_name': genre.get('name'),
-                                                                     'rawg_slug': genre.get('slug')
-                                                                 })
-                GameGenre.objects.get_or_create(genre=genre_obj, game=game)
+            update_game_genres(game, rawg_game)
 
         parsed_game = parse_game(rawg_game, hltb_game)
 
@@ -205,6 +198,27 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+def update_game_genres(game: Game, rawg_game: dict) -> None:
+    existing_game_genres = GameGenre.objects.filter(game=game)
+    new_game_genres = []
+    game_genres_to_delete_ids = []
+
+    for genre in rawg_game.get('genres'):
+        genre_obj, created = Genre.objects.get_or_create(rawg_id=genre.get('id'),
+                                                         defaults={
+                                                             'rawg_name': genre.get('name'),
+                                                             'rawg_slug': genre.get('slug')
+                                                         })
+        game_genre_obj, created = GameGenre.objects.get_or_create(genre=genre_obj, game=game)
+        new_game_genres.append(game_genre_obj)
+
+    for existing_game_genre in existing_game_genres:
+        if existing_game_genre not in new_game_genres:
+            game_genres_to_delete_ids.append(existing_game_genre.id)
+
+    GameGenre.objects.filter(id__in=game_genres_to_delete_ids).delete()
 
 
 def translate_hltb_time(hltb_game, time, time_unit):

@@ -1,12 +1,24 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
 import { COLORS } from "../Colors";
 
-function ChartBlock({ chartData, hidden }) {
+function ChartBlock(props) {
+	const [chartData, setChartData] = useState([]);
+
+	useEffect(() => {
+		setChartData([]);
+		if (props.chartData && props.chartData?.length > 0) {
+			let newData = props.chartData?.map((value) => ({ name: value.name, Процент: value.spent_time_percent })).sort((a, b) => b.Процент - a.Процент);
+			newData = newData.slice(0, 12);
+			console.log(newData);
+			setChartData(newData);
+		}
+	}, [props.chartData, setChartData]);
+
 	return (
-		<div hidden={hidden}>
+		<div hidden={props.hidden}>
 			{/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? (
-				<BarChart width={document.body.clientWidth - 50} height={chartData.length * 40} data={chartData} margin={{ top: 5, right: 0, left: 45, bottom: 20 }} layout='vertical'>
+				<BarChart width={document.body.clientWidth - 50} height={chartData?.length * 40} data={chartData} margin={{ top: 5, right: 0, left: 45, bottom: 20 }} layout='vertical'>
 					<YAxis dataKey='name' tickLine={false} tick={{ fill: "rgb(238, 238, 238)" }} interval={0} tickMargin={0} type='category' />
 					<XAxis domain={[0, "dataMax"]} tick={{ fill: "rgb(238, 238, 238)" }} type='number' />
 					<Tooltip
@@ -21,7 +33,7 @@ function ChartBlock({ chartData, hidden }) {
 					</Bar>
 				</BarChart>
 			) : (
-				<BarChart width={Math.min(chartData.length * 100, document.body.clientWidth - 50)} height={300} data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
+				<BarChart width={Math.min(chartData?.length * 100, document.body.clientWidth - 50)} height={300} data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
 					<XAxis dataKey='name' tickLine={false} tick={{ fill: "rgb(238, 238, 238)" }} interval={0} angle={-10} tickMargin={15} />
 					<YAxis domain={[0, "dataMax"]} tick={{ fill: "rgb(238, 238, 238)" }} />
 					<Tooltip
@@ -30,7 +42,7 @@ function ChartBlock({ chartData, hidden }) {
 						cursor={false}
 					/>
 					<Bar dataKey='Процент'>
-						{chartData.map((entry, index) => (
+						{chartData?.map((entry, index) => (
 							<Cell fill={COLORS[index]} key={index} />
 						))}
 					</Bar>
