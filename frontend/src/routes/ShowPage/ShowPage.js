@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { observer } from "mobx-react";
+import ReactPlayer from "react-player/youtube";
+import { Carousel } from "react-responsive-carousel";
 import AuthStore from "store/AuthStore";
 import PagesStore from "store/PagesStore";
 import ShowStore from "store/ShowStore";
-import CurrentUserStore from "store/CurrentUserStore";
 
 import LoadingOverlay from "react-loading-overlay";
 import { toast } from "react-toastify";
@@ -14,7 +15,7 @@ import StatusButtonGroup from "shared/StatusButtonGroup";
 import FriendsActivity from "shared/FriendsActivity";
 import SeasonsBlock from "./views/SeasonsBlock";
 import ScoreBlock from "shared/ScoreBlock";
-
+import "react-responsive-carousel/lib/styles/carousel.min.css";
 import "./show-page.sass";
 
 /**
@@ -23,7 +24,6 @@ import "./show-page.sass";
 const ShowPage = observer((props) => {
 	const { loggedIn } = AuthStore;
 	const { openLoginForm } = PagesStore;
-	const { saveSettingsState } = CurrentUserStore;
 	const { requestShow, show, showState, setShowStatus, setShowReview, requestShowUserInfo, userInfo, friendsInfo, userInfoState, anyError } = ShowStore;
 
 	let { id } = useParams();
@@ -78,10 +78,12 @@ const ShowPage = observer((props) => {
 	useEffect(() => {
 		if (anyError) toast.error(anyError);
 	}, [anyError]);
-	useEffect(() => {
-		if (saveSettingsState.startsWith("error:")) toast.error(`Ошибка фона! ${saveSettingsState}`);
-		else if (saveSettingsState === "saved") toast.success(`Фон установлен!`);
-	}, [saveSettingsState]);
+
+	const renderVideo = (video, index) => (
+		<div className='movie-page__trailer'>
+			<ReactPlayer url={video.url} controls key={index} className='movie-page__trailer-player' />
+		</div>
+	);
 
 	return (
 		<div className='show-page'>
@@ -141,6 +143,9 @@ const ShowPage = observer((props) => {
 							<ScoreBlock score={show.score} text='TMDB score' className='show-page__info-score' />
 						</div>
 					</div>
+					<Carousel className='movie-page__trailers' showArrows centerMode centerSlidePercentage={50} showThumbs={false} showStatus={false} showIndicators={false}>
+						{show?.videos?.map(renderVideo)}
+					</Carousel>
 					<div className='show-page__overview'>
 						<div>
 							<h3 className='show-page__overview-header'>Описание</h3>
