@@ -619,7 +619,7 @@ def calculate_shows_stats(user: User) -> dict:
 
         shows_total_spent_time = round(shows_total_spent_time / MINUTES_IN_HOUR, 1)
 
-        watched_shows_by_years = UserShow.objects \
+        watched_shows_by_years = UserShow.objects.filter(user=user) \
             .filter(Q(status=UserShow.STATUS_WATCHED) | Q(status=UserShow.STATUS_WATCHING)) \
             .annotate(year=ExtractYear('show__tmdb_release_date')) \
             .values('year').annotate(count=Count('id')).exclude(year=None).order_by()
