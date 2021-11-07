@@ -106,8 +106,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         hltb_game = get_hltb_game(rawg_game.get('name'))
         new_fields = get_game_new_fields(rawg_game, hltb_game)
 
-        game, created = Game.objects.select_for_update().get_or_create(rawg_slug=rawg_game.get('slug'),
-                                                                       defaults=new_fields)
+        game, created = Game.objects.filter().get_or_create(rawg_slug=rawg_game.get('slug'),
+                                                            defaults=new_fields)
         if not created and not returned_from_cache:
             update_fields_if_needed(game, new_fields)
 
@@ -211,15 +211,14 @@ def update_game_genres(game: Game, rawg_game: dict) -> None:
                                                              'rawg_name': genre.get('name'),
                                                              'rawg_slug': genre.get('slug')
                                                          })
-        new_game_genres.append(GameGenre.objects.get_or_create(genre=genre_obj, game=game))
+        game_genre_obj, created = GameGenre.objects.get_or_create(genre=genre_obj, game=game)
+        new_game_genres.append(game_genre_obj)
 
     for existing_game_genre in existing_game_genres:
         if existing_game_genre not in new_game_genres:
             game_genres_to_delete_ids.append(existing_game_genre.id)
 
     GameGenre.objects.filter(id__in=game_genres_to_delete_ids).delete()
-
-
 
 
 def translate_hltb_time(hltb_game, time, time_unit):

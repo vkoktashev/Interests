@@ -108,8 +108,8 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         new_fields = get_movie_new_fields(tmdb_movie)
 
-        movie, created = Movie.objects.select_for_update().get_or_create(tmdb_id=tmdb_movie.get('id'),
-                                                                         defaults=new_fields)
+        movie, created = Movie.objects.filter().get_or_create(tmdb_id=tmdb_movie.get('id'),
+                                                              defaults=new_fields)
         if not created and not returned_from_cache:
             update_fields_if_needed(movie, new_fields)
 
@@ -211,7 +211,8 @@ def update_movie_genres(movie: Movie, tmdb_movie: dict) -> None:
                                                          defaults={
                                                              'tmdb_name': genre.get('name')
                                                          })
-        new_movie_genres.append(MovieGenre.objects.get_or_create(genre=genre_obj, movie=movie))
+        movie_genre_obj, created = MovieGenre.objects.get_or_create(genre=genre_obj, movie=movie)
+        new_movie_genres.append(movie_genre_obj)
 
     for existing_movie_genre in existing_movie_genres:
         if existing_movie_genre not in new_movie_genres:
