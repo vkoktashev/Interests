@@ -553,7 +553,7 @@ def calculate_games_stats(user_games: QuerySet, user: User) -> dict:
             for genre in games_genres_spent_time:
                 genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 / games_total_spent_time, 1)
 
-        completed_games_by_years = user_games.filter(status=UserGame.STATUS_COMPLETED) \
+        completed_games_by_years = user_games.exclude(status=UserGame.STATUS_GOING) \
             .annotate(year=ExtractYear('game__rawg_release_date')).values('year') \
             .annotate(count=Count('id')).exclude(year=None).order_by()
     else:
@@ -620,7 +620,7 @@ def calculate_shows_stats(user: User) -> dict:
         shows_total_spent_time = round(shows_total_spent_time / MINUTES_IN_HOUR, 1)
 
         watched_shows_by_years = UserShow.objects.filter(user=user) \
-            .filter(Q(status=UserShow.STATUS_WATCHED) | Q(status=UserShow.STATUS_WATCHING)) \
+            .exclude(status__in=[UserShow.STATUS_NOT_WATCHED, UserShow.STATUS_GOING]) \
             .annotate(year=ExtractYear('show__tmdb_release_date')) \
             .values('year').annotate(count=Count('id')).exclude(year=None).order_by()
     else:
