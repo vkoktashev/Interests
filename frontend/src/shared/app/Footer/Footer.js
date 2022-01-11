@@ -9,8 +9,8 @@ function Footer({ className }) {
 			<div className='footer__body'>
 				<div>
 					<h2 className='footer__name'>Interests</h2>
-					<p className='footer__email'>info@interests.fun</p>
-					<p className='footer__date'>2020-2021</p>
+					<p className='footer__email'>info@interests.host</p>
+					<p className='footer__date'>2020-2022</p>
 				</div>
 				<div className='footer__social-block'>
 					<p>Следите за нами в социальных сетях, чтобы оставаться в курсе последних событий!</p>
