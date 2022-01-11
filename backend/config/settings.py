@@ -129,13 +129,13 @@ LOGIN_URL = 'users/auth/login'
 
 EMAIL_USE_SSL = True
 EMAIL_HOST = 'smtp.mail.ru'
-EMAIL_HOST_USER = 'info@interests.fun'
+EMAIL_HOST_USER = 'info@interests.host'
 EMAIL_HOST_PASSWORD = 'IUIIyfpo3^a8'
 EMAIL_PORT = 465
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7)
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=60)
 }
 
 # celery
