@@ -32,18 +32,17 @@ const RegisterForm = observer((props) => {
 				<h2 className='register-form__header'> Регистрация</h2>
 
 				<label htmlFor='loginInput'>Никнейм</label>
-				<input type='text' id='loginInput' className='register-form__input' {...login} />
+				<input type='text' className='register-form__input' {...login} />
 
 				<label htmlFor='emailInput'>Электронная почта</label>
-				<input type='email' id='emailInput' className='register-form__input' {...email} />
+				<input type='email' className='register-form__input' {...email} />
 
 				<label htmlFor='passwordInput'>Пароль</label>
-				<input type='password' id='passwordInput' {...password} className='register-form__input' />
+				<input type='password' {...password} className='register-form__input' />
 
 				<label htmlFor='passwordConfirmInput'>Подтверждение пароля</label>
 				<input
 					type='password'
-					id='passwordConfirmInput'
 					{...passwordConfirm}
 					className={classnames("register-form__input", !passwordConfirm.value ? "" : passwordConfirm.value === password.value ? "register-form__input_right" : "register-form__input_wrong")}
 				/>

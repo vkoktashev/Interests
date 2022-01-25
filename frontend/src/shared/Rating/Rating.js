@@ -13,6 +13,7 @@ function RatingBlock({ initialRating, readonly, onChange, className, withEye }) 
 			readonly={readonly}
 			onChange={onChange}
 			className={className}
+			quiet
 		/>
 	);
 }

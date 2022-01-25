@@ -80,7 +80,7 @@ const ShowPage = observer((props) => {
 	}, [anyError]);
 
 	const renderVideo = (video, index) => (
-		<div className='movie-page__trailer'>
+		<div className='movie-page__trailer' key={video.url}>
 			<ReactPlayer url={video.url} controls key={index} className='movie-page__trailer-player' />
 		</div>
 	);

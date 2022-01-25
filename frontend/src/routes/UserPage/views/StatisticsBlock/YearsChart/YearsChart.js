@@ -20,7 +20,7 @@ function YearsChart(props) {
 			setMaxCount(newMaxCount);
 			setChartData(newData);
 		}
-	}, [props.chartData, setChartData]);
+	}, [props.chartData, setChartData, maxCount]);
 
 	return (
 		<div hidden={props.hidden}>

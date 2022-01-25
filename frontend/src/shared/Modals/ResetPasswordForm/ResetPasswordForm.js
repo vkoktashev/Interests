@@ -32,7 +32,7 @@ const ResetPasswordForm = observer((props) => {
 				</p>
 
 				<label htmlFor='emailInput'>Почта</label>
-				<input type='text' id='emailInput' className='reset-password-form__input' {...email} />
+				<input type='text' className='reset-password-form__input' {...email} />
 
 				<button type='submit' className='reset-password-form__button'>
 					{resetPasswordState !== "pending" ? "Сбросить" : "Загрузка..."}
