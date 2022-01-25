@@ -1,5 +1,6 @@
 @import ./colors
 @import ./fonts
+@import ./breakpoints
 
 @mixin default-page
     width: 80rem
@@ -101,6 +102,9 @@
         padding-bottom: 1rem
         padding-right: 1rem
         width: 45rem
+        
+        @media (max-width: $mobile-width)
+            font-size: 12px
     
     &__info-header
         padding-right: 2.5em
