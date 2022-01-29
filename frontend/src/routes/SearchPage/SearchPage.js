@@ -24,29 +24,29 @@ const SearchPage = observer((props) => {
 
 	let history = useHistory();
 	let { query } = useParams();
-	const queryText = useInput("");
+	const [queryText, setQueryText] = useState('');
 
 	const parentRef = useRef();
 	const childRef = useRef();
 	// eslint-disable-next-line
 	const intersected = useScroll(parentRef, childRef, () => fetchItems());
 
-	const [activeCategory, setActiveCategory] = useState("Игры");
+	const [activeCategory, setActiveCategory] = useState('Игры');
 
 	function fetchItems() {
-		if (activeCategory === "Игры") store.nextGames();
-		if (activeCategory === "Фильмы") store.nextMovies();
-		if (activeCategory === "Сериалы") store.nextShows();
+		if (activeCategory === 'Игры') store.nextGames();
+		if (activeCategory === 'Фильмы') store.nextMovies();
+		if (activeCategory === 'Сериалы') store.nextShows();
 	}
 
 	useEffect(
 		() => {
-			if (activeCategory === "Игры") store.searchGames(query);
-			if (activeCategory === "Фильмы") store.searchMovies(query);
-			if (activeCategory === "Сериалы") store.searchShows(query);
-			if (activeCategory === "Пользователи") store.searchUsers(query);
-			queryText.setValue(query);
-			document.title = "Поиск";
+			if (activeCategory === 'Игры') store.searchGames(query);
+			if (activeCategory === 'Фильмы') store.searchMovies(query);
+			if (activeCategory === 'Сериалы') store.searchShows(query);
+			if (activeCategory === 'Пользователи') store.searchUsers(query);
+			setQueryText(query);
+			document.title = 'Поиск';
 		},
 		// eslint-disable-next-line
 		[query, activeCategory]
@@ -59,12 +59,18 @@ const SearchPage = observer((props) => {
 					className='search-page__form'
 					onSubmit={(event) => {
 						event.preventDefault();
-						history.push("/search/" + queryText.value);
+						history.push("/search/" + queryText);
 						return false;
 					}}>
 					<h1>Поиск</h1>
 					<FaSearch className='search-page__name-icon' />
-					<input className='search-page__name-input' type='text' placeholder='Найти' {...queryText} />
+					<input
+						className='search-page__name-input'
+						type='text'
+						placeholder='Найти'
+						value={queryText}
+						onChange={setQueryText}
+					/>
 				</form>
 				<CategoriesTab
 					categories={["Игры", "Фильмы", "Сериалы", "Пользователи"]}
