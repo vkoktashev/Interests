@@ -3,8 +3,7 @@ import { SEARCH_MOVIES_URL, SEARCH_MOVIES_FAST_URL, GET_MOVIE_URL } from "../set
 
 /**
  * Запрос к бд, получающий информацию о фильме
- * @param {string} id ID фильма
- * @returns {object} Информация о фильме
+ * @param {number} id ID фильма
  */
 export async function getMovie(id) {
 	const res = await api.get(GET_MOVIE_URL + id + "/");
@@ -42,7 +41,7 @@ export async function searchMoviesFast(query) {
 
 /**
  * Запрос к бд, получающий информацию об оценках друзей для фильма
- * @param {string} id id фильма
+ * @param {number} id id фильма
  */
 export async function getMovieUserInfo(id) {
 	const res = await api.get(GET_MOVIE_URL + id + "/user_info/");

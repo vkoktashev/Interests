@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import { observer } from "mobx-react";
-import AuthStore from "store/AuthStore";
-import ShowStore from "store/ShowStore";
-import PagesStore from "store/PagesStore";
-
 import LoadingOverlay from "react-loading-overlay";
 import { AreaChart, linearGradient, XAxis, Tooltip, YAxis, Area, ResponsiveContainer } from "recharts";
 import { toast } from "react-toastify";
 
-import Rating from "shared/Rating";
-import FriendsActivity from "shared/FriendsActivity";
-import DetailEpisodeRow from "shared/DetailEpisodeRow";
+import AuthStore from '../../store/AuthStore';
+import ShowStore from '../../store/ShowStore';
+import PagesStore from '../../store/PagesStore';
+import Rating from '../../shared/Rating';
+import FriendsActivity from '../../shared/FriendsActivity';
+import DetailEpisodeRow from '../../shared/DetailEpisodeRow';
+
 import "./season-page.sass";
 
 /**

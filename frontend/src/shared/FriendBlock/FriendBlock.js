@@ -2,7 +2,7 @@ import React from "react";
 import classnames from "classnames";
 import "./friend-block.sass";
 
-import CardUser from "shared/CardUser";
+import CardUser from '../CardUser';
 
 function FriendBlock({ users, className }) {
 	return (

@@ -1,21 +1,21 @@
-import React from "react";
-import { Route, Switch } from "react-router-dom";
-import "react-toastify/dist/ReactToastify.css";
+import React from 'react';
+import { Route, Switch } from 'react-router-dom';
+import 'react-toastify/dist/ReactToastify.css';
 
-import HomePage from "routes/HomePage";
-import GamePage from "routes/GamePage";
-import MoviePage from "routes/MoviePage";
-import ShowPage from "routes/ShowPage";
-import SeasonPage from "routes/ShowSeasonPage";
-import EpisodePage from "routes/ShowEpisodePage";
-import SearchPage from "routes/SearchPage";
-import ConfirmPage from "routes/ConfirmPage";
-import ConfirmPasswordPage from "routes/ConfirmPasswordPage";
-import UserPage from "routes/UserPage";
-import CalendarPage from "routes/CalendarPage";
-import SettingsPage from "routes/SettingsPage";
-import UnwatchedPage from "routes/UnwatchedPage";
-import NotFoundPage from "routes/NotFoundPage";
+import HomePage from './routes/HomePage';
+import GamePage from './routes/GamePage';
+import MoviePage from './routes/MoviePage';
+import ShowPage from './routes/ShowPage';
+import SeasonPage from './routes/ShowSeasonPage';
+import EpisodePage from './routes/ShowEpisodePage';
+import SearchPage from './routes/SearchPage';
+import ConfirmPage from './routes/ConfirmPage';
+import ConfirmPasswordPage from './routes/ConfirmPasswordPage';
+import UserPage from './routes/UserPage';
+import CalendarPage from './routes/CalendarPage';
+import SettingsPage from './routes/SettingsPage';
+import UnwatchedPage from './routes/UnwatchedPage';
+import NotFoundPage from './routes/NotFoundPage';
 
 class Routes extends React.Component {
 	render() {

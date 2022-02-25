@@ -1,8 +1,7 @@
-import React from "react";
-import useInput from "hooks/useInput";
-import { observer } from "mobx-react";
-import AuthStore from "store/AuthStore";
-import "./confirm-password-page.sass";
+import React, {useState} from 'react';
+import { observer } from 'mobx-react';
+import AuthStore from '../../store/AuthStore';
+import './confirm-password-page.sass';
 
 /**
  * Основная страница приложения
@@ -10,8 +9,8 @@ import "./confirm-password-page.sass";
 const ConfirmPasswordPage = observer((props) => {
 	const { confirmPassword, confirmPasswordState } = AuthStore;
 
-	const password = useInput("");
-	const passwordConfirm = useInput("");
+	const [password, setPassword] = useState('');
+	const [passwordConfirm, setPasswordConfirm] = useState('');
 
 	let search = window.location.search;
 	let params = new URLSearchParams(search);
@@ -33,13 +32,32 @@ const ConfirmPasswordPage = observer((props) => {
 						Пароль обновлен!
 					</p>
 
-					<label htmlFor='passwordInput'>Новый пароль</label>
-					<input type='password' id='passwordInput' className='confirm-password-page__input' {...password} />
+					<label htmlFor='passwordInput'>
+						Новый пароль
+					</label>
+					<input
+						type='password'
+						id='passwordInput'
+						className='confirm-password-page__input'
+						value={password}
+						onChange={setPassword}
+					/>
+					<label htmlFor='passwordConfirmInput'>
+						Подтверждение пароля
+					</label>
+					<input
+						type='password'
+						id='passwordConfirmInput'
+						className='confirm-password-page__input'
+						value={passwordConfirm}
+						onChange={setPasswordConfirm}
+					/>
 
-					<label htmlFor='passwordConfurmInput'>Подтверждение пароля</label>
-					<input type='password' id='passwordConfurmInput' className='confirm-password-page__input' {...passwordConfirm} />
-
-					<button type='submit' className='confirm-password-page__button' disabled={(password.value !== passwordConfirm.value) | (password.value.length < 1)}>
+					<button
+						type='submit'
+						className='confirm-password-page__button'
+						disabled={(password.value !== passwordConfirm.value) | (password.value.length < 1)}
+					>
 						Обновить
 					</button>
 				</form>

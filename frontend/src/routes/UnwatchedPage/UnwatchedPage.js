@@ -1,13 +1,14 @@
 import React, { useEffect } from "react";
 import { observer } from "mobx-react";
-import AuthStore from "store/AuthStore";
-import CurrentUserStore from "store/CurrentUserStore";
-import ShowStore from "store/ShowStore";
-import "./unwatched-page.sass";
-
 import { toast } from "react-toastify";
 import LoadingOverlay from "react-loading-overlay";
-import ShowBlock from "./views/ShowBlock";
+
+import AuthStore from '../../store/AuthStore';
+import CurrentUserStore from '../../store/CurrentUserStore';
+import ShowStore from '../../store/ShowStore';
+import ShowBlock from './views/ShowBlock';
+
+import "./unwatched-page.sass";
 
 const UnwatchedPage = observer((props) => {
 	const { loggedIn } = AuthStore;

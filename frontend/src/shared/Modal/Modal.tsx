@@ -3,7 +3,14 @@ import classnames from "classnames";
 
 import "./modal.sass";
 
-function Modal({ className, children, isOpen, toggle }) {
+interface IModalProps {
+	className?: string,
+	children?: any,
+	isOpen?: boolean,
+	toggle?: () => any,
+}
+
+function Modal({ className, children, isOpen, toggle }: IModalProps) {
 	return (
 		<div className={classnames("modal2", isOpen ? "modal2_open" : "")}>
 			<div className={classnames("modal2__backdrop")} onClick={toggle} />

@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { observer } from "mobx-react";
 import classnames from "classnames";
-import CurrentUserStore from "store/CurrentUserStore";
-import AuthStore from "store/AuthStore";
-
 import { toast } from "react-toastify";
 import Calendar from "react-calendar";
 import LoadingOverlay from "react-loading-overlay";
-import "react-calendar/dist/Calendar.css";
+
+import CurrentUserStore from '../../store/CurrentUserStore';
+import AuthStore from '../../store/AuthStore';
 import DayInfo from "./views/DayInfo";
 import ReleasesList from "./views/ReleasesList";
 
+import "react-calendar/dist/Calendar.css";
 import styles from "./calendar-page.module.sass";
 import "./react-calendar.sass";
 
