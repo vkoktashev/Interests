@@ -2,7 +2,16 @@ import React from "react";
 import classnames from "classnames";
 import "./categories-tab.sass";
 
-function CategoriesTab({ categories, onChangeCategory, activeCategory, hidden, children, className }) {
+interface ICategoriesTabProps {
+	categories: Array<string>,
+	onChangeCategory: (category: string) => void,
+	activeCategory: string,
+	hidden?: boolean,
+	children?: any,
+	className?: string,
+}
+
+function CategoriesTab({ categories, onChangeCategory, activeCategory, hidden, children, className }: ICategoriesTabProps) {
 	return (
 		<div hidden={hidden} className={classnames("categories-tabs", className)}>
 			<div className='categories-tabs__body'>

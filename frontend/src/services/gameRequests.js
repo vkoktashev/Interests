@@ -8,7 +8,6 @@ api.defaults.headers.common = {
 /**
  * Запрос к бд, получающий информацию об игре
  * @param {string} id ID игры
- * @returns {object} Информация об игре
  */
 export async function getGame(id) {
 	const res = await api.get(GET_GAME_URL + id + "/");

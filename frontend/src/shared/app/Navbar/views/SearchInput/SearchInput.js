@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { observer } from "mobx-react";
-import SearchStore from "store/SearchStore";
 import { useHistory } from "react-router-dom";
 import { MdVideogameAsset, MdLocalMovies, MdLiveTv } from "react-icons/md";
 import classnames from "classnames";
+
+import SearchStore from '../../../../../store/SearchStore';
+
 import "./search-input.sass";
 
 const SearchInput = observer(({ onSubmit, className }) => {

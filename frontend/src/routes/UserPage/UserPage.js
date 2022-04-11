@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { observer } from "mobx-react";
-import AuthStore from "store/AuthStore";
-import UserStore from "store/UserStore";
 import { FaLock } from "react-icons/fa";
 import { useQueryParam, StringParam, withDefault } from "use-query-params";
-
 import LoadingOverlay from "react-loading-overlay";
-import GameBlock from "./views/ItemsBlock/GameBlock";
-import FriendBlock from "shared/FriendBlock";
-import MovieBlock from "./views/ItemsBlock/MovieBlock";
-import UserLogs from "./views/UserLogs";
-import CategoriesTab from "shared/CategoriesTab";
-import ShowBlock from "./views/ItemsBlock/ShowBlock";
-import StatisticsBlock from "./views/StatisticsBlock";
+
+import AuthStore from '../../store/AuthStore';
+import UserStore from '../../store/UserStore';
+import GameBlock from './views/ItemsBlock/GameBlock';
+import FriendBlock from '../../shared/FriendBlock';
+import MovieBlock from './views/ItemsBlock/MovieBlock';
+import UserLogs from './views/UserLogs';
+import CategoriesTab from '../../shared/CategoriesTab';
+import ShowBlock from './views/ItemsBlock/ShowBlock';
+import StatisticsBlock from './views/StatisticsBlock';
 
 import "./user-page.sass";
 

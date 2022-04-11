@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { observer } from "mobx-react";
 import { useHistory } from "react-router-dom";
-import AuthStore from "store/AuthStore";
+import AuthStore from '../../store/AuthStore';
 import "./confirm-page.sass";
 
 /**

@@ -1,7 +1,16 @@
 import { makeAutoObservable } from "mobx";
 //import remotedev from "mobx-remotedev";
 
-class Pages {
+export interface IPagesState {
+	LoginFormIsOpen: boolean;
+	RegistrateFormIsOpen: boolean;
+	ResetPasswordFormIsOpen: boolean;
+	saveEpisodesBlockIsOpen: boolean;
+	sidebarIsToggled: boolean;
+	sidebarIsCollapsed: boolean;
+}
+
+class Pages implements IPagesState{
 	LoginFormIsOpen = false;
 	RegistrateFormIsOpen = false;
 	ResetPasswordFormIsOpen = false;
@@ -16,12 +25,12 @@ class Pages {
 	toggleSidebar = async () => {
 		this.sidebarIsToggled = !this.sidebarIsToggled;
 		if (!this.sidebarIsToggled) this.sidebarIsCollapsed = false;
-		localStorage.setItem("sidebarToggled", this.sidebarIsToggled);
+		localStorage.setItem("sidebarToggled", JSON.stringify(this.sidebarIsToggled));
 	};
 
 	collapseSidebar = async () => {
 		this.sidebarIsCollapsed = !this.sidebarIsCollapsed;
-		localStorage.setItem("sidebarCollapsed", this.sidebarIsCollapsed);
+		localStorage.setItem("sidebarCollapsed", JSON.stringify(this.sidebarIsCollapsed));
 	};
 
 	openLoginForm = async () => {
@@ -48,7 +57,7 @@ class Pages {
 		this.ResetPasswordFormIsOpen = false;
 	};
 
-	setSaveEpisodes = (status) => (this.saveEpisodesBlockIsOpen = status);
+	setSaveEpisodes = (status: boolean) => (this.saveEpisodesBlockIsOpen = status);
 }
 
 const PagesStore = new Pages();

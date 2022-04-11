@@ -1,7 +1,9 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
-import Rating from "shared/Rating/Rating";
 import classnames from "classnames";
+
+import Rating from '../../../../../shared/Rating';
+
 import "./log-row.sass";
 
 function LogRow({ log, showUsername, onDeleteLog, className }) {
