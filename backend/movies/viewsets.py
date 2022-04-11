@@ -103,9 +103,9 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             if error_code == 404:
                 return Response({ERROR: MOVIE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
             else:
-                return Response(e.args[0], status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                return Response(e.args, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except ConnectionError as e:
-            return Response(e.args[0], status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response(e.args, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         new_fields = get_movie_new_fields(tmdb_movie)
 
