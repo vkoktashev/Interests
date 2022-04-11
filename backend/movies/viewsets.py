@@ -100,12 +100,12 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             tmdb_movie['videos'] = get_tmdb_movie_videos(kwargs.get('tmdb_id'))
         except HTTPError as e:
             error_code = int(e.args[0].split(' ', 1)[0])
-            print(e.args[0])
+            return Response(e.args[0])
             if error_code == 404:
                 return Response({ERROR: MOVIE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except ConnectionError as e:
-            print(e.args[0])
+            return Response(e.args[0])
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         new_fields = get_movie_new_fields(tmdb_movie)
