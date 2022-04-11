@@ -3,8 +3,7 @@ import { SEARCH_SHOWS_URL, SEARCH_SHOWS_FAST_URL, GET_SHOW_URL, GET_UNWATCHED_EP
 
 /**
  * Запрос к бд, получающий информацию о сериале
- * @param {string} id ID сериала
- * @returns {object} Информация о сериале
+ * @param {number} id ID сериала
  */
 export async function getShow(id) {
 	const res = await api.get(GET_SHOW_URL + id + "/");
@@ -13,9 +12,8 @@ export async function getShow(id) {
 
 /**
  * Запрос к бд, получающий информацию о сезоне сериала
- * @param {string} showID ID сериала
- *  * @param {string} seasonNumber номер сезона
- * @returns {object} Информация о сериале
+ * @param {number} showID ID сериала
+ *  * @param {number} seasonNumber номер сезона
  */
 export async function getShowSeason(showID, seasonNumber) {
 	const res = await api.get(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/");
@@ -24,21 +22,15 @@ export async function getShowSeason(showID, seasonNumber) {
 
 /**
  * Запрос к бд, получающий информацию о серии сериала
- * @param {string} showID ID сериала
- * @param {string} seasonNumber номер сезона
- * @param {string} episodeNumber номер эпизода
- * @returns {object} Информация о сериале
+ * @param {number} showID ID сериала
+ * @param {number} seasonNumber номер сезона
+ * @param {number} episodeNumber номер эпизода
  */
 export async function getShowEpisode(showID, seasonNumber, episodeNumber) {
 	const res = await api.get(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/episode/" + episodeNumber + "/");
 	return res.data;
 }
 
-/**
- * Запрос на изменение статуса сериала
- * @param {object} user_info Статус сериала
- * @param {string} id ID сериала
- */
 export async function setShowStatus(id, user_info) {
 	const res = await api.put(GET_SHOW_URL + id + "/", user_info);
 	return res.data;
@@ -47,8 +39,8 @@ export async function setShowStatus(id, user_info) {
 /**
  * Запрос на изменение статуса сезона сериала
  * @param {object} user_info Статус сезона сериала
- * @param {string} showID ID сериала
- *  * @param {string} seasonNumber номер сезона
+ * @param {number} showID ID сериала
+ *  * @param {number} seasonNumber номер сезона
  */
 export async function setShowSeasonStatus(showID, seasonNumber, user_info) {
 	const res = await api.put(GET_SHOW_URL + showID + "/season/" + seasonNumber + "/", user_info);
@@ -58,7 +50,7 @@ export async function setShowSeasonStatus(showID, seasonNumber, user_info) {
 /**
  * Запрос на изменение статуса сезона сериала
  * @param {object} episodesList Список объектов эпизодов
- * @param {string} showID ID сериала
+ * @param {number} showID ID сериала
  */
 export async function setShowEpisodesStatus(showID, episodesList) {
 	const res = await api.put(GET_SHOW_URL + showID + "/episodes/", episodesList);
@@ -86,7 +78,7 @@ export async function searchShowsFast(query) {
 
 /**
  * Запрос к бд, получающий информацию об оценках друзей для сериала
- * @param {string} showID id сериала
+ * @param {number} showID id сериала
  */
 export async function getShowUserInfo(showID) {
 	const res = await api.get(GET_SHOW_URL + showID + "/user_info/");
@@ -95,7 +87,7 @@ export async function getShowUserInfo(showID) {
 
 /**
  * Запрос к бд, получающий информацию об оценках друзей для сезона сериала
- * @param {string} showID id сериала
+ * @param {number} showID id сериала
  */
 export async function getShowSeasonUserInfo(showID, seasonID) {
 	const res = await api.get(GET_SHOW_URL + showID + "/season/" + seasonID + "/user_info/");
@@ -104,7 +96,7 @@ export async function getShowSeasonUserInfo(showID, seasonID) {
 
 /**
  * Запрос к бд, получающий информацию об оценках друзей для эпизода сериала
- * @param {string} showID id сериала
+ * @param {number} showID id сериала
  * @param {int} page страница
  */
 export async function getShowEpisodeUserInfo(showID, seasonID, episodeID) {
@@ -114,7 +106,6 @@ export async function getShowEpisodeUserInfo(showID, seasonID, episodeID) {
 
 /**
  * Запрос к бд, получающий информацию о сериале
- * @returns {Array} Список эпизодов
  */
 export async function getUnwatchedEpisodes() {
 	const res = await api.get(GET_UNWATCHED_EPISODES_URL);

@@ -2,14 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { observer } from "mobx-react";
 import { computed } from "mobx";
-import AuthStore from "store/AuthStore";
-import ShowStore from "store/ShowStore";
-import PagesStore from "store/PagesStore";
-
 import LoadingOverlay from "react-loading-overlay";
-import DetailEpisodeRow from "shared/DetailEpisodeRow";
-import Rating from "shared/Rating";
 import classnames from "classnames";
+
+import AuthStore from '../../../../store/AuthStore';
+import ShowStore from '../../../../store/ShowStore';
+import PagesStore from '../../../../store/PagesStore';
+import DetailEpisodeRow from '../../../../shared/DetailEpisodeRow';
+import Rating from '../../../../shared/Rating';
+
 import "./season-block.sass";
 
 const SeasonBlock = observer(

@@ -1,7 +1,7 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
-import Rating from "shared/Rating";
 import classnames from "classnames";
+import Rating from '../../../Rating';
 import "./friend-activity.sass";
 
 function FriendActivity({ info, className }) {

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Pagination from "rc-pagination";
-import SelectMulti from "shared/SelectMulti/SelectMulti";
-import InputNumber from "shared/InputNumber/InputNumber";
-import LogsByDay from "./LogsByDay/LogsByDay";
 import { FaAngleDown, FaAngleUp } from "react-icons/fa";
-import useWindowDimensions from "hooks/useWindowDimensions";
+
+import SelectMulti from '../../../../shared/SelectMulti';
+import InputNumber from '../../../../shared/InputNumber';
+import LogsByDay from "./LogsByDay/LogsByDay";
+import useWindowDimensions from '../../../../hooks/useWindowDimensions';
+
 import "./user-logs.sass";
 
 function UserLogs({ userID, logs, showUsername, requestUserLogs, currentUser, onDeleteLog, logsType }) {

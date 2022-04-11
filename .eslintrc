@@ -1,0 +1,15 @@
+{
+    "extends": [
+        "@steroidsjs/eslint-config"
+    ],
+    "rules": {
+        "import/prefer-default-export": "off",
+        "no-useless-constructor": "off",
+        "class-methods-use-this": "off",
+        "no-await-in-loop": "off",
+        "no-restricted-syntax": "off"
+    },
+    "env": {
+        "node": true
+    }
+}

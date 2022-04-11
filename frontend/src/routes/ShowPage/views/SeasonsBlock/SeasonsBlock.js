@@ -2,11 +2,12 @@ import React from "react";
 import { toJS } from "mobx";
 import { observer } from "mobx-react";
 import LoadingOverlay from "react-loading-overlay";
-import ShowStore from "store/ShowStore";
-import PagesStore from "store/PagesStore";
-import AuthStore from "store/AuthStore";
 
+import ShowStore from '../../../../store/ShowStore';
+import PagesStore from '../../../../store/PagesStore';
+import AuthStore from '../../../../store/AuthStore';
 import SeasonBlock from "../SeasonBlock";
+
 import "./seasons-block.sass";
 
 const SeasonsBlock = observer(({ showID, seasons, userWatchedShow }) => {

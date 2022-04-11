@@ -1,7 +1,9 @@
 import React, { useEffect } from "react";
-import EpisodeRow from "../EpisodeRow";
 import { useHistory } from "react-router-dom";
 import classnames from "classnames";
+
+import EpisodeRow from "../EpisodeRow";
+
 import "./show-block.sass";
 
 function ShowBlock({ loggedIn, show, setShowEpisodeUserStatus, className }) {

@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { observer } from "mobx-react";
-import "./game-page.sass";
-import GameStore from "store/GameStore";
-import AuthStore from "store/AuthStore";
-import PagesStore from "store/PagesStore";
-
 import LoadingOverlay from "react-loading-overlay";
 import { toast } from "react-toastify";
 
-import StatusButtonGroup from "shared/StatusButtonGroup";
-import FriendsActivity from "shared/FriendsActivity";
-import TimeToBeat from "./views/TimeToBeat";
-import ScoreBlock from "shared/ScoreBlock";
-import Rating from "shared/Rating";
-import InputNumber from "shared/InputNumber";
+import GameStore from '../../store/GameStore';
+import AuthStore from '../../store/AuthStore';
+import PagesStore from '../../store/PagesStore';
+import StatusButtonGroup from '../../shared/StatusButtonGroup';
+import FriendsActivity from '../../shared/FriendsActivity';
+import TimeToBeat from './views/TimeToBeat';
+import ScoreBlock from '../../shared/ScoreBlock';
+import Rating from '../../shared/Rating';
+import InputNumber from '../../shared/InputNumber';
+
+import "./game-page.sass";
 
 /**
  * Основная страница приложения

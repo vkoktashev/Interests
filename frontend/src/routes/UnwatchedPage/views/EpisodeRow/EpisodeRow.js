@@ -1,6 +1,6 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
-import Rating from "shared/Rating";
+import Rating from '../../../../shared/Rating';
 import "./episode-row.sass";
 
 function DetailedEpisodeRow({ episode, showID, seasonNumber, setShowEpisodeUserStatus, loggedIn }) {

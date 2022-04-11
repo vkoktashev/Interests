@@ -1,6 +1,6 @@
 /**Адрес сервера*/
-export const BACKEND_URL = "http://localhost:8000/";
-//export const BACKEND_URL = "https://interests.fun/api/";
+//export const BACKEND_URL = "http://localhost:8000/";
+export const BACKEND_URL = "https://interests.host/api/";
 /**Адрес получения токена */
 export const GET_TOKEN_URL = BACKEND_URL + "users/auth/login/";
 /**Адрес обновления токена */

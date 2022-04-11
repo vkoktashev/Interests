@@ -3,17 +3,17 @@ import { useParams } from "react-router-dom";
 import ReactPlayer from "react-player/youtube";
 import { Carousel } from "react-responsive-carousel";
 import { observer } from "mobx-react";
-import MovieStore from "store/MovieStore";
-import AuthStore from "store/AuthStore";
-import PagesStore from "store/PagesStore";
-
 import LoadingOverlay from "react-loading-overlay";
 import { toast } from "react-toastify";
 
-import StatusButtonGroup from "shared/StatusButtonGroup";
-import FriendsActivity from "shared/FriendsActivity";
-import ScoreBlock from "shared/ScoreBlock";
-import Rating from "shared/Rating";
+import MovieStore from '../../store/MovieStore';
+import AuthStore from '../../store/AuthStore';
+import PagesStore from '../../store/PagesStore';
+import StatusButtonGroup from '../../shared/StatusButtonGroup';
+import FriendsActivity from '../../shared/FriendsActivity';
+import ScoreBlock from '../../shared/ScoreBlock';
+import Rating from '../../shared/Rating';
+
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import "./movie-page.sass";
 

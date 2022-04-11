@@ -1,14 +1,15 @@
-import React, { useState } from "react";
-import { useHistory } from "react-router-dom";
-import { observer } from "mobx-react";
-import PagesStore from "store/PagesStore";
-import AuthStore from "store/AuthStore";
-import useWindowDimensions from "hooks/useWindowDimensions";
-import SearchInput from "./views/SearchInput";
-import classnames from "classnames";
+import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
+import { observer } from 'mobx-react';
+import classnames from 'classnames';
+import { FaBars, FaAngleUp, FaAngleDown, FaUserCircle, FaSignInAlt } from 'react-icons/fa';
 
-import { FaBars, FaAngleUp, FaAngleDown, FaUserCircle, FaSignInAlt } from "react-icons/fa";
-import "./navbar.sass";
+import PagesStore from '../../../store/PagesStore';
+import AuthStore from '../../../store/AuthStore';
+import useWindowDimensions from '../../../hooks/useWindowDimensions';
+import SearchInput from './views/SearchInput';
+
+import './navbar.sass';
 
 const Navbar = observer((props) => {
 	const { toggleSidebar, openLoginForm } = PagesStore;
@@ -31,24 +32,24 @@ const Navbar = observer((props) => {
 		<div className='navbar'>
 			<div className='navbar__left'>
 				<FaBars onClick={toggleSidebar} className='navbar__sidebar-button' />
-				<div onClick={() => history.push("/")} className='navbar__logo'>
+				<div onClick={() => history.push('/')} className='navbar__logo'>
 					Interests
 				</div>
 				<div onClick={toggleCollapse} className='navbar__collapse-button'>
 					{collapse ? <FaAngleDown /> : <FaAngleUp />}
 				</div>
 			</div>
-			<div className={classnames("navbar__center", collapse && width <= 600 ? "navbar__center_collapsed" : "")}>
+			<div className={classnames('navbar__center', collapse && width <= 600 ? 'navbar__center_collapsed' : '')}>
 				<SearchInput
 					onSubmit={(event) => {
 						event.preventDefault();
-						history.push("/search/" + document.getElementById("searchInput").value);
+						history.push('/search/' + document.getElementById('searchInput').value);
 						toggleIfSmallScreen();
 					}}
 					className='navbar__search-input'
 				/>
 			</div>
-			<div className={classnames("navbar__right", collapse && width <= 600 ? "navbar__right_collapsed" : "")}>
+			<div className={classnames('navbar__right', collapse && width <= 600 ? 'navbar__right_collapsed' : '')}>
 				<div
 					onClick={() => {
 						history.push(`/user/${user?.id}`);
