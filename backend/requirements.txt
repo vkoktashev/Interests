@@ -1,6 +1,5 @@
 -e git+https://gitlab.com/Kononkov1998/rawg-python-wrapper#egg=rawgpy #modified rawgpy
 celery==5.1.2
-celery[redis]==3.5.3
 Django==3.2.8
 django-cors-headers==3.10.0
 django-debug-toolbar==3.2.2
@@ -12,6 +11,7 @@ Fabric3==1.14.post1
 howlongtobeatpy==0.1.18
 Pillow==8.4.0
 psycopg2==2.9.1
+redis==3.5.3
 requests==2.26.0
 tmdbsimple==2.8.0
 wheel
