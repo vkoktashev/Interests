@@ -55,7 +55,7 @@ const MoviePage = observer((props) => {
 	);
 
 	useEffect(() => {
-		document.title = movie.name;
+		document.title = movie?.name || 'Interests';
 	}, [movie]);
 
 	useEffect(
@@ -86,24 +86,24 @@ const MoviePage = observer((props) => {
 
 	return (
 		<div className='movie-page'>
-			<div className='movie-page__background' style={{ backgroundImage: `url(${movie.backdrop_path})` }} />
+			<div className='movie-page__background' style={{ backgroundImage: `url(${movie?.backdrop_path})` }} />
 			<LoadingOverlay active={movieState === "pending"} spinner text='Загрузка...'>
 				<div className='movie-page__body'>
 					<div className='movie-page__header'>
 						<div className='movie-page__poster'>
-							<img src={movie.poster_path} className='movie-page__poster-img' alt='' />
+							<img src={movie?.poster_path} className='movie-page__poster-img' alt='' />
 						</div>
 						<div className='movie-page__info'>
-							<h1 className='movie-page__info-header'>{movie.name}</h1>
-							<h5 className='movie-page__info-subheader'>{movie.original_name}</h5>
+							<h1 className='movie-page__info-header'>{movie?.name}</h1>
+							<h5 className='movie-page__info-subheader'>{movie?.original_name}</h5>
 							<div className='movie-page__info-body'>
-								<p>Дата релиза: {movie.release_date}</p>
-								<p>Продолжительность (мин): {movie.runtime}</p>
-								<p>Жанр: {movie.genres}</p>
-								<p>Компания: {movie.production_companies}</p>
-								<p>Слоган: {movie.tagline}</p>
-								<p>В ролях: {movie.cast}</p>
-								<p>Режиссер: {movie.directors}</p>
+								<p>Дата релиза: {movie?.release_date}</p>
+								<p>Продолжительность (мин): {movie?.runtime}</p>
+								<p>Жанр: {movie?.genres}</p>
+								<p>Компания: {movie?.production_companies}</p>
+								<p>Слоган: {movie?.tagline}</p>
+								<p>В ролях: {movie?.cast}</p>
+								<p>Режиссер: {movie?.directors}</p>
 							</div>
 							<LoadingOverlay active={userInfoState === "pending" && !movieState === "pending"} spinner text='Загрузка...'>
 								<Rating
@@ -133,7 +133,7 @@ const MoviePage = observer((props) => {
 									}}
 								/>
 							</LoadingOverlay>
-							<ScoreBlock score={movie.score} text='TMDB score' className='movie-page__info-score' />
+							<ScoreBlock score={movie?.score} text='TMDB score' className='movie-page__info-score' />
 						</div>
 					</div>
 					<Carousel className='movie-page__trailers' showArrows centerMode centerSlidePercentage={50} showThumbs={false} showStatus={false} showIndicators={false}>
@@ -142,7 +142,7 @@ const MoviePage = observer((props) => {
 					<div className='movie-page__overview'>
 						<div>
 							<h3 className='game-page__overview-header'>Описание</h3>
-							<div dangerouslySetInnerHTML={{ __html: movie.overview }} />
+							<div dangerouslySetInnerHTML={{ __html: movie?.overview }} />
 						</div>
 						<h3 className='movie-page__review-header'>Отзыв</h3>
 						<LoadingOverlay active={userInfoState === "pending" && !movieState === "pending"} spinner text='Загрузка...'>

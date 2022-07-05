@@ -51,7 +51,7 @@ const GamePage = observer((props) => {
 	);
 
 	useEffect(() => {
-		document.title = game.name;
+		document.title = game?.name || 'Interests';
 	}, [game]);
 
 	useEffect(
