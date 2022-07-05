@@ -38,7 +38,7 @@ const UserPage = observer((props) => {
 	);
 
 	useEffect(() => {
-		document.title = "Профиль " + user.username;
+		document.title = user.username ? "Профиль " + user.username : 'Interests';
 		if (user.last_activity) {
 			let date = new Date(user.last_activity);
 			let options = { year: date.getFullYear() === new Date().getFullYear() ? undefined : "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric" };
