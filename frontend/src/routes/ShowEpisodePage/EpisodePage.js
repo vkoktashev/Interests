@@ -50,7 +50,7 @@ const EpisodePage = observer((props) => {
 	);
 
 	useEffect(() => {
-		document.title = show.show?.tmdb_name + " - " + show.name;
+		document.title = show?.show?.tmdb_name + " - " + show?.name;
 	}, [show]);
 
 	useEffect(
@@ -77,12 +77,12 @@ const EpisodePage = observer((props) => {
 
 	return (
 		<div className='episode-page'>
-			<div className='episode-page__background' style={{ backgroundImage: `url(${show.show?.tmdb_backdrop_path})` }} />
+			<div className='episode-page__background' style={{ backgroundImage: `url(${show?.show?.tmdb_backdrop_path})` }} />
 			<LoadingOverlay active={showState === "pending"} spinner text='Загрузка...'>
 				<div className='episode-page__body'>
 					<div className='episode-page__header'>
 						<div className='episode-page__poster'>
-							<img src={show.still_path} className='img-fluid' alt='' />
+							<img src={show?.still_path} className='img-fluid' alt='' />
 						</div>
 						<div className='episode-page__info'>
 							<h1 className='episode-page__info-header'>
@@ -92,20 +92,20 @@ const EpisodePage = observer((props) => {
 										history.push("/show/" + show_id);
 										e.preventDefault();
 									}}>
-									{show.show?.tmdb_name}
+									{show?.show?.tmdb_name}
 								</a>
-								{" - " + show.name}
+								{" - " + show?.name}
 							</h1>
-							<h5 className='episode-page__info-subheader'>{show.show?.tmdb_original_name + " - Season " + show.season_number + " - Episode " + show.episode_number}</h5>
+							<h5 className='episode-page__info-subheader'>{show?.show?.tmdb_original_name + " - Season " + show?.season_number + " - Episode " + show?.episode_number}</h5>
 							<div className='episode-page__info-body'>
-								<p hidden={!show.air_date}>Дата выхода: {show.air_date}</p>
+								<p hidden={!show?.air_date}>Дата выхода: {show?.air_date}</p>
 								<a
 									href={window.location.origin + "/show/" + show_id + "/season/" + season_number}
 									onClick={(e) => {
 										history.push("/show/" + show_id + "/season/" + season_number);
 										e.preventDefault();
 									}}>
-									Сезон: {show.season_number}
+									Сезон: {show?.season_number}
 								</a>
 							</div>
 							<div hidden={!loggedIn | !userInfo?.user_watched_show}>
@@ -118,7 +118,7 @@ const EpisodePage = observer((props) => {
 												openLoginForm();
 											} else {
 												setUserRate(score);
-												setEpisodesStatus({ episodes: [{ tmdb_id: show.id, score: score }] }, show_id);
+												setEpisodesStatus({ episodes: [{ tmdb_id: show?.id, score: score }] }, show_id);
 											}
 										}}
 										className='episode-page__rating'
@@ -134,20 +134,20 @@ const EpisodePage = observer((props) => {
 											if (!loggedIn) {
 												openLoginForm();
 											} else {
-												setEpisodesStatus({ episodes: [{ tmdb_id: show.id, review: review }] }, show_id);
+												setEpisodesStatus({ episodes: [{ tmdb_id: show?.id, review: review }] }, show_id);
 											}
 										}}>
 										Сохранить
 									</button>
 								</LoadingOverlay>
 							</div>
-							<ScoreBlock score={show.score} text='TMDB score' className='episode-page__info-score' />
+							<ScoreBlock score={show?.score} text='TMDB score' className='episode-page__info-score' />
 						</div>
 					</div>
 					<div className='episode-page__overview'>
 						<div>
 							<h3>Описание</h3>
-							<div dangerouslySetInnerHTML={{ __html: show.overview }} />
+							<div dangerouslySetInnerHTML={{ __html: show?.overview }} />
 						</div>
 						<div className='episode-page__friends' hidden={friendsInfo.length < 1}>
 							<h4>Отзывы друзей</h4>

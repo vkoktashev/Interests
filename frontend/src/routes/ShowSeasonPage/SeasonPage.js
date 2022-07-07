@@ -54,16 +54,16 @@ const SeasonPage = observer((props) => {
 	);
 
 	useEffect(() => {
-		document.title = show.show?.tmdb_name + " - " + show.name;
+		document.title = show?.show?.tmdb_name + " - " + show?.name;
 	}, [show]);
 
 	useEffect(() => {
 		setChartData([]);
-		if (show.episodes)
-			if (show.episodes.length > 0) {
+		if (show?.episodes)
+			if (show?.episodes.length > 0) {
 				let newData = [];
-				for (let episode in show.episodes) {
-					if (show.episodes[episode].vote_average > 0) newData.push({ name: "Ep " + show.episodes[episode].episode_number, Оценка: show.episodes[episode].vote_average });
+				for (let episode in show?.episodes) {
+					if (show?.episodes[episode].vote_average > 0) newData.push({ name: "Ep " + show?.episodes[episode].episode_number, Оценка: show?.episodes[episode].vote_average });
 				}
 				setChartData(newData);
 			}
@@ -107,29 +107,29 @@ const SeasonPage = observer((props) => {
 
 	return (
 		<div className='season-page'>
-			<div className='season-page__background' style={{ backgroundImage: `url(${show.show?.tmdb_backdrop_path})` }} />
+			<div className='season-page__background' style={{ backgroundImage: `url(${show?.show?.tmdb_backdrop_path})` }} />
 			<LoadingOverlay active={showState === "pending"} spinner text='Загрузка...'>
 				<div className='season-page__body'>
 					<div className='season-page__header'>
 						<div className='season-page__poster'>
-							<img src={show.poster_path} className='img-fluid' alt='' />
+							<img src={show?.poster_path} className='img-fluid' alt='' />
 						</div>
 						<div className='season-page__info'>
 							<h1 className='season-page__info-header'>
 								<a
-									href={window.location.origin + "/show/" + show.show?.id}
+									href={window.location.origin + "/show/" + show?.show?.id}
 									onClick={(e) => {
-										history.push("/show/" + show.show?.tmdb_id);
+										history.push("/show/" + show?.show?.tmdb_id);
 										e.preventDefault();
 									}}>
-									{show.show?.tmdb_name}
+									{show?.show?.tmdb_name}
 								</a>
-								{" - " + show.name}
+								{" - " + show?.name}
 							</h1>
-							<h5 className='season-page__info-subheader'>{show.show?.tmdb_original_name + " - Season " + show.season_number}</h5>
+							<h5 className='season-page__info-subheader'>{show?.show?.tmdb_original_name + " - Season " + show?.season_number}</h5>
 							<div className='season-page__info-body'>
-								<p hidden={!show.air_date}>Дата выхода: {show.air_date}</p>
-								<p hidden={!show.episodes}>Количество серий: {show.episodes?.length}</p>
+								<p hidden={!show?.air_date}>Дата выхода: {show?.air_date}</p>
+								<p hidden={!show?.episodes}>Количество серий: {show?.episodes?.length}</p>
 							</div>
 							<div hidden={!loggedIn | !userInfo?.user_watched_show}>
 								<LoadingOverlay active={userInfoState === "pending" && !showState === "pending"} spinner text='Загрузка...'>
@@ -140,7 +140,7 @@ const SeasonPage = observer((props) => {
 												openLoginForm();
 											} else {
 												setUserRate(score);
-												setSeasonStatus({ score: score }, show_id, show.season_number);
+												setSeasonStatus({ score: score }, show_id, show?.season_number);
 											}
 										}}
 										className='season-page__rating'
@@ -153,7 +153,7 @@ const SeasonPage = observer((props) => {
 										className='season-page__review-save-button'
 										hidden={!loggedIn | !userInfo?.user_watched_show}
 										onClick={() => {
-											setSeasonReview({ review: review }, show_id, show.season_number);
+											setSeasonReview({ review: review }, show_id, show?.season_number);
 										}}>
 										Сохранить
 									</button>
@@ -164,7 +164,7 @@ const SeasonPage = observer((props) => {
 					<div className='season-page__overview'>
 						<div>
 							<h3 className='season-page__overview-header'>Описание</h3>
-							<div dangerouslySetInnerHTML={{ __html: show.overview }} />
+							<div dangerouslySetInnerHTML={{ __html: show?.overview }} />
 						</div>
 						<div className='season-page__episodes'>
 							<h3 className='season-page__episodes-header'>Список серий</h3>
@@ -182,8 +182,8 @@ const SeasonPage = observer((props) => {
 									/>
 								</div>
 								<ul className='season-page__episodes-ul'>
-									{show.episodes
-										? show.episodes.map((episode, counter) => (
+									{show?.episodes
+										? show?.episodes.map((episode, counter) => (
 												<li className='season-page__episode' key={counter}>
 													<DetailEpisodeRow
 														episode={episode}
