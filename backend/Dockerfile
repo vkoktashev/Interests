@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.8.15-slim-bullseye
 ENV PYTHONUNBUFFERED 1
 RUN mkdir /logs
 RUN touch /logs/celery_worker.log
