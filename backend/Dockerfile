@@ -1,14 +1,13 @@
 FROM python:3.8.5
 ENV PYTHONUNBUFFERED 1
-RUN python3 -m venv /opt/venv
-RUN . /opt/venv/bin/activate && mkdir /logs
-RUN . /opt/venv/bin/activate && touch /logs/celery_worker.log
-RUN . /opt/venv/bin/activate && touch /logs/celery_beat.log
-RUN . /opt/venv/bin/activate && mkdir /code
+RUN mkdir /logs
+RUN touch /logs/celery_worker.log
+RUN touch /logs/celery_beat.log
+RUN mkdir /code
 WORKDIR /code
 COPY requirements.txt /code/
-RUN . /opt/venv/bin/activate && pip install wheel
-RUN . /opt/venv/bin/activate && pip install -r requirements.txt
+RUN pip install wheel
+RUN pip install -r requirements.txt
 COPY . /code/
-RUN . /opt/venv/bin/activate && chmod +x ./wrapper_script.sh
-CMD . /opt/venv/bin/activate && ./wrapper_script.sh
+RUN chmod +x ./wrapper_script.sh
+CMD ./wrapper_script.sh
