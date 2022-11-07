@@ -1,5 +1,7 @@
-FROM python:3.10-alpine
+FROM python:3.10.8-bullseye
 ENV PYTHONUNBUFFERED 1
+RUN apk update
+RUN apk add git
 RUN mkdir /logs
 RUN touch /logs/celery_worker.log
 RUN touch /logs/celery_beat.log
