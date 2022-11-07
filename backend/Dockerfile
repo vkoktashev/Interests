@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.8.5
 ENV PYTHONUNBUFFERED 1
 RUN python3 -m venv /opt/venv
 RUN . /opt/venv/bin/activate && mkdir /logs
