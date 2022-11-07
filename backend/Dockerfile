@@ -6,7 +6,7 @@ RUN . /opt/venv/bin/activate && touch /logs/celery_worker.log
 RUN . /opt/venv/bin/activate && touch /logs/celery_beat.log
 RUN . /opt/venv/bin/activate && mkdir /code
 WORKDIR /code
-COPY .requirements.txt /code/
+COPY requirements.txt /code/
 RUN . /opt/venv/bin/activate && pip install -r requirements.txt
 COPY . /code/
 RUN . /opt/venv/bin/activate && chmod +x ./wrapper_script.sh
