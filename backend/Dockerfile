@@ -6,6 +6,7 @@ RUN touch /logs/celery_beat.log
 RUN mkdir /code
 WORKDIR /code
 COPY requirements.txt /code/
+RUN python -m pip install --upgrade pip
 RUN pip install wheel
 RUN pip install -r requirements.txt
 COPY . /code/
