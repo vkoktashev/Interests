@@ -1,7 +1,7 @@
 FROM python:3
 ENV PYTHONUNBUFFERED 1
-RUN apk update
-RUN apk add git
+RUN apk-get update
+RUN apk-get add git
 RUN mkdir /logs
 RUN touch /logs/celery_worker.log
 RUN touch /logs/celery_beat.log
