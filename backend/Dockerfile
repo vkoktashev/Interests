@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.10-alpine
 ENV PYTHONUNBUFFERED 1
 RUN mkdir /logs
 RUN touch /logs/celery_worker.log
