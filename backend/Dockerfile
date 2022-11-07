@@ -1,4 +1,4 @@
-FROM python:3.10-alpine
+FROM python:alpine
 ENV PYTHONUNBUFFERED 1
 RUN apk update
 RUN apk add git
