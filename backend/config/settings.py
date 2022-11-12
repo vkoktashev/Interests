@@ -61,6 +61,9 @@ SWAGGER_SETTINGS = {
 SITE_ID = 1
 
 if DEBUG:
+    import mimetypes
+
+    mimetypes.add_type("application/javascript", ".js", True)
     INSTALLED_APPS += ['debug_toolbar', ]
     MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware', ]
     INTERNAL_IPS = [

@@ -2,7 +2,7 @@
 celery==5.1.2
 Django==3.2.8
 django-cors-headers==3.10.0
-django-debug-toolbar==3.2.2
+django-debug-toolbar==3.7.0
 djangorestframework==3.12.4
 djangorestframework_simplejwt==5.0.0
 drf-nested-routers==0.93.4
