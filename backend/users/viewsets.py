@@ -332,10 +332,9 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         # games
         games = Game.objects \
-            .filter(usergame__user=request.user, rawg_release_date__gte=today_date) \
-            .exclude(usergame__status=UserGame.STATUS_NOT_PLAYED) \
-            .exclude(usergame__status=UserGame.STATUS_STOPPED)
-
+            .filter(Q(usergame__user=request.user, rawg_release_date__gte=today_date) &
+                    ~Q(usergame__user=request.user, usergame__status__in=[UserGame.STATUS_NOT_PLAYED,
+                                                                          UserGame.STATUS_STOPPED]))
         for game in games:
             rawg_release_date_str = str(game.rawg_release_date)
             release_date = calendar_dict[rawg_release_date_str]
@@ -348,9 +347,9 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         # movies
         movies = Movie.objects \
-            .filter(usermovie__user=request.user, tmdb_release_date__gte=today_date) \
-            .exclude(usermovie__status=UserMovie.STATUS_NOT_WATCHED) \
-            .exclude(usermovie__status=UserMovie.STATUS_STOPPED)
+            .filter(Q(usermovie__user=request.user, tmdb_release_date__gte=today_date) &
+                    ~Q(usermovie__user=request.user, usermovie__status__in=[UserMovie.STATUS_NOT_WATCHED,
+                                                                            UserMovie.STATUS_STOPPED]))
 
         for movie in movies:
             tmdb_release_date_str = str(movie.tmdb_release_date)
@@ -363,12 +362,14 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             release_date['movies'].append(MovieSerializer(movie).data)
 
         # episodes
-        shows = Show.objects.filter(usershow__user=request.user) \
-            .exclude(usershow__status=UserShow.STATUS_NOT_WATCHED) \
-            .exclude(usershow__status=UserShow.STATUS_STOPPED)
+        shows = Show.objects \
+            .filter(Q(usershow__user=request.user) &
+                    ~Q(usershow__user=request.user,
+                       usershow__status__in=[UserShow.STATUS_NOT_WATCHED, UserShow.STATUS_STOPPED]))
 
         episodes = Episode.objects.select_related('tmdb_season', 'tmdb_season__tmdb_show') \
             .filter(tmdb_season__tmdb_show__in=shows, tmdb_release_date__gte=today_date)
+
         for episode in episodes:
             tmdb_release_date_str = str(episode.tmdb_release_date)
             release_date = calendar_dict[tmdb_release_date_str]
