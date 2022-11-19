@@ -1,4 +1,5 @@
 import collections
+import random
 import secrets
 from datetime import datetime
 from itertools import chain
@@ -20,14 +21,15 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from config import settings
 from config.settings import EMAIL_HOST_USER
 from games.models import UserGame, GameLog, Game
-from games.serializers import GameStatsSerializer, GameLogSerializer, GameSerializer
+from games.serializers import GameStatsSerializer, GameLogSerializer, GameSerializer, TypedGameSerializer
 from movies.models import UserMovie, MovieLog, Movie
-from movies.serializers import MovieLogSerializer, MovieStatsSerializer, MovieSerializer
+from movies.serializers import MovieLogSerializer, MovieStatsSerializer, MovieSerializer, TypedMovieSerializer
 from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, Show, Episode
 from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogSerializer, EpisodeLogSerializer, \
-    EpisodeShowSerializer
+    EpisodeShowSerializer, TypedShowSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer, \
     UserInfoSerializer, SettingsSerializer
 from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
@@ -72,8 +74,10 @@ class AuthViewSet(GenericViewSet):
         message = f"Привет {user.username}, для активации аккаунта перейди по ссылке:\n{activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
         try:
-            email.send()
-            # print(activation_link)
+            if settings.DEBUG:
+                print(activation_link)
+            else:
+                email.send()
         except SMTPAuthenticationError:
             return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -94,7 +98,7 @@ class AuthViewSet(GenericViewSet):
                              )
                          })
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
-    def confirm_email(self, request, *args, **kwargs):
+    def confirm_email(self, request):
         try:
             uid = force_text(urlsafe_base64_decode(request.query_params.get('uid64')))
             user = User.objects.get(pk=uid)
@@ -134,7 +138,7 @@ class AuthViewSet(GenericViewSet):
             )
         })
     @action(detail=False, methods=['put'], permission_classes=[AllowAny])
-    def password_reset(self, request, *args, **kwargs):
+    def password_reset(self, request):
         email = request.data.get('email')
 
         try:
@@ -159,8 +163,10 @@ class AuthViewSet(GenericViewSet):
         message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
         try:
-            email.send()
-            # print(activation_link)
+            if settings.DEBUG:
+                print(activation_link)
+            else:
+                email.send()
         except SMTPAuthenticationError:
             return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -174,7 +180,7 @@ class AuthViewSet(GenericViewSet):
                              }
                          ))
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
-    def confirm_password_reset(self, request, *args, **kwargs):
+    def confirm_password_reset(self, request):
         try:
             reset_token = force_text(urlsafe_base64_decode(request.query_params.get('reset_token')))
             password = request.data.get('password')
@@ -238,7 +244,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                              )
                          })
     @action(detail=True, methods=['get', 'delete'])
-    def log(self, request, *args, **kwargs):
+    def log(self, request, **kwargs):
         try:
             user = get_user_by_id(kwargs.get('pk'), request.user)
         except ValueError:
@@ -310,7 +316,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                              )
                          })
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-    def friends_log(self, request, *args, **kwargs):
+    def friends_log(self, request):
         user_follow_query = UserFollow.objects.filter(user=request.user, is_following=True).values('followed_user')
         results, count = get_logs(user_follow_query, request.GET.get('page_size'), request.GET.get('page'),
                                   request.GET.get('query', ''),
@@ -320,16 +326,15 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response({'log': results, 'count': count})
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-    def release_calendar(self, request, *args, **kwargs):
+    def release_calendar(self, request):
         today_date = datetime.today().date()
         calendar_dict = collections.defaultdict(dict)
 
         # games
         games = Game.objects \
-            .filter(usergame__user=request.user, rawg_release_date__gte=today_date) \
-            .exclude(usergame__status=UserGame.STATUS_NOT_PLAYED) \
-            .exclude(usergame__status=UserGame.STATUS_STOPPED)
-
+            .filter(Q(usergame__user=request.user, rawg_release_date__gte=today_date) &
+                    ~Q(usergame__user=request.user, usergame__status__in=[UserGame.STATUS_NOT_PLAYED,
+                                                                          UserGame.STATUS_STOPPED]))
         for game in games:
             rawg_release_date_str = str(game.rawg_release_date)
             release_date = calendar_dict[rawg_release_date_str]
@@ -342,9 +347,9 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         # movies
         movies = Movie.objects \
-            .filter(usermovie__user=request.user, tmdb_release_date__gte=today_date) \
-            .exclude(usermovie__status=UserMovie.STATUS_NOT_WATCHED) \
-            .exclude(usermovie__status=UserMovie.STATUS_STOPPED)
+            .filter(Q(usermovie__user=request.user, tmdb_release_date__gte=today_date) &
+                    ~Q(usermovie__user=request.user, usermovie__status__in=[UserMovie.STATUS_NOT_WATCHED,
+                                                                            UserMovie.STATUS_STOPPED]))
 
         for movie in movies:
             tmdb_release_date_str = str(movie.tmdb_release_date)
@@ -357,12 +362,14 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             release_date['movies'].append(MovieSerializer(movie).data)
 
         # episodes
-        shows = Show.objects.filter(usershow__user=request.user) \
-            .exclude(usershow__status=UserShow.STATUS_NOT_WATCHED) \
-            .exclude(usershow__status=UserShow.STATUS_STOPPED)
+        shows = Show.objects \
+            .filter(Q(usershow__user=request.user) &
+                    ~Q(usershow__user=request.user,
+                       usershow__status__in=[UserShow.STATUS_NOT_WATCHED, UserShow.STATUS_STOPPED]))
 
         episodes = Episode.objects.select_related('tmdb_season', 'tmdb_season__tmdb_show') \
             .filter(tmdb_season__tmdb_show__in=shows, tmdb_release_date__gte=today_date)
+
         for episode in episodes:
             tmdb_release_date_str = str(episode.tmdb_release_date)
             release_date = calendar_dict[tmdb_release_date_str]
@@ -493,7 +500,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             )
         })
     @action(detail=True, methods=['put'])
-    def follow(self, request, *args, **kwargs):
+    def follow(self, request, **kwargs):
         try:
             user = get_user_by_id(kwargs.get('pk'), request.user)
         except ValueError:
@@ -538,6 +545,74 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                     .update(is_following=False)
 
             return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def random(self, request):
+        categories_query = request.GET.get('categories', '')
+        count = request.GET.get('count', '')
+        try:
+            count = int(count)
+            if count < 1 or count > 100:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        ended_only = request.GET.get('endedOnly', '')
+        ended_only = ended_only == 'true'
+        categories = []
+
+        games = None
+        movies = None
+        shows = None
+        games_len = 0
+        movies_len = 0
+        shows_len = 0
+
+        if 'games' in categories_query:
+            games = UserGame.objects.filter(user=request.user, status=UserGame.STATUS_GOING)
+            games_len = len(games)
+            if games_len > 0:
+                categories.append('games')
+        if 'movies' in categories_query:
+            movies = UserMovie.objects.filter(user=request.user, status=UserMovie.STATUS_GOING)
+            movies_len = len(movies)
+            if movies_len > 0:
+                categories.append('movies')
+        if 'shows' in categories_query:
+            if ended_only:
+                shows = UserShow.objects.filter(user=request.user, status=UserShow.STATUS_GOING,
+                                                show__tmdb_status__in=[Show.TMDB_STATUS_ENDED,
+                                                                       Show.TMDB_STATUS_CANCELED])
+            else:
+                shows = UserShow.objects.filter(user=request.user, status=UserShow.STATUS_GOING)
+            shows_len = len(shows)
+            if shows_len > 0:
+                categories.append('shows')
+
+        entries_count = games_len + movies_len + shows_len
+        games_chance = games_len / entries_count
+        movies_chance = movies_len / entries_count
+        shows_chance = shows_len / entries_count
+
+        random_choices = random.choices(['game', 'movie', 'show'],
+                                        weights=(games_chance, movies_chance, shows_chance), k=count)
+
+        games_count = min(sum(item == 'game' for item in random_choices), games_len)
+        movies_count = min(sum(item == 'movie' for item in random_choices), movies_len)
+        shows_count = min(sum(item == 'show' for item in random_choices), shows_len)
+
+        selected_entries = []
+        if 'games' in categories:
+            selected_games = [item.game for item in games.order_by('?')[:games_count].select_related('game')]
+            selected_entries += TypedGameSerializer(selected_games, many=True).data
+        if 'movies' in categories:
+            selected_movies = [item.movie for item in movies.order_by('?')[:movies_count].select_related('movie')]
+            selected_entries += TypedMovieSerializer(selected_movies, many=True).data
+        if 'shows' in categories:
+            selected_shows = [item.show for item in shows.order_by('?')[:shows_count].select_related('show')]
+            selected_entries += TypedShowSerializer(selected_shows, many=True).data
+
+        random.shuffle(selected_entries)
+        return Response(selected_entries, status=status.HTTP_200_OK)
 
 
 def calculate_games_stats(user_games: QuerySet, user: User) -> dict:

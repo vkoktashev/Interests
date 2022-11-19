@@ -70,3 +70,15 @@ class GameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
         exclude = ('id',)
+
+
+class TypedGameSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField('get_type')
+
+    @staticmethod
+    def get_type(game):
+        return TYPE_GAME
+
+    class Meta:
+        model = Game
+        exclude = ('id',)

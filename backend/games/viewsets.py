@@ -39,7 +39,7 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
                              )
                          })
     @action(detail=False, methods=['get'])
-    def rawg(self, request, *args, **kwargs):
+    def rawg(self, request):
         query = request.GET.get('query', '')
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
         page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
@@ -120,7 +120,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserGameSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
-    def user_info(self, request, *args, **kwargs):
+    def user_info(self, request, **kwargs):
         try:
             game = Game.objects.get(rawg_slug=kwargs.get('slug'))
 
@@ -178,7 +178,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             )
         }
     )
-    def update(self, request, *args, **kwargs):
+    def update(self, request, **kwargs):
         try:
             game = Game.objects.get(rawg_slug=kwargs.get('slug'))
         except Game.DoesNotExist:
@@ -222,6 +222,8 @@ def update_game_genres(game: Game, rawg_game: dict) -> None:
 
 
 def translate_hltb_time(hltb_game, time, time_unit):
+    print(hltb_game)
+    return
     if hltb_game is None or hltb_game.get(time) == -1:
         return
 
@@ -275,7 +277,6 @@ def get_rawg_game(slug):
     returned_from_cache = True
     key = get_rawg_game_key(slug)
     rawg_game = cache.get(key, None)
-
     if rawg_game is None:
         rawg_game = rawg.get_game(slug).json
         cache.set(key, rawg_game, CACHE_TIMEOUT)
