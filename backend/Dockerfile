@@ -8,7 +8,7 @@ WORKDIR /code
 COPY requirements.txt /code/
 RUN python -m pip install --upgrade pip
 RUN pip install wheel
-RUN pip install -r requirements.txt
+RUN pip install --upgrade -r requirements.txt
 COPY . /code/
 RUN chmod +x ./wrapper_script.sh
 CMD ./wrapper_script.sh
