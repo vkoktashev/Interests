@@ -24,12 +24,12 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from config import settings
 from config.settings import EMAIL_HOST_USER
 from games.models import UserGame, GameLog, Game
-from games.serializers import GameStatsSerializer, GameLogSerializer, GameSerializer
+from games.serializers import GameStatsSerializer, GameLogSerializer, GameSerializer, TypedGameSerializer
 from movies.models import UserMovie, MovieLog, Movie
-from movies.serializers import MovieLogSerializer, MovieStatsSerializer, MovieSerializer
+from movies.serializers import MovieLogSerializer, MovieStatsSerializer, MovieSerializer, TypedMovieSerializer
 from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, Show, Episode
 from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogSerializer, EpisodeLogSerializer, \
-    EpisodeShowSerializer, ShowSerializer
+    EpisodeShowSerializer, TypedShowSerializer
 from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer, \
     UserInfoSerializer, SettingsSerializer
 from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
@@ -556,7 +556,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
         except ValueError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        ended_only = request.GET.get('ended-only', '')
+        ended_only = request.GET.get('endedOnly', '')
         ended_only = ended_only == 'true'
         categories = []
 
@@ -603,13 +603,13 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         selected_entries = []
         if 'games' in categories:
             selected_games = [item.game for item in games.order_by('?')[:games_count].select_related('game')]
-            selected_entries += GameSerializer(selected_games, many=True).data
+            selected_entries += TypedGameSerializer(selected_games, many=True).data
         if 'movies' in categories:
             selected_movies = [item.movie for item in movies.order_by('?')[:movies_count].select_related('movie')]
-            selected_entries += MovieSerializer(selected_movies, many=True).data
+            selected_entries += TypedMovieSerializer(selected_movies, many=True).data
         if 'shows' in categories:
             selected_shows = [item.show for item in shows.order_by('?')[:shows_count].select_related('show')]
-            selected_entries += ShowSerializer(selected_shows, many=True).data
+            selected_entries += TypedShowSerializer(selected_shows, many=True).data
 
         random.shuffle(selected_entries)
         return Response(selected_entries, status=status.HTTP_200_OK)

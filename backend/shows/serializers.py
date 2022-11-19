@@ -186,6 +186,18 @@ class ShowSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class TypedShowSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField('get_type')
+
+    @staticmethod
+    def get_type(show):
+        return TYPE_SHOW
+
+    class Meta:
+        model = Show
+        exclude = ('id',)
+
+
 class SeasonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Season
