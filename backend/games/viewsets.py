@@ -222,8 +222,6 @@ def update_game_genres(game: Game, rawg_game: dict) -> None:
 
 
 def translate_hltb_time(hltb_game, time, time_unit):
-    print(hltb_game)
-    return
     if hltb_game is None or hltb_game.get(time) == -1:
         return
 
