@@ -81,18 +81,34 @@ const GamePage = observer((props) => {
 	}
 
 	function strToFloat(text) {
+		if (typeof text === 'number') {
+			return text;
+		}
 		let cleanStr = text;
-		if (cleanStr && cleanStr !== -1)
-			if (cleanStr.indexOf("½") + 1) return parseFloat(cleanStr) + 0.5;
-			else return parseFloat(cleanStr);
+		if (cleanStr && cleanStr !== -1) {
+			if (cleanStr.indexOf("½") + 1) {
+				return parseFloat(cleanStr) + 0.5
+			} else {
+				return parseFloat(cleanStr);
+			}
+		}
 	}
 
 	function hltbToDatalist(hltbInfo) {
 		let newData = [];
-		if (!(!hltbInfo || hltbInfo === "0 часов" || hltbInfo?.gameplay_main === -1)) newData.push(strToFloat(hltbInfo?.gameplay_main ? hltbInfo?.gameplay_main : hltbInfo));
-		if (hltbInfo?.gameplay_main_extra !== -1) newData.push(strToFloat(hltbInfo?.gameplay_main_extra));
-		if (hltbInfo?.gameplay_completionist !== -1) newData.push(strToFloat(hltbInfo?.gameplay_completionist));
-
+		if (!(!hltbInfo || hltbInfo === "0 часов" || hltbInfo?.gameplay_main === -1)) {
+			if (typeof hltbInfo === 'string') {
+				newData.push(hltbInfo);
+			} else {
+				newData.push(strToFloat(hltbInfo?.gameplay_main));
+			}
+		}
+		if (hltbInfo?.gameplay_main_extra !== -1) {
+			newData.push(strToFloat(hltbInfo?.gameplay_main_extra));
+		}
+		if (hltbInfo?.gameplay_completionist !== -1) {
+			newData.push(strToFloat(hltbInfo?.gameplay_completionist));
+		}
 		return newData;
 	}
 
@@ -161,7 +177,14 @@ const GamePage = observer((props) => {
 
 								<div className='game-page__review-time'>
 									Время прохождения (часы)
-									<InputNumber className='game-page__time-input' value={spentTime} min={0} max={100000} onChange={(value) => setSpentTime(value)} dataList={hltbToDatalist(game.hltb)} />
+									<InputNumber
+										className='game-page__time-input'
+										value={spentTime}
+										min={0}
+										max={100000}
+										onChange={(value) => setSpentTime(value)}
+										dataList={hltbToDatalist(game.hltb)}
+									/>
 								</div>
 								<button
 									className='game-page__review-save-button'
