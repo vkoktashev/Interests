@@ -221,24 +221,13 @@ def update_game_genres(game: Game, rawg_game: dict) -> None:
     GameGenre.objects.filter(id__in=game_genres_to_delete_ids).delete()
 
 
-def translate_hltb_time(hltb_game, time, time_unit):
-    if hltb_game is None or hltb_game.get(time) == -1:
+def translate_hltb_time(hltb_game, time_key, new_time_key, time_unit):
+    if hltb_game is None or hltb_game.get(time_key) == -1:
         return
 
-    gameplay_time = ''
-    for s in hltb_game.get(time):
-        if s.isdigit():
-            gameplay_time += s
-        else:
-            break
-    gameplay_time = int(gameplay_time)
-
-    gameplay_unit = hltb_game.get(time_unit)
-    if gameplay_unit == 'Hours':
-        gameplay_unit = int_to_hours(gameplay_time)
-    elif gameplay_unit == 'Mins':
-        gameplay_unit = int_to_minutes(gameplay_time)
-    hltb_game.update({time_unit: gameplay_unit})
+    gameplay_time = hltb_game.get(time_key)
+    gameplay_unit = int_to_hours(int(gameplay_time))
+    hltb_game.update({new_time_key: gameplay_time, time_unit: gameplay_unit})
 
 
 def get_game_search_results(query, page, page_size):
@@ -304,9 +293,9 @@ def parse_game(rawg_game, hltb_game=None):
     }
 
     if hltb_game is not None:
-        translate_hltb_time(hltb_game, 'gameplay_main', 'gameplay_main_unit')
-        translate_hltb_time(hltb_game, 'gameplay_main_extra', 'gameplay_main_extra_unit')
-        translate_hltb_time(hltb_game, 'gameplay_completionist', 'gameplay_completionist_unit')
+        translate_hltb_time(hltb_game, 'main_story', 'gameplay_main', 'gameplay_main_unit')
+        translate_hltb_time(hltb_game, 'main_extra', 'gameplay_main_extra', 'gameplay_main_extra_unit')
+        translate_hltb_time(hltb_game, 'completionist', 'gameplay_completionist', 'gameplay_completionist_unit')
         new_game.update({'hltb': hltb_game})
 
     return new_game
