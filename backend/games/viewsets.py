@@ -262,7 +262,7 @@ def update_game_stores(game: Game, rawg_game: dict) -> None:
     GameStore.objects.filter(id__in=game_stores_to_delete_ids).delete()
 
 
-def find_game_store_url(game_stores: List[rawgpy.game_store.GameStore], store_obj: Store) -> str:
+def find_game_store_url(game_stores: List[rawgpy.GameStore], store_obj: Store) -> str:
     for game_store in game_stores:
         if store_obj.rawg_id == game_store.store_id:
             return game_store.url
