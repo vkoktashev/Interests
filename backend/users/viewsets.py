@@ -10,7 +10,7 @@ from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
 from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, QuerySet
 from django.db.models.functions import ExtractYear
-from django.utils.encoding import force_bytes, force_text
+from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -100,7 +100,7 @@ class AuthViewSet(GenericViewSet):
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
     def confirm_email(self, request):
         try:
-            uid = force_text(urlsafe_base64_decode(request.query_params.get('uid64')))
+            uid = force_str(urlsafe_base64_decode(request.query_params.get('uid64')))
             user = User.objects.get(pk=uid)
         except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist):
             user = None
@@ -182,7 +182,7 @@ class AuthViewSet(GenericViewSet):
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
     def confirm_password_reset(self, request):
         try:
-            reset_token = force_text(urlsafe_base64_decode(request.query_params.get('reset_token')))
+            reset_token = force_str(urlsafe_base64_decode(request.query_params.get('reset_token')))
             password = request.data.get('password')
             user_password_token = UserPasswordToken.objects.get(reset_token=reset_token)
             user = User.objects.get(id=user_password_token.user.id)
