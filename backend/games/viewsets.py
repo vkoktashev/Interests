@@ -23,7 +23,7 @@ from utils.constants import RAWG_UNAVAILABLE, ERROR, rawg, DEFAULT_PAGE_NUMBER, 
     GAME_NOT_FOUND, CACHE_TIMEOUT
 from utils.documentation import GAMES_SEARCH_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE
 from utils.functions import int_to_hours, get_page_size, update_fields_if_needed, \
-    objects_to_str
+    objects_to_str, float_to_hours
 from utils.openapi_params import query_param, page_param, page_size_param
 
 
@@ -273,7 +273,7 @@ def translate_hltb_time(hltb_game, time_key, new_time_key, time_unit):
         return
 
     gameplay_time = hltb_game.get(time_key)
-    gameplay_unit = int_to_hours(int(gameplay_time))
+    gameplay_unit = float_to_hours(gameplay_time)
     hltb_game.update({new_time_key: gameplay_time, time_unit: gameplay_unit})
 
 
