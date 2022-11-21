@@ -3,7 +3,6 @@ from json import JSONDecodeError
 from django.contrib.postgres.search import TrigramSimilarity
 from django.core.cache import cache
 from django.core.paginator import Paginator
-from django.db import transaction
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
@@ -15,13 +14,13 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from games.functions import get_game_new_fields, get_hltb_game_key, get_rawg_game_key
-from games.models import Game, UserGame, Genre, GameGenre
+from games.models import Game, UserGame, Genre, GameGenre, GameStore, Store
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer, GameSerializer
 from users.models import UserFollow
 from utils.constants import RAWG_UNAVAILABLE, ERROR, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, \
     GAME_NOT_FOUND, CACHE_TIMEOUT
 from utils.documentation import GAMES_SEARCH_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE
-from utils.functions import int_to_hours, get_page_size, int_to_minutes, update_fields_if_needed, \
+from utils.functions import int_to_hours, get_page_size, update_fields_if_needed, \
     objects_to_str
 from utils.openapi_params import query_param, page_param, page_size_param
 
@@ -96,8 +95,9 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         )
     })
     def retrieve(self, request, *args, **kwargs):
+        slug = kwargs.get('slug')
         try:
-            rawg_game, returned_from_cache = get_rawg_game(kwargs.get('slug'))
+            rawg_game, returned_from_cache = get_rawg_game(slug)
         except KeyError:
             return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
         except JSONDecodeError:
@@ -113,6 +113,14 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         if created or not returned_from_cache:
             update_game_genres(game, rawg_game)
+            update_game_stores(game, rawg_game)
+
+        game_stores = GameStore.objects.filter(game=game).select_related('store')
+        for game_store in game_stores:
+            for rawg_game_store in rawg_game.get('stores'):
+                if game_store.store.rawg_id == rawg_game_store.get('store').get('id'):
+                    rawg_game_store['url'] = game_store.url
+                    break
 
         parsed_game = parse_game(rawg_game, hltb_game)
 
@@ -221,6 +229,43 @@ def update_game_genres(game: Game, rawg_game: dict) -> None:
     GameGenre.objects.filter(id__in=game_genres_to_delete_ids).delete()
 
 
+def update_game_stores(game: Game, rawg_game: dict) -> None:
+    existing_game_stores = GameStore.objects.filter(game=game)
+    new_game_stores = []
+    game_stores_to_delete_ids = []
+    stores = rawg.get_stores(rawg_game.get('slug')).get('results')
+
+    for game_store in rawg_game.get('stores'):
+        store = game_store['store']
+        store_obj, created = Store.objects.get_or_create(rawg_id=store.get('id'),
+                                                         defaults={
+                                                             'rawg_name': store.get('name'),
+                                                             'rawg_slug': store.get('slug')
+                                                         })
+        game_store_url = find_game_store_url(stores, store_obj)
+        game_store_obj, created = GameStore.objects.get_or_create(store=store_obj, game=game,
+                                                                  defaults={
+                                                                      'url': game_store_url
+                                                                  })
+        if game_store_obj.url != game_store_url:
+            game_store_obj.url = game_store_url
+            game_store_obj.save(update_fields=('url',))
+
+        new_game_stores.append(game_store_obj)
+
+    for existing_game_store in existing_game_stores:
+        if existing_game_store not in new_game_stores:
+            game_stores_to_delete_ids.append(existing_game_store.id)
+
+    GameStore.objects.filter(id__in=game_stores_to_delete_ids).delete()
+
+
+def find_game_store_url(game_stores: list, store_obj: Store) -> str:
+    for game_store in game_stores:
+        if store_obj.rawg_id == game_store['store_id']:
+            return game_store['url']
+
+
 def translate_hltb_time(hltb_game, time_key, new_time_key, time_unit):
     if hltb_game is None or hltb_game.get(time_key) == -1:
         return
@@ -290,6 +335,7 @@ def parse_game(rawg_game, hltb_game=None):
         'release_date': '.'.join(reversed(rawg_game['released'].split('-')))
         if rawg_game.get('released') is not None else None,
         'playtime': f'{rawg_game.get("playtime")} {int_to_hours(rawg_game.get("playtime"))}',
+        'stores': rawg_game.get('stores'),
     }
 
     if hltb_game is not None:

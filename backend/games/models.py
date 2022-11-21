@@ -59,3 +59,18 @@ class GameGenre(models.Model):
 
     class Meta:
         unique_together = (("game", "genre"),)
+
+
+class Store(models.Model):
+    rawg_id = models.IntegerField(primary_key=True)
+    rawg_name = models.CharField(max_length=100)
+    rawg_slug = models.CharField(max_length=100, unique=True)
+
+
+class GameStore(models.Model):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    store = models.ForeignKey(Store, on_delete=models.CASCADE)
+    url = models.CharField(max_length=200, blank=True)
+
+    class Meta:
+        unique_together = (("game", "store"),)
