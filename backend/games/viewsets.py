@@ -1,5 +1,7 @@
 from json import JSONDecodeError
+from typing import List
 
+import rawgpy
 from django.contrib.postgres.search import TrigramSimilarity
 from django.core.cache import cache
 from django.core.paginator import Paginator
@@ -233,7 +235,7 @@ def update_game_stores(game: Game, rawg_game: dict) -> None:
     existing_game_stores = GameStore.objects.filter(game=game)
     new_game_stores = []
     game_stores_to_delete_ids = []
-    stores = rawg.get_stores(rawg_game.get('slug')).get('results')
+    stores = rawg.get_stores(rawg_game.get('slug'))
 
     for game_store in rawg_game.get('stores'):
         store = game_store['store']
@@ -260,10 +262,10 @@ def update_game_stores(game: Game, rawg_game: dict) -> None:
     GameStore.objects.filter(id__in=game_stores_to_delete_ids).delete()
 
 
-def find_game_store_url(game_stores: list, store_obj: Store) -> str:
+def find_game_store_url(game_stores: List[rawgpy.game_store.GameStore], store_obj: Store) -> str:
     for game_store in game_stores:
-        if store_obj.rawg_id == game_store['store_id']:
-            return game_store['url']
+        if store_obj.rawg_id == game_store.store_id:
+            return game_store.url
 
 
 def translate_hltb_time(hltb_game, time_key, new_time_key, time_unit):
