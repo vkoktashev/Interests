@@ -548,8 +548,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def random(self, request):
-        categories_query = request.GET.get('categories', '')
-        count = request.GET.get('count', '')
+        categories_query = request.GET.get('categories[]', '')
+        count = request.GET.get('count', 10)
         try:
             count = int(count)
             if count < 1 or count > 100:
@@ -589,9 +589,9 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 categories.append('shows')
 
         entries_count = games_len + movies_len + shows_len
-        games_chance = games_len / entries_count
-        movies_chance = movies_len / entries_count
-        shows_chance = shows_len / entries_count
+        games_chance = games_len / entries_count if entries_count > 0 else 0
+        movies_chance = movies_len / entries_count if entries_count > 0 else 0
+        shows_chance = shows_len / entries_count if entries_count > 0 else 0
 
         random_choices = random.choices(['game', 'movie', 'show'],
                                         weights=(games_chance, movies_chance, shows_chance), k=count)
