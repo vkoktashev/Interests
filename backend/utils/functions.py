@@ -5,7 +5,7 @@ from django.db.models import DecimalField, IntegerField, CharField
 from utils.openapi_params import DEFAULT_PAGE_SIZE
 
 
-def int_to_hours(number):
+def int_to_hours(number: int) -> str:
     if 11 <= number <= 14:
         return 'часов'
     elif number % 10 == 1:
@@ -16,7 +16,19 @@ def int_to_hours(number):
         return 'часов'
 
 
-def int_to_minutes(number):
+def float_to_hours(number: float) -> str:
+    decimal_part = int(repr(number).split('.')[1])
+    if 11 <= decimal_part <= 14:
+        return 'часов'
+    elif decimal_part % 10 == 1:
+        return 'час'
+    elif 2 <= decimal_part % 10 <= 4:
+        return 'часа'
+    else:
+        return 'часов'
+
+
+def int_to_minutes(number: int) -> str:
     if 1 <= number % 10 <= 4 and number <= 14:
         return 'минут'
     elif number % 10 == 1:
