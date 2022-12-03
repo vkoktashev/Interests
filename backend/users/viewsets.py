@@ -548,7 +548,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def random(self, request):
-        categories_query = request.GET.get('categories[]', '')
+        categories_query = request.query_params.getlist('categories[]')
         count = request.GET.get('count', 10)
         try:
             count = int(count)
@@ -566,24 +566,29 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         games_len = 0
         movies_len = 0
         shows_len = 0
+        today_date = datetime.today().date()
 
         if 'games' in categories_query:
-            games = UserGame.objects.filter(user=request.user, status=UserGame.STATUS_GOING)
+            games = UserGame.objects.filter(user=request.user, status=UserGame.STATUS_GOING,
+                                            game__rawg_release_date__lte=today_date)
             games_len = len(games)
             if games_len > 0:
                 categories.append('games')
         if 'movies' in categories_query:
-            movies = UserMovie.objects.filter(user=request.user, status=UserMovie.STATUS_GOING)
+            movies = UserMovie.objects.filter(user=request.user, status=UserMovie.STATUS_GOING,
+                                              movie__tmdb_release_date__lte=today_date)
             movies_len = len(movies)
             if movies_len > 0:
                 categories.append('movies')
         if 'shows' in categories_query:
             if ended_only:
                 shows = UserShow.objects.filter(user=request.user, status=UserShow.STATUS_GOING,
+                                                show__tmdb_release_date__lte=today_date,
                                                 show__tmdb_status__in=[Show.TMDB_STATUS_ENDED,
                                                                        Show.TMDB_STATUS_CANCELED])
             else:
-                shows = UserShow.objects.filter(user=request.user, status=UserShow.STATUS_GOING)
+                shows = UserShow.objects.filter(user=request.user, status=UserShow.STATUS_GOING,
+                                                show__tmdb_release_date__lte=today_date)
             shows_len = len(shows)
             if shows_len > 0:
                 categories.append('shows')
