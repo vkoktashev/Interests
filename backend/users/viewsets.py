@@ -12,8 +12,6 @@ from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, 
 from django.db.models.functions import ExtractYear
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -35,32 +33,15 @@ from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserF
 from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
     USER_NOT_FOUND, EMAIL_ERROR, MINUTES_IN_HOUR, SITE_URL, TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, \
     TYPE_SEASON, TYPE_EPISODE, TYPE_USER, CANNOT_DELETE_ANOTHER_USER_LOG, WRONG_LOG_TYPE, LOG_NOT_FOUND
-from utils.documentation import USER_SIGNUP_201_EXAMPLE, USER_SIGNUP_400_EXAMPLE, USER_LOG_200_EXAMPLE, \
-    USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE
 from utils.functions import get_page_size
 from utils.models import Round
-from utils.openapi_params import page_param, page_size_param, query_param, uid64_param, token_param, reset_token_param
 from .functions import is_user_available
 from .models import User, UserFollow, UserLog, UserPasswordToken
 from .tokens import account_activation_token
 
 
 class AuthViewSet(GenericViewSet):
-    @swagger_auto_schema(request_body=UserSerializer,
-                         responses={
-                             status.HTTP_201_CREATED: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": USER_SIGNUP_201_EXAMPLE
-                                 }
-                             ),
-                             status.HTTP_400_BAD_REQUEST: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": USER_SIGNUP_400_EXAMPLE
-                                 }
-                             )
-                         })
+
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def signup(self, request):
         serializer = UserSerializer(data=request.data)
@@ -82,21 +63,6 @@ class AuthViewSet(GenericViewSet):
             return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @swagger_auto_schema(manual_parameters=[uid64_param, token_param],
-                         responses={
-                             status.HTTP_200_OK: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": USER_RETRIEVE_200_EXAMPLE
-                                 }
-                             ),
-                             status.HTTP_400_BAD_REQUEST: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": {ERROR: WRONG_URL}
-                                 }
-                             )
-                         })
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
     def confirm_email(self, request):
         try:
@@ -113,30 +79,6 @@ class AuthViewSet(GenericViewSet):
         else:
             return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
 
-    @swagger_auto_schema(
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                "email": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    format=openapi.FORMAT_EMAIL
-                )
-            }
-        ),
-        responses={
-            status.HTTP_200_OK: openapi.Response(
-                description=status.HTTP_200_OK,
-                examples={
-                    "application/json": None
-                }
-            ),
-            status.HTTP_404_NOT_FOUND: openapi.Response(
-                description=status.HTTP_200_OK,
-                examples={
-                    "application/json": {ERROR: USER_NOT_FOUND}
-                }
-            )
-        })
     @action(detail=False, methods=['put'], permission_classes=[AllowAny])
     def password_reset(self, request):
         email = request.data.get('email')
@@ -172,13 +114,6 @@ class AuthViewSet(GenericViewSet):
 
         return Response(status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(manual_parameters=[reset_token_param],
-                         request_body=openapi.Schema(
-                             type=openapi.TYPE_OBJECT,
-                             properties={
-                                 'password': openapi.Schema(type=openapi.TYPE_STRING),
-                             }
-                         ))
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
     def confirm_password_reset(self, request):
         try:
@@ -201,48 +136,7 @@ class AuthViewSet(GenericViewSet):
 
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
-    @swagger_auto_schema(method='get', manual_parameters=[page_param, page_size_param],
-                         responses={
-                             status.HTTP_200_OK: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": USER_LOG_200_EXAMPLE
-                                 }
-                             ),
-                             status.HTTP_400_BAD_REQUEST: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": {ERROR: ID_VALUE_ERROR}
-                                 }
-                             ),
-                             status.HTTP_404_NOT_FOUND: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": {ERROR: USER_NOT_FOUND}
-                                 }
-                             )
-                         })
-    @swagger_auto_schema(method='delete',
-                         responses={
-                             status.HTTP_204_NO_CONTENT: openapi.Response(
-                                 description=status.HTTP_204_NO_CONTENT,
-                                 examples={
-                                     "application/json": None
-                                 }
-                             ),
-                             status.HTTP_400_BAD_REQUEST: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": {ERROR: WRONG_LOG_TYPE}
-                                 }
-                             ),
-                             status.HTTP_404_NOT_FOUND: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": {ERROR: LOG_NOT_FOUND}
-                                 }
-                             )
-                         })
+
     @action(detail=True, methods=['get', 'delete'])
     def log(self, request, **kwargs):
         try:
@@ -294,27 +188,6 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
-                         responses={
-                             status.HTTP_200_OK: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": USER_LOG_200_EXAMPLE
-                                 }
-                             ),
-                             status.HTTP_400_BAD_REQUEST: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": {ERROR: ID_VALUE_ERROR}
-                                 }
-                             ),
-                             status.HTTP_404_NOT_FOUND: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": {ERROR: USER_NOT_FOUND}
-                                 }
-                             )
-                         })
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_log(self, request):
         user_follow_query = UserFollow.objects.filter(user=request.user, is_following=True).values('followed_user')
@@ -384,27 +257,6 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(calendar_dict, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(
-        responses={
-            status.HTTP_200_OK: openapi.Response(
-                description=status.HTTP_200_OK,
-                examples={
-                    "application/json": USER_RETRIEVE_200_EXAMPLE
-                }
-            ),
-            status.HTTP_400_BAD_REQUEST: openapi.Response(
-                description=status.HTTP_200_OK,
-                examples={
-                    "application/json": {ERROR: ID_VALUE_ERROR}
-                }
-            ),
-            status.HTTP_404_NOT_FOUND: openapi.Response(
-                description=status.HTTP_200_OK,
-                examples={
-                    "application/json": {ERROR: USER_NOT_FOUND}
-                }
-            )
-        })
     def retrieve(self, request, *args, **kwargs):
         try:
             user = get_user_by_id(kwargs.get('pk'), request.user)
@@ -472,32 +324,6 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(response_data)
 
-    @swagger_auto_schema(
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                "is_following": openapi.Schema(
-                    type=openapi.TYPE_BOOLEAN
-                )
-            }
-        ),
-        responses={
-            status.HTTP_200_OK: openapi.Response(
-                description=status.HTTP_200_OK,
-                examples={
-                    "application/json": {
-                        "is_following": True,
-                        "followed_user": 0
-                    }
-                }
-            ),
-            status.HTTP_400_BAD_REQUEST: openapi.Response(
-                description=status.HTTP_200_OK,
-                examples={
-                    "application/json": {ERROR: ID_VALUE_ERROR}
-                }
-            )
-        })
     @action(detail=True, methods=['put'])
     def follow(self, request, **kwargs):
         try:
@@ -794,15 +620,6 @@ def get_user_by_id(user_id, current_user):
 
 
 class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):
-    @swagger_auto_schema(manual_parameters=[query_param],
-                         responses={
-                             status.HTTP_200_OK: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": USER_SEARCH_200_EXAMPLE
-                                 }
-                             )
-                         })
     def list(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
         results = User.objects.annotate(similarity=TrigramSimilarity('username', query)) \
