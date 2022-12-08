@@ -447,12 +447,11 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .exclude(status=UserShow.STATUS_NOT_WATCHED) \
             .filter(user=user) \
             .order_by('-updated_at') \
-            .annotate(watched_episodes_count=Count('show__season__episode',
-                                                   filter=Q(show__season__episode__userepisode__user=user) &
-                                                          ~Q(show__season__episode__userepisode__score=-1))) \
-            .annotate(spent_time=ExpressionWrapper(
-            Round(1.0 * F('show__tmdb_episode_run_time') * F('watched_episodes_count') / MINUTES_IN_HOUR),
-            output_field=DecimalField()))
+            .annotate(watched_episodes_time=Sum('show__season__episode__tmdb_runtime',
+                                                filter=Q(show__season__episode__userepisode__user=user) &
+                                                       ~Q(show__season__episode__userepisode__score=-1))) \
+            .annotate(spent_time=ExpressionWrapper(Round(1.0 * F('watched_episodes_time') / MINUTES_IN_HOUR),
+                                                   output_field=DecimalField()))
 
         serializer = ShowStatsSerializer(user_shows, many=True)
         shows = serializer.data
@@ -460,8 +459,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         stats.update(calculate_shows_stats(user))
 
         # followed_users
-        followed_users = User.objects.filter(id__in=UserFollow.objects
-                                             .filter(user=user, is_following=True).values('followed_user')) \
+        followed_users = User.objects.filter(
+            id__in=UserFollow.objects.filter(user=user, is_following=True).values('followed_user')) \
             .values('id', 'username')
 
         response_data = {'is_available': is_available, 'is_followed': user_is_followed,
@@ -687,15 +686,15 @@ def calculate_shows_stats(user: User) -> dict:
     watched_episodes = UserEpisode.objects.exclude(score=-1).filter(user=user)
     if watched_episodes.exists():
         shows_total_spent_time = watched_episodes.aggregate(
-            total_spent_time=Sum('episode__tmdb_season__tmdb_show__tmdb_episode_run_time'))['total_spent_time']
+            total_spent_time=Sum('episode__tmdb_runtime'))['total_spent_time']
 
         shows_genres_spent_time = watched_episodes. \
             values(name=F('episode__tmdb_season__tmdb_show__showgenre__genre__tmdb_name')) \
-            .annotate(spent_time_percent=Sum('episode__tmdb_season__tmdb_show__tmdb_episode_run_time'))
+            .annotate(spent_time_percent=Sum('episode__tmdb_runtime'))
 
         for genre in shows_genres_spent_time:
             genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 /
-                                                shows_total_spent_time, 1)
+                                                shows_total_spent_time, 1) if shows_total_spent_time != 0 else 0
 
         shows_total_spent_time = round(shows_total_spent_time / MINUTES_IN_HOUR, 1)
 
