@@ -54,13 +54,15 @@ class AuthViewSet(GenericViewSet):
         activation_link = f"{request.scheme}://{SITE_URL}/confirm/?uid64={uid64}&token={token}"
         message = f"Привет {user.username}, для активации аккаунта перейди по ссылке:\n{activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
-        try:
-            if settings.DEBUG:
-                print(activation_link)
-            else:
+
+        if settings.DEBUG:
+            print(activation_link)
+        else:
+            try:
                 email.send()
-        except SMTPAuthenticationError:
-            return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            except SMTPAuthenticationError:
+                return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
@@ -104,13 +106,13 @@ class AuthViewSet(GenericViewSet):
                           f"confirm_password/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
         message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
-        try:
-            if settings.DEBUG:
-                print(activation_link)
-            else:
+        if settings.DEBUG:
+            print(activation_link)
+        else:
+            try:
                 email.send()
-        except SMTPAuthenticationError:
-            return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            except SMTPAuthenticationError:
+                return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         return Response(status=status.HTTP_200_OK)
 
