@@ -12,8 +12,6 @@ from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, 
 from django.db.models.functions import ExtractYear
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -35,32 +33,15 @@ from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserF
 from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
     USER_NOT_FOUND, EMAIL_ERROR, MINUTES_IN_HOUR, SITE_URL, TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, \
     TYPE_SEASON, TYPE_EPISODE, TYPE_USER, CANNOT_DELETE_ANOTHER_USER_LOG, WRONG_LOG_TYPE, LOG_NOT_FOUND
-from utils.documentation import USER_SIGNUP_201_EXAMPLE, USER_SIGNUP_400_EXAMPLE, USER_LOG_200_EXAMPLE, \
-    USER_RETRIEVE_200_EXAMPLE, USER_SEARCH_200_EXAMPLE
 from utils.functions import get_page_size
 from utils.models import Round
-from utils.openapi_params import page_param, page_size_param, query_param, uid64_param, token_param, reset_token_param
 from .functions import is_user_available
 from .models import User, UserFollow, UserLog, UserPasswordToken
 from .tokens import account_activation_token
 
 
 class AuthViewSet(GenericViewSet):
-    @swagger_auto_schema(request_body=UserSerializer,
-                         responses={
-                             status.HTTP_201_CREATED: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": USER_SIGNUP_201_EXAMPLE
-                                 }
-                             ),
-                             status.HTTP_400_BAD_REQUEST: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": USER_SIGNUP_400_EXAMPLE
-                                 }
-                             )
-                         })
+
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def signup(self, request):
         serializer = UserSerializer(data=request.data)
@@ -73,30 +54,17 @@ class AuthViewSet(GenericViewSet):
         activation_link = f"{request.scheme}://{SITE_URL}/confirm/?uid64={uid64}&token={token}"
         message = f"Привет {user.username}, для активации аккаунта перейди по ссылке:\n{activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
-        try:
-            if settings.DEBUG:
-                print(activation_link)
-            else:
+
+        if settings.DEBUG:
+            print(activation_link)
+        else:
+            try:
                 email.send()
-        except SMTPAuthenticationError:
-            return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            except SMTPAuthenticationError:
+                return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @swagger_auto_schema(manual_parameters=[uid64_param, token_param],
-                         responses={
-                             status.HTTP_200_OK: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": USER_RETRIEVE_200_EXAMPLE
-                                 }
-                             ),
-                             status.HTTP_400_BAD_REQUEST: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": {ERROR: WRONG_URL}
-                                 }
-                             )
-                         })
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
     def confirm_email(self, request):
         try:
@@ -113,30 +81,6 @@ class AuthViewSet(GenericViewSet):
         else:
             return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
 
-    @swagger_auto_schema(
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                "email": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    format=openapi.FORMAT_EMAIL
-                )
-            }
-        ),
-        responses={
-            status.HTTP_200_OK: openapi.Response(
-                description=status.HTTP_200_OK,
-                examples={
-                    "application/json": None
-                }
-            ),
-            status.HTTP_404_NOT_FOUND: openapi.Response(
-                description=status.HTTP_200_OK,
-                examples={
-                    "application/json": {ERROR: USER_NOT_FOUND}
-                }
-            )
-        })
     @action(detail=False, methods=['put'], permission_classes=[AllowAny])
     def password_reset(self, request):
         email = request.data.get('email')
@@ -162,23 +106,16 @@ class AuthViewSet(GenericViewSet):
                           f"confirm_password/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
         message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
-        try:
-            if settings.DEBUG:
-                print(activation_link)
-            else:
+        if settings.DEBUG:
+            print(activation_link)
+        else:
+            try:
                 email.send()
-        except SMTPAuthenticationError:
-            return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            except SMTPAuthenticationError:
+                return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         return Response(status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(manual_parameters=[reset_token_param],
-                         request_body=openapi.Schema(
-                             type=openapi.TYPE_OBJECT,
-                             properties={
-                                 'password': openapi.Schema(type=openapi.TYPE_STRING),
-                             }
-                         ))
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
     def confirm_password_reset(self, request):
         try:
@@ -201,48 +138,7 @@ class AuthViewSet(GenericViewSet):
 
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
-    @swagger_auto_schema(method='get', manual_parameters=[page_param, page_size_param],
-                         responses={
-                             status.HTTP_200_OK: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": USER_LOG_200_EXAMPLE
-                                 }
-                             ),
-                             status.HTTP_400_BAD_REQUEST: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": {ERROR: ID_VALUE_ERROR}
-                                 }
-                             ),
-                             status.HTTP_404_NOT_FOUND: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": {ERROR: USER_NOT_FOUND}
-                                 }
-                             )
-                         })
-    @swagger_auto_schema(method='delete',
-                         responses={
-                             status.HTTP_204_NO_CONTENT: openapi.Response(
-                                 description=status.HTTP_204_NO_CONTENT,
-                                 examples={
-                                     "application/json": None
-                                 }
-                             ),
-                             status.HTTP_400_BAD_REQUEST: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": {ERROR: WRONG_LOG_TYPE}
-                                 }
-                             ),
-                             status.HTTP_404_NOT_FOUND: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": {ERROR: LOG_NOT_FOUND}
-                                 }
-                             )
-                         })
+
     @action(detail=True, methods=['get', 'delete'])
     def log(self, request, **kwargs):
         try:
@@ -294,27 +190,6 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @swagger_auto_schema(manual_parameters=[page_param, page_size_param],
-                         responses={
-                             status.HTTP_200_OK: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": USER_LOG_200_EXAMPLE
-                                 }
-                             ),
-                             status.HTTP_400_BAD_REQUEST: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": {ERROR: ID_VALUE_ERROR}
-                                 }
-                             ),
-                             status.HTTP_404_NOT_FOUND: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": {ERROR: USER_NOT_FOUND}
-                                 }
-                             )
-                         })
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_log(self, request):
         user_follow_query = UserFollow.objects.filter(user=request.user, is_following=True).values('followed_user')
@@ -384,27 +259,6 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(calendar_dict, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(
-        responses={
-            status.HTTP_200_OK: openapi.Response(
-                description=status.HTTP_200_OK,
-                examples={
-                    "application/json": USER_RETRIEVE_200_EXAMPLE
-                }
-            ),
-            status.HTTP_400_BAD_REQUEST: openapi.Response(
-                description=status.HTTP_200_OK,
-                examples={
-                    "application/json": {ERROR: ID_VALUE_ERROR}
-                }
-            ),
-            status.HTTP_404_NOT_FOUND: openapi.Response(
-                description=status.HTTP_200_OK,
-                examples={
-                    "application/json": {ERROR: USER_NOT_FOUND}
-                }
-            )
-        })
     def retrieve(self, request, *args, **kwargs):
         try:
             user = get_user_by_id(kwargs.get('pk'), request.user)
@@ -447,12 +301,11 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .exclude(status=UserShow.STATUS_NOT_WATCHED) \
             .filter(user=user) \
             .order_by('-updated_at') \
-            .annotate(watched_episodes_count=Count('show__season__episode',
-                                                   filter=Q(show__season__episode__userepisode__user=user) &
-                                                          ~Q(show__season__episode__userepisode__score=-1))) \
-            .annotate(spent_time=ExpressionWrapper(
-            Round(1.0 * F('show__tmdb_episode_run_time') * F('watched_episodes_count') / MINUTES_IN_HOUR),
-            output_field=DecimalField()))
+            .annotate(watched_episodes_time=Sum('show__season__episode__tmdb_runtime',
+                                                filter=Q(show__season__episode__userepisode__user=user) &
+                                                       ~Q(show__season__episode__userepisode__score=-1))) \
+            .annotate(spent_time=ExpressionWrapper(Round(1.0 * F('watched_episodes_time') / MINUTES_IN_HOUR),
+                                                   output_field=DecimalField()))
 
         serializer = ShowStatsSerializer(user_shows, many=True)
         shows = serializer.data
@@ -460,8 +313,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         stats.update(calculate_shows_stats(user))
 
         # followed_users
-        followed_users = User.objects.filter(id__in=UserFollow.objects
-                                             .filter(user=user, is_following=True).values('followed_user')) \
+        followed_users = User.objects.filter(
+            id__in=UserFollow.objects.filter(user=user, is_following=True).values('followed_user')) \
             .values('id', 'username')
 
         response_data = {'is_available': is_available, 'is_followed': user_is_followed,
@@ -473,32 +326,6 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(response_data)
 
-    @swagger_auto_schema(
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                "is_following": openapi.Schema(
-                    type=openapi.TYPE_BOOLEAN
-                )
-            }
-        ),
-        responses={
-            status.HTTP_200_OK: openapi.Response(
-                description=status.HTTP_200_OK,
-                examples={
-                    "application/json": {
-                        "is_following": True,
-                        "followed_user": 0
-                    }
-                }
-            ),
-            status.HTTP_400_BAD_REQUEST: openapi.Response(
-                description=status.HTTP_200_OK,
-                examples={
-                    "application/json": {ERROR: ID_VALUE_ERROR}
-                }
-            )
-        })
     @action(detail=True, methods=['put'])
     def follow(self, request, **kwargs):
         try:
@@ -687,15 +514,15 @@ def calculate_shows_stats(user: User) -> dict:
     watched_episodes = UserEpisode.objects.exclude(score=-1).filter(user=user)
     if watched_episodes.exists():
         shows_total_spent_time = watched_episodes.aggregate(
-            total_spent_time=Sum('episode__tmdb_season__tmdb_show__tmdb_episode_run_time'))['total_spent_time']
+            total_spent_time=Sum('episode__tmdb_runtime'))['total_spent_time']
 
         shows_genres_spent_time = watched_episodes. \
             values(name=F('episode__tmdb_season__tmdb_show__showgenre__genre__tmdb_name')) \
-            .annotate(spent_time_percent=Sum('episode__tmdb_season__tmdb_show__tmdb_episode_run_time'))
+            .annotate(spent_time_percent=Sum('episode__tmdb_runtime'))
 
         for genre in shows_genres_spent_time:
             genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 /
-                                                shows_total_spent_time, 1)
+                                                shows_total_spent_time, 1) if shows_total_spent_time != 0 else 0
 
         shows_total_spent_time = round(shows_total_spent_time / MINUTES_IN_HOUR, 1)
 
@@ -795,15 +622,6 @@ def get_user_by_id(user_id, current_user):
 
 
 class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):
-    @swagger_auto_schema(manual_parameters=[query_param],
-                         responses={
-                             status.HTTP_200_OK: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": USER_SEARCH_200_EXAMPLE
-                                 }
-                             )
-                         })
     def list(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
         results = User.objects.annotate(similarity=TrigramSimilarity('username', query)) \
