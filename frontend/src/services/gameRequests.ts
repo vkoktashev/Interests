@@ -9,7 +9,7 @@ api.defaults.headers.common = {
  * Запрос к бд, получающий информацию об игре
  * @param {string} id ID игры
  */
-export async function getGame(id) {
+export async function getGame(id: string) {
 	const res = await api.get(GET_GAME_URL + id + "/");
 	return res.data;
 }
@@ -19,7 +19,7 @@ export async function getGame(id) {
  * @param {object} user_info Статус игры
  * @param {string} gameSlug Слаг игры
  */
-export async function setGameStatus(gameSlug, user_info) {
+export async function setGameStatus(gameSlug: string, user_info: any) {
 	const res = await api.put(GET_GAME_URL + gameSlug + "/", user_info);
 	return res.data;
 }
@@ -29,7 +29,7 @@ export async function setGameStatus(gameSlug, user_info) {
  * @param {string} query Поисковый запрос
  * @param {int} page Страница поиска
  */
-export async function searchGames(query, page, gamesCount) {
+export async function searchGames(query: string, page: number, gamesCount: number) {
 	const res = await api.get(SEARCH_GAMES_URL, { params: { query: query, page: page, page_size: gamesCount } });
 	return res.data;
 }
@@ -38,7 +38,7 @@ export async function searchGames(query, page, gamesCount) {
  * Запрос на поиск локльных игр
  * @param {string} query Поисковый запрос
  */
-export async function searchGamesFast(query) {
+export async function searchGamesFast(query: string) {
 	const res = await api.get(SEARCH_GAMES_FAST_URL, { params: { query: query } });
 	return res.data;
 }
@@ -48,7 +48,7 @@ export async function searchGamesFast(query) {
  * @param {string} slug slug игры
  * @param {int} page страница
  */
-export async function getGameUserInfo(slug) {
+export async function getGameUserInfo(slug: string) {
 	const res = await api.get(GET_GAME_URL + slug + "/user_info/");
 	return res.data;
 }

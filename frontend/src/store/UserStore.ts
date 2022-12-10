@@ -23,7 +23,7 @@ class User {
 	}
 
 	get isCurrentUser() {
-		return AuthStore.loggedIn && parseInt(this.user.id) == AuthStore.user.id;
+		return AuthStore.loggedIn && +this.user.id === +(AuthStore.user.id || 0);
 	}
 
 	requestUser = async (username: string) => {
@@ -78,7 +78,7 @@ class User {
 		this.userFriendsLogsState = 'error: ' + error;
 	};
 
-	setUserStatus = async (is_following: boolean, userID: number) => {
+	setUserStatus = async (is_following: boolean, userID: number | string) => {
 		this.setUserStatusState = 'pending';
 		userRequests.setUserStatus(is_following, userID).then(this.setUserStatusSuccess, this.setUserStatusFailure);
 	};

@@ -49,19 +49,51 @@ const SettingsPage = observer((props) => {
 			<div className='settings-page__body'>
 				<h1 className='settings-page__header'>Настройки</h1>
 
-				<LoadingOverlay active={settingsState === "pending" || saveSettingsState === "pending"} spinner text='Загрузка...'>
+				<LoadingOverlay
+					active={settingsState === "pending"
+						|| saveSettingsState === "pending"
+					}
+					spinner
+					text='Загрузка...'
+				>
 					<div>
-						<h3 className='settings-page__subheader'>Подписка на почтовые уведомления:</h3>
-						<div className='settings-page__settings-row' onClick={() => setGameNotifInput(!gameNotifInput)}>
-							<input type='checkbox' className='settings-page__settings-checkbox' checked={gameNotifInput} onChange={(event) => setGameNotifInput(event.target.checked)} />
+						<h3 className='settings-page__subheader'>
+							Подписка на почтовые уведомления:
+						</h3>
+						<div
+							className='settings-page__settings-row'
+							onClick={() => setGameNotifInput(!gameNotifInput)}
+						>
+							<input
+								type='checkbox'
+								className='settings-page__settings-checkbox'
+								checked={gameNotifInput}
+								onChange={(event) => setGameNotifInput(event.target.checked)}
+							/>
 							{" релиз новых игр"}
 						</div>
-						<div className='settings-page__settings-row' onClick={() => setMovieNotifInput(!movieNotifInput)}>
-							<input type='checkbox' className='settings-page__settings-checkbox' checked={movieNotifInput} onChange={(event) => setMovieNotifInput(event.target.checked)} />
+						<div
+							className='settings-page__settings-row'
+							onClick={() => setMovieNotifInput(!movieNotifInput)}
+						>
+							<input
+								type='checkbox'
+								className='settings-page__settings-checkbox'
+								checked={movieNotifInput}
+								onChange={(event) => setMovieNotifInput(event.target.checked)}
+							/>
 							{" релиз новых фильмов"}
 						</div>
-						<div className='settings-page__settings-row' onClick={() => setShowNotifInput(!showNotifInput)}>
-							<input type='checkbox' className='settings-page__settings-checkbox' checked={showNotifInput} onChange={(event) => setShowNotifInput(event.target.checked)} />
+						<div
+							className='settings-page__settings-row'
+							onClick={() => setShowNotifInput(!showNotifInput)}
+						>
+							<input
+								type='checkbox'
+								className='settings-page__settings-checkbox'
+								checked={showNotifInput}
+								onChange={(event) => setShowNotifInput(event.target.checked)}
+							/>
 							{" релиз новых серий сериалов"}
 						</div>
 					</div>
