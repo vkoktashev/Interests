@@ -1,7 +1,17 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { observer } from 'mobx-react';
-import { FaSignInAlt, FaUserCircle, FaUserFriends, FaCalendar, FaSignOutAlt, FaUserPlus, FaArrowRight, FaArrowLeft } from 'react-icons/fa';
+import {
+	FaSignInAlt,
+	FaUserCircle,
+	FaUserFriends,
+	FaCalendar,
+	FaSignOutAlt,
+	FaUserPlus,
+	FaArrowRight,
+	FaArrowLeft,
+	FaRandom
+} from 'react-icons/fa';
 import { MdLiveTv, MdSettings } from 'react-icons/md';
 import {
 	ProSidebar,
@@ -79,6 +89,17 @@ const Sidebar = observer((props) => {
 							toggleSidebarIfSmallScreen();
 						}}>
 						Календарь
+					</a>
+				</MenuItem>
+				<MenuItem icon={<FaRandom />}>
+					<a
+						href={`/random`}
+						onClick={(event) => {
+							event.preventDefault();
+							history.push(`/random`);
+							toggleSidebarIfSmallScreen();
+						}}>
+						Рандомайзер
 					</a>
 				</MenuItem>
 				<MenuItem icon={<MdSettings />}>

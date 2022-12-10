@@ -4,16 +4,14 @@ import tmdbsimple as tmdb
 from django.contrib.postgres.search import TrigramSimilarity
 from django.core.cache import cache
 from django.core.paginator import Paginator
-from django.db import transaction
 from django.db.models import F, Q
 from django.db.models.functions import Greatest
-from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
 from requests.exceptions import ConnectionError
 from rest_framework import status, mixins
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
@@ -28,23 +26,11 @@ from users.models import UserFollow
 from utils.constants import ERROR, LANGUAGE, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, DEFAULT_PAGE_NUMBER, EPISODE_NOT_FOUND, \
     SEASON_NOT_FOUND, CACHE_TIMEOUT, EPISODE_NOT_WATCHED_SCORE, TMDB_BACKDROP_PATH_PREFIX, \
     TMDB_POSTER_PATH_PREFIX, TMDB_STILL_PATH_PREFIX, EPISODE_WATCHED_SCORE, DEFAULT_PAGE_SIZE, YOUTUBE_PREFIX
-from utils.documentation import SHOW_RETRIEVE_200_EXAMPLE, SHOWS_SEARCH_200_EXAMPLE, EPISODE_RETRIEVE_200_EXAMPLE, \
-    SEASON_RETRIEVE_200_EXAMPLE
 from utils.functions import update_fields_if_needed, objects_to_str, get_page_size
-from utils.openapi_params import query_param, page_param
 
 
 class SearchShowsViewSet(GenericViewSet, mixins.ListModelMixin):
-    @swagger_auto_schema(manual_parameters=[query_param, page_param],
-                         responses={
-                             status.HTTP_200_OK: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": SHOWS_SEARCH_200_EXAMPLE
-                                 }
 
-                             )
-                         })
     @action(detail=False, methods=['get'])
     def tmdb(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
@@ -76,30 +62,6 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     serializer_class = UserShowSerializer
     lookup_field = 'tmdb_id'
 
-    @swagger_auto_schema(responses={
-        status.HTTP_200_OK: openapi.Response(
-            description=status.HTTP_200_OK,
-            examples={
-                "application/json": SHOW_RETRIEVE_200_EXAMPLE
-            }
-        ),
-        status.HTTP_404_NOT_FOUND: openapi.Response(
-            description=status.HTTP_404_NOT_FOUND,
-            examples={
-                "application/json": {
-                    ERROR: SHOW_NOT_FOUND
-                }
-            }
-        ),
-        status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
-            description=status.HTTP_503_SERVICE_UNAVAILABLE,
-            examples={
-                "application/json": {
-                    ERROR: TMDB_UNAVAILABLE
-                },
-            }
-        )
-    })
     def retrieve(self, request, *args, **kwargs):
         try:
             tmdb_show, returned_from_cache = get_tmdb_show(kwargs.get('tmdb_id'))
@@ -124,43 +86,6 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(parse_show(tmdb_show))
 
-    @swagger_auto_schema(request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            "status": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                enum=list(dict(UserShow.STATUS_CHOICES).keys()) + list(dict(UserShow.STATUS_CHOICES).values())
-            ),
-            "score": openapi.Schema(
-                type=openapi.TYPE_INTEGER,
-                minimum=UserShow._meta.get_field('score').validators[0].limit_value,
-                maximum=UserShow._meta.get_field('score').validators[1].limit_value
-            ),
-            "review": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                maxLength=UserShow._meta.get_field('review').max_length
-            )
-        }
-    ),
-        responses={
-            status.HTTP_404_NOT_FOUND: openapi.Response(
-                description=status.HTTP_404_NOT_FOUND,
-                examples={
-                    "application/json": {
-                        ERROR: SHOW_NOT_FOUND
-                    }
-                }
-            ),
-            status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
-                description=status.HTTP_503_SERVICE_UNAVAILABLE,
-                examples={
-                    "application/json": {
-                        ERROR: TMDB_UNAVAILABLE
-                    },
-                }
-            )
-        }
-    )
     def update(self, request, *args, **kwargs):
         try:
             show = Show.objects.get(tmdb_id=kwargs.get('tmdb_id'))
@@ -207,53 +132,6 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response({'user_info': user_info, 'friends_info': friends_info})
 
-    @swagger_auto_schema(request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            'episodes': openapi.Schema(
-                type=openapi.TYPE_ARRAY,
-                items=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'season_number': openapi.Schema(
-                            type=openapi.TYPE_INTEGER
-                        ),
-                        "episode_number": openapi.Schema(
-                            type=openapi.TYPE_INTEGER
-                        ),
-                        "score": openapi.Schema(
-                            type=openapi.TYPE_INTEGER,
-                            minimum=UserEpisode._meta.get_field('score').validators[0].limit_value,
-                            maximum=UserEpisode._meta.get_field('score').validators[1].limit_value
-                        ),
-                        "review": openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            maxLength=UserEpisode._meta.get_field('review').max_length
-                        )
-                    }
-                )
-            )
-        }
-    ),
-        responses={
-            status.HTTP_404_NOT_FOUND: openapi.Response(
-                description=status.HTTP_404_NOT_FOUND,
-                examples={
-                    "application/json": {
-                        ERROR: EPISODE_NOT_FOUND
-                    }
-                }
-            ),
-            status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
-                description=status.HTTP_503_SERVICE_UNAVAILABLE,
-                examples={
-                    "application/json": {
-                        ERROR: TMDB_UNAVAILABLE
-                    },
-                }
-            )
-        }
-    )
     @action(detail=True, methods=['put'])
     def episodes(self, request, *args, **kwargs):
         episodes = request.data.get('episodes')
@@ -433,30 +311,6 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     serializer_class = UserSeasonSerializer
     lookup_field = 'number'
 
-    @swagger_auto_schema(responses={
-        status.HTTP_200_OK: openapi.Response(
-            description=status.HTTP_200_OK,
-            examples={
-                "application/json": SEASON_RETRIEVE_200_EXAMPLE
-            }
-        ),
-        status.HTTP_404_NOT_FOUND: openapi.Response(
-            description=status.HTTP_404_NOT_FOUND,
-            examples={
-                "application/json": {
-                    ERROR: SEASON_NOT_FOUND
-                }
-            }
-        ),
-        status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
-            description=status.HTTP_503_SERVICE_UNAVAILABLE,
-            examples={
-                "application/json": {
-                    ERROR: TMDB_UNAVAILABLE
-                },
-            }
-        )
-    })
     def retrieve(self, request, *args, **kwargs):
         try:
             tmdb_season, returned_from_cache = get_season(kwargs.get('show_tmdb_id'),
@@ -496,39 +350,6 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(parse_season(tmdb_season))
 
-    @swagger_auto_schema(request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            "score": openapi.Schema(
-                type=openapi.TYPE_INTEGER,
-                minimum=UserSeason._meta.get_field('score').validators[0].limit_value,
-                maximum=UserSeason._meta.get_field('score').validators[1].limit_value
-            ),
-            "review": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                maxLength=UserSeason._meta.get_field('review').max_length
-            )
-        }
-    ),
-        responses={
-            status.HTTP_404_NOT_FOUND: openapi.Response(
-                description=status.HTTP_404_NOT_FOUND,
-                examples={
-                    "application/json": {
-                        ERROR: SEASON_NOT_FOUND
-                    }
-                }
-            ),
-            status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
-                description=status.HTTP_503_SERVICE_UNAVAILABLE,
-                examples={
-                    "application/json": {
-                        ERROR: TMDB_UNAVAILABLE
-                    },
-                }
-            )
-        }
-    )
     def update(self, request, *args, **kwargs):
         try:
             show = Show.objects.get(tmdb_id=kwargs.get('show_tmdb_id'))
@@ -600,30 +421,6 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     serializer_class = UserEpisodeSerializer
     lookup_field = 'number'
 
-    @swagger_auto_schema(responses={
-        status.HTTP_200_OK: openapi.Response(
-            description=status.HTTP_200_OK,
-            examples={
-                "application/json": EPISODE_RETRIEVE_200_EXAMPLE
-            }
-        ),
-        status.HTTP_404_NOT_FOUND: openapi.Response(
-            description=status.HTTP_404_NOT_FOUND,
-            examples={
-                "application/json": {
-                    ERROR: EPISODE_NOT_FOUND
-                }
-            }
-        ),
-        status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
-            description=status.HTTP_503_SERVICE_UNAVAILABLE,
-            examples={
-                "application/json": {
-                    ERROR: TMDB_UNAVAILABLE
-                },
-            }
-        )
-    })
     def retrieve(self, request, *args, **kwargs):
         try:
             tmdb_episode = get_episode(kwargs.get('show_tmdb_id'),
@@ -647,7 +444,7 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserEpisodeSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
-    def user_info(self, request, *args, **kwargs):
+    def user_info(self, request, **kwargs):
         show_id = kwargs.get('show_tmdb_id')
         season_number = kwargs.get('season_number')
         episode_number = kwargs.get('number')
@@ -684,6 +481,64 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response({'user_info': user_info,
                          'friends_info': friends_info,
                          'user_watched_show': user_watched_show(show, request.user)})
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
+    def update_all_shows(self, objects_to_skip=0):
+        shows = Show.objects.all()[objects_to_skip:]
+        count = len(shows)
+        i = 1
+        episodes_to_create = []
+        episodes_to_update = []
+        episodes_to_delete_pks = []
+
+        for show in shows:
+            show_tmdb_id = show.tmdb_id
+            key = get_tmdb_show_key(show_tmdb_id)
+            try:
+                tmdb_show = tmdb.TV(show_tmdb_id).info(language=LANGUAGE)
+            except HTTPError as e:
+                print(e)
+                break
+            cache.set(key, tmdb_show, CACHE_TIMEOUT)
+
+            new_fields = get_show_new_fields(tmdb_show)
+
+            update_fields_if_needed(show, new_fields)
+
+            for season in tmdb_show.get('seasons'):
+                season_number = season['season_number']
+                key = get_tmdb_season_key(show_tmdb_id, season_number)
+
+                try:
+                    tmdb_season = tmdb.TV_Seasons(show_tmdb_id, season_number).info(language=LANGUAGE)
+                except HTTPError as e:
+                    print(e)
+                    break
+                cache.set(key, tmdb_season, CACHE_TIMEOUT)
+
+                new_fields = get_season_new_fields(tmdb_season, show.id)
+                season, created = Season.objects.get_or_create(tmdb_id=tmdb_season.get('id'),
+                                                               defaults=new_fields)
+                if not created:
+                    update_fields_if_needed(season, new_fields)
+
+                episodes = tmdb_season.get('episodes')
+                existed_episodes = Episode.objects.select_related('tmdb_season').filter(tmdb_season=season)
+
+                temp1, temp2, temp3 = get_episodes_to_create_update_delete(existed_episodes, episodes, season.id)
+                episodes_to_create += temp1
+                episodes_to_update += temp2
+                episodes_to_delete_pks += temp3
+
+            print(f'updated {i} of {count}')
+            i += 1
+
+        Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
+        Episode.objects.bulk_update(episodes_to_update,
+                                    ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date',
+                                     'tmdb_runtime'])
+        Episode.objects.bulk_create(episodes_to_create)
+        return Response()
 
 
 def update_show_genres(show: Show, tmdb_show: dict) -> None:
@@ -837,6 +692,7 @@ def parse_episode(tmdb_episode):
         'name': tmdb_episode.get('name'),
         'overview': tmdb_episode.get('overview'),
         'score': int(tmdb_episode['vote_average'] * 10) if tmdb_episode.get('vote_average') is not None else None,
+        'runtime': tmdb_episode.get('runtime'),
         'still_path': TMDB_STILL_PATH_PREFIX + tmdb_episode['still_path']
         if tmdb_episode.get('still_path') is not None else '',
         'air_date': '.'.join(reversed(tmdb_episode['air_date'].split('-')))

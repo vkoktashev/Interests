@@ -1,0 +1,19 @@
+@import "src/styles/colors";
+@import "src/styles/mixins";
+@import "src/styles/fonts";
+
+.RandomCard {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+
+  &__poster {
+    height: 300px;
+    max-width: 450px;
+    object-fit: cover;
+  }
+
+  &__link {
+    @include headline5
+  }
+}

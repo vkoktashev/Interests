@@ -5,7 +5,6 @@ import rawgpy
 from django.contrib.postgres.search import TrigramSimilarity
 from django.core.cache import cache
 from django.core.paginator import Paginator
-from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
 from requests.exceptions import ConnectionError
@@ -21,24 +20,13 @@ from games.serializers import UserGameSerializer, FollowedUserGameSerializer, Ga
 from users.models import UserFollow
 from utils.constants import RAWG_UNAVAILABLE, ERROR, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, \
     GAME_NOT_FOUND, CACHE_TIMEOUT
-from utils.documentation import GAMES_SEARCH_200_EXAMPLE, GAME_RETRIEVE_200_EXAMPLE
 from utils.functions import int_to_hours, get_page_size, update_fields_if_needed, \
     objects_to_str, float_to_hours
-from utils.openapi_params import query_param, page_param, page_size_param
 
 
 class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
     queryset = Game.objects.all()
 
-    @swagger_auto_schema(manual_parameters=[query_param, page_param, page_size_param],
-                         responses={
-                             status.HTTP_200_OK: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": GAMES_SEARCH_200_EXAMPLE
-                                 }
-                             )
-                         })
     @action(detail=False, methods=['get'])
     def rawg(self, request):
         query = request.GET.get('query', '')
@@ -72,30 +60,6 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     serializer_class = UserGameSerializer
     lookup_field = 'slug'
 
-    @swagger_auto_schema(responses={
-        status.HTTP_200_OK: openapi.Response(
-            description=status.HTTP_200_OK,
-            examples={
-                "application/json": GAME_RETRIEVE_200_EXAMPLE
-            }
-        ),
-        status.HTTP_404_NOT_FOUND: openapi.Response(
-            description=status.HTTP_404_NOT_FOUND,
-            examples={
-                "application/json": {
-                    ERROR: GAME_NOT_FOUND
-                }
-            }
-        ),
-        status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
-            description=status.HTTP_503_SERVICE_UNAVAILABLE,
-            examples={
-                "application/json": {
-                    ERROR: RAWG_UNAVAILABLE
-                },
-            }
-        )
-    })
     def retrieve(self, request, *args, **kwargs):
         slug = kwargs.get('slug')
         try:
@@ -152,42 +116,6 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response({'user_info': user_info, 'friends_info': friends_info})
 
-    @swagger_auto_schema(
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                "status": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    enum=list(dict(UserGame.STATUS_CHOICES).keys()) + list(dict(UserGame.STATUS_CHOICES).values())
-                ),
-                "score": openapi.Schema(
-                    type=openapi.TYPE_INTEGER,
-                    minimum=UserGame._meta.get_field('score').validators[0].limit_value,
-                    maximum=UserGame._meta.get_field('score').validators[1].limit_value
-                ),
-                "review": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    maxLength=UserGame._meta.get_field('review').max_length
-
-                ),
-                'spent_time': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    format=openapi.FORMAT_DECIMAL,
-                    pattern=r'^\d{0,6}\.\d{1}$'
-                )
-            }
-        ),
-        responses={
-            status.HTTP_404_NOT_FOUND: openapi.Response(
-                description=status.HTTP_404_NOT_FOUND,
-                examples={
-                    "application/json": {
-                        ERROR: GAME_NOT_FOUND
-                    }
-                }
-            )
-        }
-    )
     def update(self, request, **kwargs):
         try:
             game = Game.objects.get(rawg_slug=kwargs.get('slug'))

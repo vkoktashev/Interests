@@ -31,7 +31,8 @@ def get_episodes_to_create_update_delete(existed_episodes, episodes_to_check, se
                                               tmdb_season_id=season_id,
                                               tmdb_release_date=episode.get('air_date')
                                               if episode.get('air_date') != "" else None,
-                                              tmdb_name=episode.get('name')))
+                                              tmdb_name=episode.get('name'),
+                                              tmdb_runtime=episode.get('runtime')))
 
     return episodes_to_create, episodes_to_update, episodes_to_delete_pks
 
@@ -41,7 +42,7 @@ def get_show_new_fields(tmdb_show):
         'imdb_id': tmdb_show.get('imdb_id') if tmdb_show.get('imdb_id') is not None else '',
         'tmdb_original_name': tmdb_show['original_name'],
         'tmdb_name': tmdb_show['name'],
-        'tmdb_episode_run_time': tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0,
+        'tmdb_episode_runtime': tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0,
         'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path']
         if tmdb_show['backdrop_path'] else '',
         'tmdb_poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_show['poster_path']
@@ -70,7 +71,8 @@ def get_episode_new_fields(tmdb_episode, season_id):
         'tmdb_episode_number': tmdb_episode.get('episode_number'),
         'tmdb_season_id': season_id,
         'tmdb_name': tmdb_episode.get('name'),
-        'tmdb_release_date': tmdb_episode.get('air_date') if tmdb_episode.get('air_date') != "" else None
+        'tmdb_release_date': tmdb_episode.get('air_date') if tmdb_episode.get('air_date') != "" else None,
+        'tmdb_runtime': tmdb_episode.get('runtime')
     }
 
     return result

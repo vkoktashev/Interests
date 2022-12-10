@@ -2,9 +2,7 @@ import tmdbsimple as tmdb
 from django.contrib.postgres.search import TrigramSimilarity
 from django.core.cache import cache
 from django.core.paginator import Paginator
-from django.db import transaction
 from django.db.models.functions import Greatest
-from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
 from requests.exceptions import ConnectionError
@@ -20,22 +18,11 @@ from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer,
 from users.models import UserFollow
 from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, CACHE_TIMEOUT, \
     TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, DEFAULT_PAGE_SIZE, YOUTUBE_PREFIX
-from utils.documentation import MOVIES_SEARCH_200_EXAMPLE, MOVIE_RETRIEVE_200_EXAMPLE
 from utils.functions import update_fields_if_needed, objects_to_str, get_page_size
-from utils.openapi_params import query_param, page_param, DEFAULT_PAGE_NUMBER
+from utils.openapi_params import DEFAULT_PAGE_NUMBER
 
 
 class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
-    @swagger_auto_schema(manual_parameters=[query_param, page_param],
-                         responses={
-                             status.HTTP_200_OK: openapi.Response(
-                                 description=status.HTTP_200_OK,
-                                 examples={
-                                     "application/json": MOVIES_SEARCH_200_EXAMPLE
-                                 }
-
-                             )
-                         })
     @action(detail=False, methods=['get'])
     def tmdb(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
@@ -67,30 +54,6 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     serializer_class = UserMovieSerializer
     lookup_field = 'tmdb_id'
 
-    @swagger_auto_schema(responses={
-        status.HTTP_200_OK: openapi.Response(
-            description=status.HTTP_200_OK,
-            examples={
-                "application/json": MOVIE_RETRIEVE_200_EXAMPLE
-            }
-        ),
-        status.HTTP_404_NOT_FOUND: openapi.Response(
-            description=status.HTTP_404_NOT_FOUND,
-            examples={
-                "application/json": {
-                    ERROR: MOVIE_NOT_FOUND
-                }
-            }
-        ),
-        status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
-            description=status.HTTP_503_SERVICE_UNAVAILABLE,
-            examples={
-                "application/json": {
-                    ERROR: TMDB_UNAVAILABLE
-                },
-            }
-        )
-    })
     def retrieve(self, request, *args, **kwargs):
         try:
             tmdb_movie, returned_from_cache = get_tmdb_movie(kwargs.get('tmdb_id'))
@@ -142,43 +105,6 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response({'user_info': user_info, 'friends_info': friends_info})
 
-    @swagger_auto_schema(request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            "status": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                enum=list(dict(UserMovie.STATUS_CHOICES).keys()) + list(dict(UserMovie.STATUS_CHOICES).values())
-            ),
-            "score": openapi.Schema(
-                type=openapi.TYPE_INTEGER,
-                minimum=UserMovie._meta.get_field('score').validators[0].limit_value,
-                maximum=UserMovie._meta.get_field('score').validators[1].limit_value
-            ),
-            "review": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                maxLength=UserMovie._meta.get_field('review').max_length
-            )
-        }
-    ),
-        responses={
-            status.HTTP_404_NOT_FOUND: openapi.Response(
-                description=status.HTTP_404_NOT_FOUND,
-                examples={
-                    "application/json": {
-                        ERROR: MOVIE_NOT_FOUND
-                    }
-                }
-            ),
-            status.HTTP_503_SERVICE_UNAVAILABLE: openapi.Response(
-                description=status.HTTP_503_SERVICE_UNAVAILABLE,
-                examples={
-                    "application/json": {
-                        ERROR: TMDB_UNAVAILABLE
-                    },
-                }
-            )
-        }
-    )
     def update(self, request, *args, **kwargs):
         try:
             movie = Movie.objects.get(tmdb_id=kwargs.get('tmdb_id'))
