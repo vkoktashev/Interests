@@ -114,7 +114,7 @@ DATABASES = {
         # 'HOST': '18.192.101.30',  # prod
         # 'PORT': '5454'  # prod
         'HOST': 'localhost',
-        'PORT': '5433',
+        'PORT': '5432',
     }
 }
 
