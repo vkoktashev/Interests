@@ -32,8 +32,9 @@ def get_episodes_to_create_update_delete(existed_episodes, episodes_to_check, se
                                               tmdb_release_date=episode.get('air_date')
                                               if episode.get('air_date') != "" else None,
                                               tmdb_name=episode.get('name'),
-                                              tmdb_runtime=episode.get('runtime')))
-
+                                              tmdb_runtime=episode.get('runtime')
+                                              if episode.get('runtime') is not None
+                                              else 0))
     return episodes_to_create, episodes_to_update, episodes_to_delete_pks
 
 
@@ -55,12 +56,10 @@ def get_show_new_fields(tmdb_show):
     return result
 
 
-def get_season_new_fields(tmdb_season, show_id):
+def get_season_new_fields(tmdb_season):
     result = {
         'tmdb_id': tmdb_season.get('id'),
-        # 'tmdb_season_number': tmdb_season.get('season_number'),
         'tmdb_name': tmdb_season.get('name'),
-        # 'tmdb_show_id': show_id
     }
 
     return result
@@ -72,7 +71,7 @@ def get_episode_new_fields(tmdb_episode, season_id):
         'tmdb_season_id': season_id,
         'tmdb_name': tmdb_episode.get('name'),
         'tmdb_release_date': tmdb_episode.get('air_date') if tmdb_episode.get('air_date') != "" else None,
-        'tmdb_runtime': tmdb_episode.get('runtime')
+        'tmdb_runtime': tmdb_episode.get('runtime') if tmdb_episode.get('runtime') is not None else 0
     }
     return result
 
