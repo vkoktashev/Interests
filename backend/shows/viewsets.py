@@ -340,12 +340,13 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         episodes = tmdb_season.get('episodes')
         existed_episodes = Episode.objects.select_related('tmdb_season').filter(tmdb_season=season)
-        episodes_to_create, episodes_to_update, episodes_to_delete_pks = \
-            get_episodes_to_create_update_delete(existed_episodes, episodes, season.id)
+        episodes_to_create, episodes_to_update, episodes_to_delete_pks = get_episodes_to_create_update_delete(
+            existed_episodes, episodes, season.id)
 
         Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
         Episode.objects.bulk_update(episodes_to_update,
-                                    ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date'])
+                                    ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date',
+                                     'tmdb_runtime'])
         Episode.objects.bulk_create(episodes_to_create)
 
         return Response(parse_season(tmdb_season))

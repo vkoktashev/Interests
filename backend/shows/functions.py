@@ -74,7 +74,6 @@ def get_episode_new_fields(tmdb_episode, season_id):
         'tmdb_release_date': tmdb_episode.get('air_date') if tmdb_episode.get('air_date') != "" else None,
         'tmdb_runtime': tmdb_episode.get('runtime')
     }
-
     return result
 
 
