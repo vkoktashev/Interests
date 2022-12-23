@@ -151,3 +151,9 @@ def update_all_shows_task(start_index):
             episodes_to_delete_pks = []
 
         i += 1
+
+    Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
+    Episode.objects.bulk_update(episodes_to_update,
+                                ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date',
+                                 'tmdb_runtime'])
+    Episode.objects.bulk_create(episodes_to_create)
