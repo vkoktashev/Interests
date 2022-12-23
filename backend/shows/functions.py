@@ -57,10 +57,9 @@ def get_show_new_fields(tmdb_show):
 
 def get_season_new_fields(tmdb_season, show_id):
     result = {
-        'tmdb_id': tmdb_season.get('id'),
-        # 'tmdb_season_number': tmdb_season.get('season_number'),
+        'tmdb_season_number': tmdb_season.get('season_number'),
         'tmdb_name': tmdb_season.get('name'),
-        # 'tmdb_show_id': show_id
+        'tmdb_show_id': show_id
     }
 
     return result
