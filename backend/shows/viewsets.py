@@ -337,7 +337,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         tmdb_season.update(show_info)
 
-        new_fields = get_season_new_fields(tmdb_season, tmdb_season.get('show').get('id'))
+        new_fields = get_season_new_fields(tmdb_season)
 
         season, created = Season.objects.get_or_create(tmdb_show_id=tmdb_season.get('show').get('id'),
                                                        tmdb_season_number=tmdb_season.get('season_number'),
