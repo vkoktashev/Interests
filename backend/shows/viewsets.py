@@ -306,8 +306,8 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response(shows_info)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
-    def update_all_shows(self, objects_to_skip=0):
-        shows = Show.objects.all()[objects_to_skip:]
+    def update_all_shows(self):
+        shows = Show.objects.all()
         count = len(shows)
         i = 1
         episodes_to_create = []
