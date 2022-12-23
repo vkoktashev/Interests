@@ -1,11 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import { observer } from 'mobx-react';
-import LoadingOverlay from 'react-loading-overlay';
+import LoadingOverlay from 'react-loading-overlay-ts';
 import { FaSearch } from 'react-icons/fa';
-
 import SearchStore from '../../store/SearchStore';
-
 import GameCards from './views/GameCards';
 import MovieCards from './views/MovieCards';
 import ShowCards from './views/ShowCards';

@@ -16,6 +16,7 @@ import CalendarPage from './routes/CalendarPage';
 import SettingsPage from './routes/SettingsPage';
 import UnwatchedPage from './routes/UnwatchedPage';
 import NotFoundPage from './routes/NotFoundPage';
+import RandomPage from './routes/RandomPage/RandomPage';
 
 class Routes extends React.Component {
 	render() {
@@ -34,6 +35,7 @@ class Routes extends React.Component {
 				<Route exact path='/calendar' component={CalendarPage} />
 				<Route exact path='/settings' component={SettingsPage} />
 				<Route exact path='/unwatched' component={UnwatchedPage} />
+				<Route exact path='/random' component={RandomPage} />
 				<Route component={NotFoundPage} />
 			</Switch>
 		);
