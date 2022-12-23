@@ -306,7 +306,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response(shows_info)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
-    def update_all_shows(self):
+    def update_all_shows(self, request):
         shows = Show.objects.all()
         count = len(shows)
         i = 1
