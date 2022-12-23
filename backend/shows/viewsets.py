@@ -316,10 +316,10 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         episodes_to_delete_pks = []
 
         for show in shows:
-            show_tmdb_id = show.tmdb_id
-            key = get_tmdb_show_key(show_tmdb_id)
+            tmdb_show_id = show.tmdb_id
+            key = get_tmdb_show_key(tmdb_show_id)
             try:
-                tmdb_show = tmdb.TV(show_tmdb_id).info(language=LANGUAGE)
+                tmdb_show = tmdb.TV(tmdb_show_id).info(language=LANGUAGE)
             except HTTPError as e:
                 print(e)
                 break
@@ -331,17 +331,18 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             for season in tmdb_show.get('seasons'):
                 season_number = season['season_number']
-                key = get_tmdb_season_key(show_tmdb_id, season_number)
+                key = get_tmdb_season_key(tmdb_show_id, season_number)
 
                 try:
-                    tmdb_season = tmdb.TV_Seasons(show_tmdb_id, season_number).info(language=LANGUAGE)
+                    tmdb_season = tmdb.TV_Seasons(tmdb_show_id, season_number).info(language=LANGUAGE)
                 except HTTPError as e:
                     print(e)
                     break
                 cache.set(key, tmdb_season, CACHE_TIMEOUT)
 
                 new_fields = get_season_new_fields(tmdb_season, show.id)
-                season, created = Season.objects.get_or_create(tmdb_id=tmdb_season.get('id'),
+                season, created = Season.objects.get_or_create(tmdb_show_id=show.id,
+                                                               tmdb_season_number=tmdb_season.get('season_number'),
                                                                defaults=new_fields)
                 if not created:
                     update_fields_if_needed(season, new_fields)
