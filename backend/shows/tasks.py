@@ -94,11 +94,12 @@ def update_all_shows_task(start_index):
     shows = Show.objects.all()[start_index:]
     count = len(shows)
     i = 1
-    episodes_to_create = []
-    episodes_to_update = []
-    episodes_to_delete_pks = []
 
     for show in shows:
+        episodes_to_create = []
+        episodes_to_update = []
+        episodes_to_delete_pks = []
+
         tmdb_show_id = show.tmdb_id
         key = get_tmdb_show_key(tmdb_show_id)
         try:
@@ -141,8 +142,8 @@ def update_all_shows_task(start_index):
         print(f'updated {i} of {count}')
         i += 1
 
-    Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
-    Episode.objects.bulk_update(episodes_to_update,
-                                ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date',
-                                 'tmdb_runtime'])
-    Episode.objects.bulk_create(episodes_to_create)
+        Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
+        Episode.objects.bulk_update(episodes_to_update,
+                                    ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date',
+                                     'tmdb_runtime'])
+        Episode.objects.bulk_create(episodes_to_create)
