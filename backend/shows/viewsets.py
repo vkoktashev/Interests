@@ -305,6 +305,64 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(shows_info)
 
+    @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
+    def update_all_shows(self, objects_to_skip=0):
+        shows = Show.objects.all()[objects_to_skip:]
+        count = len(shows)
+        i = 1
+        episodes_to_create = []
+        episodes_to_update = []
+        episodes_to_delete_pks = []
+
+        for show in shows:
+            show_tmdb_id = show.tmdb_id
+            key = get_tmdb_show_key(show_tmdb_id)
+            try:
+                tmdb_show = tmdb.TV(show_tmdb_id).info(language=LANGUAGE)
+            except HTTPError as e:
+                print(e)
+                break
+            cache.set(key, tmdb_show, CACHE_TIMEOUT)
+
+            new_fields = get_show_new_fields(tmdb_show)
+
+            update_fields_if_needed(show, new_fields)
+
+            for season in tmdb_show.get('seasons'):
+                season_number = season['season_number']
+                key = get_tmdb_season_key(show_tmdb_id, season_number)
+
+                try:
+                    tmdb_season = tmdb.TV_Seasons(show_tmdb_id, season_number).info(language=LANGUAGE)
+                except HTTPError as e:
+                    print(e)
+                    break
+                cache.set(key, tmdb_season, CACHE_TIMEOUT)
+
+                new_fields = get_season_new_fields(tmdb_season, show.id)
+                season, created = Season.objects.get_or_create(tmdb_id=tmdb_season.get('id'),
+                                                               defaults=new_fields)
+                if not created:
+                    update_fields_if_needed(season, new_fields)
+
+                episodes = tmdb_season.get('episodes')
+                existed_episodes = Episode.objects.select_related('tmdb_season').filter(tmdb_season=season)
+
+                temp1, temp2, temp3 = get_episodes_to_create_update_delete(existed_episodes, episodes, season.id)
+                episodes_to_create += temp1
+                episodes_to_update += temp2
+                episodes_to_delete_pks += temp3
+
+            print(f'updated {i} of {count}')
+            i += 1
+
+        Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
+        Episode.objects.bulk_update(episodes_to_update,
+                                    ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date',
+                                     'tmdb_runtime'])
+        Episode.objects.bulk_create(episodes_to_create)
+        return Response()
+
 
 class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     queryset = UserSeason.objects.all()
@@ -482,64 +540,6 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response({'user_info': user_info,
                          'friends_info': friends_info,
                          'user_watched_show': user_watched_show(show, request.user)})
-
-    @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
-    def update_all_shows(self, objects_to_skip=0):
-        shows = Show.objects.all()[objects_to_skip:]
-        count = len(shows)
-        i = 1
-        episodes_to_create = []
-        episodes_to_update = []
-        episodes_to_delete_pks = []
-
-        for show in shows:
-            show_tmdb_id = show.tmdb_id
-            key = get_tmdb_show_key(show_tmdb_id)
-            try:
-                tmdb_show = tmdb.TV(show_tmdb_id).info(language=LANGUAGE)
-            except HTTPError as e:
-                print(e)
-                break
-            cache.set(key, tmdb_show, CACHE_TIMEOUT)
-
-            new_fields = get_show_new_fields(tmdb_show)
-
-            update_fields_if_needed(show, new_fields)
-
-            for season in tmdb_show.get('seasons'):
-                season_number = season['season_number']
-                key = get_tmdb_season_key(show_tmdb_id, season_number)
-
-                try:
-                    tmdb_season = tmdb.TV_Seasons(show_tmdb_id, season_number).info(language=LANGUAGE)
-                except HTTPError as e:
-                    print(e)
-                    break
-                cache.set(key, tmdb_season, CACHE_TIMEOUT)
-
-                new_fields = get_season_new_fields(tmdb_season, show.id)
-                season, created = Season.objects.get_or_create(tmdb_id=tmdb_season.get('id'),
-                                                               defaults=new_fields)
-                if not created:
-                    update_fields_if_needed(season, new_fields)
-
-                episodes = tmdb_season.get('episodes')
-                existed_episodes = Episode.objects.select_related('tmdb_season').filter(tmdb_season=season)
-
-                temp1, temp2, temp3 = get_episodes_to_create_update_delete(existed_episodes, episodes, season.id)
-                episodes_to_create += temp1
-                episodes_to_update += temp2
-                episodes_to_delete_pks += temp3
-
-            print(f'updated {i} of {count}')
-            i += 1
-
-        Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
-        Episode.objects.bulk_update(episodes_to_update,
-                                    ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date',
-                                     'tmdb_runtime'])
-        Episode.objects.bulk_create(episodes_to_create)
-        return Response()
 
 
 def update_show_genres(show: Show, tmdb_show: dict) -> None:
