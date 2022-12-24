@@ -8,8 +8,8 @@ from smtplib import SMTPAuthenticationError
 from django.contrib.postgres.search import TrigramSimilarity
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
-from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, QuerySet
-from django.db.models.functions import ExtractYear
+from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, QuerySet, Case, When
+from django.db.models.functions import ExtractYear, Coalesce
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework import status, mixins
@@ -301,9 +301,11 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .exclude(status=UserShow.STATUS_NOT_WATCHED) \
             .filter(user=user) \
             .order_by('-updated_at') \
-            .annotate(watched_episodes_time=Sum('show__season__episode__tmdb_runtime',
-                                                filter=Q(show__season__episode__userepisode__user=user) &
-                                                       ~Q(show__season__episode__userepisode__score=-1))) \
+            .annotate(watched_episodes_time=
+                      Coalesce(Sum(Case(When(show__season__episode__tmdb_runtime=0, then='show__tmdb_episode_runtime'),
+                                        default='show__season__episode__tmdb_runtime'),
+                                   filter=Q(show__season__episode__userepisode__user=user) &
+                                          ~Q(show__season__episode__userepisode__score=-1)), 0)) \
             .annotate(spent_time=ExpressionWrapper(Round(1.0 * F('watched_episodes_time') / MINUTES_IN_HOUR),
                                                    output_field=DecimalField()))
 
@@ -514,11 +516,15 @@ def calculate_shows_stats(user: User) -> dict:
     watched_episodes = UserEpisode.objects.exclude(score=-1).filter(user=user)
     if watched_episodes.exists():
         shows_total_spent_time = watched_episodes.aggregate(
-            total_spent_time=Sum('episode__tmdb_runtime'))['total_spent_time']
+            total_spent_time=Sum(
+                Case(When(episode__tmdb_runtime=0, then='episode__tmdb_season__tmdb_show__tmdb_episode_runtime'),
+                     default='episode__tmdb_runtime')))['total_spent_time']
 
-        shows_genres_spent_time = watched_episodes. \
-            values(name=F('episode__tmdb_season__tmdb_show__showgenre__genre__tmdb_name')) \
-            .annotate(spent_time_percent=Sum('episode__tmdb_runtime'))
+        shows_genres_spent_time = watched_episodes \
+            .values(name=F('episode__tmdb_season__tmdb_show__showgenre__genre__tmdb_name')) \
+            .annotate(spent_time_percent=Sum(
+            Case(When(episode__tmdb_runtime=0, then='episode__tmdb_season__tmdb_show__tmdb_episode_runtime'),
+                 default='episode__tmdb_runtime')))
 
         for genre in shows_genres_spent_time:
             genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 /

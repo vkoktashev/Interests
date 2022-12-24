@@ -642,7 +642,7 @@ def parse_episode(tmdb_episode):
         'name': tmdb_episode.get('name'),
         'overview': tmdb_episode.get('overview'),
         'score': int(tmdb_episode['vote_average'] * 10) if tmdb_episode.get('vote_average') is not None else None,
-        'runtime': tmdb_episode.get('runtime'),
+        'runtime': tmdb_episode.get('runtime') if tmdb_episode.get('runtime') is not None else 0,
         'still_path': TMDB_STILL_PATH_PREFIX + tmdb_episode['still_path']
         if tmdb_episode.get('still_path') is not None else '',
         'air_date': '.'.join(reversed(tmdb_episode['air_date'].split('-')))
