@@ -255,7 +255,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response(status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-    def unwatched_episodes(self, request, *args, **kwargs):
+    def unwatched_episodes(self, request):
         today_date = datetime.today().date()
 
         shows = Show.objects.filter(Q(usershow__user=request.user) &
@@ -264,8 +264,8 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         episodes = Episode.objects.select_related('tmdb_season', 'tmdb_season__tmdb_show') \
             .filter(tmdb_season__tmdb_show__in=shows, tmdb_release_date__lte=today_date) \
+            .exclude(userepisode__in=UserEpisode.objects.filter(score__gt=-1, user=request.user)) \
             .exclude(tmdb_season__tmdb_season_number=0) \
-            .exclude(userepisode__score__gt=-1, userepisode__user=request.user) \
             .order_by('tmdb_season__tmdb_season_number', 'tmdb_episode_number')
 
         shows_info = []
