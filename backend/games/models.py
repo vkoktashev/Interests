@@ -34,7 +34,7 @@ class UserGame(UserScore):
         (STATUS_NOT_PLAYED, 'Не играл')
     )
 
-    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, on_delete=models.PROTECT)
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=STATUS_NOT_PLAYED)
     spent_time = models.DecimalField(validators=[MinValueValidator(0.0)], default=0.0, max_digits=7, decimal_places=1)
     updated_at = models.DateTimeField(null=False, default=timezone.now)
@@ -44,7 +44,7 @@ class UserGame(UserScore):
 
 
 class GameLog(UserLogAbstract):
-    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, on_delete=models.PROTECT)
 
 
 class Genre(models.Model):

@@ -29,7 +29,7 @@ class UserMovie(UserScore):
         (STATUS_NOT_WATCHED, 'Не смотрел')
     )
 
-    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.PROTECT)
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=STATUS_NOT_WATCHED)
     updated_at = models.DateTimeField(null=False, default=timezone.now)
 
@@ -38,7 +38,7 @@ class UserMovie(UserScore):
 
 
 class MovieLog(UserLogAbstract):
-    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.PROTECT)
 
 
 class Genre(models.Model):

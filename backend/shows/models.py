@@ -77,7 +77,7 @@ class UserShow(UserScore):
         (STATUS_WATCHING, 'Смотрю')
     )
 
-    show = models.ForeignKey(Show, on_delete=models.CASCADE)
+    show = models.ForeignKey(Show, on_delete=models.PROTECT)
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=STATUS_NOT_WATCHED)
     updated_at = models.DateTimeField(null=False, default=timezone.now)
 
@@ -86,14 +86,14 @@ class UserShow(UserScore):
 
 
 class UserSeason(UserScore):
-    season = models.ForeignKey(Season, on_delete=models.CASCADE)
+    season = models.ForeignKey(Season, on_delete=models.PROTECT)
 
     class Meta:
         unique_together = (("user", "season"),)
 
 
 class UserEpisode(UserScore):
-    episode = models.ForeignKey(Episode, on_delete=models.CASCADE)
+    episode = models.ForeignKey(Episode, on_delete=models.PROTECT)
     score = models.IntegerField(validators=[MinValueValidator(-1), MaxValueValidator(10)], default=-1)
 
     class Meta:
@@ -104,15 +104,15 @@ class ShowLog(UserLogAbstract):
     ACTION_TYPE_EPISODES = 'episodes'
     ACTION_TYPE_CHOICES = *UserLogAbstract.ACTION_TYPE_CHOICES, (ACTION_TYPE_EPISODES, 'Episodes changed'),
 
-    show = models.ForeignKey(Show, on_delete=models.CASCADE)
+    show = models.ForeignKey(Show, on_delete=models.PROTECT)
 
 
 class SeasonLog(UserLogAbstract):
-    season = models.ForeignKey(Season, on_delete=models.CASCADE)
+    season = models.ForeignKey(Season, on_delete=models.PROTECT)
 
 
 class EpisodeLog(UserLogAbstract):
-    episode = models.ForeignKey(Episode, on_delete=models.CASCADE)
+    episode = models.ForeignKey(Episode, on_delete=models.PROTECT)
 
 
 class ShowGenre(models.Model):
