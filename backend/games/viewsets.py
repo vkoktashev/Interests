@@ -72,7 +72,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         hltb_game = get_hltb_game(rawg_game.get('name'))
         new_fields = get_game_new_fields(rawg_game, hltb_game)
 
-        game, created = Game.objects.filter().get_or_create(rawg_slug=rawg_game.get('slug'),
+        game, created = Game.objects.filter().get_or_create(rawg_id=rawg_game.get('id'),
                                                             defaults=new_fields)
         if not created and not returned_from_cache:
             update_fields_if_needed(game, new_fields)
