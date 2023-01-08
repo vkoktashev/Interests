@@ -99,6 +99,7 @@ const EpisodePage = observer((props) => {
 							<h5 className='episode-page__info-subheader'>{show?.show?.tmdb_original_name + " - Season " + show?.season_number + " - Episode " + show?.episode_number}</h5>
 							<div className='episode-page__info-body'>
 								<p hidden={!show?.air_date}>Дата выхода: {show?.air_date}</p>
+								<p hidden={!show?.runtime}>Продолжительность (мин): {show?.runtime}</p>
 								<a
 									href={window.location.origin + "/show/" + show_id + "/season/" + season_number}
 									onClick={(e) => {

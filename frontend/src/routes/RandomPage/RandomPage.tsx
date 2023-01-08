@@ -90,17 +90,17 @@ const RandomPage = observer(() => {
                 style={{width: 0, height: 0}}
             />
             {
-                winner && !isLoading && (
+                winner && (
                     <Fade right duration={500} distance='50px'>
                         <RandomCard winner={winner} />
                     </Fade>
                 )
             }
-            {
-                isLoading && (
-                    <RandomCardLoader />
-                )
-            }
+            {/*{*/}
+            {/*    isLoading && (*/}
+            {/*        <RandomCardLoader />*/}
+            {/*    )*/}
+            {/*}*/}
         </div>
 );
 });

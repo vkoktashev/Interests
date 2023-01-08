@@ -82,14 +82,14 @@ const GamePage = observer((props) => {
 
 	function strToFloat(text) {
 		if (typeof text === 'number') {
-			return text;
+			return text.toFixed(1);
 		}
 		let cleanStr = text;
 		if (cleanStr && cleanStr !== -1) {
 			if (cleanStr.indexOf("½") + 1) {
 				return parseFloat(cleanStr) + 0.5
 			} else {
-				return parseFloat(cleanStr);
+				return parseFloat(cleanStr).toFixed(1);
 			}
 		}
 	}
@@ -98,7 +98,7 @@ const GamePage = observer((props) => {
 		let newData = [];
 		if (!(!hltbInfo || hltbInfo === "0 часов" || hltbInfo?.gameplay_main === -1)) {
 			if (typeof hltbInfo === 'string') {
-				newData.push(hltbInfo);
+				newData.push(strToFloat(hltbInfo));
 			} else {
 				newData.push(strToFloat(hltbInfo?.gameplay_main));
 			}
