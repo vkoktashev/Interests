@@ -102,7 +102,7 @@ const ShowPage = observer((props) => {
 								<p hidden={!show?.production_companies}>Компания: {show?.production_companies}</p>
 								<p hidden={!show?.first_air_date}>Дата выхода первой серии: {show?.first_air_date}</p>
 								<p hidden={!show?.last_air_date}>Дата выхода последней серии: {show?.last_air_date}</p>
-								<p hidden={show?.episode_runtime === null}>Продолжительность (мин): {show?.episode_run_time}</p>
+								<p hidden={!!show?.episode_run_time}>Продолжительность (мин): {show?.episode_run_time}</p>
 								<p>Количество сезонов: {show?.seasons_count}</p>
 								<p>Количество серий: {show?.episodes_count}</p>
 								<p hidden={!show?.status}>Статус: {show?.status}</p>

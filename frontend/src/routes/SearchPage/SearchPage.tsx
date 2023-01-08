@@ -77,21 +77,37 @@ const SearchPage = observer(() => {
 						setActiveCategory(category);
 					}}>
 					<div className='search-page__results' ref={parentRef}>
-						<LoadingOverlay active={store.gamesState === 'pending'} spinner text='Ищем игры...'>
-							<GameCards games={store.games.values} hidden={activeCategory !== 'Игры'} />
-						</LoadingOverlay>
+						{
+							 activeCategory === 'Игры' && (
+								<LoadingOverlay active={store.gamesState === 'pending'} spinner text='Ищем игры...'>
+									<GameCards games={store.games.values} hidden={activeCategory !== 'Игры'} />
+								</LoadingOverlay>
+							)
+						}
 
-						<LoadingOverlay active={store.moviesState === 'pending'} spinner text='Ищем фильмы...'>
-							<MovieCards movies={store.movies.values} hidden={activeCategory !== 'Фильмы'} />
-						</LoadingOverlay>
+						{
+							activeCategory === 'Фильмы' && (
+								<LoadingOverlay active={store.moviesState === 'pending'} spinner text='Ищем фильмы...'>
+									<MovieCards movies={store.movies.values} hidden={activeCategory !== 'Фильмы'} />
+								</LoadingOverlay>
+							)
+						}
 
-						<LoadingOverlay active={store.showsState === 'pending'} spinner text='Ищем сериалы...'>
-							<ShowCards shows={store.shows.values} hidden={activeCategory !== 'Сериалы'} />
-						</LoadingOverlay>
+						{
+							activeCategory === 'Сериалы' && (
+								<LoadingOverlay active={store.showsState === 'pending'} spinner text='Ищем сериалы...'>
+									<ShowCards shows={store.shows.values} hidden={activeCategory !== 'Сериалы'} />
+								</LoadingOverlay>
+							)
+						}
 
-						<LoadingOverlay active={store.usersState === 'pending'} spinner text='Ищем пользователей...'>
-							<UserCards users={store.users.values} hidden={activeCategory !== 'Всё' && activeCategory !== 'Пользователи'} />
-						</LoadingOverlay>
+						{
+							activeCategory === 'Пользователи' && (
+								<LoadingOverlay active={store.usersState === 'pending'} spinner text='Ищем пользователей...'>
+									<UserCards users={store.users.values} hidden={activeCategory !== 'Пользователи'} />
+								</LoadingOverlay>
+							)
+						}
 
 						<div ref={childRef} style={{ height: 20 }} />
 					</div>
