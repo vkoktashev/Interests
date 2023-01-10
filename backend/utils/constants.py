@@ -15,7 +15,7 @@ TYPE_USER = 'user'
 DEFAULT_PAGE_NUMBER = 1
 DEFAULT_PAGE_SIZE = 5
 
-SITE_URL = 'interests.host'
+SITE_URL = 'интерестс.space'
 CACHE_TIMEOUT = 60 * 60 * 10
 LAST_ACTIVITY_INTERVAL_SECS = 60 * 10
 
