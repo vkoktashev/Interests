@@ -5,6 +5,7 @@ import rawgpy
 from django.contrib.postgres.search import TrigramSimilarity
 from django.core.cache import cache
 from django.core.paginator import Paginator
+from django.db import IntegrityError
 from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
 from requests.exceptions import ConnectionError
@@ -72,8 +73,13 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         hltb_game = get_hltb_game(rawg_game.get('name'))
         new_fields = get_game_new_fields(rawg_game, hltb_game)
 
-        game, created = Game.objects.filter().get_or_create(rawg_id=rawg_game.get('id'),
-                                                            defaults=new_fields)
+        try:
+            game, created = Game.objects.filter().get_or_create(rawg_id=rawg_game.get('id'),
+                                                                defaults=new_fields)
+        except IntegrityError:
+            created = False
+            game = Game.objects.filter().get(rawg_slug=rawg_game.get('slug'))
+
         if not created and not returned_from_cache:
             update_fields_if_needed(game, new_fields)
 
