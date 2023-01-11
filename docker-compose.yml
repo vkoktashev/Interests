@@ -21,7 +21,7 @@ services:
       CELERY_RESULT_BACKEND: 'redis://redis:6379'
       DATABASE_URL: 'db2'
     volumes:
-      - /etc/letsencrypt/live/интерестс.space/:/etc/letsencrypt/live/интерестс.space/
+      - /etc/letsencrypt/live/xn--e1aahuqhade.space/:/etc/letsencrypt/live/xn--e1aahuqhade.space/
     ports:
       - "8001:8001"
     depends_on:

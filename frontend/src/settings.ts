@@ -1,5 +1,5 @@
 /**Адрес сервера*/
-export const BACKEND_URL = "https://интерестс.space/api/";
+export const BACKEND_URL = "https://xn--e1aahuqhade.space/api/";
 /**Адрес получения токена */
 export const GET_TOKEN_URL = BACKEND_URL + "users/auth/login/";
 /**Адрес обновления токена */
