@@ -627,7 +627,7 @@ def parse_season(tmdb_season):
         'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_season['poster_path']
         if tmdb_season.get('poster_path') is not None else '',
         'air_date': '.'.join(reversed(tmdb_season['air_date'].split('-')))
-        if tmdb_season.get('air_date') != "" else None,
+        if tmdb_season.get('air_date') != ("" or None) else None,
         'season_number': tmdb_season.get('season_number'),
         'show': tmdb_season.get('show'),
         'episodes': tmdb_season.get('episodes')
