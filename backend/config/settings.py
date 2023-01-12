@@ -139,8 +139,8 @@ LOGIN_URL = 'users/auth/login'
 
 EMAIL_USE_SSL = True
 EMAIL_HOST = 'smtp.mail.ru'
-EMAIL_HOST_USER = 'info@интерестс.space'
-EMAIL_HOST_PASSWORD = 'ewY3cASyiBmqbNrXzhuA'
+EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 EMAIL_PORT = 465
 
 SIMPLE_JWT = {
