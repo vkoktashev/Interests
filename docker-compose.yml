@@ -21,7 +21,7 @@ services:
       CELERY_RESULT_BACKEND: 'redis://redis:6379'
       DATABASE_URL: 'db2'
       EMAIL_HOST_USER: 'your_interests@mail.ru'
-      EMAIL_HOST_PASSWORD: 'tMPI24Aytyi\$'
+      EMAIL_HOST_PASSWORD: 'tMPI24Aytyi$$'
     volumes:
       - /etc/letsencrypt/live/xn--e1aahuqhade.space/:/etc/letsencrypt/live/xn--e1aahuqhade.space/
     ports:
