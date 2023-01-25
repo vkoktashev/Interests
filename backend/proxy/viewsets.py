@@ -3,13 +3,12 @@ from django.http import HttpResponse
 from requests.exceptions import MissingSchema
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 
 class ProxyViewSet(GenericViewSet):
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'])
     def image(self, request):
         url = request.GET.get('url')
         try:

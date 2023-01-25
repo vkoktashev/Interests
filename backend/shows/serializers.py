@@ -160,6 +160,7 @@ class EpisodeLogSerializer(serializers.ModelSerializer):
 
 class FollowedUserShowSerializer(UserShowSerializer):
     user = FollowedUserSerializer()
+    show = None
 
     class Meta:
         model = UserShow
