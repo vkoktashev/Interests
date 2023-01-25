@@ -32,6 +32,7 @@ class MovieStatsSerializer(UserMovieSerializer):
 
 class FollowedUserMovieSerializer(UserMovieSerializer):
     user = FollowedUserSerializer()
+    movie = None
 
     class Meta:
         model = UserMovie
