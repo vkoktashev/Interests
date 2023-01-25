@@ -286,7 +286,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                     break
 
             if not show_found:
-                show_data = ShowSerializer(show, {'request': request}).data
+                show_data = ShowSerializer(show, context={'request': request}).data
                 show_data.update({'seasons': []})
                 shows_info.append(show_data)
 
