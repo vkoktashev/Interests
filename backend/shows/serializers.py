@@ -230,7 +230,7 @@ class EpisodeShowSerializer(serializers.ModelSerializer):
     tmdb_season_number = serializers.SerializerMethodField('get_season_number')
 
     def get_tmdb_show(self, episode):
-        return ShowSerializer(episode.tmdb_season.tmdb_show, {'request': self.context.get("request")}).data
+        return ShowSerializer(episode.tmdb_season.tmdb_show, context={'request': self.context.get("request")}).data
 
     @staticmethod
     def get_season_number(episode):
