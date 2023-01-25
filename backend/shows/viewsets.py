@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from movies.models import Genre
+from proxy.functions import get_proxy_url
 from shows.functions import get_show_new_fields, get_season_new_fields, get_tmdb_show_key, \
     get_tmdb_season_key, get_tmdb_episode_key, get_episodes_to_create_update_delete
 from shows.models import UserShow, Show, UserSeason, Season, UserEpisode, Episode, ShowGenre, EpisodeLog, ShowLog
@@ -85,7 +86,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         if created or not returned_from_cache:
             update_show_genres(show, tmdb_show)
 
-        return Response(parse_show(tmdb_show))
+        return Response(parse_show(tmdb_show, request.scheme))
 
     def update(self, request, *args, **kwargs):
         try:
@@ -285,7 +286,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                     break
 
             if not show_found:
-                show_data = ShowSerializer(show).data
+                show_data = ShowSerializer(show, {'request': request}).data
                 show_data.update({'seasons': []})
                 shows_info.append(show_data)
 
@@ -331,7 +332,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
-            show_info = get_show_info(kwargs.get('show_tmdb_id'))
+            show_info = get_show_info(kwargs.get('show_tmdb_id'), request)
         except Show.DoesNotExist:
             return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
@@ -356,7 +357,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                      'tmdb_runtime'])
         Episode.objects.bulk_create(episodes_to_create)
 
-        return Response(parse_season(tmdb_season))
+        return Response(parse_season(tmdb_season, request.scheme))
 
     def update(self, request, *args, **kwargs):
         try:
@@ -443,12 +444,12 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         try:
-            show_info = get_show_info(kwargs.get('show_tmdb_id'))
+            show_info = get_show_info(kwargs.get('show_tmdb_id'), request)
         except Show.DoesNotExist:
             return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         tmdb_episode.update(show_info)
-        return Response(parse_episode(tmdb_episode))
+        return Response(parse_episode(tmdb_episode, request.scheme))
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserEpisodeSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
@@ -522,9 +523,9 @@ def user_watched_show(show, user):
     return False
 
 
-def get_show_info(show_id):
+def get_show_info(show_id, request):
     show = Show.objects.get(tmdb_id=show_id)
-    show_data = ShowSerializer(show).data
+    show_data = ShowSerializer(show, context={'request': request}).data
     return {'show': show_data}
 
 
@@ -590,7 +591,7 @@ def translate_tmdb_status(tmdb_status):
     return tmdb_status
 
 
-def parse_show(tmdb_show):
+def parse_show(tmdb_show, schema):
     new_show = {
         'id': tmdb_show.get('id'),
         'name': tmdb_show.get('name'),
@@ -600,10 +601,8 @@ def parse_show(tmdb_show):
         'seasons_count': tmdb_show.get('number_of_seasons'),
         'episodes_count': tmdb_show.get('number_of_episodes'),
         'score': int(tmdb_show['vote_average'] * 10) if tmdb_show.get('vote_average') is not None else None,
-        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path']
-        if tmdb_show.get('backdrop_path') is not None else '',
-        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_show['poster_path']
-        if tmdb_show.get('poster_path') is not None else '',
+        'backdrop_path': get_proxy_url(schema, TMDB_BACKDROP_PATH_PREFIX, tmdb_show.get('backdrop_path')),
+        'poster_path': get_proxy_url(schema, TMDB_POSTER_PATH_PREFIX, tmdb_show.get('poster_path')),
         'genres': objects_to_str(tmdb_show['genres']),
         'production_companies': objects_to_str(tmdb_show['production_companies']),
         'status': translate_tmdb_status(tmdb_show['status']),
@@ -619,13 +618,12 @@ def parse_show(tmdb_show):
     return new_show
 
 
-def parse_season(tmdb_season):
+def parse_season(tmdb_season, schema):
     new_season = {
         'id': tmdb_season.get('id'),
         'name': tmdb_season.get('name'),
         'overview': tmdb_season.get('overview'),
-        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_season['poster_path']
-        if tmdb_season.get('poster_path') is not None else '',
+        'poster_path': get_proxy_url(schema, TMDB_POSTER_PATH_PREFIX, tmdb_season.get('poster_path')),
         'air_date': '.'.join(reversed(tmdb_season['air_date'].split('-')))
         if tmdb_season.get('air_date') != ("" or None) else None,
         'season_number': tmdb_season.get('season_number'),
@@ -636,15 +634,14 @@ def parse_season(tmdb_season):
     return new_season
 
 
-def parse_episode(tmdb_episode):
+def parse_episode(tmdb_episode, schema):
     new_episode = {
         'id': tmdb_episode.get('id'),
         'name': tmdb_episode.get('name'),
         'overview': tmdb_episode.get('overview'),
         'score': int(tmdb_episode['vote_average'] * 10) if tmdb_episode.get('vote_average') is not None else None,
         'runtime': tmdb_episode.get('runtime') if tmdb_episode.get('runtime') is not None else 0,
-        'still_path': TMDB_STILL_PATH_PREFIX + tmdb_episode['still_path']
-        if tmdb_episode.get('still_path') is not None else '',
+        'still_path': get_proxy_url(schema, TMDB_STILL_PATH_PREFIX, tmdb_episode.get('still_path')),
         'air_date': '.'.join(reversed(tmdb_episode['air_date'].split('-')))
         if tmdb_episode.get('air_date') != "" else None,
         'season_number': tmdb_episode.get('season_number'),

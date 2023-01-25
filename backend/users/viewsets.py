@@ -253,7 +253,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 release_date = collections.defaultdict(list)
                 calendar_dict[tmdb_release_date_str] = release_date
 
-            release_date['episodes'].append(EpisodeShowSerializer(episode).data)
+            release_date['episodes'].append(EpisodeShowSerializer(episode, context={'request': request}).data)
 
         calendar_dict = dict(sorted(calendar_dict.items()))
 

@@ -15,6 +15,7 @@ from rest_framework.viewsets import GenericViewSet
 from movies.functions import get_movie_new_fields, get_tmdb_movie_key
 from movies.models import Movie, UserMovie, Genre, MovieGenre
 from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer, MovieSerializer
+from proxy.functions import get_proxy_url
 from users.models import UserFollow
 from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, CACHE_TIMEOUT, \
     TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, DEFAULT_PAGE_SIZE, YOUTUBE_PREFIX
@@ -79,7 +80,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         if created or not returned_from_cache:
             update_movie_genres(movie, tmdb_movie)
 
-        return Response(parse_movie(tmdb_movie))
+        return Response(parse_movie(tmdb_movie, request.scheme))
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserMovieSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
@@ -123,7 +124,6 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
-
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -191,7 +191,7 @@ def get_cast_crew(tmdb_id):
     return tmdb_cast_crew
 
 
-def parse_movie(tmdb_movie):
+def parse_movie(tmdb_movie, scheme):
     directors = []
     for i in tmdb_movie['crew']:
         if i['job'] == 'Director':
@@ -207,9 +207,8 @@ def parse_movie(tmdb_movie):
         if tmdb_movie.get('air_date') != "" else None,
         'score': int(tmdb_movie['vote_average'] * 10) if tmdb_movie.get('vote_average') else None,
         'tagline': tmdb_movie.get('tagline'),
-        'backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path']
-        if tmdb_movie.get('backdrop_path') else '',
-        'poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_movie['poster_path'] if tmdb_movie.get('poster_path') else '',
+        'backdrop_path': get_proxy_url(scheme, TMDB_BACKDROP_PATH_PREFIX, tmdb_movie.get('backdrop_path')),
+        'poster_path': get_proxy_url(scheme, TMDB_POSTER_PATH_PREFIX, tmdb_movie.get('poster_path')),
         'genres': objects_to_str(tmdb_movie['genres']),
         'production_companies': objects_to_str(tmdb_movie['production_companies']),
         'cast': objects_to_str(tmdb_movie['cast'][:5]),

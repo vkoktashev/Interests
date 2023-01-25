@@ -1,8 +1,9 @@
 from rest_framework import serializers
 
+from proxy.functions import get_proxy_url
 from shows.models import UserShow, UserSeason, UserEpisode, ShowLog, SeasonLog, EpisodeLog, Episode, Show, Season
 from users.serializers import FollowedUserSerializer
-from utils.constants import TYPE_SHOW, TYPE_SEASON, TYPE_EPISODE
+from utils.constants import TYPE_SHOW, TYPE_SEASON, TYPE_EPISODE, TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX
 from utils.serializers import ChoicesField
 
 
@@ -181,6 +182,19 @@ class FollowedUserEpisodeSerializer(UserEpisodeSerializer):
 
 
 class ShowSerializer(serializers.ModelSerializer):
+    tmdb_backdrop_path = serializers.SerializerMethodField('get_backdrop_path')
+    tmdb_poster_path = serializers.SerializerMethodField('get_poster_path')
+
+    def get_backdrop_path(self, show):
+        return get_proxy_url(self.context.get('request').scheme,
+                             TMDB_BACKDROP_PATH_PREFIX,
+                             show.tmdb_backdrop_path)
+
+    def get_poster_path(self, show):
+        return get_proxy_url(self.context.get('request').scheme,
+                             TMDB_POSTER_PATH_PREFIX,
+                             show.tmdb_poster_path)
+
     class Meta:
         model = Show
         fields = '__all__'
@@ -208,9 +222,8 @@ class EpisodeShowSerializer(serializers.ModelSerializer):
     tmdb_show = serializers.SerializerMethodField('get_tmdb_show')
     tmdb_season_number = serializers.SerializerMethodField('get_season_number')
 
-    @staticmethod
-    def get_tmdb_show(episode):
-        return ShowSerializer(episode.tmdb_season.tmdb_show).data
+    def get_tmdb_show(self, episode):
+        return ShowSerializer(episode.tmdb_season.tmdb_show, {'request': self.context.get("request")}).data
 
     @staticmethod
     def get_season_number(episode):
