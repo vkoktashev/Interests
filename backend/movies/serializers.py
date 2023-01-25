@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from movies.models import UserMovie, MovieLog, Movie
+from proxy.functions import get_proxy_url
 from users.serializers import FollowedUserSerializer
 from utils.constants import TYPE_MOVIE
 from utils.serializers import ChoicesField
@@ -8,6 +9,10 @@ from utils.serializers import ChoicesField
 
 class UserMovieSerializer(serializers.ModelSerializer):
     status = ChoicesField(choices=UserMovie.STATUS_CHOICES, required=False)
+    movie = serializers.SerializerMethodField('get_movie')
+
+    def get_movie(self, user_movie):
+        return MovieSerializer(user_movie.movie, context={'request': self.context.get("request")}).data
 
     class Meta:
         model = UserMovie
@@ -67,6 +72,21 @@ class MovieLogSerializer(serializers.ModelSerializer):
 
 
 class MovieSerializer(serializers.ModelSerializer):
+    tmdb_backdrop_path = serializers.SerializerMethodField('get_backdrop_path')
+    tmdb_poster_path = serializers.SerializerMethodField('get_poster_path')
+
+    def get_backdrop_path(self, show):
+        if self.context.get('request'):
+            return get_proxy_url(self.context.get('request').scheme, show.tmdb_backdrop_path)
+        else:
+            return show.tmdb_backdrop_path
+
+    def get_poster_path(self, show):
+        if self.context.get('request'):
+            return get_proxy_url(self.context.get('request').scheme, show.tmdb_poster_path)
+        else:
+            return show.tmdb_poster_path
+
     class Meta:
         model = Movie
         exclude = ('id',)

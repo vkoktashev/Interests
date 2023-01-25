@@ -3,12 +3,16 @@ from rest_framework import serializers
 from proxy.functions import get_proxy_url
 from shows.models import UserShow, UserSeason, UserEpisode, ShowLog, SeasonLog, EpisodeLog, Episode, Show, Season
 from users.serializers import FollowedUserSerializer
-from utils.constants import TYPE_SHOW, TYPE_SEASON, TYPE_EPISODE, TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX
+from utils.constants import TYPE_SHOW, TYPE_SEASON, TYPE_EPISODE
 from utils.serializers import ChoicesField
 
 
 class UserShowSerializer(serializers.ModelSerializer):
     status = ChoicesField(choices=UserShow.STATUS_CHOICES, required=False)
+    show = serializers.SerializerMethodField('get_show')
+
+    def get_show(self, user_show):
+        return ShowSerializer(user_show.show, context={'request': self.context.get("request")}).data
 
     class Meta:
         model = UserShow
@@ -186,21 +190,23 @@ class ShowSerializer(serializers.ModelSerializer):
     tmdb_poster_path = serializers.SerializerMethodField('get_poster_path')
 
     def get_backdrop_path(self, show):
-        return get_proxy_url(self.context.get('request').scheme,
-                             TMDB_BACKDROP_PATH_PREFIX,
-                             show.tmdb_backdrop_path)
+        if self.context.get('request'):
+            return get_proxy_url(self.context.get('request').scheme, show.tmdb_backdrop_path)
+        else:
+            return show.tmdb_backdrop_path
 
     def get_poster_path(self, show):
-        return get_proxy_url(self.context.get('request').scheme,
-                             TMDB_POSTER_PATH_PREFIX,
-                             show.tmdb_poster_path)
+        if self.context.get('request'):
+            return get_proxy_url(self.context.get('request').scheme, show.tmdb_poster_path)
+        else:
+            return show.tmdb_poster_path
 
     class Meta:
         model = Show
         fields = '__all__'
 
 
-class TypedShowSerializer(serializers.ModelSerializer):
+class TypedShowSerializer(ShowSerializer):
     type = serializers.SerializerMethodField('get_type')
 
     @staticmethod

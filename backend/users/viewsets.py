@@ -292,7 +292,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .exclude(status=UserMovie.STATUS_NOT_WATCHED) \
             .filter(user=user) \
             .order_by('-updated_at')
-        serializer = MovieStatsSerializer(user_movies, many=True)
+        serializer = MovieStatsSerializer(user_movies, many=True, context={'request': request})
         movies = serializer.data
 
         stats.update(calculate_movies_stats(user))
@@ -309,7 +309,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .annotate(spent_time=ExpressionWrapper(Round(1.0 * F('watched_episodes_time') / MINUTES_IN_HOUR),
                                                    output_field=DecimalField()))
 
-        serializer = ShowStatsSerializer(user_shows, many=True)
+        serializer = ShowStatsSerializer(user_shows, many=True, context={'request': request})
         shows = serializer.data
 
         stats.update(calculate_shows_stats(user))
