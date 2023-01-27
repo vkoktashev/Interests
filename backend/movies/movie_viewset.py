@@ -1,11 +1,7 @@
 import tmdbsimple as tmdb
-from django.contrib.postgres.search import TrigramSimilarity
 from django.core.cache import cache
-from django.core.paginator import Paginator
-from django.db.models.functions import Greatest
 from drf_yasg.utils import swagger_auto_schema
-from requests import HTTPError
-from requests.exceptions import ConnectionError
+from requests import HTTPError, ConnectionError
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -13,41 +9,12 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from movies.functions import get_movie_new_fields, get_tmdb_movie_key
-from movies.models import Movie, UserMovie, Genre, MovieGenre
-from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer, MovieSerializer
+from movies.models import UserMovie, Movie, MovieGenre, Genre
+from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer
 from proxy.functions import get_proxy_url
 from users.models import UserFollow
-from utils.constants import LANGUAGE, ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, CACHE_TIMEOUT, \
-    TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, DEFAULT_PAGE_SIZE, YOUTUBE_PREFIX
-from utils.functions import update_fields_if_needed, objects_to_str, get_page_size
-from utils.openapi_params import DEFAULT_PAGE_NUMBER
-
-
-class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
-    @action(detail=False, methods=['get'])
-    def tmdb(self, request, *args, **kwargs):
-        query = request.GET.get('query', '')
-        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
-        try:
-            results = get_movie_search_results(query=query, page=page)
-        except HTTPError:
-            results = None
-        return Response(results, status=status.HTTP_200_OK)
-
-    def list(self, request, *args, **kwargs):
-        query = request.GET.get('query', '')
-        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
-        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
-
-        movies = Movie.objects \
-            .annotate(similarity=Greatest(TrigramSimilarity('tmdb_name', query),
-                                          TrigramSimilarity('tmdb_original_name', query))) \
-            .filter(similarity__gt=0.1) \
-            .order_by('-similarity')
-        paginator_page = Paginator(movies, page_size).get_page(page)
-        serializer = MovieSerializer(paginator_page.object_list, many=True)
-
-        return Response(serializer.data)
+from utils.constants import ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, LANGUAGE, CACHE_TIMEOUT, YOUTUBE_PREFIX
+from utils.functions import update_fields_if_needed, objects_to_str
 
 
 class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -147,15 +114,6 @@ def update_movie_genres(movie: Movie, tmdb_movie: dict) -> None:
     MovieGenre.objects.filter(id__in=movie_genres_to_delete_ids).delete()
 
 
-def get_movie_search_results(query, page):
-    key = f'tmdb_movie_search_{query.replace(" ", "_")}_page_{page}'
-    results = cache.get(key, None)
-    if results is None:
-        results = tmdb.Search().movie(query=query, page=page, language=LANGUAGE)
-        cache.set(key, results, CACHE_TIMEOUT)
-    return results
-
-
 def get_tmdb_movie(tmdb_id):
     returned_from_cache = True
     key = get_tmdb_movie_key(tmdb_id)
@@ -207,8 +165,8 @@ def parse_movie(tmdb_movie, scheme):
         if tmdb_movie.get('air_date') != "" else None,
         'score': int(tmdb_movie['vote_average'] * 10) if tmdb_movie.get('vote_average') else None,
         'tagline': tmdb_movie.get('tagline'),
-        'backdrop_path': get_proxy_url(scheme, TMDB_BACKDROP_PATH_PREFIX, tmdb_movie.get('backdrop_path')),
-        'poster_path': get_proxy_url(scheme, TMDB_POSTER_PATH_PREFIX, tmdb_movie.get('poster_path')),
+        'backdrop_path': get_proxy_url(scheme),
+        'poster_path': get_proxy_url(scheme),
         'genres': objects_to_str(tmdb_movie['genres']),
         'production_companies': objects_to_str(tmdb_movie['production_companies']),
         'cast': objects_to_str(tmdb_movie['cast'][:5]),
