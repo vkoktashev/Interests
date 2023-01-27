@@ -13,7 +13,8 @@ from movies.models import UserMovie, Movie, MovieGenre, Genre
 from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer
 from proxy.functions import get_proxy_url
 from users.models import UserFollow
-from utils.constants import ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, LANGUAGE, CACHE_TIMEOUT, YOUTUBE_PREFIX
+from utils.constants import ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, LANGUAGE, CACHE_TIMEOUT, YOUTUBE_PREFIX, \
+    TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX
 from utils.functions import update_fields_if_needed, objects_to_str
 
 
@@ -165,8 +166,8 @@ def parse_movie(tmdb_movie, scheme):
         if tmdb_movie.get('air_date') != "" else None,
         'score': int(tmdb_movie['vote_average'] * 10) if tmdb_movie.get('vote_average') else None,
         'tagline': tmdb_movie.get('tagline'),
-        'backdrop_path': get_proxy_url(scheme),
-        'poster_path': get_proxy_url(scheme),
+        'backdrop_path': get_proxy_url(scheme, TMDB_BACKDROP_PATH_PREFIX, tmdb_movie.get('backdrop_path')),
+        'poster_path': get_proxy_url(scheme, TMDB_POSTER_PATH_PREFIX, tmdb_movie.get('poster_path')),
         'genres': objects_to_str(tmdb_movie['genres']),
         'production_companies': objects_to_str(tmdb_movie['production_companies']),
         'cast': objects_to_str(tmdb_movie['cast'][:5]),
