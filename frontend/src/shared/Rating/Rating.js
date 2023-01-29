@@ -11,7 +11,13 @@ function RatingBlock({ initialRating, readonly, onChange, className, withEye }) 
 			fullSymbol={(withEye ? [<FaEye />] : []).concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaStar title={n} />))}
 			initialRating={initialRating}
 			readonly={readonly}
-			onChange={onChange}
+			onClick={(value) => {
+				if (value !== initialRating) {
+					onChange(value);
+				} else {
+					onChange(0);
+				}
+			}}
 			className={className}
 			quiet
 		/>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { toJS } from "mobx";
 import { observer } from "mobx-react";
 import LoadingOverlay from "react-loading-overlay";
@@ -41,7 +41,6 @@ const SeasonsBlock = observer(({ showID, seasons, userWatchedShow }) => {
 		let episodes = [];
 		let seasons = [];
 		for (let season in showSeasons) {
-			console.log(toJS(showSeasons));
 			if (showSeasons[season].name !== "Спецматериалы")
 				for (let episode in showSeasons[season].episodes) {
 					episodes.push({ tmdb_id: showSeasons[season].episodes[episode].id, score: 0 });
@@ -51,6 +50,12 @@ const SeasonsBlock = observer(({ showID, seasons, userWatchedShow }) => {
 		setEpisodesStatus({ episodes }, showID, seasons);
 		setSaveEpisodes(false);
 	}
+
+	useEffect(() => {
+		return () => {
+			setSaveEpisodes(false);
+		}
+	}, []);
 
 	return (
 		<div className='seasons-block'>

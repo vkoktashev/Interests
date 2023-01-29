@@ -27,9 +27,14 @@ function DetailEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, use
 	);
 
 	function parseDate(date) {
+		if (!date) {
+			return 'TBA';
+		}
 		let newDate = new Date(date).toLocaleDateString("ru-RU");
-		if (newDate !== "Invalid Date") return newDate;
-		else return "TBA";
+		if (newDate !== "Invalid Date") {
+			return newDate;
+		}
+		return 'TBA';
 	}
 
 	return (

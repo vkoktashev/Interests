@@ -8,7 +8,7 @@ function ShowCards({ shows, hidden }) {
 				let object = {
 					name: show.name,
 					id: show.id,
-					poster: `url(${"http://image.tmdb.org/t/p/w300" + show.backdrop_path})`,
+					poster: `url(${show.backdrop_path})`,
 					link: "/show/" + show.id,
 					overview: show.overview,
 				};

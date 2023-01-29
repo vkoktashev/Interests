@@ -15,6 +15,7 @@ import Rating from '../../shared/Rating';
 import InputNumber from '../../shared/InputNumber';
 
 import "./game-page.sass";
+import GameStores from "../../shared/GameStores";
 
 /**
  * Основная страница приложения
@@ -129,6 +130,7 @@ const GamePage = observer((props) => {
 								<p>Жанр: {game.genres}</p>
 								<p>Платформы: {game.platforms}</p>
 								<TimeToBeat hltbInfo={game.hltb || game.playtime} />
+								<GameStores stores={game.stores} />
 							</div>
 							<LoadingOverlay active={userInfoState === "pending" && gameState !== "pending"} spinner text='Загрузка...'>
 								<Rating
@@ -158,7 +160,11 @@ const GamePage = observer((props) => {
 									}}
 								/>
 							</LoadingOverlay>
-							<ScoreBlock score={game.metacritic} text='Metascore' className='game-page__info-score' />
+							<ScoreBlock
+								score={game.metacritic}
+								text='Metascore'
+								className='game-page__info-score'
+							/>
 						</div>
 					</div>
 					<div className='game-page__overview'>

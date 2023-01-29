@@ -79,6 +79,5 @@ export async function getRoulette(params: {
 	endedOnly: boolean,
 }) {
 	const response = await api.get('users/user/random/', {params: params});
-	console.log(response.data);
 	return response.data;
 }

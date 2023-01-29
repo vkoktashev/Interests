@@ -9,11 +9,14 @@ import "./log-row.sass";
 function LogRow({ log, showUsername, onDeleteLog, className }) {
 	let history = useHistory();
 
-	function translateActionType(action, actionResult) {
+	function translateActionType(action, actionResult, logType) {
 		switch (action) {
 			case "score":
 				switch (actionResult) {
 					case "0":
+						if (logType !== 'episode') {
+							return 'оценил(а)';
+						}
 						return "посмотрел(а)";
 					case "-1":
 						return "не смотрела(а)";
@@ -206,7 +209,7 @@ function LogRow({ log, showUsername, onDeleteLog, className }) {
 		<div className={classnames("log-row", className)}>
 			{parseDate(log.created)}&thinsp;
 			{showUsername ? userToLink(log.user, log.user_id) : ""}&thinsp;
-			{translateActionType(log.action_type, log.action_result)}&thinsp;
+			{translateActionType(log.action_type, log.action_result, log.type)}&thinsp;
 			{translateType(log.type, log.action_type)}&thinsp;
 			{nameToLink(log.target, log.type, log.target_id)}
 			{(log.type === "user") | (log.action_type === "episodes") | (log.action_result === "0") | (log.action_result === "-1") ? "" : ":"}&thinsp;

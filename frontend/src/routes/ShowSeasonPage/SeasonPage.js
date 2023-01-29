@@ -189,7 +189,7 @@ const SeasonPage = observer((props) => {
 														episode={episode}
 														showID={show_id}
 														loggedIn={loggedIn}
-														userInfo={getEpisodeByID(userInfo.episodes, episode.id)}
+														userInfo={getEpisodeByID(userInfo?.episodes, episode.id)}
 														setEpisodeUserStatus={setEpisodesStatus}
 														checkAll={isChecked}
 														userWatchedShow={userInfo?.user_watched_show}
