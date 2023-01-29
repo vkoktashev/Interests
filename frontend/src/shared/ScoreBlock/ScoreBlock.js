@@ -16,6 +16,10 @@ function ScoreBlock({ score, text, className }) {
 		}
 	}
 
+	if (!score) {
+		return null;
+	}
+
 	return (
 		<div hidden={!score} className={classnames("score-block", className)}>
 			<div className={classnames("score-block__body", "score-block__body_" + getColor(score))}>

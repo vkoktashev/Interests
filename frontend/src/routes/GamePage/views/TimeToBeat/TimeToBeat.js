@@ -3,9 +3,18 @@ import { MdAccessTime } from "react-icons/md";
 import "./time-to-beat.sass";
 
 function TimeToBeat({ hltbInfo }) {
-	if (!hltbInfo) {
+	console.log({...hltbInfo});
+	if (
+		!hltbInfo
+		|| (
+			!hltbInfo?.gameplay_main
+			&& !hltbInfo?.gameplay_main_extra
+			&& !hltbInfo?.gameplay_completionist
+		)
+	) {
 		return null;
 	}
+
 	return (
 		<div className='time-to-beat' hidden={!hltbInfo || hltbInfo === "0 часов" || (hltbInfo?.gameplay_main < 0 && hltbInfo?.gameplay_main_extra < 0 && hltbInfo?.gameplay_completionist < 0)}>
 			<p className='time-to-beat__element'>Время прохождения: </p>

@@ -8,7 +8,7 @@ function MovieCards({ movies, hidden }) {
 				let object = {
 					name: movie.title,
 					id: movie.id,
-					poster: `url(${"http://image.tmdb.org/t/p/w300" + movie.backdrop_path})`,
+					poster: `url(${movie.backdrop_path})`,
 					link: "/movie/" + movie.id,
 					overview: movie.overview,
 				};

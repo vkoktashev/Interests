@@ -10,7 +10,6 @@ function ChartBlock(props) {
 		if (props.chartData && props.chartData?.length > 0) {
 			let newData = props.chartData?.map((value) => ({ name: value.name, Процент: value.spent_time_percent })).sort((a, b) => b.Процент - a.Процент);
 			newData = newData.slice(0, 12);
-			console.log(newData);
 			setChartData(newData);
 		}
 	}, [props.chartData, setChartData]);

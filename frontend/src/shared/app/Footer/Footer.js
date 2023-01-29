@@ -2,6 +2,7 @@ import React from "react";
 import { FaVk, FaDiscord } from "react-icons/fa";
 import classnames from "classnames";
 import "./footer.sass";
+import tmdbLogo from './tmdb-logo.svg';
 
 function Footer({ className }) {
 	return (
@@ -29,7 +30,10 @@ function Footer({ className }) {
 						RAWG
 					</a>
 					<a href='https://www.themoviedb.org/'>
-						<div className='footer__tmdb-logo' />
+						<img
+							className='footer__tmdb-logo'
+							src={tmdbLogo}
+						/>
 					</a>
 				</div>
 			</div>
