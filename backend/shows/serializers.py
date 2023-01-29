@@ -214,10 +214,6 @@ class TypedShowSerializer(ShowSerializer):
     def get_type(show):
         return TYPE_SHOW
 
-    class Meta:
-        model = Show
-        exclude = ('id',)
-
 
 class SeasonSerializer(serializers.ModelSerializer):
     class Meta:

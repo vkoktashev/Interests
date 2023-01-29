@@ -1,26 +1,17 @@
 import collections
 import random
-import secrets
 from datetime import datetime
 from itertools import chain
-from smtplib import SMTPAuthenticationError
 
-from django.contrib.postgres.search import TrigramSimilarity
-from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
 from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, QuerySet, Case, When
 from django.db.models.functions import ExtractYear, Coalesce
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework import status, mixins
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
-from rest_framework_simplejwt.views import TokenObtainPairView
 
-from config import settings
-from config.settings import EMAIL_HOST_USER
 from games.models import UserGame, GameLog, Game
 from games.serializers import GameStatsSerializer, GameLogSerializer, GameSerializer, TypedGameSerializer
 from movies.models import UserMovie, MovieLog, Movie
@@ -28,113 +19,15 @@ from movies.serializers import MovieLogSerializer, MovieStatsSerializer, MovieSe
 from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, Show, Episode
 from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogSerializer, EpisodeLogSerializer, \
     EpisodeShowSerializer, TypedShowSerializer
-from users.serializers import UserSerializer, MyTokenObtainPairSerializer, UserFollowSerializer, UserLogSerializer, \
+from users.serializers import UserFollowSerializer, UserLogSerializer, \
     UserInfoSerializer, SettingsSerializer
-from utils.constants import ERROR, WRONG_URL, ID_VALUE_ERROR, \
-    USER_NOT_FOUND, EMAIL_ERROR, MINUTES_IN_HOUR, SITE_URL, TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, \
+from utils.constants import ERROR, ID_VALUE_ERROR, \
+    USER_NOT_FOUND, MINUTES_IN_HOUR, TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, \
     TYPE_SEASON, TYPE_EPISODE, TYPE_USER, CANNOT_DELETE_ANOTHER_USER_LOG, WRONG_LOG_TYPE, LOG_NOT_FOUND
 from utils.functions import get_page_size
 from utils.models import Round
 from .functions import is_user_available
-from .models import User, UserFollow, UserLog, UserPasswordToken
-from .tokens import account_activation_token
-
-
-class AuthViewSet(GenericViewSet):
-
-    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
-    def signup(self, request):
-        serializer = UserSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        user = serializer.save()
-        mail_subject = 'Активация аккаунта.'
-        uid64 = urlsafe_base64_encode(force_bytes(user.pk))
-        token = account_activation_token.make_token(user)
-        activation_link = f"{request.scheme}://{SITE_URL}/confirm/?uid64={uid64}&token={token}"
-        message = f"Привет {user.username}, для активации аккаунта перейди по ссылке:\n{activation_link}"
-        email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
-
-        if settings.DEBUG:
-            print(activation_link)
-        else:
-            try:
-                email.send()
-            except SMTPAuthenticationError:
-                return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
-    def confirm_email(self, request):
-        try:
-            uid = force_str(urlsafe_base64_decode(request.query_params.get('uid64')))
-            user = User.objects.get(pk=uid)
-        except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist):
-            user = None
-
-        if user is not None and account_activation_token.check_token(user, request.query_params.get('token')):
-            user.is_active = True
-            user.save()
-            serializer = UserSerializer(instance=user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=False, methods=['put'], permission_classes=[AllowAny])
-    def password_reset(self, request):
-        email = request.data.get('email')
-
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-
-        reset_token = secrets.token_urlsafe()
-
-        try:
-            user_password_token = UserPasswordToken.objects.get(user=user)
-            user_password_token.reset_token = reset_token
-            user_password_token.is_active = True
-        except UserPasswordToken.DoesNotExist:
-            user_password_token = UserPasswordToken.objects.create(user=user, reset_token=reset_token)
-
-        user_password_token.save()
-
-        mail_subject = 'Сброс пароля.'
-        activation_link = f"{request.scheme}://{SITE_URL}/" \
-                          f"confirm_password/?token={urlsafe_base64_encode(force_bytes(reset_token))}"
-        message = f"Привет {user.username}, вот твоя ссылка:\n{activation_link}"
-        email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
-        if settings.DEBUG:
-            print(activation_link)
-        else:
-            try:
-                email.send()
-            except SMTPAuthenticationError:
-                return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        return Response(status=status.HTTP_200_OK)
-
-    @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
-    def confirm_password_reset(self, request):
-        try:
-            reset_token = force_str(urlsafe_base64_decode(request.query_params.get('reset_token')))
-            password = request.data.get('password')
-            user_password_token = UserPasswordToken.objects.get(reset_token=reset_token)
-            user = User.objects.get(id=user_password_token.user.id)
-        except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist, UserPasswordToken.DoesNotExist):
-            return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
-
-        if user_password_token.is_active:
-            serializer = UserSerializer(instance=user, data={'password': password}, partial=True)
-            serializer.is_valid(raise_exception=True)
-            user_password_token.is_active = False
-            user_password_token.save()
-            serializer.save()
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response({ERROR: WRONG_URL}, status=status.HTTP_400_BAD_REQUEST)
+from .models import User, UserFollow, UserLog
 
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -440,10 +333,10 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             selected_entries += TypedGameSerializer(selected_games, many=True).data
         if 'movies' in categories:
             selected_movies = [item.movie for item in movies.order_by('?')[:movies_count].select_related('movie')]
-            selected_entries += TypedMovieSerializer(selected_movies, many=True).data
+            selected_entries += TypedMovieSerializer(selected_movies, many=True, context={'request': request}).data
         if 'shows' in categories:
             selected_shows = [item.show for item in shows.order_by('?')[:shows_count].select_related('show')]
-            selected_entries += TypedShowSerializer(selected_shows, many=True).data
+            selected_entries += TypedShowSerializer(selected_shows, many=True, context={'request': request}).data
 
         random.shuffle(selected_entries)
         return Response(selected_entries, status=status.HTTP_200_OK)
@@ -627,15 +520,3 @@ def get_user_by_id(user_id, current_user):
     return user
 
 
-class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):
-    def list(self, request, *args, **kwargs):
-        query = request.GET.get('query', '')
-        results = User.objects.annotate(similarity=TrigramSimilarity('username', query)) \
-            .filter(similarity__gt=0.1) \
-            .order_by('-similarity')
-        serializer = UserSerializer(results, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class MyTokenObtainPairView(TokenObtainPairView):
-    serializer_class = MyTokenObtainPairSerializer
