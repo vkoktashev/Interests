@@ -13,7 +13,7 @@ from proxy.functions import get_proxy_url
 from shows.functions import get_season_new_fields, get_episodes_to_create_update_delete, get_tmdb_season_key
 from shows.models import UserSeason, Show, Season, Episode, UserShow, UserEpisode
 from shows.serializers import UserSeasonSerializer, FollowedUserSeasonSerializer, UserEpisodeInSeasonSerializer
-from shows.viewsets import get_show_info, user_watched_show
+from shows.show_viewsets import get_show_info, user_watched_show
 from users.models import UserFollow
 from utils.constants import ERROR, SEASON_NOT_FOUND, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, LANGUAGE, CACHE_TIMEOUT, \
     TMDB_POSTER_PATH_PREFIX
@@ -149,7 +149,7 @@ def parse_season(tmdb_season, schema):
         'overview': tmdb_season.get('overview'),
         'poster_path': get_proxy_url(schema, TMDB_POSTER_PATH_PREFIX, tmdb_season.get('poster_path')),
         'air_date': '.'.join(reversed(tmdb_season['air_date'].split('-')))
-        if tmdb_season.get('air_date') != ("" or None) else None,
+        if tmdb_season.get('air_date') is not None else None,
         'season_number': tmdb_season.get('season_number'),
         'show': tmdb_season.get('show'),
         'episodes': tmdb_season.get('episodes')
