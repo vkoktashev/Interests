@@ -93,13 +93,9 @@ class MovieSerializer(serializers.ModelSerializer):
         exclude = ('id',)
 
 
-class TypedMovieSerializer(serializers.ModelSerializer):
+class TypedMovieSerializer(MovieSerializer):
     type = serializers.SerializerMethodField('get_type')
 
     @staticmethod
     def get_type(movie):
         return TYPE_MOVIE
-
-    class Meta:
-        model = Movie
-        exclude = ('id',)

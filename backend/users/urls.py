@@ -2,7 +2,9 @@ from django.urls import path
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from users.viewsets import AuthViewSet, UserViewSet, MyTokenObtainPairView, SearchUsersViewSet
+from users.viewsets import UserViewSet
+from users.search_viewsets import SearchUsersViewSet
+from users.auth_viewsets import AuthViewSet, MyTokenObtainPairView
 
 router = routers.DefaultRouter()
 router.register('auth', AuthViewSet, basename='auth')
