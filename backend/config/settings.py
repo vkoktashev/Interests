@@ -140,16 +140,23 @@ LOGGING = {
     'version': 1,
     'handlers': {
         'file': {
+            'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': 'general.log',
         },
         'console': {
-            'level': 'ERROR',
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
         },
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console', 'mail_admins'],
+            'propagate': False,
         },
     },
 }
