@@ -3,7 +3,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 from shows.models import UserShow, ShowLog, UserSeason, SeasonLog
-from shows.serializers import UserShowSerializer, UserSeasonSerializer
+from shows.serializers import UserShowReadSerializer, UserSeasonSerializer
 from utils.functions import field_is_changed
 
 
@@ -11,11 +11,11 @@ from utils.functions import field_is_changed
 def create_show_log(instance, **kwargs):
     try:
         old_instance = UserShow.objects.get(user=instance.user, show=instance.show)
-        old_fields = UserShowSerializer(old_instance).data
+        old_fields = UserShowReadSerializer(old_instance).data
     except UserShow.DoesNotExist:
         old_fields = None
 
-    fields = UserShowSerializer(instance).data
+    fields = UserShowReadSerializer(instance).data
     show_log_dict = dict(ShowLog.ACTION_TYPE_CHOICES)
 
     for field in fields:

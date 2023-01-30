@@ -7,12 +7,24 @@ from utils.constants import TYPE_SHOW, TYPE_SEASON, TYPE_EPISODE
 from utils.serializers import ChoicesField
 
 
-class UserShowSerializer(serializers.ModelSerializer):
+class UserShowReadSerializer(serializers.ModelSerializer):
     status = ChoicesField(choices=UserShow.STATUS_CHOICES, required=False)
     show = serializers.SerializerMethodField('get_show')
 
     def get_show(self, user_show):
         return ShowSerializer(user_show.show, context={'request': self.context.get("request")}).data
+
+    class Meta:
+        model = UserShow
+        exclude = ('id', 'updated_at')
+        extra_kwargs = {
+            'user': {'write_only': True},
+            'show': {'write_only': True}
+        }
+
+
+class UserShowWriteSerializer(serializers.ModelSerializer):
+    status = ChoicesField(choices=UserShow.STATUS_CHOICES, required=False)
 
     class Meta:
         model = UserShow
@@ -47,7 +59,7 @@ class UserEpisodeInSeasonSerializer(UserEpisodeSerializer):
         return user_episode.episode.tmdb_id
 
 
-class ShowStatsSerializer(UserShowSerializer):
+class ShowStatsSerializer(UserShowReadSerializer):
     spent_time = serializers.DecimalField(max_digits=7, decimal_places=1)
     watched_episodes_time = serializers.IntegerField()
 
@@ -158,7 +170,7 @@ class EpisodeLogSerializer(serializers.ModelSerializer):
         exclude = ('episode',)
 
 
-class FollowedUserShowSerializer(UserShowSerializer):
+class FollowedUserShowSerializer(UserShowReadSerializer):
     user = FollowedUserSerializer()
     show = None
 

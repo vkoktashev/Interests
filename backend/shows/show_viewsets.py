@@ -15,8 +15,8 @@ from movies.models import Genre
 from proxy.functions import get_proxy_url
 from shows.functions import get_tmdb_show_key, get_show_new_fields
 from shows.models import Show, ShowGenre, UserShow, Episode, UserEpisode, EpisodeLog, ShowLog
-from shows.serializers import ShowSerializer, UserShowSerializer, FollowedUserShowSerializer, UserEpisodeSerializer, \
-    SeasonSerializer, EpisodeSerializer
+from shows.serializers import ShowSerializer, UserShowReadSerializer, FollowedUserShowSerializer, UserEpisodeSerializer, \
+    SeasonSerializer, EpisodeSerializer, UserShowWriteSerializer
 from shows.tasks import update_all_shows_task
 from users.models import UserFollow
 from utils.constants import LANGUAGE, CACHE_TIMEOUT, YOUTUBE_PREFIX, TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, \
@@ -122,7 +122,7 @@ def translate_tmdb_status(tmdb_status):
 
 class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     queryset = UserShow.objects.all()
-    serializer_class = UserShowSerializer
+    serializer_class = UserShowReadSerializer
     lookup_field = 'tmdb_id'
 
     def retrieve(self, request, *args, **kwargs):
@@ -161,9 +161,9 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         try:
             user_show = UserShow.objects.get(user=request.user, show=show)
-            serializer = self.get_serializer(user_show, data=data)
+            serializer = UserShowWriteSerializer(user_show, data=data)
         except UserShow.DoesNotExist:
-            serializer = self.get_serializer(data=data)
+            serializer = UserShowWriteSerializer(data=data)
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
