@@ -135,8 +135,22 @@ AUTH_USER_MODEL = 'users.User'
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 AUTHENTICATION_BACKENDS = ['users.backends.EmailOrUsernameModelBackend']
-
 LOGIN_URL = 'users/auth/login'
+
+LOGGING = {
+    'handlers': {
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'general.log',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+        },
+    },
+}
+
+ADMINS = [('Jenya', 'kononkov98@mail.ru')]
 
 EMAIL_USE_SSL = True
 EMAIL_HOST = 'smtp.mail.ru'
