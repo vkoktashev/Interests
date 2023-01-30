@@ -10,7 +10,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from movies.functions import get_movie_new_fields, get_tmdb_movie_key
 from movies.models import UserMovie, Movie, MovieGenre, Genre
-from movies.serializers import UserMovieSerializer, FollowedUserMovieSerializer
+from movies.serializers import UserMovieReadSerializer, FollowedUserMovieSerializer
 from proxy.functions import get_proxy_url
 from users.models import UserFollow
 from utils.constants import ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, LANGUAGE, CACHE_TIMEOUT, YOUTUBE_PREFIX, \
@@ -20,7 +20,7 @@ from utils.functions import update_fields_if_needed, objects_to_str
 
 class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     queryset = UserMovie.objects.all()
-    serializer_class = UserMovieSerializer
+    serializer_class = UserMovieReadSerializer
     lookup_field = 'tmdb_id'
 
     def retrieve(self, request, *args, **kwargs):

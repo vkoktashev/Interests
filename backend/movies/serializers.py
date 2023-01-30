@@ -7,7 +7,7 @@ from utils.constants import TYPE_MOVIE
 from utils.serializers import ChoicesField
 
 
-class UserMovieSerializer(serializers.ModelSerializer):
+class UserMovieReadSerializer(serializers.ModelSerializer):
     status = ChoicesField(choices=UserMovie.STATUS_CHOICES, required=False)
     movie = serializers.SerializerMethodField('get_movie')
 
@@ -23,14 +23,26 @@ class UserMovieSerializer(serializers.ModelSerializer):
         }
 
 
-class MovieStatsSerializer(UserMovieSerializer):
+class UserMovieWriteSerializer(serializers.ModelSerializer):
+    status = ChoicesField(choices=UserMovie.STATUS_CHOICES, required=False)
+
+    class Meta:
+        model = UserMovie
+        exclude = ('id', 'updated_at')
+        extra_kwargs = {
+            'user': {'write_only': True},
+            'movie': {'write_only': True}
+        }
+
+
+class MovieStatsSerializer(UserMovieReadSerializer):
     class Meta:
         model = UserMovie
         exclude = ('id', 'user', 'updated_at')
         depth = 1
 
 
-class FollowedUserMovieSerializer(UserMovieSerializer):
+class FollowedUserMovieSerializer(UserMovieReadSerializer):
     user = FollowedUserSerializer()
     movie = None
 

@@ -3,7 +3,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 from movies.models import UserMovie, MovieLog
-from movies.serializers import UserMovieSerializer
+from movies.serializers import UserMovieReadSerializer
 from utils.functions import field_is_changed
 
 
@@ -11,11 +11,11 @@ from utils.functions import field_is_changed
 def create_log(instance, **kwargs):
     try:
         old_instance = UserMovie.objects.get(user=instance.user, movie=instance.movie)
-        old_fields = UserMovieSerializer(old_instance).data
+        old_fields = UserMovieReadSerializer(old_instance).data
     except UserMovie.DoesNotExist:
         old_fields = None
 
-    fields = UserMovieSerializer(instance).data
+    fields = UserMovieReadSerializer(instance).data
     movie_log_dict = dict(MovieLog.ACTION_TYPE_CHOICES)
 
     for field in fields:

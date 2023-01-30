@@ -13,7 +13,7 @@ from proxy.functions import get_proxy_url
 from shows.functions import get_tmdb_episode_key
 from shows.models import UserEpisode, Show, Season, Episode, UserShow
 from shows.serializers import UserEpisodeSerializer, FollowedUserEpisodeSerializer
-from shows.viewsets import get_show_info, user_watched_show
+from shows.show_viewsets import get_show_info, user_watched_show
 from users.models import UserFollow
 from utils.constants import ERROR, EPISODE_NOT_FOUND, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, EPISODE_NOT_WATCHED_SCORE, \
     LANGUAGE, CACHE_TIMEOUT, TMDB_STILL_PATH_PREFIX
@@ -104,7 +104,7 @@ def parse_episode(tmdb_episode, schema):
         'runtime': tmdb_episode.get('runtime') if tmdb_episode.get('runtime') is not None else 0,
         'still_path': get_proxy_url(schema, TMDB_STILL_PATH_PREFIX, tmdb_episode.get('still_path')),
         'air_date': '.'.join(reversed(tmdb_episode['air_date'].split('-')))
-        if tmdb_episode.get('air_date') != "" else None,
+        if tmdb_episode.get('air_date') is not None else None,
         'season_number': tmdb_episode.get('season_number'),
         'episode_number': tmdb_episode.get('episode_number'),
         'show': tmdb_episode.get('show'),
