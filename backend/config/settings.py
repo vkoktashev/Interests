@@ -138,10 +138,15 @@ AUTHENTICATION_BACKENDS = ['users.backends.EmailOrUsernameModelBackend']
 LOGIN_URL = 'users/auth/login'
 
 LOGGING = {
+    'version': 1,
     'handlers': {
         'file': {
             'class': 'logging.FileHandler',
             'filename': 'general.log',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
         },
         'mail_admins': {
             'level': 'ERROR',
