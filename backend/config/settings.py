@@ -145,7 +145,7 @@ LOGGING = {
             'filename': 'general.log',
         },
         'console': {
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'class': 'logging.StreamHandler',
         },
         'mail_admins': {
