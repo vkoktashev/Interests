@@ -10,7 +10,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from movies.functions import get_movie_new_fields, get_tmdb_movie_key
 from movies.models import UserMovie, Movie, MovieGenre, Genre
-from movies.serializers import UserMovieReadSerializer, FollowedUserMovieSerializer
+from movies.serializers import UserMovieReadSerializer, FollowedUserMovieSerializer, UserMovieWriteSerializer
 from proxy.functions import get_proxy_url
 from users.models import UserFollow
 from utils.constants import ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, LANGUAGE, CACHE_TIMEOUT, YOUTUBE_PREFIX, \
@@ -86,9 +86,9 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         try:
             user_movie = UserMovie.objects.get(user=request.user, movie=movie)
-            serializer = self.get_serializer(user_movie, data=data)
+            serializer = UserMovieWriteSerializer(user_movie, data=data)
         except UserMovie.DoesNotExist:
-            serializer = self.get_serializer(data=data)
+            serializer = UserMovieWriteSerializer(data=data)
 
         serializer.is_valid(raise_exception=True)
         serializer.save()

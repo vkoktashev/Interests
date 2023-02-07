@@ -70,7 +70,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except JSONDecodeError:
             return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        hltb_game = get_hltb_game(rawg_game.get('name'))
+        release_year = int(rawg_game.get('released', '0').split('-')[0])
+        hltb_game = get_hltb_game(rawg_game.get('name'), release_year)
         new_fields = get_game_new_fields(rawg_game, hltb_game)
 
         try:
@@ -223,14 +224,18 @@ def get_game_search_results(query, page, page_size):
     return results
 
 
-def get_hltb_game(game_name):
+def get_hltb_game(game_name: str, release_year: int):
     key = get_hltb_game_key(game_name)
     hltb_game = cache.get(key, None)
-
+    game_name = game_name.replace('’', '\'')
     if hltb_game is None:
         try:
-            results = HowLongToBeat(1).search(game_name.replace('’', '\''), similarity_case_sensitive=False)
-            hltb_game = max(results, key=lambda element: element.similarity).__dict__
+            results = HowLongToBeat(1).search(game_name, similarity_case_sensitive=False)
+            if len(results) == 0:
+                results = HowLongToBeat(1).search(game_name.split('(')[0].strip(), similarity_case_sensitive=False)
+
+            same_year_games = [x for x in results if x.release_world == release_year]
+            hltb_game = max(same_year_games, key=lambda element: element.similarity).__dict__
             cache.set(key, hltb_game, CACHE_TIMEOUT)
         except (ValueError, TypeError):
             hltb_game = None
