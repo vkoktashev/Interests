@@ -137,30 +137,31 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 AUTHENTICATION_BACKENDS = ['users.backends.EmailOrUsernameModelBackend']
 LOGIN_URL = 'users/auth/login'
 
-LOGGING = {
-    'version': 1,
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': 'general.log',
+if not DEBUG:
+    LOGGING = {
+        'version': 1,
+        'handlers': {
+            'file': {
+                'level': 'DEBUG',
+                'class': 'logging.FileHandler',
+                'filename': 'general.log',
+            },
+            'console': {
+                'level': 'INFO',
+                'class': 'logging.StreamHandler',
+            },
+            'mail_admins': {
+                'level': 'ERROR',
+                'class': 'django.utils.log.AdminEmailHandler',
+            },
         },
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
+        'loggers': {
+            'django': {
+                'handlers': ['file', 'console', 'mail_admins'],
+                'propagate': False,
+            },
         },
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file', 'console', 'mail_admins'],
-            'propagate': False,
-        },
-    },
-}
+    }
 
 ADMINS = [('Jenya', 'kononkov98@mail.ru')]
 
