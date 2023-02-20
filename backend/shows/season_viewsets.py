@@ -43,9 +43,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         tmdb_season.update(show_info)
-
         new_fields = get_season_new_fields(tmdb_season)
-
         season, created = Season.objects.get_or_create(tmdb_show_id=tmdb_season.get('show').get('id'),
                                                        tmdb_season_number=tmdb_season.get('season_number'),
                                                        defaults=new_fields)
