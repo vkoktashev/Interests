@@ -17,7 +17,7 @@ from shows.functions import get_tmdb_show_key, get_show_new_fields
 from shows.models import Show, ShowGenre, UserShow, Episode, UserEpisode, EpisodeLog, ShowLog
 from shows.serializers import ShowSerializer, UserShowReadSerializer, FollowedUserShowSerializer, UserEpisodeSerializer, \
     SeasonSerializer, EpisodeSerializer, UserShowWriteSerializer
-from shows.tasks import update_all_shows_task
+from shows.tasks import update_shows, update_all_shows_task
 from users.models import UserFollow
 from utils.constants import LANGUAGE, CACHE_TIMEOUT, YOUTUBE_PREFIX, TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, \
     ERROR, SHOW_NOT_FOUND, TMDB_UNAVAILABLE, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE
@@ -372,4 +372,9 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     def update_all_shows(self, request):
         start_index = int(request.GET.get('start_index', 0))
         update_all_shows_task.delay(start_index)
+        return Response()
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
+    def update_shows(self, request):
+        update_shows()
         return Response()

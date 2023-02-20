@@ -5,6 +5,7 @@ from celery.schedules import crontab
 from django.core.cache import cache
 from django.db.models import Q
 from requests import HTTPError
+from requests.exceptions import ConnectionError
 
 from config.celery import app
 from shows.functions import get_show_new_fields, get_season_new_fields, get_tmdb_show_key, \
@@ -42,20 +43,26 @@ def update_shows():
     episodes_to_update = []
     episodes_to_delete_pks = []
 
-    for show in shows:
+    for i, show in enumerate(shows):
         show_tmdb_id = show.tmdb_id
-        current_number_of_episodes = show.tmdb_number_of_episodes
+        current_number_of_episodes = Episode.objects.filter(tmdb_season__tmdb_show=show).count()
         key = get_tmdb_show_key(show_tmdb_id)
         try:
             tmdb_show = tmdb.TV(show_tmdb_id).info(language=LANGUAGE)
-        except HTTPError:
+            try:
+                print(show.tmdb_name)
+            except UnicodeError:
+                print(f'utf-8 {show.tmdb_name.encode("utf-8")}')
+        except (HTTPError, ConnectionError):
+            try:
+                print(f'ERROR {show.tmdb_name}')
+            except UnicodeError:
+                print(f'ERROR utf-8  {show.tmdb_name.encode("utf-8")}')
             continue
         cache.set(key, tmdb_show, CACHE_TIMEOUT)
 
         new_fields = get_show_new_fields(tmdb_show)
-
         update_fields_if_needed(show, new_fields)
-        print(show.tmdb_name)
 
         if current_number_of_episodes != show.tmdb_number_of_episodes:
             season_number = tmdb_show.get('seasons')[-1]['season_number']
@@ -68,7 +75,8 @@ def update_shows():
             cache.set(key, tmdb_season, CACHE_TIMEOUT)
 
             new_fields = get_season_new_fields(tmdb_season)
-            season, created = Season.objects.get_or_create(tmdb_id=tmdb_season.get('id'),
+            season, created = Season.objects.get_or_create(tmdb_show_id=show.id,
+                                                           tmdb_season_number=tmdb_season.get('season_number'),
                                                            defaults=new_fields)
             if not created:
                 update_fields_if_needed(season, new_fields)
@@ -83,9 +91,20 @@ def update_shows():
             episodes_to_update += temp2
             episodes_to_delete_pks += temp3
 
+        if (i + 1) % 10 == 0:
+            Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
+            Episode.objects.bulk_update(episodes_to_update,
+                                        ['tmdb_episode_number', 'tmdb_season', 'tmdb_name',
+                                         'tmdb_release_date', 'tmdb_runtime'])
+            Episode.objects.bulk_create(episodes_to_create)
+            episodes_to_create = []
+            episodes_to_update = []
+            episodes_to_delete_pks = []
+
     Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
     Episode.objects.bulk_update(episodes_to_update,
-                                ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date'])
+                                ['tmdb_episode_number', 'tmdb_season', 'tmdb_name',
+                                 'tmdb_release_date', 'tmdb_runtime'])
     Episode.objects.bulk_create(episodes_to_create)
 
 
@@ -93,12 +112,11 @@ def update_shows():
 def update_all_shows_task(start_index):
     shows = Show.objects.all()[start_index:]
     count = len(shows)
-    i = 1
     episodes_to_create = []
     episodes_to_update = []
     episodes_to_delete_pks = []
 
-    for show in shows:
+    for i, show in enumerate(shows):
         tmdb_show_id = show.tmdb_id
         key = get_tmdb_show_key(tmdb_show_id)
         try:
@@ -138,9 +156,9 @@ def update_all_shows_task(start_index):
             episodes_to_update += temp2
             episodes_to_delete_pks += temp3
 
-        print(f'updated {i} of {count}')
+        print(f'updated {i + 1} of {count}')
 
-        if i % 10 == 0:
+        if (i + 1) % 10 == 0:
             Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
             Episode.objects.bulk_update(episodes_to_update,
                                         ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date',
@@ -149,8 +167,6 @@ def update_all_shows_task(start_index):
             episodes_to_create = []
             episodes_to_update = []
             episodes_to_delete_pks = []
-
-        i += 1
 
     Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
     Episode.objects.bulk_update(episodes_to_update,
