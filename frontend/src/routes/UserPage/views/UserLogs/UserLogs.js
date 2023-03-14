@@ -50,8 +50,13 @@ function UserLogs({ userID, logs, showUsername, requestUserLogs, currentUser, on
 								}}
 							/>
 						</form>
-						<button className='user-logs__mobile-expand' onClick={toggleCollapse}>
-							{collapse ? <FaAngleDown /> : <FaAngleUp />}
+						<button
+							className='user-logs__mobile-expand'
+							onClick={toggleCollapse}
+						>
+							{collapse
+								? <FaAngleDown />
+								: <FaAngleUp />}
 						</button>
 					</div>
 
@@ -70,11 +75,24 @@ function UserLogs({ userID, logs, showUsername, requestUserLogs, currentUser, on
 					/>
 				</div>
 				<div className='user-logs__page-size' hidden={collapse && width < 748}>
-					<label className='user-logs__page-size-label'> Записей на странице</label>
-					<InputNumber value={pageSize} max={100} min={1} onChange={(value) => setPageSize(value)} dataList={[5, 10, 25, 50, 100]} />
+					<label className='user-logs__page-size-label'>
+						Записей на странице
+					</label>
+					<InputNumber
+						value={pageSize}
+						max={100}
+						min={1}
+						onChange={(value) => setPageSize(value)}
+						dataList={[5, 10, 25, 50, 100]}
+					/>
 				</div>
 			</div>
-			<LogsByDay logs={logs} showUsername={showUsername} currentUser={currentUser} onDeleteLog={onDeleteLog} />
+			<LogsByDay
+				logs={logs}
+				showUsername={showUsername}
+				currentUser={currentUser}
+				onDeleteLog={onDeleteLog}
+			/>
 			<Pagination
 				total={logs.count}
 				pageSize={pageSize}
