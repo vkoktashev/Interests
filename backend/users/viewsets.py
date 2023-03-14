@@ -152,6 +152,55 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(calendar_dict, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def full_release_calendar(self, request):
+        today_date = datetime.today().date()
+        calendar_dict = collections.defaultdict(dict)
+
+        # games
+        games = Game.objects.filter(rawg_release_date__gte=today_date)
+        for game in games:
+            rawg_release_date_str = str(game.rawg_release_date)
+            release_date = calendar_dict[rawg_release_date_str]
+
+            if not release_date:
+                release_date = collections.defaultdict(list)
+                calendar_dict[rawg_release_date_str] = release_date
+
+            release_date['games'].append(GameSerializer(game).data)
+
+        # movies
+        movies = Movie.objects.filter(tmdb_release_date__gte=today_date)
+
+        for movie in movies:
+            tmdb_release_date_str = str(movie.tmdb_release_date)
+            release_date = calendar_dict[tmdb_release_date_str]
+
+            if not release_date:
+                release_date = collections.defaultdict(list)
+                calendar_dict[tmdb_release_date_str] = release_date
+
+            release_date['movies'].append(MovieSerializer(movie).data)
+
+        # episodes
+        shows = Show.objects.all()
+        episodes = Episode.objects.select_related('tmdb_season', 'tmdb_season__tmdb_show') \
+            .filter(tmdb_season__tmdb_show__in=shows, tmdb_release_date__gte=today_date)
+
+        for episode in episodes:
+            tmdb_release_date_str = str(episode.tmdb_release_date)
+            release_date = calendar_dict[tmdb_release_date_str]
+
+            if not release_date:
+                release_date = collections.defaultdict(list)
+                calendar_dict[tmdb_release_date_str] = release_date
+
+            release_date['episodes'].append(EpisodeShowSerializer(episode, context={'request': request}).data)
+
+        calendar_dict = dict(sorted(calendar_dict.items()))
+
+        return Response(calendar_dict, status=status.HTTP_200_OK)
+
     def retrieve(self, request, *args, **kwargs):
         try:
             user = get_user_by_id(kwargs.get('pk'), request.user)
@@ -518,5 +567,3 @@ def get_user_by_id(user_id, current_user):
         raise User.DoesNotExist()
 
     return user
-
-
