@@ -16,7 +16,7 @@ function UserLogs({ logs, showUsername, currentUser, onDeleteLog }) {
 	function groupLogsByDay(logs) {
 		let newLogs = [];
 
-		for (let i in logs) {
+		for (const i in logs) {
 			let date = new Date(logs[i].created);
 
 			if (newLogs.length === 0) {
@@ -26,7 +26,7 @@ function UserLogs({ logs, showUsername, currentUser, onDeleteLog }) {
 				});
 			} else {
 				if (
-					date.getDay() === newLogs[newLogs.length - 1].date.getDay()
+					date.getDate() === newLogs[newLogs.length - 1].date.getDate()
 					&& date.getMonth() === newLogs[newLogs.length - 1].date.getMonth()
 					&& date.getFullYear() === newLogs[newLogs.length - 1].date.getFullYear()
 				) {
