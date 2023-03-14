@@ -19,17 +19,26 @@ function UserLogs({ logs, showUsername, currentUser, onDeleteLog }) {
 		for (let i in logs) {
 			let date = new Date(logs[i].created);
 
-			if (newLogs.length === 0)
+			if (newLogs.length === 0) {
 				newLogs.push({
 					date: date,
 					logs: [logs[i]],
 				});
-			else if (date.getDay() === newLogs[newLogs.length - 1].date.getDay()) newLogs[newLogs.length - 1].logs.push(logs[i]);
-			else
-				newLogs.push({
-					date: date,
-					logs: [logs[i]],
-				});
+			} else {
+				if (
+					date.getDay() === newLogs[newLogs.length - 1].date.getDay()
+					&& date.getMonth() === newLogs[newLogs.length - 1].date.getMonth()
+					&& date.getFullYear() === newLogs[newLogs.length - 1].date.getFullYear()
+				) {
+					newLogs[newLogs.length - 1].logs.push(logs[i]);
+				} else {
+					newLogs.push({
+						date: date,
+						logs: [logs[i]],
+					});
+				}
+			}
+
 		}
 		return newLogs;
 	}
@@ -39,11 +48,25 @@ function UserLogs({ logs, showUsername, currentUser, onDeleteLog }) {
 			{logsByDay.map((dayLog, counter) => (
 				<div key={counter} className='logs-by-day__day'>
 					<div className='logs-by-day__date'>
-						{dayLog.date.toLocaleDateString("ru-RU", { year: dayLog.date.getFullYear() === new Date().getFullYear() ? undefined : "numeric", month: "numeric", day: "numeric" })}
+						{
+							dayLog.date.toLocaleDateString("ru-RU", {
+								year: dayLog.date.getFullYear() === new Date().getFullYear()
+									? undefined
+									: "numeric",
+								month: "numeric",
+								day: "numeric"
+							})}
 					</div>
 					<div className='logs-by-day__logs'>
 						{dayLog.logs.map((log) => (
-							<LogRow log={log} showUsername={showUsername} key={log.id + log.created} currentUser={currentUser} onDeleteLog={onDeleteLog} className='logs-by-day__log' />
+							<LogRow
+								log={log}
+								showUsername={showUsername}
+								key={log.id + log.created}
+								currentUser={currentUser}
+								onDeleteLog={onDeleteLog}
+								className='logs-by-day__log'
+							/>
 						))}
 					</div>
 				</div>

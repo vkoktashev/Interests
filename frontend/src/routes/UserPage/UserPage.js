@@ -75,7 +75,14 @@ const UserPage = observer((props) => {
 						<div hidden={activeCategory !== "Лента"}>
 							<div hidden={!user.is_available}>
 								<LoadingOverlay active={userLogsState === "pending" && userState !== "pending"} spinner text='Загрузка активности...'>
-									<UserLogs userID={userID} logs={userLogs} requestUserLogs={requestUserLogs} currentUser={isCurrentUser} onDeleteLog={deleteUserLog} logsType={"user"} />
+									<UserLogs
+										userID={userID}
+										logs={userLogs}
+										requestUserLogs={requestUserLogs}
+										currentUser={isCurrentUser}
+										onDeleteLog={deleteUserLog}
+										logsType={"user"}
+									/>
 								</LoadingOverlay>
 							</div>
 							<h4 hidden={user.is_available || userState === "pending"}>
