@@ -11,7 +11,8 @@ def get_episodes_to_create_update_delete(existed_episodes, episodes_to_check, se
     for existed_episode in existed_episodes:
         exists = False
         for episode in episodes_to_check:
-            if episode['id'] == existed_episode.tmdb_id:
+            if episode['id'] == existed_episode.tmdb_id or \
+                    episode['episode_number'] == existed_episode.tmdb_episode_number:
                 exists = True
                 episode['exists'] = True
                 new_fields = get_episode_new_fields(episode, season_id)
@@ -67,6 +68,7 @@ def get_season_new_fields(tmdb_season):
 
 def get_episode_new_fields(tmdb_episode, season_id):
     result = {
+        'tmdb_id': tmdb_episode.get('id'),
         'tmdb_episode_number': tmdb_episode.get('episode_number'),
         'tmdb_season_id': season_id,
         'tmdb_name': tmdb_episode.get('name'),

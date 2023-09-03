@@ -1,6 +1,6 @@
 import tmdbsimple as tmdb
 from django.core.cache import cache
-from django.db.models import F
+from django.db.models import F, ProtectedError
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError, ConnectionError
 from rest_framework import mixins, status
