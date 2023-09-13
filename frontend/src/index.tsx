@@ -1,8 +1,8 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import App from './App';
-import * as serviceWorker from './serviceWorker';
+/// <reference types="@steroidsjs/core/index" />
 
-ReactDOM.render(<App />, document.getElementById("root"));
+import * as React from 'react';
+import {createRoot} from 'react-dom/client';
+import Application from './Application';
 
-serviceWorker.register();
+const root = createRoot(document.getElementById('root'));
+root.render(<Application />);

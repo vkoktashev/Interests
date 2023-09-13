@@ -1,0 +1,34 @@
+/* latin */
+@font-face {
+  font-family: "Nunito";
+  src: url("../../public/fonts/Nunito-Regular.ttf") format('truetype');
+}
+
+@font-face {
+  font-family: "Nunito";
+  src: url("../../public/fonts/Nunito-Medium.ttf") format('truetype');
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: "Nunito";
+  src: url("../../public/fonts/Nunito-Bold.ttf") format('truetype');
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: "Open Sans";
+  src: url("../../public/fonts/OpenSans-Regular.woff") format('truetype');
+}
+
+@font-face {
+  font-family: "Nunito";
+  src: url("../../public/fonts/OpenSans-SemiBold.woff") format('truetype');
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: "Nunito";
+  src: url("../../public/fonts/OpenSans-Bold.woff") format('truetype');
+  font-weight: 700;
+}

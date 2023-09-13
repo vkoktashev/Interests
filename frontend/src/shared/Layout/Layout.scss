@@ -1,0 +1,12 @@
+@use "style/variables";
+
+.Layout {
+    height: 100vh;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+
+    &__content {
+        padding-top: 100px;
+    }
+}

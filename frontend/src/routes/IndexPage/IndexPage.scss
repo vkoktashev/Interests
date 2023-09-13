@@ -1,0 +1,41 @@
+@import "style/variables";
+@import "style/typography";
+
+.IndexPage {
+  display: flex;
+  background-color: $newBackground1;
+  justify-content: center;
+
+  &__body {
+    width: 80rem;
+    max-width: 100%;
+    padding: 1rem;
+    color: $newText3;
+    background-color: $newBackground2;
+    border-radius: 1rem;
+  }
+
+  &__header {
+    margin-bottom: 1rem;
+    font-weight: 500;
+  }
+
+
+  &__header-secondary {
+    @include headline6;
+    margin-bottom: 0.5rem;
+    margin-top: 1rem;
+    font-weight: 600;
+  }
+
+  &__text {
+    @include body1;
+    margin-bottom: 5px;
+    font-weight: 300;
+    font-size: 1.15rem;
+  }
+
+  &__link {
+    font-weight: 500;
+  }
+}
