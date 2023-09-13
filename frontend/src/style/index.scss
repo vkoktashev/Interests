@@ -79,7 +79,7 @@
 @use '~@steroidsjs/bootstrap/list/PaginationSize/PaginationSizeView';
 @use '~@steroidsjs/bootstrap/list/Steps/StepsView';
 @use '~@steroidsjs/bootstrap/list/Steps/StepItemView';
-@use '~@steroidsjs/bootstrap/modal/Modal/ModalView';
+@use '../ui/views/ModalView/ModalView';
 @use '~@steroidsjs/bootstrap/nav/Breadcrubms/BreadcrumbsView';
 @use '~@steroidsjs/bootstrap/nav/Controls/ControlsView';
 @use '~@steroidsjs/bootstrap/nav/Nav/NavBarView';

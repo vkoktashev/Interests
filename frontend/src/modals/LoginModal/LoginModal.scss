@@ -1,0 +1,30 @@
+@import "style/variables";
+@import "style/typography";
+
+.LoginModal {
+  border-radius: 12px;
+  background-color: $newBackground2;
+
+  &__modalContainer {
+    border-radius: 12px;
+    color: $newText3;
+    width: 400px;
+    background-color: $newBackground2;
+    padding: 10px 20px 20px 20px;
+  }
+
+  &__form {
+    display: flex;
+    align-items: center;
+  }
+
+  &__header {
+    @include headline5;
+    margin-bottom: 10px;
+  }
+}
+
+.ModalView__body {
+  background-color: $newBackground2;
+  border-radius: 12px;
+}

@@ -14,6 +14,8 @@ import {ROUTE_ROOT} from '../../routes';
 import './Layout.scss';
 import Footer from '../Footer';
 import Navbar from '../Navbar';
+import Portal from '@steroidsjs/core/ui/layout/Portal';
+import ModalPortal from '@steroidsjs/core/ui/modal/ModalPortal';
 
 export default function Layout(props: React.PropsWithChildren<any>) {
     const bem = useBem('Layout');
@@ -46,6 +48,8 @@ export default function Layout(props: React.PropsWithChildren<any>) {
                     </div>
                 )}
                 <Notifications />
+                <Portal />
+                <ModalPortal />
             </div>
             <Footer />
         </div>

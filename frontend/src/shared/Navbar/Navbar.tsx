@@ -9,6 +9,8 @@ import useWindowDimensions from '../../hooks/useWindowDimensions';
 import {goToRoute} from '@steroidsjs/core/actions/router';
 import {ROUTE_ROOT} from '../../routes';
 import {MOBILE_WIDTH} from '../../constants';
+import {openModal} from '@steroidsjs/core/actions/modal';
+import LoginModal from '../../modals/LoginModal';
 
 interface INavbarProps {
     className?: string,
@@ -33,19 +35,23 @@ function Navbar(props: INavbarProps) {
 
     const onLogoClick = useCallback(() => dispatch(goToRoute(ROUTE_ROOT)), []);
 
-    const openLoginForm = useCallback(() => {}, []);
+    const openLoginForm = useCallback(() => {
+        dispatch(openModal(LoginModal));
+    }, []);
 
     const toggleSidebar = useCallback(() => {}, []);
 
     return (
         <div className={bem(bem.block(), props.className)}>
             <div className={bem.element('leftSide')}>
-                <FaBars
-                    onClick={toggleSidebar}
-                    className={bem.element('sidebar-button')}
-                />
-                <div onClick={onLogoClick} className={bem.element('logo')}>
-                    HypeHub
+                <div className={bem.element('logoContainer')}>
+                    <FaBars
+                        onClick={toggleSidebar}
+                        className={bem.element('sidebar-button')}
+                    />
+                    <div onClick={onLogoClick} className={bem.element('logo')}>
+                        HypeHub
+                    </div>
                 </div>
                 <div onClick={toggleCollapse} className={bem.element('collapse-button')}>
                     {collapse ? <FaAngleDown /> : <FaAngleUp />}
