@@ -1,5 +1,69 @@
 @import "style/variables";
+@import '~@steroidsjs/bootstrap/scss/mixins';
 
 .SearchField {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
+  &__input {
+    background-color: $newBackground3;
+    padding: 10px 20px;
+    width: 100%;
+    border-radius: 20px;
+    font-family: $font-family-nunito;
+
+    white-space: nowrap; /* Запретить перенос текста */
+    overflow: hidden; /* Скрыть содержимое, выходящее за границы ячейки */
+    text-overflow: ellipsis; /* Добавить многоточие, если текст обрезается */
+  }
+
+  &__drop-down {
+    width: 100%;
+    top: 100%;
+    left: 0;
+    position: absolute;
+    z-index: 9999;
+    margin-top: 8px;
+    border-radius: 8px;
+    background-color: $newBackground3;
+    overflow: hidden;
+  }
+
+  &__list {
+    display: flex;
+    flex-flow: column nowrap;
+    @include scrollWrapper(550px, 0, $scroll-thumb-color, $scroll-track-color);
+    padding: 10px;
+    gap: 20px;
+  }
+
+  &__category-block {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  &__hint {
+    width: 100%;
+
+    &:hover {
+      background-color: $newText1;
+    }
+  }
+
+  .ButtonView__link {
+    width: 100%;
+  }
+
+  .ButtonView__text {
+    width: 100%;
+    padding-left: 10px;
+    padding-right: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
 }

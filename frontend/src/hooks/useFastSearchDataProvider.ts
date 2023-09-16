@@ -1,7 +1,19 @@
 import {useComponents} from '@steroidsjs/core/hooks';
 import {useCallback, useEffect, useState} from 'react';
+import IGameFastSearch from '../types/IGameFastSearch';
+import IMovieFastSearch from '../types/IMovieFastSearch';
+import IShowFastSearch from '../types/IShowFastSearch';
 
-export default function useFastSearchDataProvider(query: string) {
+interface IResult {
+    games: IGameFastSearch[],
+    gamesIsLoading: boolean,
+    movies: IMovieFastSearch[],
+    moviesIsLoading: boolean,
+    shows: IShowFastSearch[],
+    showsIsLoading: boolean,
+}
+
+export default function useFastSearchDataProvider(query: string): IResult {
     const {http} = useComponents();
 
     const [games, setGames] = useState([]);

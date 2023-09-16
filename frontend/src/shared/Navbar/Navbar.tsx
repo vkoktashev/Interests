@@ -4,14 +4,14 @@ import {useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {useCallback, useState} from 'react';
 import {FaAngleDown, FaAngleUp, FaBars, FaSignInAlt, FaUserCircle} from 'react-icons/fa';
-import './Navbar.scss';
-import useWindowDimensions from '../../hooks/useWindowDimensions';
 import {goToRoute} from '@steroidsjs/core/actions/router';
+import useWindowDimensions from '../../hooks/useWindowDimensions';
 import {ROUTE_ROOT} from '../../routes';
 import {MOBILE_WIDTH} from '../../constants';
 import {openModal} from '@steroidsjs/core/actions/modal';
 import LoginModal from '../../modals/LoginModal';
 import SearchField from './views/SearchField';
+import './Navbar.scss';
 
 interface INavbarProps {
     className?: string,
