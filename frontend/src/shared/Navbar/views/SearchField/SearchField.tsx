@@ -1,11 +1,12 @@
 import * as React from 'react';
 import useBem from '@steroidsjs/core/hooks/useBem';
-import {useState} from 'react';
+import {useCallback, useState} from 'react';
 import {isEmpty as _isEmpty} from 'lodash';
 import {MdLiveTv, MdLocalMovies, MdVideogameAsset} from 'react-icons/md';
 import {Link} from '@steroidsjs/core/ui/nav';
 import useFastSearchDataProvider from '../../../../hooks/useFastSearchDataProvider';
 import './SearchField.scss';
+import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW} from '../../../../routes';
 
 
 interface ISearchFieldViewProps {
@@ -15,7 +16,6 @@ interface ISearchFieldViewProps {
 function SearchField(props: ISearchFieldViewProps) {
     const bem = useBem('SearchField');
     const [query, setQuery] = useState('');
-    const [isOpened, setIsOpened] = useState(true);
 
     const items = useFastSearchDataProvider(query);
 
@@ -24,7 +24,11 @@ function SearchField(props: ISearchFieldViewProps) {
             <div className={bem.element('category-block', {hidden: !items.games.length})}>
                 <MdVideogameAsset />
                 {items.games.map((game, key) => (
-                    <Link key={key} className={bem.element('hint')}>
+                    <Link key={game.rawg_id}
+                        toRoute={ROUTE_GAME}
+                        toRouteParams={{id: game.rawg_id}}
+                        className={bem.element('hint')}
+                    >
                         <div>{game.rawg_name}</div>
                         <div>{game?.rawg_release_date?.substr(0, 4)}</div>
                     </Link>
@@ -32,19 +36,26 @@ function SearchField(props: ISearchFieldViewProps) {
             </div>
             <div className={bem.element('category-block', {hidden: !items.movies.length})}>
                 <MdLocalMovies />
-                {items.movies.map((hint, key) => (
-                    <Link key={key} className={bem.element('hint')}>
-                        <div>{hint.tmdb_name}</div>
-                        <div>{hint?.tmdb_release_date?.substr(0, 4)}</div>
+                {items.movies.map((movie, key) => (
+                    <Link key={movie.tmdb_id}
+                          toRoute={ROUTE_MOVIE}
+                          toRouteParams={{id: movie.tmdb_id}}
+                          className={bem.element('hint')}>
+                        <div>{movie.tmdb_name}</div>
+                        <div>{movie?.tmdb_release_date?.substr(0, 4)}</div>
                     </Link>
                 ))}
             </div>
             <div className={bem.element('category-block', {hidden: !items.shows.length})}>
                 <MdLiveTv />
-                {items.shows.map((hint, key) => (
-                    <Link key={key} className={bem.element('hint')}>
-                        <div>{hint.tmdb_name}</div>
-                        <div>{hint?.tmdb_release_date?.substr(0, 4)}</div>
+                {items.shows.map((show, key) => (
+                    <Link
+                        key={show.tmdb_id}
+                        toRoute={ROUTE_SHOW}
+                        toRouteParams={{id: show.tmdb_id}}
+                        className={bem.element('hint')}>
+                        <div>{show.tmdb_name}</div>
+                        <div>{show?.tmdb_release_date?.substr(0, 4)}</div>
                     </Link>
                 ))}
             </div>
@@ -60,11 +71,9 @@ function SearchField(props: ISearchFieldViewProps) {
                     // props.onOpen();
                 }}
                 onChange={e => setQuery(e.target.value)}
-                onFocus={() => setIsOpened(true)}
-                onBlur={() => setIsOpened(false)}
                 placeholder={__('Поиск')}
             />
-            {isOpened && (
+
                 <div className={bem.element('drop-down')}>
                     <div className={bem.element('list')}>
                         {!_isEmpty(items.games) || !_isEmpty(items.movies) || !_isEmpty(items.shows)
@@ -76,7 +85,6 @@ function SearchField(props: ISearchFieldViewProps) {
                             )}
                     </div>
                 </div>
-            )}
         </div>
     );
 }

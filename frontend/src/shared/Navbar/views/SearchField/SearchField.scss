@@ -29,7 +29,13 @@
     margin-top: 8px;
     border-radius: 8px;
     background-color: $newBackground3;
+    visibility: hidden;
     overflow: hidden;
+  }
+
+  &__input:focus ~ &__drop-down, &__drop-down:active, &__drop-down:hover {
+    visibility: visible;
+    opacity: 1
   }
 
   &__list {
