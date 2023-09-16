@@ -11,6 +11,7 @@ import {ROUTE_ROOT} from '../../routes';
 import {MOBILE_WIDTH} from '../../constants';
 import {openModal} from '@steroidsjs/core/actions/modal';
 import LoginModal from '../../modals/LoginModal';
+import SearchField from './views/SearchField';
 
 interface INavbarProps {
     className?: string,
@@ -58,14 +59,7 @@ function Navbar(props: INavbarProps) {
                 </div>
             </div>
             <div className={bem.element('centerSide', {collapsed: collapse && width <= MOBILE_WIDTH})}>
-                {/*<SearchInput*/}
-                {/*    onSubmit={(event) => {*/}
-                {/*        event.preventDefault();*/}
-                {/*        history.push('/search/' + document.getElementById('searchInput').value);*/}
-                {/*        toggleIfSmallScreen();*/}
-                {/*    }}*/}
-                {/*    className='navbar__search-input'*/}
-                {/*/>*/}
+                <SearchField className={bem.element('search-field')} />
             </div>
             <div className={bem.element('rightSide', {collapsed: collapse && width <= MOBILE_WIDTH})}>
                 <div
