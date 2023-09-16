@@ -1,11 +1,14 @@
 import * as React from 'react';
 import useBem from '@steroidsjs/core/hooks/useBem';
-import './LoginModal.scss';
 import Modal from '@steroidsjs/core/ui/modal/Modal';
 import {IModalProps} from '@steroidsjs/core/ui/modal/Modal/Modal';
 import {Button, Form, InputField} from '@steroidsjs/core/ui/form';
 import {useCallback, useState} from 'react';
 import {Link} from '@steroidsjs/core/ui/nav';
+import './LoginModal.scss';
+import {useDispatch} from '@steroidsjs/core/hooks';
+import {login} from '@steroidsjs/core/actions/auth';
+import {ROUTE_ROOT} from '../../routes';
 
 interface ILoginModalProps extends IModalProps {}
 
@@ -13,6 +16,7 @@ const LOGIN_FORM_ID = 'LoginForm';
 
 function LoginModal(props: ILoginModalProps) {
     const bem = useBem('LoginModal');
+    const dispatch = useDispatch();
     const [error, setError] = useState('');
 
     const onPasswordRecovery = async () => {
@@ -26,7 +30,8 @@ function LoginModal(props: ILoginModalProps) {
     }
 
     const onComplete = useCallback((values, result) => {
-        console.log(result);
+        dispatch(login(result.access, ROUTE_ROOT, {refreshToken: result.refresh}));
+        props.onClose();
     }, []);
 
     return (
@@ -40,6 +45,7 @@ function LoginModal(props: ILoginModalProps) {
                       action={'users/auth/login/'}
                       onComplete={onComplete}
                       className={bem.element('form')}
+                      submitErrorMessage={__('Неверный логин или пароль!')}
                 >
                     <h2 className={bem.element('header')}>
                         {__('Войти')}
@@ -51,7 +57,7 @@ function LoginModal(props: ILoginModalProps) {
                             </p>
                         )
                     }
-                    <InputField attribute='login'
+                    <InputField attribute='username'
                         label={__('Логин')}
                         className={bem.element('input')}
                     />

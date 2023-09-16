@@ -21,6 +21,9 @@ export default function Application() {
                     url: 'users/auth/refresh-token/',
                     method: 'post',
                 },
+                refreshTokenKey: 'refresh',
+                accessTokenKey: 'access',
+                clientStorageName: 'local',
             },
         },
         onInit: ({ui}) => {

@@ -46,7 +46,7 @@
 @use '~@steroidsjs/bootstrap/form/FieldSet/FieldSetView';
 @use '~@steroidsjs/bootstrap/form/Form/FormView';
 @use '~@steroidsjs/bootstrap/form/HtmlField/HtmlFieldView';
-@use '~@steroidsjs/bootstrap/form/InputField/InputFieldView';
+@use '../ui/views/InputFieldView/InputFieldView';
 @use '~@steroidsjs/bootstrap/form/NumberField/NumberFieldView';
 @use '~@steroidsjs/bootstrap/form/PasswordField/PasswordFieldView';
 @use '~@steroidsjs/bootstrap/form/RateField/RateFieldView';
