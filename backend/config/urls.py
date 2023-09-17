@@ -23,6 +23,7 @@ urlpatterns = [
     path('movies/', include('movies.urls')),
     path('shows/', include('shows.urls')),
     path('', include('proxy.urls')),
+    path('', include('general.urls')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
