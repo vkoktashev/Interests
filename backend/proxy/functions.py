@@ -18,6 +18,7 @@ def get_proxy_url(scheme, path_prefix, path):
 @dispatch(str, str)
 def get_proxy_url(scheme, url):
     if len(url) > 0:
-        url = f"{scheme}://{SITE_URL}/api/proxy/image/?url={url}"
+        url = f"https://try.readme.io/{url}"
+        # url = f"{scheme}://{SITE_URL}/api/proxy/image/?url={url}"
 
     return url
