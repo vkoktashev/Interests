@@ -1,4 +1,4 @@
-import { FaSteam, FaPlaystation, FaXbox, FaAppStoreIos, FaGooglePlay } from "react-icons/fa";
+import { FaSteam, FaPlaystation, FaXbox, FaAppStoreIos, FaGooglePlay, FaItchIo } from "react-icons/fa";
 import { SiEpicgames, SiNintendoswitch, SiGogdotcom } from "react-icons/si";
 import { RiXboxLine } from "react-icons/ri";
 
@@ -21,6 +21,8 @@ export class GameStoresEnum {
 
     static GOOGLE_PLAY = 'google-play';
 
+    static ITCH_IO = 'itch';
+
     static getIcon(id: string) {
         switch (id) {
             case this.STEAM:
@@ -41,6 +43,8 @@ export class GameStoresEnum {
                 return FaAppStoreIos;
             case this.GOOGLE_PLAY:
                 return FaGooglePlay;
+            case this.ITCH_IO:
+                return FaItchIo;
             default:
                 return null;
         }
