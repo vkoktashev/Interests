@@ -16,6 +16,7 @@ import Rating from '../../shared/Rating';
 
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import "./movie-page.sass";
+import Image from "../../shared/Image";
 
 /**
  * Основная страница приложения
@@ -86,12 +87,16 @@ const MoviePage = observer((props) => {
 
 	return (
 		<div className='movie-page'>
-			<div className='movie-page__background' style={{ backgroundImage: `url(${movie?.backdrop_path})` }} />
+			<Image
+				className='movie-page__background'
+				src={movie?.backdrop_path}
+
+			/>
 			<LoadingOverlay active={movieState === "pending"} spinner text='Загрузка...'>
 				<div className='movie-page__body'>
 					<div className='movie-page__header'>
 						<div className='movie-page__poster'>
-							<img src={movie?.poster_path} className='movie-page__poster-img' alt='' />
+							<Image src={movie?.poster_path} className='movie-page__poster-img' alt='' />
 						</div>
 						<div className='movie-page__info'>
 							<h1 className='movie-page__info-header'>{movie?.name}</h1>

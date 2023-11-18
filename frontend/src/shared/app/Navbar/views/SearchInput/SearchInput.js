@@ -7,6 +7,7 @@ import classnames from "classnames";
 import SearchStore from '../../../../../store/SearchStore';
 
 import "./search-input.sass";
+import Image from "../../../../Image";
 
 const SearchInput = observer(({ onSubmit, className }) => {
 	const [query, setQuery] = useState("");
@@ -63,7 +64,7 @@ const SearchInput = observer(({ onSubmit, className }) => {
 								e.preventDefault();
 								setQuery("");
 							}}>
-							{<img src={hint.tmdb_backdrop_path} alt={""} />}
+							{<Image src={hint.tmdb_backdrop_path} alt={""} />}
 							{hint.tmdb_name}
 							<div>{hint?.tmdb_release_date?.substr(0, 4)}</div>
 						</a>
@@ -81,7 +82,7 @@ const SearchInput = observer(({ onSubmit, className }) => {
 								e.preventDefault();
 								setQuery("");
 							}}>
-							{<img src={hint.tmdb_backdrop_path} alt={""} />}
+							{<Image src={hint.tmdb_backdrop_path} alt={""} />}
 							{hint.tmdb_name}
 							<div>{hint?.tmdb_release_date?.substr(0, 4)}</div>
 						</a>

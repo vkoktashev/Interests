@@ -1,5 +1,6 @@
 import React from "react";
 import { FaStar, FaClock } from "react-icons/fa";
+import Image from '../../../../../shared/Image';
 import "./item-row.sass";
 
 function ItemRow({ data, fields }) {
@@ -11,7 +12,7 @@ function ItemRow({ data, fields }) {
 			</div>
 			<div className='item-row__body'>
 				<div className='item-row__body-left'>
-					<div className='item-row__poster' style={{ backgroundImage: `url(${data.poster})` }} />
+					<Image className='item-row__poster' src={data.poster} />
 					<div className='item-row__name'>
 						<a href={data.link}> {data.name} </a>
 					</div>
