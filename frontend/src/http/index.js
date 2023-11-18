@@ -10,6 +10,9 @@ api.interceptors.request.use((config) => {
 	if (token) {
 		config.headers.Authorization = `Bearer ${token}`;
 	}
+	if (!config.headers['Content-Type']) {
+		config.headers['Content-Type'] = 'application/json';
+	}
 	return config;
 });
 
@@ -21,7 +24,6 @@ api.interceptors.response.use(
 		const originalRequest = error.config;
 		if (error.response.status === 401 && error.config && !error.config._isRetry) {
 			originalRequest._isRetry = true;
-			originalRequest.headers['content-type'] = 'application/json';
 			try {
 				const response = await axios.post(REFRESH_TOKEN_URL, {
 					refresh: localStorage.getItem("refreshToken"),

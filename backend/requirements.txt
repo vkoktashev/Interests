@@ -17,3 +17,4 @@ redis==4.3.4
 requests==2.28.1
 multipledispatch==0.6.0
 wheel
+dotenv
