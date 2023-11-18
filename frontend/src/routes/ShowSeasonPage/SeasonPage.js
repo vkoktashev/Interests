@@ -13,6 +13,7 @@ import FriendsActivity from '../../shared/FriendsActivity';
 import DetailEpisodeRow from '../../shared/DetailEpisodeRow';
 
 import "./season-page.sass";
+import Image from "../../shared/Image";
 
 /**
  * Основная страница приложения
@@ -107,12 +108,12 @@ const SeasonPage = observer((props) => {
 
 	return (
 		<div className='season-page'>
-			<div className='season-page__background' style={{ backgroundImage: `url(${show?.show?.tmdb_backdrop_path})` }} />
+			<Image className='season-page__background' src={show?.show?.tmdb_backdrop_path} />
 			<LoadingOverlay active={showState === "pending"} spinner text='Загрузка...'>
 				<div className='season-page__body'>
 					<div className='season-page__header'>
 						<div className='season-page__poster'>
-							<img src={show?.poster_path} className='img-fluid' alt='' />
+							<Image src={show?.poster_path} className='img-fluid' alt='' />
 						</div>
 						<div className='season-page__info'>
 							<h1 className='season-page__info-header'>

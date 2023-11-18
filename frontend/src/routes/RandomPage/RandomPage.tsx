@@ -11,6 +11,7 @@ import {getRoulette} from '../../services/userRequests';
 import Button from '../../shared/Button';
 import RandomCard from './views/RandomCard';
 import RandomCardLoader from './views/RandomCardLoader';
+import Image from '../../shared/Image';
 const categoriesEnum = [
     {id: 'games', label: 'Игры'},
     {id: 'shows', label: 'Сериалы'},
@@ -84,11 +85,18 @@ const RandomPage = observer(() => {
                     label='Крутануть'
                 />
             </form>
-            <img
-                src={winner?.tmdb_poster_path || winner?.rawg_poster_path}
-                onLoad={() => setLoading(false)}
-                style={{width: 0, height: 0}}
-            />
+            {winner?.tmdb_poster_path
+                ? (
+                    <Image src={winner?.tmdb_poster_path}
+                           onLoad={() => setLoading(false)}
+                           style={{width: 0, height: 0}} />
+                ) : (
+                    <img
+                        src={winner?.rawg_poster_path}
+                        onLoad={() => setLoading(false)}
+                        style={{width: 0, height: 0}}
+                    />
+                )}
             {
                 winner && (
                     <Fade right duration={500} distance='50px'>

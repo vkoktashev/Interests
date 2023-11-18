@@ -34,6 +34,7 @@
         background-position: center
         background-repeat: no-repeat
         background-size: 100% auto
+        object-fit: contain
 
     &__name
         @include headline6
@@ -67,7 +68,7 @@
 
             &:last-child
                 border-right: none !important
-    
+
     &__status-block
         @include subtitle2
         color: $newText3
@@ -86,7 +87,7 @@
     &__score-icon
         margin-left: 0.5rem
         color: #F2C94C
-    
+
     &__time-icon
         margin-left: 0.5rem
 
@@ -100,7 +101,7 @@
 
         &[style*="display: none"] ~ .itemRow
             border-radius: 8px
-    
+
     &__review-body
         @include body2
         color: $newText2

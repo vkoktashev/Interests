@@ -17,6 +17,7 @@ import ScoreBlock from '../../shared/ScoreBlock';
 
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import "./show-page.sass";
+import Image from "../../shared/Image";
 
 /**
  * Основная страница приложения
@@ -92,7 +93,7 @@ const ShowPage = observer((props) => {
 				<div className='show-page__body'>
 					<div className='show-page__header'>
 						<div className='show-page__poster'>
-							<img src={show?.poster_path} className='show-page__poster-img' alt='' />
+							<Image src={show?.poster_path} className='show-page__poster-img' alt='' />
 						</div>
 						<div className='show-page__info'>
 							<h1 className='show-page__info-header'>{show?.name}</h1>

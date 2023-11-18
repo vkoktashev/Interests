@@ -13,6 +13,7 @@ import FriendsActivity from '../../shared/FriendsActivity';
 import ScoreBlock from '../../shared/ScoreBlock';
 
 import "./episode-page.sass";
+import Image from "../../shared/Image";
 
 /**
  * Основная страница приложения
@@ -77,12 +78,12 @@ const EpisodePage = observer((props) => {
 
 	return (
 		<div className='episode-page'>
-			<div className='episode-page__background' style={{ backgroundImage: `url(${show?.show?.tmdb_backdrop_path})` }} />
+			<Image className='episode-page__background' src={show?.show?.tmdb_backdrop_path} />
 			<LoadingOverlay active={showState === "pending"} spinner text='Загрузка...'>
 				<div className='episode-page__body'>
 					<div className='episode-page__header'>
 						<div className='episode-page__poster'>
-							<img src={show?.still_path} className='img-fluid' alt='' />
+							<Image src={show?.still_path}  alt='' />
 						</div>
 						<div className='episode-page__info'>
 							<h1 className='episode-page__info-header'>
