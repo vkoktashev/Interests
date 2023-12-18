@@ -235,7 +235,11 @@ def get_hltb_game(game_name: str, release_year: int):
                 results = HowLongToBeat(1).search(game_name.split('(')[0].strip(), similarity_case_sensitive=False)
 
             same_year_games = [x for x in results if x.release_world == release_year]
-            hltb_game = max(same_year_games, key=lambda element: element.similarity).__dict__
+            if len(results) > 0 and len(same_year_games) == 0:
+                pass
+            else:
+                results = same_year_games
+            hltb_game = max(results, key=lambda element: element.similarity).__dict__
             cache.set(key, hltb_game, CACHE_TIMEOUT)
         except (ValueError, TypeError):
             hltb_game = None
