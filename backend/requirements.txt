@@ -1,5 +1,5 @@
-git+https://gitlab.com/Kononkov1998/rawg-python-wrapper.git@master
-git+https://github.com/Kononkov1998/tmdbsimple.git@master
+-e git+https://gitlab.com/Kononkov1998/rawg-python-wrapper#egg=rawgpy
+-e git+https://github.com/Kononkov1998/tmdbsimple#egg=tmdbsimple
 celery==5.2.7
 Django==4.1.3
 django-cors-headers==3.13.0
