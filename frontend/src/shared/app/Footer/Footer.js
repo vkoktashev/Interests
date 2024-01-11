@@ -10,7 +10,7 @@ function Footer({ className }) {
 			<div className='footer__body'>
 				<div>
 					<h2 className='footer__name'>Interests</h2>
-					<p className='footer__email'>info@интерестс.space</p>
+					<p className='footer__email'>info@your-interests.ru</p>
 					<p className='footer__date'>
 						{`2020-${(new Date()).getFullYear()}`}
 					</p>

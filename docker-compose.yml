@@ -23,7 +23,7 @@ services:
       EMAIL_HOST_USER: 'your_interests@mail.ru'
       EMAIL_HOST_PASSWORD: 'WuPr6hPi2MjUccarUkMp'
     volumes:
-      - /etc/letsencrypt/live/xn--e1aahuqhade.space/:/etc/letsencrypt/live/xn--e1aahuqhade.space/
+      - /etc/letsencrypt/live/your-interests.ru/:/etc/letsencrypt/live/your-interests.ru/
     ports:
       - "8001:8001"
     depends_on:
