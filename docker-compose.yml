@@ -7,10 +7,8 @@ services:
     volumes:
       - postgres_data_interests:/var/lib/postgresql/data/
     restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 8080
-      POSTGRES_DB: interests
+    env_file:
+      - .env
     ports:
       - "5454:5432"
 
@@ -19,9 +17,8 @@ services:
     environment:
       CELERY_BROKER_URL: 'redis://redis:6379'
       CELERY_RESULT_BACKEND: 'redis://redis:6379'
-      DATABASE_URL: 'db2'
-      EMAIL_HOST_USER: 'your_interests@mail.ru'
-      EMAIL_HOST_PASSWORD: 'WuPr6hPi2MjUccarUkMp'
+    env_file:
+      - .env
     volumes:
       - /etc/letsencrypt/live/your-interests.ru/:/etc/letsencrypt/live/your-interests.ru/
     ports:
@@ -38,10 +35,7 @@ services:
       - "443:443"
     volumes:
       - /etc/letsencrypt/:/etc/letsencrypt/
-    depends_on:
-      - back
     restart: always
-
     depends_on:
       - back
       - redis
