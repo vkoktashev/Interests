@@ -172,7 +172,8 @@ EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 EMAIL_PORT = 25
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=float(os.environ['ACCESS_TOKEN_LIFETIME_DAYS'])),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=float(os.environ['ACCESS_TOKEN_LIFETIME_MINUTES']),
+                                       days=float(os.environ['ACCESS_TOKEN_LIFETIME_DAYS'])),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=float(os.environ['REFRESH_TOKEN_LIFETIME_DAYS']))
 }
 
