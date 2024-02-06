@@ -172,8 +172,8 @@ EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 EMAIL_PORT = 25
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7)
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=float(os.environ['ACCESS_TOKEN_LIFETIME_DAYS'])),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=float(os.environ['REFRESH_TOKEN_LIFETIME_DAYS']))
 }
 
 CELERY_BROKER_URL = 'redis://localhost:6379'
