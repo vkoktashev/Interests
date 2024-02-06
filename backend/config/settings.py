@@ -1,11 +1,11 @@
 import os
 from datetime import timedelta
 
-SECRET_KEY = '3^a%5=f#(3eyozrxer7)$mz#pk158#9+pm3#j#++p99_if9ee('
+SECRET_KEY = os.environ['SECRET_KEY']
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-DEBUG = False
+DEBUG = os.environ['DEBUG']
 
 ALLOWED_HOSTS = ['*']
 
@@ -67,11 +67,12 @@ if DEBUG:
     INSTALLED_APPS += ['debug_toolbar', ]
     MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware', ]
     INTERNAL_IPS = [
-        '127.0.0.1',
+        os.environ['INTERNAL_IP'],
     ]
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
@@ -108,10 +109,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'interests',
-        'USER': 'postgres',
-        'PASSWORD': '8080',
-        'HOST': os.environ['DATABASE_URL'],
-        'PORT': '',
+        'USER': os.environ['DB_USER'],
+        'PASSWORD': os.environ['DB_PASSWORD'],
+        'HOST': os.environ['DB_HOST'],
+        'PORT': os.environ['DB_PORT'],
     }
 }
 
@@ -164,15 +165,16 @@ if not DEBUG:
 
 ADMINS = [('Jenya', 'kononkov98@mail.ru')]
 
-EMAIL_USE_SSL = True
+EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.mail.ru'
 EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
 EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
-EMAIL_PORT = 465
+EMAIL_PORT = 25
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=60)
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=float(os.environ['ACCESS_TOKEN_LIFETIME_MINUTES']),
+                                       days=float(os.environ['ACCESS_TOKEN_LIFETIME_DAYS'])),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=float(os.environ['REFRESH_TOKEN_LIFETIME_DAYS']))
 }
 
 CELERY_BROKER_URL = 'redis://localhost:6379'
