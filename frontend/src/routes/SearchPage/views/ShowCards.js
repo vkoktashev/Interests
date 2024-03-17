@@ -8,7 +8,7 @@ function ShowCards({ shows, hidden }) {
 				let object = {
 					name: show.name,
 					id: show.id,
-					poster: `url(${show.backdrop_path})`,
+					poster: show.backdrop_path,
 					link: "/show/" + show.id,
 					overview: show.overview,
 				};
