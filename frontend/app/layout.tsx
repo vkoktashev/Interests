@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-const inter = Inter({ subsets: ["latin", 'cyrillic'] });
+import {Roboto} from 'next/font/google';
+const inter = Roboto({ subsets: ["latin", 'cyrillic'], weight: '400' });
+import '@/shared/ui/styles/index.scss';
 
 export const metadata: Metadata = {
   title: "Interests",

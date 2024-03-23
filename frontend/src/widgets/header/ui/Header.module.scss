@@ -1,0 +1,10 @@
+@use "src/shared/ui/styles/variables";
+
+.Header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+
+  background-color: variables.$background;
+  padding: 20px;
+}
