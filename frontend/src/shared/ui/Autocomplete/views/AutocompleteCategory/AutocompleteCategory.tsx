@@ -9,10 +9,14 @@ export interface IAutocompleteCategoryProps {
 }
 
 function AutocompleteCategory(props: IAutocompleteCategoryProps) {
+    const Icon = props.category.icon;
+
     return (
         <div className={[styles.AutocompleteCategory, props.className].join(' ')}>
-            <div>
-                {props.category.icon}
+            <div className={styles.row}>
+                {Icon && (
+                    <Icon className={styles.icon} />
+                )}
                 <span>
                     {props.category.label}
                 </span>

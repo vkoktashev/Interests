@@ -1,3 +1,5 @@
+@use "src/shared/ui/styles/variables";
+
 .Autocomplete {
   position: relative;
   display: flex;
@@ -29,7 +31,7 @@
   border-radius: 8px;
   background-color: black;
   border: 1px solid black;
-  overflow: hidden;
+  overflow: scroll;
 }
 
 .input {
@@ -43,4 +45,8 @@
     outline: none;
     border: none;
   }
+}
+
+.item:not(:last-child) {
+  margin-bottom: 5px;
 }

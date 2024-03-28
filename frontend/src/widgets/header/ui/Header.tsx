@@ -10,7 +10,7 @@ function Header() {
 
                 </button>
             </div>
-            <SearchAutocomplete />
+            <SearchAutocomplete className={styles.search} />
             <div>
 
             </div>

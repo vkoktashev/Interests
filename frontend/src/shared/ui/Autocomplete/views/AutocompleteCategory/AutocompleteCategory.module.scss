@@ -1,3 +1,22 @@
-.AutocompleteCategory {
+@use "@/shared/ui/styles/variables";
 
+.AutocompleteCategory {
+  padding: 10px;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+
+  fill: rgba(variables.$color, 0.7);
 }

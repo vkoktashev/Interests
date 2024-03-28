@@ -3,7 +3,12 @@ import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import Autocomplete from '@/shared/ui/Autocomplete';
 import useDebounce from '@/shared/hooks/useDebounce';
 import {fetchItemsAutocomplete} from '@/features/search/ui/api';
-import {IAutoCompleteItem} from '@/shared/ui/Autocomplete/Autocomplete';
+import {IAutoCompleteCategory, IAutoCompleteItem} from '@/shared/ui/Autocomplete/Autocomplete';
+import gamepad from '@/../public/icons/gamepad.svg';
+import film from '@/../public/icons/film.svg';
+import tv from '@/../public/icons/tv.svg';
+import users from '@/../public/icons/users.svg';
+import SearchAutocompleteItemView from '@/features/search/ui/SearchAutocomplete/views/SearchAutocompleteItemView';
 
 interface ISearchAutocomplete {
     className?: string,
@@ -24,16 +29,19 @@ function SearchAutocomplete(props: ISearchAutocomplete) {
                         id: game.rawg_id.toString(),
                         label: game.rawg_name,
                         categoryId: 'game',
+                        year: new Date(game.rawg_release_date).getFullYear(),
                     })),
                     ...result.movies.map(movie => ({
                         id: movie.tmdb_id.toString(),
                         label: movie.tmdb_name,
                         categoryId: 'movie',
+                        year: new Date(movie.tmdb_release_date).getFullYear(),
                     })),
                     ...result.shows.map(show => ({
                         id: show.tmdb_id.toString(),
                         label: show.tmdb_name,
                         categoryId: 'show',
+                        year: new Date(show.tmdb_release_date).getFullYear(),
                     })),
                     ...result.users.map(user => ({
                         id: user.id.toString(),
@@ -47,11 +55,11 @@ function SearchAutocomplete(props: ISearchAutocomplete) {
         }
     }, [debouncedValue]);
 
-    const categories = useMemo(() => ([
-        {id: 'game', label: 'Игры'},
-        {id: 'movie', label: 'Фильмы'},
-        {id: 'show', label: 'Сериалы'},
-        {id: 'user', label: 'Пользователи'},
+    const categories = useMemo<IAutoCompleteCategory[]>(() => ([
+        {id: 'game', label: 'Игры', icon: gamepad},
+        {id: 'movie', label: 'Фильмы', icon: film},
+        {id: 'show', label: 'Сериалы', icon: tv},
+        {id: 'user', label: 'Пользователи', icon: users},
     ]), [])
 
     return (
@@ -59,7 +67,9 @@ function SearchAutocomplete(props: ISearchAutocomplete) {
             items={items}
             categories={categories}
             onQueryChange={onQueryChange}
+            onSelect={console.log}
             className={props.className}
+            itemComponent={SearchAutocompleteItemView}
         />
     )
 }
