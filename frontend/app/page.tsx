@@ -1,3 +1,3 @@
-import {RootPage} from '@/pages/root';
+import {RootPage} from '@/pagesFSD/root';
 
 export default RootPage;

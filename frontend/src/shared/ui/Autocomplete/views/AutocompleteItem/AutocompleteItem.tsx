@@ -2,15 +2,15 @@ import React, {useEffect, useRef} from 'react';
 import styles from './AutocompleteItem.module.scss';
 import {IAutoCompleteItem} from '@/shared/ui/Autocomplete/Autocomplete';
 
-export interface IAutocompleteItemProps {
+export interface IAutocompleteItemProps<Item extends IAutoCompleteItem>{
     className?: string,
-    item: IAutoCompleteItem,
+    item: Item,
     isSelected: boolean,
     onHover: () => void,
-    onClick: (item: IAutoCompleteItem) => void,
+    onClick: (item: Item) => void,
 }
 
-function AutocompleteItem(props: IAutocompleteItemProps) {
+function AutocompleteItem<Item extends IAutoCompleteItem>(props: IAutocompleteItemProps<Item>) {
     return (
         <button
                 className={[

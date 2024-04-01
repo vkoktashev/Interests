@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import {Roboto} from 'next/font/google';
 const inter = Roboto({ subsets: ["latin", 'cyrillic'], weight: '400' });
 import '@/shared/ui/styles/index.scss';
+import {Layout} from '@/pagesFSD/layout';
 
 export const metadata: Metadata = {
   title: "Interests",
@@ -16,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className={inter.className}>
-        {children}
+        <Layout>
+            {children}
+        </Layout>
       </body>
     </html>
   );

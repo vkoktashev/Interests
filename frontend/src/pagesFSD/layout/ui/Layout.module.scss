@@ -1,0 +1,10 @@
+@use "src/shared/ui/styles/variables";
+
+.Layout {
+  background-color: variables.$background;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

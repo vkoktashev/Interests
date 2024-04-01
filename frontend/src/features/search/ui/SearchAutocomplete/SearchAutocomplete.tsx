@@ -14,8 +14,13 @@ interface ISearchAutocomplete {
     className?: string,
 }
 
+export interface ISearchAutocompleteItem extends IAutoCompleteItem {
+    year?: number,
+    href: string,
+}
+
 function SearchAutocomplete(props: ISearchAutocomplete) {
-    const [items, setItems] = useState<IAutoCompleteItem[]>([]);
+    const [items, setItems] = useState<ISearchAutocompleteItem[]>([]);
     const [query, setQuery] = useState<string>('');
     const debouncedValue = useDebounce(query);
 
@@ -30,23 +35,27 @@ function SearchAutocomplete(props: ISearchAutocomplete) {
                         label: game.rawg_name,
                         categoryId: 'game',
                         year: new Date(game.rawg_release_date).getFullYear(),
+                        href: `/game/${game.rawg_slug}`,
                     })),
                     ...result.movies.map(movie => ({
                         id: movie.tmdb_id.toString(),
                         label: movie.tmdb_name,
                         categoryId: 'movie',
                         year: new Date(movie.tmdb_release_date).getFullYear(),
+                        href: `/movie/${movie.tmdb_id}`,
                     })),
                     ...result.shows.map(show => ({
                         id: show.tmdb_id.toString(),
                         label: show.tmdb_name,
                         categoryId: 'show',
                         year: new Date(show.tmdb_release_date).getFullYear(),
+                        href: `/show/${show.tmdb_id}`,
                     })),
                     ...result.users.map(user => ({
                         id: user.id.toString(),
                         label: user.username,
                         categoryId: 'user',
+                        href: `/user/${user.id}`,
                     })),
                 ]);
             });
@@ -63,7 +72,7 @@ function SearchAutocomplete(props: ISearchAutocomplete) {
     ]), [])
 
     return (
-        <Autocomplete
+        <Autocomplete<ISearchAutocompleteItem>
             items={items}
             categories={categories}
             onQueryChange={onQueryChange}

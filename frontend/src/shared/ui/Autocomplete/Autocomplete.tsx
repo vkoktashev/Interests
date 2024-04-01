@@ -3,7 +3,7 @@ import {useClickAway} from 'react-use';
 import {IAutocompleteCategoryProps} from '@/shared/ui/Autocomplete/views/AutocompleteCategory/AutocompleteCategory';
 import AutocompleteItem from '@/shared/ui/Autocomplete/views/AutocompleteItem';
 import {IAutocompleteItemProps} from '@/shared/ui/Autocomplete/views/AutocompleteItem/AutocompleteItem';
-import SearchIcon from '../../../../public/icons/search.svg';
+import SearchIcon from '@/../public/icons/search.svg';
 import AutocompleteCategory from './views/AutocompleteCategory';
 import styles from './Autocomplete.module.scss';
 
@@ -25,7 +25,7 @@ interface IAutocompleteProps<Item extends IAutoCompleteItem> {
     onQueryChange: (query: string) => Promise<void> | void,
     onSelect: (item: Item) => Promise<void> | void,
     className?: string,
-    itemComponent?: React.FC<IAutocompleteItemProps>,
+    itemComponent?: React.FC<IAutocompleteItemProps<Item>>,
     categoryComponent?: React.FC<IAutocompleteCategoryProps>,
 }
 
