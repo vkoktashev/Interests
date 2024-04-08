@@ -26,4 +26,13 @@ module.exports = {
 
         return config
     },
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'media.rawg.io',
+                port: '',
+            },
+        ],
+    },
 }

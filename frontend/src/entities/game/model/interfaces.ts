@@ -19,7 +19,7 @@ interface IGameStore {
     slug: string,
 }
 
-interface IGameInStore {
+export interface IGameInStore {
     id: number,
     store: IGameStore,
     url: string,

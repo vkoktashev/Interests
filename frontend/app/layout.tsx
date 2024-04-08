@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import {Roboto} from 'next/font/google';
-const inter = Roboto({ subsets: ["latin", 'cyrillic'], weight: '400' });
 import '@/shared/ui/styles/index.scss';
 import {Layout} from '@/pagesFSD/layout';
+import AntWrapper from './antWrapper';
 
 export const metadata: Metadata = {
   title: "Interests",
@@ -16,10 +15,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
-      <body className={inter.className}>
-        <Layout>
-            {children}
-        </Layout>
+      <body>
+          <AntWrapper>
+            <Layout>
+              {children}
+            </Layout>
+          </AntWrapper>
       </body>
     </html>
   );

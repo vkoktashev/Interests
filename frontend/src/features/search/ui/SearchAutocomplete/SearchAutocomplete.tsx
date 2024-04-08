@@ -1,85 +1,122 @@
-"use client"
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import Autocomplete from '@/shared/ui/Autocomplete';
+"use client";
+import React, {CSSProperties, useCallback, useEffect, useMemo, useState} from 'react';
 import useDebounce from '@/shared/hooks/useDebounce';
-import {fetchItemsAutocomplete} from '@/features/search/ui/api';
-import {IAutoCompleteCategory, IAutoCompleteItem} from '@/shared/ui/Autocomplete/Autocomplete';
 import gamepad from '@/../public/icons/gamepad.svg';
 import film from '@/../public/icons/film.svg';
 import tv from '@/../public/icons/tv.svg';
 import users from '@/../public/icons/users.svg';
-import SearchAutocompleteItemView from '@/features/search/ui/SearchAutocomplete/views/SearchAutocompleteItemView';
+import {AutoComplete, Input} from 'antd';
+import {fetchItemsAutocomplete} from '@/features/search/ui/api';
+import SearchAutocompleteCategory from '@/features/search/ui/SearchAutocomplete/views/SearchAutocompleteCategory';
+import {IGameAutocomplete} from '@/entities/game/model/interfaces';
+import {IMovieAutocomplete} from '@/entities/movie/model/interfaces';
+import {IShowAutocomplete} from '@/entities/show/model/interfaces';
+import {IUserAutocomplete} from '@/entities/user/model/interfaces';
+import SearchAutocompleteItem from './views/SearchAutocompleteItem';
+import {useRouter} from 'next/navigation';
 
 interface ISearchAutocomplete {
-    className?: string,
-}
-
-export interface ISearchAutocompleteItem extends IAutoCompleteItem {
-    year?: number,
-    href: string,
+    style?: CSSProperties,
 }
 
 function SearchAutocomplete(props: ISearchAutocomplete) {
-    const [items, setItems] = useState<ISearchAutocompleteItem[]>([]);
+    const [items, setItems] = useState<{
+        games: IGameAutocomplete[],
+        movies: IMovieAutocomplete[],
+        shows: IShowAutocomplete[],
+        users: IUserAutocomplete[],
+    } | null>();
     const [query, setQuery] = useState<string>('');
+    const [isLoading, setLoading] = useState<boolean>(false);
     const debouncedValue = useDebounce(query);
+    const router = useRouter();
 
-    const onQueryChange = useCallback((query: string) => setQuery(query), [setQuery]);
+    const onQueryChange = useCallback((event: any) => setQuery(event.target.value), [setQuery]);
 
     useEffect(() => {
         if (debouncedValue) {
+            setLoading(true);
             fetchItemsAutocomplete(debouncedValue).then(result => {
-                setItems([
-                    ...result.games.map(game => ({
-                        id: game.rawg_id.toString(),
-                        label: game.rawg_name,
-                        categoryId: 'game',
-                        year: new Date(game.rawg_release_date).getFullYear(),
-                        href: `/game/${game.rawg_slug}`,
-                    })),
-                    ...result.movies.map(movie => ({
-                        id: movie.tmdb_id.toString(),
-                        label: movie.tmdb_name,
-                        categoryId: 'movie',
-                        year: new Date(movie.tmdb_release_date).getFullYear(),
-                        href: `/movie/${movie.tmdb_id}`,
-                    })),
-                    ...result.shows.map(show => ({
-                        id: show.tmdb_id.toString(),
-                        label: show.tmdb_name,
-                        categoryId: 'show',
-                        year: new Date(show.tmdb_release_date).getFullYear(),
-                        href: `/show/${show.tmdb_id}`,
-                    })),
-                    ...result.users.map(user => ({
-                        id: user.id.toString(),
-                        label: user.username,
-                        categoryId: 'user',
-                        href: `/user/${user.id}`,
-                    })),
-                ]);
-            });
+                setItems(result);
+            }).finally(() => setLoading(false))
         } else {
-            setItems([]);
+            setItems(null);
         }
     }, [debouncedValue]);
 
-    const categories = useMemo<IAutoCompleteCategory[]>(() => ([
-        {id: 'game', label: 'Игры', icon: gamepad},
-        {id: 'movie', label: 'Фильмы', icon: film},
-        {id: 'show', label: 'Сериалы', icon: tv},
-        {id: 'user', label: 'Пользователи', icon: users},
-    ]), [])
+    const renderTitle = (title: string, icon: React.FC) => (
+        <SearchAutocompleteCategory title={title} icon={icon} />
+    )
+
+    const renderItem = (title: string, year: number | null, link: string) => ({
+        value: title,
+        link,
+        label: <SearchAutocompleteItem
+            title={title}
+            year={year}
+            link={link}
+        />
+    });
+
+    const categories = useMemo(() => ([
+        {
+            label: renderTitle('Игры', gamepad),
+            options: items?.games?.map(game => renderItem(
+                game.rawg_name,
+                new Date(game.rawg_release_date).getFullYear(),
+                `/game/${game.rawg_slug}`,
+            )),
+        },
+        {
+            label: renderTitle('Фильмы', film),
+            options: items?.movies?.map(movie => renderItem(
+                movie.tmdb_name,
+                new Date(movie.tmdb_release_date).getFullYear(),
+                `/movie/${movie.tmdb_id}`,
+            )),
+        },
+        {
+            label: renderTitle('Сериалы', tv),
+            options: items?.shows?.map(show => renderItem(
+                show.tmdb_name,
+                new Date(show.tmdb_release_date).getFullYear(),
+                `/show/${show.tmdb_id}`,
+            )),
+        },
+        {
+            label: renderTitle('Пользователи', users),
+            options: items?.users?.map(user => renderItem(
+                user.username,
+                null,
+                `/user/${user.id}`,
+            )),
+        },
+    ]), [items]);
+
+    const onSelect = useCallback((title: string, item: ReturnType<typeof renderItem>) => {
+        router.push(item.link);
+    }, []);
 
     return (
-        <Autocomplete<ISearchAutocompleteItem>
-            items={items}
-            categories={categories}
-            onQueryChange={onQueryChange}
-            onSelect={console.log}
-            className={props.className}
-            itemComponent={SearchAutocompleteItemView}
-        />
+        <AutoComplete
+            popupClassName="certain-category-search-dropdown"
+            style={{
+                maxWidth: 450,
+                width: '50%',
+            }}
+            options={categories}
+            onSelect={onSelect as any}
+            defaultActiveFirstOption
+            listHeight={700}
+            size="large"
+        >
+            <Input.Search
+                size="large"
+                placeholder="Искать"
+                loading={isLoading}
+                onChange={onQueryChange}
+            />
+        </AutoComplete>
     )
 }
 
