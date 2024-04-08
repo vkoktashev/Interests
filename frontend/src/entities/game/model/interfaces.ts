@@ -56,7 +56,7 @@ export interface IGame {
     genres: string,
     hltb: IGameHLTB,
     metacritic: number,
-    name: string
+    name: string,
     overview: string,
     platforms: string,
     playtime: string,

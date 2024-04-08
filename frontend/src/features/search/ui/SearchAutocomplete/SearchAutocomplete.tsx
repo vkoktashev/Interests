@@ -1,11 +1,13 @@
-"use client";
+'use client';
+
 import React, {CSSProperties, useCallback, useEffect, useMemo, useState} from 'react';
+import {AutoComplete, Input} from 'antd';
+import {useRouter} from 'next/navigation';
 import useDebounce from '@/shared/hooks/useDebounce';
 import gamepad from '@/../public/icons/gamepad.svg';
 import film from '@/../public/icons/film.svg';
 import tv from '@/../public/icons/tv.svg';
 import users from '@/../public/icons/users.svg';
-import {AutoComplete, Input} from 'antd';
 import {fetchItemsAutocomplete} from '@/features/search/ui/api';
 import SearchAutocompleteCategory from '@/features/search/ui/SearchAutocomplete/views/SearchAutocompleteCategory';
 import {IGameAutocomplete} from '@/entities/game/model/interfaces';
@@ -13,7 +15,6 @@ import {IMovieAutocomplete} from '@/entities/movie/model/interfaces';
 import {IShowAutocomplete} from '@/entities/show/model/interfaces';
 import {IUserAutocomplete} from '@/entities/user/model/interfaces';
 import SearchAutocompleteItem from './views/SearchAutocompleteItem';
-import {useRouter} from 'next/navigation';
 
 interface ISearchAutocomplete {
     style?: CSSProperties,
@@ -38,15 +39,18 @@ function SearchAutocomplete(props: ISearchAutocomplete) {
             setLoading(true);
             fetchItemsAutocomplete(debouncedValue).then(result => {
                 setItems(result);
-            }).finally(() => setLoading(false))
+            }).finally(() => setLoading(false));
         } else {
             setItems(null);
         }
     }, [debouncedValue]);
 
     const renderTitle = (title: string, icon: React.FC) => (
-        <SearchAutocompleteCategory title={title} icon={icon} />
-    )
+        <SearchAutocompleteCategory
+            title={title}
+            icon={icon}
+        />
+    );
 
     const renderItem = (title: string, year: number | null, link: string) => ({
         value: title,
@@ -55,7 +59,7 @@ function SearchAutocomplete(props: ISearchAutocomplete) {
             title={title}
             year={year}
             link={link}
-        />
+        />,
     });
 
     const categories = useMemo(() => ([
@@ -117,7 +121,7 @@ function SearchAutocomplete(props: ISearchAutocomplete) {
                 onChange={onQueryChange}
             />
         </AutoComplete>
-    )
+    );
 }
 
 export default SearchAutocomplete;

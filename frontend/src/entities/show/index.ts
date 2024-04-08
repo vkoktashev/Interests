@@ -1,5 +1,5 @@
-import { showsAutocomplete } from "./api/requests";
+import {showsAutocomplete} from './api/requests';
 
 export {
-    showsAutocomplete,
-}
+  showsAutocomplete,
+};

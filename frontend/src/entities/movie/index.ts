@@ -1,5 +1,5 @@
-import { moviesAutocomplete } from "./api/requests";
+import {moviesAutocomplete} from './api/requests';
 
 export {
-    moviesAutocomplete,
-}
+  moviesAutocomplete,
+};

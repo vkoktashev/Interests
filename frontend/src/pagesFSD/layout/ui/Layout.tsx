@@ -1,10 +1,10 @@
-"use client";
+'use client';
+
 import React from 'react';
-import styles from './Layout.module.scss';
+import {Layout as AntLayout} from 'antd';
 import {Header} from '@/widgets/header';
 import {Footer} from '@/widgets/footer';
 import {Sidebar} from '../../../widgets/sidebar';
-import {Layout as AntLayout} from 'antd';
 
 const {Content} = AntLayout;
 
@@ -21,7 +21,8 @@ function Layout(props: ILayoutProps) {
                 display: 'flex',
                 flexDirection: 'row',
                 height: '100%',
-            }}>
+            }}
+            >
                 <Sidebar />
                 <Content style={{
                     overflow: 'scroll',
@@ -29,7 +30,8 @@ function Layout(props: ILayoutProps) {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                }}>
+                }}
+                >
                     {props.children}
                     <Footer />
                 </Content>

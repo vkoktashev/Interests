@@ -1,3 +1,3 @@
-import GamePage from "./ui/GamePage";
+import GamePage from './ui/GamePage';
 
 export {GamePage};

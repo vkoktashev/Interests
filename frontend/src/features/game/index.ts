@@ -1,3 +1,3 @@
-import GameHeader from "./ui/GameHeader";
+import GameHeader from './ui/GameHeader';
 
 export {GameHeader};

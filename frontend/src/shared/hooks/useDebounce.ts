@@ -13,7 +13,7 @@ export default function useDebounce<T>(value: T, delay = 500): T {
                 clearTimeout(handler);
             };
         },
-        [value]
+        [value],
     );
 
     return debouncedValue;

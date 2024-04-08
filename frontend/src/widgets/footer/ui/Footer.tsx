@@ -1,13 +1,14 @@
-"use client";
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import {theme, Layout, GlobalToken} from 'antd';
+import Typography from 'antd/es/typography';
+import styled from 'styled-components';
 import DiscordIcon from '@/../public/icons/discord.svg';
 import VKIcon from '@/../public/icons/vk.svg';
 import TMDBIcon from '@/../public/icons/tmdb.svg';
 import styles from './Footer.module.scss';
-import {theme, Layout, GlobalToken} from 'antd';
-import Typography from 'antd/es/typography';
-import styled from 'styled-components';
 
 interface IFooterProps {
     className?: string,
@@ -17,7 +18,7 @@ const {Footer: BaseFooter} = Layout;
 
 const {useToken} = theme;
 
-const StyledLink = styled(Link)<{ $token: GlobalToken }>`
+const StyledLink = styled(Link)<{ $token: GlobalToken, }>`
   svg {
     width: 55px;
     fill: ${props => props.$token.colorText};
@@ -28,7 +29,7 @@ const StyledLink = styled(Link)<{ $token: GlobalToken }>`
   }
 `;
 
-const StyledTextLink = styled(Link)<{ $token: GlobalToken }>`
+const StyledTextLink = styled(Link)<{ $token: GlobalToken, }>`
   transition: color .5s ease;
   color: ${props => props.$token.colorText};
   
@@ -38,12 +39,18 @@ const StyledTextLink = styled(Link)<{ $token: GlobalToken }>`
 `;
 
 function Footer(props: IFooterProps) {
-    const { token } = useToken();
+    const {token} = useToken();
 
     return (
-        <BaseFooter className={[styles.Footer, props.className].join(' ')} style={{backgroundColor: token.colorBgBase}}>
+        <BaseFooter
+            className={[styles.Footer, props.className].join(' ')}
+            style={{backgroundColor: token.colorBgBase}}
+        >
             <div className={[styles.block, styles.leftBlock].join(' ')}>
-                <Typography.Title level={3} className={styles.name}>
+                <Typography.Title
+                    level={3}
+                    className={styles.name}
+                >
                     Interests
                 </Typography.Title>
                 <Typography.Text>
@@ -59,13 +66,13 @@ function Footer(props: IFooterProps) {
                 </Typography.Text>
                 <div className={styles.links}>
                     <StyledLink
-                        href={'https://discord.gg/wXkUF5tKee'}
+                        href="https://discord.gg/wXkUF5tKee"
                         $token={token}
                     >
                         <DiscordIcon className={styles.icon} />
                     </StyledLink>
                     <StyledLink
-                        href={'https://vk.com/interests_fun'}
+                        href="https://vk.com/interests_fun"
                         $token={token}
                     >
                         <VKIcon className={styles.icon} />
@@ -78,13 +85,13 @@ function Footer(props: IFooterProps) {
                 </Typography.Text>
                 <div className={styles.links}>
                     <StyledTextLink
-                        href={'https://discord.gg/wXkUF5tKee'}
+                        href="https://discord.gg/wXkUF5tKee"
                         className={styles.rawg}
                         $token={token}
                     >
                         RAWG
                     </StyledTextLink>
-                    <Link href={'https://www.themoviedb.org/'}>
+                    <Link href="https://www.themoviedb.org/">
                         <TMDBIcon className={styles.tmdb} />
                     </Link>
                 </div>

@@ -1,11 +1,11 @@
 import React, {useMemo} from 'react';
 import {Rate, Segmented, theme} from 'antd';
-import {IGame, IGameInStore} from '@/entities/game/model/interfaces';
 import Image from 'next/image';
 import Typography from 'antd/es/typography';
 import styled from 'styled-components';
 import {GlobalToken} from 'antd/es/theme/interface';
 import Link from 'next/link';
+import {IGame, IGameInStore} from '@/entities/game/model/interfaces';
 import {GameStoresEnum} from '@/entities/game/model/GameStoreEnum';
 
 interface IGameHeaderProps {
@@ -14,7 +14,7 @@ interface IGameHeaderProps {
 
 const {useToken} = theme;
 
-const StyledMain = styled.div<{ $token: GlobalToken }>`
+const StyledMain = styled.div<{ $token: GlobalToken, }>`
     flex: 0;
     display: flex;
     flex-direction: row;
@@ -34,7 +34,7 @@ const Stores = styled.div`
     margin-bottom: 10px;
 `;
 
-const IconWrapper = styled.span<{ $token: GlobalToken }>`
+const IconWrapper = styled.span<{ $token: GlobalToken, }>`
     svg {
       width: ${props => props.$token.sizeLG}px;
       fill: ${props => props.$token.colorText};
@@ -71,15 +71,18 @@ function GameHeader(props: IGameHeaderProps) {
     const renderStoreLink = (store: IGameInStore) => {
         const StoreIcon = GameStoresEnum.getIcon(store.store.slug);
         return (
-            <Link href={store.url} key={store.id}>
+            <Link
+                href={store.url}
+                key={store.id}
+            >
                 {StoreIcon && (
                     <IconWrapper $token={token}>
                         <StoreIcon />
                     </IconWrapper>
                 )}
             </Link>
-        )
-    }
+        );
+    };
 
     return (
         <StyledMain $token={token}>
@@ -111,11 +114,26 @@ function GameHeader(props: IGameHeaderProps) {
                 />
                 <Segmented
                     options={[
-                        { label: 'Не играл', value: 'Weekly' },
-                        { label: 'Буду играть', value: 'Weekly2' },
-                        { label: 'Играю', value: 'Weekly3' },
-                        { label: 'Дропнул', value: 'Weekly4' },
-                        { label: 'Прошел', value: 'Weekly5' },
+                        {
+                            label: 'Не играл',
+                            value: 'Weekly',
+                        },
+                        {
+                            label: 'Буду играть',
+                            value: 'Weekly2',
+                        },
+                        {
+                            label: 'Играю',
+                            value: 'Weekly3',
+                        },
+                        {
+                            label: 'Дропнул',
+                            value: 'Weekly4',
+                        },
+                        {
+                            label: 'Прошел',
+                            value: 'Weekly5',
+                        },
                     ]}
                 />
             </div>

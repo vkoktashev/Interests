@@ -2,6 +2,7 @@ import axios, {Axios, AxiosRequestConfig, AxiosResponse} from 'axios';
 
 class Api {
     protected readonly _axios: Axios;
+
     constructor() {
         this._axios = axios.create({
             baseURL: process.env.NEXT_PUBLIC_API_URL,

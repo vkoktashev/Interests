@@ -1,4 +1,5 @@
-"use client";
+'use client';
+
 import React from 'react';
 import styled from 'styled-components';
 import {theme} from 'antd';
@@ -17,7 +18,7 @@ const StyledSpan = styled.span`
     gap: 8px;
 `;
 
-const StyledIcon = styled.span<{ fill: string }>`
+const StyledIcon = styled.span<{ fill: string, }>`
     width: 20px;
   
     svg {

@@ -1,5 +1,5 @@
-import { usersAutocomplete } from "./api/requests";
+import {usersAutocomplete} from './api/requests';
 
 export {
-    usersAutocomplete,
-}
+  usersAutocomplete,
+};
