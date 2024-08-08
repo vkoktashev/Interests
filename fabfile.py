@@ -2,11 +2,11 @@ from fabric.api import local
 
 
 def up():
-    local("sudo docker-compose down && sudo docker-compose build && sudo docker-compose up -d")
+    local("sudo docker compose down && sudo docker compose build && sudo docker compose up -d")
 
 
 def up_no_cache():
-    local("sudo docker-compose down && sudo docker-compose build --no-cache && sudo docker-compose up -d")
+    local("sudo docker compose down && sudo docker compose build --no-cache && sudo docker compose up -d")
 
 
 def migrate():
