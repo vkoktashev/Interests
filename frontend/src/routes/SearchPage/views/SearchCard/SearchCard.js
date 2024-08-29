@@ -2,6 +2,7 @@ import React from "react";
 import { useHistory } from "react-router-dom";
 import classnames from "classnames";
 import "./search-card.sass";
+import Image from "../../../../shared/Image";
 
 function SearchCard({ info, className }) {
 	let history = useHistory();
@@ -15,7 +16,11 @@ function SearchCard({ info, className }) {
 					e.preventDefault();
 				}}
 				title={info.name}>
-				<div className='search-card__poster' style={{ backgroundImage: info.poster }} />
+				{
+					info.poster?.includes('url(')
+						? (<div className='search-card__poster' style={{ backgroundImage: info.poster }} />)
+						: (<Image className='search-card__poster' src={info.poster} />)
+				}
 				<div className='search-card__body'>
 					<div className='search-card__name'>
 						<h4>{info.name}</h4>
