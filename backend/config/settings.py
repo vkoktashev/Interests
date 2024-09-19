@@ -5,7 +5,7 @@ SECRET_KEY = os.environ['SECRET_KEY']
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-DEBUG = os.environ['DEBUG']
+DEBUG = os.environ['DEBUG'] == 'True'
 
 ALLOWED_HOSTS = ['*']
 
@@ -112,7 +112,7 @@ DATABASES = {
         'USER': os.environ['DB_USER'],
         'PASSWORD': os.environ['DB_PASSWORD'],
         'HOST': os.environ['DB_HOST'],
-        'PORT': os.environ['DB_PORT'],
+        'PORT': int(os.environ['DB_PORT']),
     }
 }
 
