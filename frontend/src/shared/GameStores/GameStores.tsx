@@ -26,6 +26,7 @@ function GameStores(props: IGameStoresProps) {
                 href={store.url}
                 className={bem('store-link')}
                 title={store.store.name}
+                target="_blank"
             >
                 <StoreIcon
                     className={bem('store-icon')}

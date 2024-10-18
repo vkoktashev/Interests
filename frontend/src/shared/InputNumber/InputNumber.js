@@ -21,7 +21,7 @@ function InputNumber({ value, max, min, onChange, className, dataList }) {
 					if ((!min || event.target.value > min) && (!max || event.target.value < max)) onChange(parseFloat(event.target.value));
 				}}
 				className='input-number__input'
-				style={{ width: `${value.toString().length * 15}px` }}
+				style={{width: `${value.toString().length * 15}px`}}
 			/>
 			<button
 				className='input-number__plus'
@@ -30,13 +30,17 @@ function InputNumber({ value, max, min, onChange, className, dataList }) {
 				}}>
 				+
 			</button>
-			<div className='input-number__hints'>
-				{dataList?.map((data, counter) => (
-					<div key={counter} onClick={() => onChange(parseFloat(data))} className='input-number__hint'>
-						{data}
+			{
+				dataList.length > 0 && (
+					<div className='input-number__hints'>
+						{dataList?.map((data, counter) => (
+							<div key={counter} onClick={() => onChange(parseFloat(data))} className='input-number__hint'>
+								{data}
+							</div>
+						))}
 					</div>
-				))}
-			</div>
+				)
+			}
 		</div>
 	);
 }
