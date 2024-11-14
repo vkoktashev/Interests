@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { observer } from "mobx-react";
 import LoadingOverlay from "react-loading-overlay";
 import { toast } from "react-toastify";
+import _uniq from 'lodash/uniq';
 
 import GameStore from '../../store/GameStore';
 import AuthStore from '../../store/AuthStore';
@@ -110,7 +111,7 @@ const GamePage = observer((props) => {
 		if (hltbInfo?.gameplay_completionist !== -1) {
 			newData.push(strToFloat(hltbInfo?.gameplay_completionist));
 		}
-		return newData;
+		return _uniq(newData);
 	}
 
 	return (

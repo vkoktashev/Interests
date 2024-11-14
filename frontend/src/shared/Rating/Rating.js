@@ -7,7 +7,7 @@ function RatingBlock({ initialRating, readonly, onChange, className, withEye }) 
 		<Rating
 			start={withEye ? -1 : 0}
 			stop={10}
-			emptySymbol={(withEye ? [<FaEyeSlash />] : []).concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaRegStar />))}
+			emptySymbol={(withEye ? [<FaEyeSlash />] : []).concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaRegStar title={n} />))}
 			fullSymbol={(withEye ? [<FaEye />] : []).concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaStar title={n} />))}
 			initialRating={initialRating}
 			readonly={readonly}
