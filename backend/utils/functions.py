@@ -1,5 +1,6 @@
 import decimal
 
+from asgiref.sync import sync_to_async
 from django.db.models import DecimalField, IntegerField, CharField
 
 from utils.openapi_params import DEFAULT_PAGE_SIZE
@@ -86,6 +87,22 @@ def update_fields_if_needed(obj, new_fields, need_save=True):
 
     if need_save:
         obj.save(update_fields=fields_to_update)
+
+
+@sync_to_async
+def async_save(obj, fields_to_update):
+    obj.save(update_fields=fields_to_update)
+
+
+async def update_fields_if_needed_async(obj, new_fields, need_save=True):
+    fields_to_update = []
+    for key, value in new_fields.items():
+        if str(value) != str(getattr(obj, key)):
+            obj.__setattr__(key, value)
+            fields_to_update.append(key)
+
+    if need_save:
+        await async_save(obj, fields_to_update)
 
 
 def objects_to_str(objects):
