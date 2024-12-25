@@ -1,3 +1,5 @@
+import adrf.serializers
+from adrf.serializers import Serializer, ModelSerializer
 from rest_framework import serializers
 
 from games.models import UserGame, GameLog, Game
@@ -6,7 +8,7 @@ from utils.constants import TYPE_GAME
 from utils.serializers import ChoicesField
 
 
-class UserGameSerializer(serializers.ModelSerializer):
+class UserGameSerializer(ModelSerializer):
     status = ChoicesField(choices=UserGame.STATUS_CHOICES, required=False)
 
     class Meta:
@@ -34,7 +36,7 @@ class FollowedUserGameSerializer(UserGameSerializer):
         depth = 1
 
 
-class GameLogSerializer(serializers.ModelSerializer):
+class GameLogSerializer(ModelSerializer):
     user = serializers.SerializerMethodField('get_username')
     user_id = serializers.SerializerMethodField('get_user_id')
     type = serializers.SerializerMethodField('get_type')
@@ -66,13 +68,13 @@ class GameLogSerializer(serializers.ModelSerializer):
         exclude = ('game',)
 
 
-class GameSerializer(serializers.ModelSerializer):
+class GameSerializer(ModelSerializer):
     class Meta:
         model = Game
         exclude = ('id',)
 
 
-class TypedGameSerializer(serializers.ModelSerializer):
+class TypedGameSerializer(ModelSerializer):
     type = serializers.SerializerMethodField('get_type')
 
     @staticmethod
