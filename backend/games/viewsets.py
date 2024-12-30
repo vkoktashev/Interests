@@ -24,8 +24,7 @@ from games.serializers import UserGameSerializer, FollowedUserGameSerializer, Ga
 from users.models import UserFollow
 from utils.constants import RAWG_UNAVAILABLE, ERROR, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, \
     GAME_NOT_FOUND, CACHE_TIMEOUT
-from utils.functions import int_to_hours, get_page_size, update_fields_if_needed, \
-    objects_to_str, float_to_hours, update_fields_if_needed_async
+from utils.functions import int_to_hours, get_page_size, objects_to_str, float_to_hours, update_fields_if_needed_async
 
 
 class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
@@ -156,9 +155,10 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         # todo: rework
         await sync_to_async(serializer.is_valid)(raise_exception=True)
-        await serializer.asave()
+        await sync_to_async(serializer.save)()
+        data = await serializer.adata
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 async def update_game_genres(game: Game, rawg_game: dict) -> None:
