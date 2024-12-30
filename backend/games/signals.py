@@ -8,9 +8,9 @@ from utils.functions import field_is_changed
 
 
 @receiver(pre_save, sender=UserGame)
-def create_log(instance, **kwargs):
+async def create_log(instance, **kwargs):
     try:
-        old_instance = UserGame.objects.get(user=instance.user, game=instance.game)
+        old_instance = await UserGame.objects.aget(user=instance.user, game=instance.game)
         old_fields = UserGameSerializer(old_instance).data
     except UserGame.DoesNotExist:
         old_fields = None
@@ -22,8 +22,8 @@ def create_log(instance, **kwargs):
         if field_is_changed(game_log_dict, field, fields, old_fields, UserGame._meta):
             action_type = field
             action_result = fields[field]
-            GameLog.objects.create(user=instance.user, game=instance.game,
-                                   action_type=action_type, action_result=action_result)
+            await GameLog.objects.acreate(user=instance.user, game=instance.game,
+                                          action_type=action_type, action_result=action_result)
 
 
 @receiver(pre_save, sender=UserGame)

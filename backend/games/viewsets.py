@@ -4,6 +4,7 @@ from typing import List
 import rawgpy
 from adrf import mixins
 from adrf.viewsets import GenericViewSet
+from asgiref.sync import sync_to_async
 from django.contrib.postgres.search import TrigramSimilarity
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
@@ -153,8 +154,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except UserGame.DoesNotExist:
             serializer = self.get_serializer(data=data)
 
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        await sync_to_async(serializer.is_valid)(raise_exception=True)
+        await serializer.asave()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
