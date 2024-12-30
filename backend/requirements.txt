@@ -11,8 +11,8 @@ drf-yasg==1.21.4
 Fabric3==1.14.post1
 gunicorn==20.1.0
 howlongtobeatpy==1.0.15
-Pillow==9.3.0
-psycopg2==2.9.5
+Pillow==11.0.0
+psycopg2==2.9.10
 redis==4.3.4
 requests==2.32.3
 multipledispatch==0.6.0
@@ -21,4 +21,3 @@ python-dotenv
 asyncio==3.4.3
 uvicorn==0.33.0
 adrf==0.1.8
-aiohttp==3.11.10
