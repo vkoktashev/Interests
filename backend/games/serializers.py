@@ -1,8 +1,8 @@
-import adrf.serializers
-from adrf.serializers import Serializer, ModelSerializer
-from rest_framework import serializers
+from adrf.fields import SerializerMethodField
+from adrf.serializers import ModelSerializer
 
 from games.models import UserGame, GameLog, Game
+from users.models import User
 from users.serializers import FollowedUserSerializer
 from utils.constants import TYPE_GAME
 from utils.serializers import ChoicesField
@@ -27,21 +27,26 @@ class GameStatsSerializer(UserGameSerializer):
         depth = 1
 
 
+# todo: rework
 class FollowedUserGameSerializer(UserGameSerializer):
-    user = FollowedUserSerializer()
+    user = SerializerMethodField()
+
+    @staticmethod
+    async def get_user(obj):
+        user = await User.objects.aget(id=obj.user_id)
+        return await FollowedUserSerializer(user).adata
 
     class Meta:
         model = UserGame
         exclude = ('id', 'game', 'updated_at')
-        depth = 1
 
 
 class GameLogSerializer(ModelSerializer):
-    user = serializers.SerializerMethodField('get_username')
-    user_id = serializers.SerializerMethodField('get_user_id')
-    type = serializers.SerializerMethodField('get_type')
-    target = serializers.SerializerMethodField('get_target')
-    target_id = serializers.SerializerMethodField('get_target_id')
+    user = SerializerMethodField('get_username')
+    user_id = SerializerMethodField('get_user_id')
+    type = SerializerMethodField('get_type')
+    target = SerializerMethodField('get_target')
+    target_id = SerializerMethodField('get_target_id')
 
     @staticmethod
     def get_username(game_log):
@@ -75,7 +80,7 @@ class GameSerializer(ModelSerializer):
 
 
 class TypedGameSerializer(ModelSerializer):
-    type = serializers.SerializerMethodField('get_type')
+    type = SerializerMethodField('get_type')
 
     @staticmethod
     def get_type(game):

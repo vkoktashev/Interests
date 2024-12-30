@@ -1,3 +1,5 @@
+from adrf.fields import SerializerMethodField
+from adrf.serializers import ModelSerializer
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
@@ -13,7 +15,7 @@ from utils.constants import USER_USERNAME_EXISTS, USER_EMAIL_EXISTS, USERNAME_CO
 from utils.serializers import ChoicesField
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(ModelSerializer):
     @staticmethod
     def validate_email(value):
         if User.objects.filter(email__iexact=value).exists():
@@ -50,7 +52,7 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
 
-class UserFollowSerializer(serializers.ModelSerializer):
+class UserFollowSerializer(ModelSerializer):
     def validate_followed_user(self, value):
         if value.pk == self.initial_data['user']:
             raise serializers.ValidationError('You can\'t follow yourself')
@@ -66,19 +68,19 @@ class UserFollowSerializer(serializers.ModelSerializer):
         }
 
 
-class FollowedUserSerializer(serializers.ModelSerializer):
+class FollowedUserSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username')
         read_only_fields = ('id', 'username')
 
 
-class UserLogSerializer(serializers.ModelSerializer):
-    user = serializers.SerializerMethodField('get_username')
-    user_id = serializers.SerializerMethodField('get_user_id')
-    type = serializers.SerializerMethodField('get_type')
-    target = serializers.SerializerMethodField('get_target')
-    target_id = serializers.SerializerMethodField('get_target_id')
+class UserLogSerializer(ModelSerializer):
+    user = SerializerMethodField('get_username')
+    user_id = SerializerMethodField('get_user_id')
+    type = SerializerMethodField('get_type')
+    target = SerializerMethodField('get_target')
+    target_id = SerializerMethodField('get_target_id')
 
     @staticmethod
     def get_username(user_log):
@@ -105,7 +107,7 @@ class UserLogSerializer(serializers.ModelSerializer):
         exclude = ('followed_user',)
 
 
-class SettingsSerializer(serializers.ModelSerializer):
+class SettingsSerializer(ModelSerializer):
     privacy = ChoicesField(choices=User.PRIVACY_CHOICES, required=False)
 
     @staticmethod
@@ -122,7 +124,7 @@ class SettingsSerializer(serializers.ModelSerializer):
                   'receive_episodes_releases', 'backdrop_path', 'privacy')
 
 
-class UserInfoSerializer(serializers.ModelSerializer):
+class UserInfoSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'last_activity', 'backdrop_path')
