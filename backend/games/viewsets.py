@@ -1,12 +1,9 @@
-import asyncio
-import random
 from json import JSONDecodeError
 from typing import List
 
 import rawgpy
 from adrf import mixins
 from adrf.viewsets import GenericViewSet
-from asgiref.sync import sync_to_async
 from django.contrib.postgres.search import TrigramSimilarity
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
