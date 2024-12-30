@@ -20,4 +20,4 @@ wheel
 python-dotenv
 asyncio==3.4.3
 uvicorn==0.33.0
-adrf==0.1.8
+adrf==0.1.9

@@ -81,7 +81,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                                                        defaults=new_fields)
         except IntegrityError:
             created = False
-            game = Game.objects.filter().get(rawg_slug=rawg_game.get('slug'))
+            game = await Game.objects.filter().aget(rawg_slug=rawg_game.get('slug'))
         if not created and not returned_from_cache:
             update_fields_if_needed(game, new_fields)
         if created or not returned_from_cache:
@@ -123,7 +123,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             try:
                 user_game = await UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).aget(user=request.user,
                                                                                                    game=game)
-                user_info = self.get_serializer(user_game).data
+                user_info = await self.get_serializer(user_game).adata
             except UserGame.DoesNotExist:
                 user_info = None
 
@@ -154,6 +154,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except UserGame.DoesNotExist:
             serializer = self.get_serializer(data=data)
 
+        # todo: rework
         await sync_to_async(serializer.is_valid)(raise_exception=True)
         await serializer.asave()
 
