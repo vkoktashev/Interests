@@ -83,7 +83,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             created = False
             game = await Game.objects.filter().aget(rawg_slug=rawg_game.get('slug'))
         if not created and not returned_from_cache:
-            update_fields_if_needed(game, new_fields)
+            await update_fields_if_needed_async(game, new_fields)
         if created or not returned_from_cache:
             await update_game_genres(game, rawg_game)
             await update_game_stores(game, rawg_game)
