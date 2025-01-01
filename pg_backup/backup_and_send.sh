@@ -9,6 +9,8 @@ TELEGRAM_TOKEN=${TELEGRAM_TOKEN}      # Токен Telegram бота
 CHAT_ID=${CHAT_ID}                    # ID чата или пользователя Telegram
 BACKUP_DIR="/app/backups"             # Директория для хранения бэкапов
 
+echo $DB_PASSWORD
+
 # Создаём директорию для бэкапов (если её нет)
 mkdir -p "$BACKUP_DIR"
 
