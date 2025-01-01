@@ -2,7 +2,7 @@ services:
 
   db2:
     build:
-      context: ./PostgresDockerfile
+      context: .
     volumes:
       - postgres_data_interests:/var/lib/postgresql/data/
       - ./backups:/app/backups
