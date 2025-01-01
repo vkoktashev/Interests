@@ -1,28 +1,31 @@
-name: Deploy to Server
+name: Deploy Application
 
 on:
   push:
     branches:
-      - production
+      - production  # Запускать деплой при пуше в ветку main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Клонируем репозиторий
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # 2. Настраиваем SSH-доступ
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.5.4
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      # 3. Выполняем команды на сервере
       - name: Deploy via SSH
-          run: |
-            ssh -o StrictHostKeyChecking=no -p 1544 interests@your-interests.ru << 'EOF'
-            cd /Interests
-            sudo docker compose down
-            sudo docker compose build
-            sudo docker compose up -d
-            EOF
+        run: |
+          ssh -o StrictHostKeyChecking=no -p 1544 interests@your-interests.ru << 'EOF'
+          cd /path/to/your/project
+          sudo docker compose down
+          sudo docker compose build
+          sudo docker compose up -d
+          EOF
