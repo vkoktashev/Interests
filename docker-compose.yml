@@ -48,6 +48,8 @@ services:
       - .env
     volumes:
       - ./backups:/app/backups
+    depends_on:
+      - db2
 
 volumes:
   postgres_data_interests:
