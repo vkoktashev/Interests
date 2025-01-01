@@ -24,7 +24,7 @@ jobs:
       - name: Deploy via SSH
         run: |
           ssh -o StrictHostKeyChecking=no -p 1544 interests@your-interests.ru << 'EOF'
-          cd /path/to/your/project
+          cd Interests
           sudo docker compose down
           sudo docker compose build
           sudo docker compose up -d
