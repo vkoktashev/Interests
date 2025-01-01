@@ -1,4 +1,4 @@
-def get_game_new_fields(rawg_game, hltb_game=None):
+def get_game_new_fields(rawg_game):
     if rawg_game.get('background_image_additional') is not None:
         backdrop_path = rawg_game.get('background_image_additional')
     elif rawg_game.get('background_image') is not None:
@@ -20,12 +20,6 @@ def get_game_new_fields(rawg_game, hltb_game=None):
         'rawg_backdrop_path': backdrop_path,
         'rawg_poster_path': poster_path,
     }
-
-    if hltb_game is not None:
-        result.update({
-            'hltb_name': hltb_game.get('game_name'),
-            'hltb_id': hltb_game.get('game_id')
-        })
 
     return result
 
