@@ -4,11 +4,12 @@
 DB_NAME=${DB_NAME:-"test_db"}          # Имя базы данных
 DB_USER=${DB_USER:-"postgres"}        # Пользователь базы
 DB_PASSWORD=${DB_PASSWORD:-"password"}# Пароль пользователя
-TELEGRAM_TOKEN=${TELEGRAM_TOKEN}      # Токен Telegram бота (передается через ENV)
-CHAT_ID=${CHAT_ID}                    # ID чата или пользователя Telegram (передается через ENV)
+DB_HOST=db2  # Имя или адрес контейнера с базой данных
+TELEGRAM_TOKEN=${TELEGRAM_TOKEN}      # Токен Telegram бота
+CHAT_ID=${CHAT_ID}                    # ID чата или пользователя Telegram
 BACKUP_DIR="/app/backups"             # Директория для хранения бэкапов
 
-# Создаём папку для бэкапов (если её нет)
+# Создаём директорию для бэкапов (если её нет)
 mkdir -p "$BACKUP_DIR"
 
 # Текущая дата для имени файла
@@ -20,7 +21,7 @@ export PGPASSWORD="$DB_PASSWORD"
 
 # Создание бэкапа базы данных
 echo "Создание бэкапа базы данных..."
-pg_dump -U "$DB_USER" -d "$DB_NAME" -F c -f "$BACKUP_FILE"
+pg_dump -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -F c -f "$BACKUP_FILE"
 
 # Проверяем успешность создания бэкапа
 if [ $? -ne 0 ]; then

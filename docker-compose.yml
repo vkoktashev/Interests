@@ -1,11 +1,9 @@
 services:
 
   db2:
-    build:
-      context: .
+    image: postgres:16
     volumes:
       - postgres_data_interests:/var/lib/postgresql/data/
-      - ./backups:/app/backups
     restart: always
     env_file:
       - .env
@@ -42,6 +40,14 @@ services:
 
   redis:
     image: redis:6-alpine
+
+  pg_backup:
+    build:
+      context: ./pg_backup
+    env_file:
+      - .env
+    volumes:
+      - ./backups:/app/backups
 
 volumes:
   postgres_data_interests:
