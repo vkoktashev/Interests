@@ -15,7 +15,7 @@ BACKUP_DIR="/app/backups"             # Директория для хранен
 mkdir -p "$BACKUP_DIR"
 
 # Текущая дата для имени файла
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+TIMESTAMP=$(date +"%Y_%m_%d")
 BACKUP_FILE="${BACKUP_DIR}/${DB_NAME}_backup_${TIMESTAMP}.sql"
 
 # Экспорт переменной окружения для pg_dump
