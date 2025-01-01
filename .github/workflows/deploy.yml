@@ -1,0 +1,28 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy via SSH
+          run: |
+            ssh -o StrictHostKeyChecking=no -p 1544 interests@your-interests.ru << 'EOF'
+            cd /Interests
+            sudo docker compose down
+            sudo docker compose build
+            sudo docker compose up -d
+            EOF
