@@ -26,4 +26,4 @@ RUN crontab /etc/cron.d/pg_backup_cron
 RUN mkdir -p /app/backups
 
 # Запускаем cron и ждём, чтобы контейнер не завершился
-CMD ["cron", "-f"]
+CMD printenv | grep -v "no_proxy" >> /etc/environment && cron -f

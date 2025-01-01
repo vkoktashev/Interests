@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source /etc/environment
+
 # Конфигурация
 DB_NAME=${DB_NAME:-"test_db"}          # Имя базы данных
 DB_USER=${DB_USER:-"postgres"}        # Пользователь базы
@@ -8,9 +10,6 @@ DB_HOST=db2  # Имя или адрес контейнера с базой да�
 TELEGRAM_TOKEN=${TELEGRAM_TOKEN}      # Токен Telegram бота
 CHAT_ID=${CHAT_ID}                    # ID чата или пользователя Telegram
 BACKUP_DIR="/app/backups"             # Директория для хранения бэкапов
-
-echo $DB_PASSWORD
-echo $TELEGRAM_TOKEN
 
 # Создаём директорию для бэкапов (если её нет)
 mkdir -p "$BACKUP_DIR"
