@@ -1,9 +1,11 @@
 services:
 
   db2:
-    image: postgres:16
+    build:
+      context: ./PostgresDockerfile
     volumes:
       - postgres_data_interests:/var/lib/postgresql/data/
+      - ./backups:/app/backups
     restart: always
     env_file:
       - .env
