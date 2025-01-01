@@ -3,7 +3,7 @@
 # Конфигурация
 DB_NAME=${DB_NAME:-"test_db"}          # Имя базы данных
 DB_USER=${DB_USER:-"postgres"}        # Пользователь базы
-DB_PASSWORD=${DB_PASSWORD:-"password"}# Пароль пользователя
+DB_PASSWORD=${DB_PASSWORD:-"password"} # Пароль пользователя
 DB_HOST=db2  # Имя или адрес контейнера с базой данных
 TELEGRAM_TOKEN=${TELEGRAM_TOKEN}      # Токен Telegram бота
 CHAT_ID=${CHAT_ID}                    # ID чата или пользователя Telegram
