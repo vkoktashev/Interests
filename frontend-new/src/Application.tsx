@@ -6,7 +6,7 @@ import 'style/index.scss';
 import JwtHttpComponent from '@steroidsjs/core/components/JwtHttpComponent';
 
 export const config = {
-    reducers: require('@steroidsjs/core/reducers').default,
+    reducers: require('reducers').default,
     routes: () => require('routes').default,
     layoutView: () => require('shared/Layout').default,
     screen: {},

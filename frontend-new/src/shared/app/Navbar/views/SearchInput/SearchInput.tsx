@@ -11,18 +11,49 @@ export function SearchInput({ onSubmit, className }) {
 	const dispatch = useDispatch();
 	const {http} = useComponents();
 
-	const hints: any = useState({
+	const [hints, setHints] = useState({
 		games: [],
 		movies: [],
 		shows: [],
 	});
 
-	const fetchHints = useCallback(async (query: string) => {
-		const response = await http.get('api/games/search/', {
+	const fetchGamesHints = useCallback((query: string) => {
+		http.get('api/games/search/', {
 			query,
+		}).then(response => {
+			setHints(prevState => ({
+				...prevState,
+				games: response,
+			}));
 		});
+	}, []);
 
-		console.log(response);
+	const fetchMoviesHints = useCallback((query: string) => {
+		http.get('api/movies/search/', {
+			query,
+		}).then(response => {
+			setHints(prevState => ({
+				...prevState,
+				movies: response,
+			}));
+		});
+	}, []);
+
+	const fetchShowsHints = useCallback((query: string) => {
+		http.get('api/shows/search/', {
+			query,
+		}).then(response => {
+			setHints(prevState => ({
+				...prevState,
+				shows: response,
+			}));
+		});
+	}, []);
+
+	const fetchHints = useCallback((query: string) => {
+		fetchGamesHints(query);
+		fetchMoviesHints(query);
+		fetchShowsHints(query);
 	}, []);
 
 	useEffect(() => {

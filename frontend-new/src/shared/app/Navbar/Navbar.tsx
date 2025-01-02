@@ -6,15 +6,16 @@ import useWindowDimensions from '../../../hooks/useWindowDimensions';
 import SearchInput from './views/SearchInput';
 
 import './navbar.scss';
-import {useDispatch, useSelector} from '@steroidsjs/core/hooks';
+import {useBem, useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {openLoginForm, toggleSidebar} from '../../../actions/modals';
 import {goToRoute} from '@steroidsjs/core/actions/router';
 import {ROUTE_ROOT, ROUTE_SEARCH, ROUTE_USER} from '../../../routes';
 import {go} from 'connected-react-router';
 
-export function Navbar() {
+export function Navbar(props: any) {
 	const dispatch = useDispatch();
+	const bem = useBem('navbar');
 	const { width } = useWindowDimensions();
 	const user = useSelector(getUser);
 	const [collapse, setCollapse] = useState(true);
@@ -39,7 +40,7 @@ export function Navbar() {
 	}
 
 	return (
-		<div className='navbar'>
+		<div className={bem(bem.block(), props.className)}>
 			<div className='navbar__left'>
 				<FaBars onClick={toggleSidebarAction} className='navbar__sidebar-button' />
 				<div onClick={() => dispatch(goToRoute(ROUTE_ROOT))} className='navbar__logo'>

@@ -10,6 +10,7 @@ import ModalPortal from '@steroidsjs/core/ui/modal/ModalPortal';
 import './Layout.scss';
 import Footer from '../app/Footer';
 import Navbar from '../app/Navbar';
+import Sidebar from '../app/Sidebar';
 
 export default function Layout(props: React.PropsWithChildren<any>) {
     const bem = useBem('Layout');
@@ -23,11 +24,11 @@ export default function Layout(props: React.PropsWithChildren<any>) {
 
     return (
         <div className={bem.block()}>
-            <Navbar />
+            <Navbar className={bem.element('header')} />
+            <Sidebar />
             <div className={bem.element('content')}>
                 <Notifications />
                 {props.children}
-                <Footer />
                 <ModalPortal />
                 {
                     process.env.IS_SSR
@@ -35,6 +36,7 @@ export default function Layout(props: React.PropsWithChildren<any>) {
                         : <Portal />
                 }
             </div>
+            <Footer className={bem.element('footer')} />
         </div>
     );
 }

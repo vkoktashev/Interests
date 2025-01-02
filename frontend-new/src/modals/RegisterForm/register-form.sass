@@ -1,0 +1,58 @@
+@import src/styles/colors
+
+.register-form
+    background-color: $newBackground2
+    color: $newText3
+    text-align: center
+
+    &__header
+        margin-bottom: 1rem
+
+    &__input
+        display: block
+        width: 100%
+        background-color: $newBackground2
+        color: $newText3
+        margin-bottom: 10px
+        outline: none
+        border: 1px solid $newBackground3   
+        border-radius: 5px  
+        padding: 5px
+        margin-bottom: 1rem
+        transition: border-color 0.5s, background-color 0.5s
+
+        &:focus
+            background-color: $newBackground2
+            color: $newText3
+            border: 1px solid $newAccent2
+
+        &:-webkit-autofill
+            box-shadow: inset 0 0 0 50px $newBackground2 !important
+            -webkit-box-shadow: inset 0 0 0 50px $newBackground2 !important
+            -webkit-text-fill-color: $newText3 !important
+            color: $newText3 !important
+
+        &_wrong
+            border: 1px solid red !important
+        
+        &_right:focus
+            border: 1px solid green !important
+    
+    &__auth-button
+        background-color: $newAccent2
+        border-radius: 5px
+        color: $newText3
+        outline: none
+        border: none
+        padding: 0.8rem 1rem
+        transition: background-color 0.5s
+
+        &:disabled
+            background-color: $newAccent3
+    
+    &__success, &__fail
+        background: $newAccent2
+        color: $newText3
+        border-radius: 8px
+        padding: 5px
+        margin-bottom: 5px

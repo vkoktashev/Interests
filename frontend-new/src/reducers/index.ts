@@ -16,7 +16,8 @@ export default (asyncReducers: any) => combineReducers({
     fields,
     list,
     notifications,
-    router,
+    // router,
     modals,
     ...asyncReducers,
+    router: (state, action) => router(asyncReducers.router ? asyncReducers.router(state, action) : {}, action),
 });

@@ -1,6 +1,4 @@
-import React from 'react';
-import { useHistory } from 'react-router-dom';
-import { observer } from 'mobx-react';
+import React, {useCallback} from 'react';
 import {
 	FaSignInAlt,
 	FaUserCircle,
@@ -17,41 +15,54 @@ import {
 	ProSidebar,
 	Menu,
 	MenuItem,
-	//SubMenu,
 	SidebarFooter,
 } from 'react-pro-sidebar';
 
-import AuthStore from '../../../store/AuthStore';
-import PagesStore from '../../../store/PagesStore';
 import useWindowDimensions from '../../../hooks/useWindowDimensions';
 
-import './sidebar.sass';
-//import 'react-pro-sidebar/dist/css/styles.css';
+import './sidebar.scss';
+import {useDispatch, useSelector} from '@steroidsjs/core/hooks';
+import {getUser} from '@steroidsjs/core/reducers/auth';
+import {collapseSidebar, openLoginForm, openRegistrationForm, toggleSidebar} from '../../../actions/modals';
+import {getSidebarIsCollapsed, getSidebarIsOpen} from '../../../reducers/modals';
+import {goToRoute} from '@steroidsjs/core/actions/router';
+import {ROUTE_CALENDAR, ROUTE_RANDOMIZER, ROUTE_SETTINGS, ROUTE_UNWATCHED, ROUTE_USER} from '../../../routes';
+import 'react-pro-sidebar/dist/css/styles.css';
 
 /**
  * Основная страница приложения
  */
-const Sidebar = observer((props) => {
-	const history = useHistory();
+export function Sidebar() {
+	const dispatch = useDispatch();
 	const { width } = useWindowDimensions();
+	const user = useSelector(getUser);
+	const sidebarIsCollapsed = useSelector(getSidebarIsCollapsed);
+	const sidebarIsToggled = useSelector(getSidebarIsOpen);
 
-	const { loggedIn, user, resetAuthorization } = AuthStore;
-	const { sidebarIsCollapsed, sidebarIsToggled, collapseSidebar, toggleSidebar, openLoginForm, openRegistrateForm } = PagesStore;
+	const logout = useCallback(() => {
+		dispatch(logout());
+	}, []);
 
 	function toggleSidebarIfSmallScreen() {
-		if (width < 1780 && width > 1440 && !sidebarIsCollapsed) collapseSidebar();
-		if (width <= 1440) toggleSidebar();
+		if (width < 1780 && width > 1440 && !sidebarIsCollapsed) {
+			dispatch(collapseSidebar());
+		}
+		if (width <= 1440) {
+			dispatch(toggleSidebar());
+		}
 	}
 
 	return (
 		<ProSidebar className='sidebar' collapsed={sidebarIsCollapsed} hidden={!sidebarIsToggled}>
-			<Menu iconShape='round' hidden={!loggedIn}>
+			<Menu iconShape='round' hidden={!user}>
 				<MenuItem icon={<FaUserCircle />}>
 					<a
 						href={`/user/${user?.id}`}
 						onClick={(event) => {
 							event.preventDefault();
-							history.push(`/user/${user?.id}`);
+							dispatch(goToRoute(ROUTE_USER, {
+								userId: user?.id,
+							}));
 							toggleSidebarIfSmallScreen();
 						}}>
 						Профиль
@@ -59,10 +70,13 @@ const Sidebar = observer((props) => {
 				</MenuItem>
 				<MenuItem icon={<FaUserFriends />}>
 					<a
-						href={`/user/${user.id}?сategory=Друзья`}
+						href={`/user/${user?.id}?сategory=Друзья`}
 						onClick={(event) => {
 							event.preventDefault();
-							history.push(`/user/${user?.id}?сategory=Друзья`);
+							dispatch(goToRoute(ROUTE_USER, {
+								userId: user?.id,
+								сategory: 'Друзья',
+							}));
 							toggleSidebarIfSmallScreen();
 						}}>
 						Друзья
@@ -74,7 +88,7 @@ const Sidebar = observer((props) => {
 						href={`/unwatched`}
 						onClick={(event) => {
 							event.preventDefault();
-							history.push(`/unwatched`);
+							dispatch(goToRoute(ROUTE_UNWATCHED));
 							toggleSidebarIfSmallScreen();
 						}}>
 						Непросмотренное
@@ -85,7 +99,7 @@ const Sidebar = observer((props) => {
 						href={`/calendar`}
 						onClick={(event) => {
 							event.preventDefault();
-							history.push(`/calendar`);
+							dispatch(goToRoute(ROUTE_CALENDAR));
 							toggleSidebarIfSmallScreen();
 						}}>
 						Календарь
@@ -96,7 +110,7 @@ const Sidebar = observer((props) => {
 						href={`/random`}
 						onClick={(event) => {
 							event.preventDefault();
-							history.push(`/random`);
+							dispatch(goToRoute(ROUTE_RANDOMIZER));
 							toggleSidebarIfSmallScreen();
 						}}>
 						Рандомайзер
@@ -107,7 +121,7 @@ const Sidebar = observer((props) => {
 						href={`/settings`}
 						onClick={(event) => {
 							event.preventDefault();
-							history.push(`/settings`);
+							dispatch(goToRoute(ROUTE_SETTINGS));
 							toggleSidebarIfSmallScreen();
 						}}>
 						Настройки
@@ -118,19 +132,19 @@ const Sidebar = observer((props) => {
 						href={`/`}
 						onClick={(event) => {
 							event.preventDefault();
-							resetAuthorization();
+							logout();
 						}}>
 						Выход
 					</a>
 				</MenuItem>
 			</Menu>
-			<Menu iconShape='round' hidden={loggedIn}>
+			<Menu iconShape='round' hidden={user}>
 				<MenuItem icon={<FaSignInAlt />}>
 					<a
 						href={`/`}
 						onClick={(event) => {
 							event.preventDefault();
-							openLoginForm();
+							dispatch(openLoginForm());
 							toggleSidebarIfSmallScreen();
 						}}>
 						Войти
@@ -141,7 +155,7 @@ const Sidebar = observer((props) => {
 						href={`/`}
 						onClick={(event) => {
 							event.preventDefault();
-							openRegistrateForm();
+							dispatch(openRegistrationForm());
 							toggleSidebarIfSmallScreen();
 						}}>
 						Зарегистрироваться
@@ -150,13 +164,17 @@ const Sidebar = observer((props) => {
 			</Menu>
 			<SidebarFooter>
 				<Menu iconShape='round'>
-					<MenuItem icon={sidebarIsCollapsed ? <FaArrowRight /> : <FaArrowLeft />} onClick={collapseSidebar}>
+					<MenuItem
+						icon={sidebarIsCollapsed ? <FaArrowRight /> : <FaArrowLeft />}
+						onClick={() => {
+							dispatch(collapseSidebar());
+						}}>
 						Свернуть
 					</MenuItem>
 				</Menu>
 			</SidebarFooter>
 		</ProSidebar>
 	);
-});
+}
 
 export default Sidebar;
