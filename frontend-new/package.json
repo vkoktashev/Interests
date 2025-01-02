@@ -1,0 +1,36 @@
+{
+  "name": "interests",
+  "description": "Interests",
+  "version": "2.0.0",
+  "main": "src/index.ts",
+  "license": "MIT",
+  "scripts": {
+    "watch": "node webpack",
+    "build": "node webpack production",
+    "lint": "eslint -c ./.eslintrc --ext .js,.jsx,.ts,.tsx ./src"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@sentry/browser": "^5.27.3",
+    "@steroidsjs/bootstrap": "^3.0.10",
+    "@steroidsjs/core": "^3.0.11",
+    "@steroidsjs/webpack": "^4.0.5",
+    "connected-react-router": "^6.9.1",
+    "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.4.0"
+  },
+  "devDependencies": {
+    "@steroidsjs/eslint-config": "^2.1.6",
+    "@types/lodash": "^4.14.191",
+    "@types/react": "^18.0.27",
+    "@types/react-dom": "^18.0.10",
+    "@types/webpack-env": "^1.15.1",
+    "eslint": "^8.34.0",
+    "typescript": "^4.9.5"
+  }
+}

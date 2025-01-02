@@ -3,3 +3,5 @@
 *.pyc
 frontend/.eslintcache
 backend/src/rawgpy/
+frontend-new/.eslintcache
+frontend-new/node_modules
