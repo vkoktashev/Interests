@@ -1,5 +1,6 @@
 import {IRouteItem} from '@steroidsjs/core/ui/nav/Router/Router';
 import HomePage from './HomePage';
+import GamePage from './GamePage';
 
 export const ROUTE_ROOT = 'root';
 
@@ -24,4 +25,12 @@ export default {
     path: '/',
     component: HomePage,
     roles,
+    items: {
+      [ROUTE_GAME]: {
+          exact: true,
+          path: '/game/:gameId',
+          component: GamePage,
+          roles,
+      },
+    },
 } as IRouteItem;

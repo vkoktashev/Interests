@@ -1,12 +1,16 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
 import "./home-page.scss";
+import {useDispatch} from '@steroidsjs/core/hooks';
+import {openModal} from '@steroidsjs/core/actions/modal';
+import LoginForm from '../../modals/LoginForm';
 
 /**
  * Основная страница приложения
  */
-export function HomePage(props) {
+export function HomePage() {
 	let history = useHistory();
+	const dispatch = useDispatch();
 	const user: any = {};
 	const loggedIn = true;
 	const openLoginForm = () => {};
@@ -27,7 +31,7 @@ export function HomePage(props) {
 						onClick={(e) => {
 							e.preventDefault();
 							if (!loggedIn) {
-								openLoginForm();
+								dispatch(openModal(LoginForm));
 							} else {
 								history.push("/user/" + user?.id);
 							}

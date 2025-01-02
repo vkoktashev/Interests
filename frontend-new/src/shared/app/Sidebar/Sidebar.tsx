@@ -23,11 +23,15 @@ import useWindowDimensions from '../../../hooks/useWindowDimensions';
 import './sidebar.scss';
 import {useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
-import {collapseSidebar, openLoginForm, openRegistrationForm, toggleSidebar} from '../../../actions/modals';
+import {collapseSidebar, toggleSidebar} from '../../../actions/modals';
 import {getSidebarIsCollapsed, getSidebarIsOpen} from '../../../reducers/modals';
 import {goToRoute} from '@steroidsjs/core/actions/router';
 import {ROUTE_CALENDAR, ROUTE_RANDOMIZER, ROUTE_SETTINGS, ROUTE_UNWATCHED, ROUTE_USER} from '../../../routes';
 import 'react-pro-sidebar/dist/css/styles.css';
+import {openModal} from '@steroidsjs/core/actions/modal';
+import LoginForm from '../../../modals/LoginForm';
+import {logout} from '@steroidsjs/core/actions/auth';
+import RegisterForm from '../../../modals/RegisterForm';
 
 /**
  * Основная страница приложения
@@ -39,7 +43,7 @@ export function Sidebar() {
 	const sidebarIsCollapsed = useSelector(getSidebarIsCollapsed);
 	const sidebarIsToggled = useSelector(getSidebarIsOpen);
 
-	const logout = useCallback(() => {
+	const logoutAction = useCallback(() => {
 		dispatch(logout());
 	}, []);
 
@@ -132,7 +136,7 @@ export function Sidebar() {
 						href={`/`}
 						onClick={(event) => {
 							event.preventDefault();
-							logout();
+							logoutAction();
 						}}>
 						Выход
 					</a>
@@ -144,7 +148,7 @@ export function Sidebar() {
 						href={`/`}
 						onClick={(event) => {
 							event.preventDefault();
-							dispatch(openLoginForm());
+							dispatch(openModal(LoginForm));
 							toggleSidebarIfSmallScreen();
 						}}>
 						Войти
@@ -155,7 +159,7 @@ export function Sidebar() {
 						href={`/`}
 						onClick={(event) => {
 							event.preventDefault();
-							dispatch(openRegistrationForm());
+							dispatch(openModal(RegisterForm));
 							toggleSidebarIfSmallScreen();
 						}}>
 						Зарегистрироваться

@@ -2,8 +2,6 @@ import dotProps from 'dot-prop-immutable';
 
 export const OPEN_SIDEBAR = 'open_sidebar';
 export const CLOSE_SIDEBAR = 'close_sidebar'
-export const OPEN_LOGIN_FORM = 'open_login_form';
-export const OPEN_REGISTRATION_FORM = 'open_registration_form';
 export const COLLAPSE_SIDEBAR = 'collapse_sidebar';
 
 
@@ -25,17 +23,11 @@ export default (state = initialState, action: any) => {
         case COLLAPSE_SIDEBAR: {
             return dotProps.set(state, 'sidebarIsCollapsed', action.value);
         }
-        case OPEN_LOGIN_FORM: {
-            return dotProps.set(state, 'loginFormIsOpen', true);
-        }
-        case OPEN_REGISTRATION_FORM: {
-            return dotProps.set(state, 'registrationFormIsOpen', true);
-        }
         default: {
             return state;
         }
     }
 };
 
-export const getSidebarIsOpen = (state: any) => state.modals.sidebarIsOpen;
-export const getSidebarIsCollapsed = (state: any) => state.modals.sidebarIsCollapsed;
+export const getSidebarIsOpen = (state: any) => state.projectModals.sidebarIsOpen;
+export const getSidebarIsCollapsed = (state: any) => state.projectModals.sidebarIsCollapsed;

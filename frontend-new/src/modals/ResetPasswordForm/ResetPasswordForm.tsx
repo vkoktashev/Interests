@@ -1,42 +1,54 @@
 import React, {useState} from 'react';
-import { observer } from 'mobx-react';
 
-import AuthStore from '../../../store/AuthStore';
-import PagesStore from '../../../store/PagesStore';
-import Modal from '../../Modal';
+import './reset-password-form.scss';
+import {useBem, useComponents} from '@steroidsjs/core/hooks';
+import {IModalProps} from '@steroidsjs/core/ui/modal/Modal/Modal';
+import Modal from '@steroidsjs/core/ui/modal/Modal';
 
-import './reset-password-form.sass';
-
-/**
- * КОмпонент формы сброса пароля
- * @param {number} Параметр, при изменении которого компонент открывается
- */
-const ResetPasswordForm = observer(() => {
-	const { resetPassword, resetPasswordState } = AuthStore;
-	const { ResetPasswordFormIsOpen, closeResetPasswordForm } = PagesStore;
-
+export function ResetPasswordForm(props: IModalProps) {
+    const bem = useBem('reset-password-form');
+	const {http} = useComponents();
+	const [error, setError] = useState('');
+	const [isLoading, setLoading] = useState(false);
+	const [emailSent, setEmailSent] = useState(false);
 	const [email, setEmail] = useState('');
 
 	const onSubmit = async (event: any) => {
 		event.preventDefault();
-		await resetPassword(email);
+		setLoading(true);
+		setError('');
+		http.send('PUT', 'api/users/auth/password_reset/', {
+			email,
+		})
+			.then(response => {
+				setEmailSent(true);
+				console.log(response);
+			})
+			.catch(error => {
+				const errorMessage = error?.response?.data?.error || __('Ошибка сервера');
+				setError(errorMessage);
+			})
+			.finally(() => setLoading(false));
 	};
 
 	return (
-		<Modal isOpen={ResetPasswordFormIsOpen} toggle={closeResetPasswordForm} className='reset-password-form'>
+		<Modal
+            {...props}
+            size='sm'
+            className={bem.block()}
+            onClose={props.onClose}
+			title={__('Сбросить пароль')}
+        >
 			<form onSubmit={onSubmit}>
-				<h2 className='reset-password-form__header'>
-					Сбросить пароль
-				</h2>
 				<p
 					className='reset-password-form__fail'
-					hidden={!resetPasswordState.startsWith('error:')}
+					hidden={!error}
 				>
-					{resetPasswordState}
+					{error}
 				</p>
 				<p
 					className='reset-password-form__success'
-					hidden={resetPasswordState !== 'done'}
+					hidden={!emailSent}
 				>
 					На вашу почту отправлено письмо
 				</p>
@@ -52,11 +64,9 @@ const ResetPasswordForm = observer(() => {
 				/>
 
 				<button type='submit' className='reset-password-form__button'>
-					{resetPasswordState !== 'pending' ? 'Сбросить' : 'Загрузка...'}
+					{isLoading ? __('Загрузка...') : __('Сбросить')}
 				</button>
 			</form>
 		</Modal>
 	);
-});
-
-export default ResetPasswordForm;
+}

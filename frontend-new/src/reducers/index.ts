@@ -7,8 +7,9 @@ import {
     list,
     notifications,
     router,
+    modal,
 } from '@steroidsjs/core/reducers';
-import modals from './modals';
+import projectModals from './modals';
 
 export default (asyncReducers: any) => combineReducers({
     form,
@@ -16,8 +17,9 @@ export default (asyncReducers: any) => combineReducers({
     fields,
     list,
     notifications,
+    modal,
     // router,
-    modals,
+    projectModals,
     ...asyncReducers,
     router: (state, action) => router(asyncReducers.router ? asyncReducers.router(state, action) : {}, action),
 });

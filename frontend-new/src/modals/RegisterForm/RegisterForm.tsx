@@ -1,51 +1,72 @@
-import React, {useState} from 'react';
-import { observer } from 'mobx-react';
+import React, {useCallback, useState} from 'react';
 import classnames from 'classnames';
+import Modal from '@steroidsjs/core/ui/modal/Modal';
+import {useBem, useComponents, useDispatch, useSelector} from '@steroidsjs/core/hooks';
+import {IModalProps} from '@steroidsjs/core/ui/modal/Modal/Modal';
+import {getUser} from '@steroidsjs/core/reducers/auth';
+import {setUser} from '@steroidsjs/core/actions/auth';
+import './register-form.scss';
 
-import AuthStore from '../../../store/AuthStore';
-import PagesStore from '../../../store/PagesStore';
-import Modal from '../../Modal';
-
-import './register-form.sass';
-
-/**
- * КОмпонент формы авторизации
- * @param {number} Параметр, при изменении которого компонент открывается
- */
-const RegisterForm = observer(() => {
-	const { register, registrateState, user } = AuthStore;
-	const { RegistrateFormIsOpen, closeRegistrateForm } = PagesStore;
+export function RegisterForm(props: IModalProps) {
+    const bem = useBem('register-form');
+	const {http} = useComponents();
+	const dispatch = useDispatch();
+	const user = useSelector(getUser);
+    const [isLoading, setLoading] = useState(false);
+	const [error, setError] = useState('');
 
 	const [passwordConfirm, setPasswordConfirm] = useState('');
 	const [password, setPassword] = useState('');
 	const [email, setEmail] = useState('');
 	const [login, setLogin] = useState('');
 
-	const onRegistration = () => register(login, email, password);
+	const onRegistration = useCallback(async () => {
+		setLoading(true);
+		setError('');
+		http.post('api/users/auth/signup/', {
+			username: login,
+			email: email,
+			password: password,
+		})
+			.then(response => {
+				console.log(response);
+				const user = {
+					login: response.username,
+					email: response.email,
+				};
+				dispatch(setUser(user));
+			})
+			.catch(error => {
+				const data = error?.response?.data;
+				const errorMessage = data?.error
+					|| Object.values(data).flat().flat().join('\n')
+					|| __('Ошибка сервера');
+				setError(errorMessage);
+			})
+			.finally(() => setLoading(false));
+    }, [login, email, password]);
 
 	return (
 		<Modal
-			isOpen={RegistrateFormIsOpen}
-			toggle={closeRegistrateForm}
-			className='register-form'
+            {...props}
+            size='sm'
+            className={bem.block()}
+            onClose={props.onClose}
+			title={__('Регистрация')}
 		>
 			<form>
 				<p
 					className='register-form__fail'
-					hidden={!registrateState.startsWith('error:')}
+					hidden={!error}
 				>
-					{registrateState}
+					{error}
 				</p>
 				<p
 					className='register-form__success'
-					hidden={user?.email === ''}
+					hidden={!user?.email}
 				>
-					{user.login}, добро пожаловать! Осталось только подтвердить вашу почту
+					{user?.login}, добро пожаловать! Осталось только подтвердить вашу почту
 				</p>
-				<h2 className='register-form__header'>
-					Регистрация
-				</h2>
-
 				<label htmlFor='loginInput'>
 					Никнейм
 				</label>
@@ -105,12 +126,10 @@ const RegisterForm = observer(() => {
 						}
 						onClick={onRegistration}
 					>
-						{registrateState !== 'pending' ? 'Зарегистрироваться' : 'Загрузка...'}
+						{isLoading ? __('Загрузка...') : __('Зарегистрироваться')}
 					</button>
 				</div>
 			</form>
 		</Modal>
 	);
-});
-
-export default RegisterForm;
+}

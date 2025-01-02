@@ -5,13 +5,14 @@ import { FaBars, FaAngleUp, FaAngleDown, FaUserCircle, FaSignInAlt } from 'react
 import useWindowDimensions from '../../../hooks/useWindowDimensions';
 import SearchInput from './views/SearchInput';
 
-import './navbar.scss';
 import {useBem, useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
-import {openLoginForm, toggleSidebar} from '../../../actions/modals';
 import {goToRoute} from '@steroidsjs/core/actions/router';
+import {openModal} from '@steroidsjs/core/actions/modal';
+import LoginForm from '../../../modals/LoginForm';
 import {ROUTE_ROOT, ROUTE_SEARCH, ROUTE_USER} from '../../../routes';
-import {go} from 'connected-react-router';
+import {toggleSidebar} from '../../../actions/modals';
+import './navbar.scss';
 
 export function Navbar(props: any) {
 	const dispatch = useDispatch();
@@ -25,7 +26,7 @@ export function Navbar(props: any) {
 	}, []);
 
 	const openLogin = useCallback(() => {
-		dispatch(openLoginForm());
+		dispatch(openModal(LoginForm, {}))
 	}, []);
 
 

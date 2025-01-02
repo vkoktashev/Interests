@@ -1,0 +1,36 @@
+@import 'style/colors';
+
+.friends-activity {
+    &__element {
+        margin: 1rem 1rem 1rem 0px;
+    }
+}
+.friend-activity {
+    display: inline-flex;
+    background-color: $newBackground3;
+    color: $newText3;
+    vertical-align: top;
+    width: 38rem;
+    max-width: 100%;
+    border-radius: 5px;
+    padding-bottom: 1rem;
+
+    &__user {
+        display: inline-block;
+        padding-top: 10px;
+        padding-left: 10px;
+        margin-left: 0px;
+        margin-right: 13px;
+        vertical-align: top;
+        font-weight: 400;
+    }
+    &__info {
+        display: inline-block;
+        margin-bottom: 0px;
+        margin-top: 0px;
+        padding-top: 12px;
+    }
+    &__info-text {
+        margin-bottom: 5px;
+    }
+}
