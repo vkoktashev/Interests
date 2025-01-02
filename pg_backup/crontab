@@ -1,1 +1,1 @@
-0 12 * * * /app/backup_and_send.sh >> /var/log/cron.log 2>&1
+* * * * * /app/backup_and_send.sh >> /var/log/cron.log 2>&1
