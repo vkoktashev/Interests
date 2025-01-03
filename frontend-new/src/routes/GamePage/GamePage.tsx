@@ -1,30 +1,28 @@
-import React, {useEffect, useMemo, useState} from 'react';
-import { useParams } from "react-router-dom";
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
+import {getUser} from '@steroidsjs/core/reducers/auth';
+import {getRouteParam} from '@steroidsjs/core/reducers/router';
+import {openModal} from '@steroidsjs/core/actions/modal';
+import {useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
+import {showNotification} from '@steroidsjs/core/actions/notifications';
 import _uniq from 'lodash/uniq';
-
+import {Loader} from '@steroidsjs/core/ui/layout'
 import StatusButtonGroup from '../../shared/StatusButtonGroup';
 import FriendsActivity from '../../shared/FriendsActivity';
 import TimeToBeat from './views/TimeToBeat';
 import ScoreBlock from '../../shared/ScoreBlock';
 import Rating from '../../shared/Rating';
 import InputNumber from '../../shared/InputNumber';
-
-import "./game-page.scss";
 import GameStores from "../../shared/GameStores";
-import {useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
-import {getUser} from '@steroidsjs/core/reducers/auth';
-import {getRouteParam} from '@steroidsjs/core/reducers/router';
-import {openModal} from '@steroidsjs/core/actions/modal';
 import LoginForm from '../../modals/LoginForm';
-import {Loader} from '@steroidsjs/core/ui/layout';
+import "./game-page.scss";
 
-export function GamePage(props) {
+export function GamePage() {
 	const user = useSelector(getUser);
 	const dispatch = useDispatch();
+	const {http} = useComponents();
 	const gameId = useSelector(state => getRouteParam(state, 'gameId'));
 
-	let { id } = useParams();
 	const [review, setReview] = useState("");
 	const [spentTime, setSpentTime] = useState("");
 	const [userStatus, setUserStatus] = useState("Не играл");
@@ -40,17 +38,23 @@ export function GamePage(props) {
 		url: `/api/games/game/${gameId}/user_info/`,
 		method: 'get',
 	}), [gameId]);
-	const {data: userInfoResponse, isLoading: userInfoIsLoading} = useFetch(userInfoFetchConfig);
+	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
 
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
+
+	const setGameStatus = useCallback(async (payload) => {
+		http.send('PUT', `/api/games/game/${gameId}/`, payload).catch(e => {
+			fetchUserInfo();
+		});
+	}, [gameId]);
 
 	useEffect(
 		() => {
 			setClearUI();
 		},
 		// eslint-disable-next-line
-		[id]
+		[gameId]
 	);
 
 	useEffect(() => {
@@ -143,8 +147,7 @@ export function GamePage(props) {
 									readonly={!user || (userStatus === "Не играл")}
 									onChange={(score) => {
 										setUserRate(score);
-										// TODO
-										// setGameStatus({ score: score });
+										setGameStatus({ score });
 									}}
 									className='game-page__rating'
 								/>
@@ -157,8 +160,7 @@ export function GamePage(props) {
 											dispatch(openModal(LoginForm));
 										} else {
 											setUserStatus(status);
-											// TODO
-											// setGameStatus({ status: status });
+											setGameStatus({ status });
 											if (status === "Не играл") {
 												setReview("");
 												setUserRate(0);
@@ -212,10 +214,17 @@ export function GamePage(props) {
 									disabled={!user || (userStatus === "Не играл")}
 									onClick={() => {
 										if (!user) {
-											dispatch(openModal(LoginForm))
+											dispatch(openModal(LoginForm));
 										} else {
-											// TODO
-											// setGameReview({ review: review, spent_time: spentTime });
+											setGameStatus({
+												review: review,
+												spent_time: spentTime,
+											}).then(() => {
+												dispatch(showNotification('Отзыв сохранен!', 'success', {
+													position: 'top-right',
+													timeOut: 1000,
+												}));
+											});
 										}
 									}}>
 									Сохранить

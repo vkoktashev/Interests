@@ -22,6 +22,7 @@ function GameStores(props: IGameStoresProps) {
         const StoreIcon = GameStoresEnum.getIcon(store.store.slug) || renderStoreName;
         return (
             <a
+                key={store.url}
                 href={store.url}
                 className={bem('store-link')}
                 title={store.store.name}

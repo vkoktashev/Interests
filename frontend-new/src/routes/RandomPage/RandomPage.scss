@@ -1,0 +1,34 @@
+@import "style/colors";
+@import "style/mixins";
+
+.RandomPage {
+  @include default-page;
+
+
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+  min-height: 500px;
+
+  &__header {
+    margin-bottom: 1rem;
+    font-weight: 300;
+    font-size: 2rem;
+  }
+  &__form {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 20px;
+  }
+
+  &__image {
+    max-width: 500px;
+  }
+
+  &__checkbox {
+    .CheckboxFieldView__label-text {
+      color: $newText3 !important;
+    }
+  }
+}
