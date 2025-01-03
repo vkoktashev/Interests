@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import {useBem, useComponents} from '@steroidsjs/core/hooks';
+import {useBem, useComponents, useTheme} from '@steroidsjs/core/hooks';
 import useLayout, {STATUS_OK, STATUS_LOADING} from '@steroidsjs/core/hooks/useLayout';
 
 import {Notifications} from '@steroidsjs/core/ui/layout';
@@ -15,6 +15,9 @@ import {jwtDecode} from 'jwt-decode';
 
 export default function Layout(props: React.PropsWithChildren<any>) {
     const bem = useBem('Layout');
+    const {setTheme} = useTheme();
+
+    setTheme('dark');
 
     const components = useComponents();
     const {status} = useLayout(

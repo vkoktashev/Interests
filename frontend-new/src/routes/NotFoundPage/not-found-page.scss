@@ -1,0 +1,18 @@
+@import "style/colors";
+@import "style/mixins";
+
+.not-found-page {
+    @include default-page;
+
+    &__body {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        width: 80%;
+        margin-left: 10%;
+    }
+    &__image {
+        width: 500px;
+        max-width: 70%;
+    }
+}

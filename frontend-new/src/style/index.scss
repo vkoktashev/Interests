@@ -4,6 +4,7 @@
 @use '~@steroidsjs/bootstrap/scss/fonts';
 @use '~@steroidsjs/bootstrap/scss/animations';
 
+//@use 'clean';
 @use 'variables';
 @use 'project-animations';
 @use 'breakpoints';
@@ -11,7 +12,6 @@
 @use 'project-fonts';
 @use 'mixins';
 @use 'toast';
-@use 'clean';
 
 @use '~@steroidsjs/bootstrap/content/Accordion/AccordionView';
 @use '~@steroidsjs/bootstrap/content/Accordion/AccordionItemView';

@@ -1,0 +1,14 @@
+@import "style/colors";
+@import "style/mixins";
+
+.unwatched-page {
+    @include default-page;
+
+    &__show-block {
+        margin-bottom: 1rem;
+    }
+    &__header {
+        font-weight: 300;
+        font-size: 2rem;
+    }
+}

@@ -29,6 +29,7 @@ export const config = {
         ui.addFormatters(require('@steroidsjs/core/ui/format').default);
         ui.addIcons(require('@steroidsjs/bootstrap/icons/index').default(customIcons));
     },
+    theme: {},
 };
 
 export default function Application() {

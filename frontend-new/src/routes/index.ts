@@ -5,6 +5,10 @@ import MoviePage from './MoviePage';
 import SettingsPage from './SettingsPage';
 import RandomPage from './RandomPage/RandomPage';
 import CalendarPage from './CalendarPage';
+import UnwatchedPage from './UnwatchedPage';
+import ConfirmPage from './ConfirmPage';
+import ConfirmPasswordPage from './ConfirmPasswordPage';
+import NotFoundPage from './NotFoundPage';
 
 export const ROUTE_ROOT = 'root';
 
@@ -23,6 +27,11 @@ export const ROUTE_RANDOMIZER = 'randomizer';
 export const ROUTE_SETTINGS = 'settings';
 export const ROUTE_CALENDAR = 'calendar';
 
+export const ROUTE_EMAIL_CONFIRM = 'email_confirm';
+export const ROUTE_PASSWORD_CONFIRM = 'password_confirm';
+
+export const NOT_FOUND = 'not_found';
+
 const roles = [null];
 
 export default {
@@ -30,37 +39,72 @@ export default {
     exact: true,
     path: '/',
     component: HomePage,
+    title: __('Interests'),
     roles,
     items: {
       [ROUTE_GAME]: {
           exact: true,
           path: '/game/:gameId',
           component: GamePage,
+          title: __('Игра'),
           roles,
       },
         [ROUTE_MOVIE]: {
             exact: true,
             path: '/movie/:movieId',
             component: MoviePage,
+            title: __('Фильм'),
             roles,
         },
         [ROUTE_SETTINGS]: {
             exact: true,
             path: '/settings',
             component: SettingsPage,
+            title: __('Настройки'),
             roles,
         },
         [ROUTE_RANDOMIZER]: {
             exact: true,
             path: '/random',
             component: RandomPage,
+            title: __('Рандомайзер'),
             roles,
         },
         [ROUTE_CALENDAR]: {
             exact: true,
             path: '/calendar',
             component: CalendarPage,
+            title: __('Календарь'),
             roles,
+        },
+        [ROUTE_UNWATCHED]: {
+            exact: true,
+            path: '/unwatched',
+            component: UnwatchedPage,
+            title: __('Непросмотренное'),
+            roles,
+        },
+        [ROUTE_EMAIL_CONFIRM]: {
+            exact: true,
+            path: '/confirm/',
+            component: ConfirmPage,
+            title: __('Подтверждение почты'),
+            roles,
+        },
+        [ROUTE_PASSWORD_CONFIRM]: {
+            exact: true,
+            path: '/confirm_password/',
+            component: ConfirmPasswordPage,
+            title: __('Подтверждение пароля'),
+            roles,
+        },
+        [NOT_FOUND]: {
+            // exact: true,
+            path: '/404',
+            role: '404',
+            title: __('404'),
+            component: NotFoundPage,
+            // roles,
         },
     },
 } as IRouteItem;
