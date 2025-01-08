@@ -14,17 +14,19 @@
   },
   "dependencies": {
     "@sentry/browser": "^5.27.3",
-    "@steroidsjs/bootstrap": "^3.0.10",
-    "@steroidsjs/core": "^3.0.11",
+    "@steroidsjs/bootstrap": "^3.0.28",
+    "@steroidsjs/core": "^3.0.47",
     "@steroidsjs/webpack": "^4.0.5",
     "buffer": "^6.0.3",
     "connected-react-router": "^6.9.1",
     "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
+    "rc-pagination": "^5.0.0",
     "react": "^18.2.0",
     "react-calendar": "3.3.1",
     "react-content-loader": "^7.0.2",
+    "react-csv": "^2.2.2",
     "react-dom": "^18.2.0",
     "react-event-timeline": "^1.6.3",
     "react-icons": "^5.4.0",
@@ -33,7 +35,9 @@
     "react-pro-sidebar": "^0.6.0",
     "react-rating": "^2.0.5",
     "react-responsive-carousel": "^3.2.21",
-    "react-reveal": "^1.2.2"
+    "react-reveal": "^1.2.2",
+    "recharts": "1.8.5",
+    "use-query-params": "^2.2.1"
   },
   "devDependencies": {
     "@steroidsjs/eslint-config": "^2.1.6",

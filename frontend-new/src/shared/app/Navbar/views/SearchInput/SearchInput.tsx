@@ -63,7 +63,7 @@ export function SearchInput({ onSubmit, className }) {
 	return (
 		<form
 			onSubmit={(event) => {
-				onSubmit(event);
+				onSubmit(event, query);
 				setQuery("");
 			}}
 			className={classnames("search-input", className)}>

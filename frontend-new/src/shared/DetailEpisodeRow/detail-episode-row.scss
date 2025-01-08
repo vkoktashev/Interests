@@ -1,0 +1,23 @@
+.detail-episode-row {
+    padding: 3px 1rem;
+    font-size: 1rem;
+
+    &__check {
+        display: inline-block;
+        margin-right: 5px;
+    }
+    &__date {
+        display: inline-block;
+        width: 90px;
+        margin: 0;
+        text-align: center;
+    }
+    &__rate {
+        display: inline-block;
+        margin-right: 1rem;
+    }
+    &__name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}

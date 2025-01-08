@@ -12,6 +12,8 @@ import Footer from '../app/Footer';
 import Navbar from '../app/Navbar';
 import Sidebar from '../app/Sidebar';
 import {jwtDecode} from 'jwt-decode';
+import {QueryParamProvider} from 'use-query-params';
+import {ReactRouter5Adapter} from 'use-query-params/adapters/react-router-5';
 
 export default function Layout(props: React.PropsWithChildren<any>) {
     const bem = useBem('Layout');
@@ -47,7 +49,9 @@ export default function Layout(props: React.PropsWithChildren<any>) {
             <Sidebar />
             <div className={bem.element('content')}>
                 <Notifications />
-                {props.children}
+                <QueryParamProvider adapter={ReactRouter5Adapter}>
+                    {props.children}
+                </QueryParamProvider>
                 {
                     process.env.IS_SSR
                         ? null

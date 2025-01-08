@@ -13,6 +13,7 @@ import LoginForm from '../../../modals/LoginForm';
 import {ROUTE_ROOT, ROUTE_SEARCH, ROUTE_USER} from '../../../routes';
 import {toggleSidebar} from '../../../actions/modals';
 import './navbar.scss';
+import {goToRouteWithParams} from '../../../actions/router';
 
 export function Navbar(props: any) {
 	const dispatch = useDispatch();
@@ -56,7 +57,7 @@ export function Navbar(props: any) {
 					onSubmit={(event, value) => {
 						event.preventDefault();
 						toggleIfSmallScreen();
-						dispatch(goToRoute(ROUTE_SEARCH, {
+						dispatch(goToRouteWithParams(ROUTE_SEARCH, {
 							query: value,
 						}));
 					}}

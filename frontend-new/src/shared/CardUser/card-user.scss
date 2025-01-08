@@ -1,0 +1,40 @@
+@import "style/colors";
+
+.card-user {
+    max-width: 100%;
+    width: 250px;
+    height: 75px;
+
+    .ButtonView__text {
+        width: 250px;
+        height: 75px;
+    }
+
+    &__image {
+        height: inherit;
+        width: 30%;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-color: $newBackground3;
+        display: inline-block;
+        margin: 0;
+        border-top-left-radius: 10px;
+        border-bottom-left-radius: 10px;
+    }
+    &__text {
+        height: inherit;
+        width: 70%;
+        padding: 10px;
+        text-align: center;
+        vertical-align: top;
+        color: $newText3;
+        font-weight: 400;
+        font-size: 1.3rem;
+        background-color: $newBackground3;
+        display: inline-block;
+        margin: 0;
+        border-top-right-radius: 10px;
+        border-bottom-right-radius: 10px;
+    }
+}

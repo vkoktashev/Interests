@@ -1,0 +1,33 @@
+@import "style/colors";
+@import "style/mixins";
+
+.search-page {
+    @include default-page;
+    background-color: $newBackground1;
+
+    &__form {
+        padding: 1rem;
+        margin-bottom: 2rem;
+        background-color: $newBackground2;
+        border-radius: 1rem;
+    }
+    &__name-input {
+        color: $newText3;
+        display: inline-block;
+        margin-left: 0.5rem;
+        border: none;
+        border-bottom: 1px solid $newText3;
+        padding: 5px;
+        width: 50%;
+        background-color: $newBackground2;
+
+        &:focus {
+            outline: none;
+            border-bottom: 1px solid $newAccent2;
+        }
+    }
+    &__results {
+        height: 90vh;
+        overflow-y: auto;
+    }
+}

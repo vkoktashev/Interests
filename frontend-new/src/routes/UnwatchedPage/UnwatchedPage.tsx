@@ -15,7 +15,7 @@ function UnwatchedPage() {
 	}), [user]);
 	const {data: unwatched, isLoading} = useFetch(fetchConfig);
 
-	const setEpisodesStatus = useCallback((showId: string, episodesList: string[]) => {
+	const setEpisodesStatus = useCallback((showId: string, episodesList: any[]) => {
 		http.send(
 			'PUT',
 			`api/shows/show/${showId}/episodes/`,

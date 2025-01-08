@@ -2,7 +2,7 @@ import React from "react";
 import classnames from "classnames";
 import "./input-number.scss";
 
-export function InputNumber({ value, max, min, onChange, className, dataList }) {
+export function InputNumber({ value, max, min, onChange, className, dataList }: any) {
 	return (
 		<div className={classnames("input-number", className)}>
 			<button

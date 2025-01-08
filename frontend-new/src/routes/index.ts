@@ -9,6 +9,8 @@ import UnwatchedPage from './UnwatchedPage';
 import ConfirmPage from './ConfirmPage';
 import ConfirmPasswordPage from './ConfirmPasswordPage';
 import NotFoundPage from './NotFoundPage';
+import SearchPage from './SearchPage';
+import UserPage from './UserPage';
 
 export const ROUTE_ROOT = 'root';
 
@@ -105,6 +107,20 @@ export default {
             title: __('404'),
             component: NotFoundPage,
             // roles,
+        },
+        [ROUTE_SEARCH]: {
+            // exact: true,
+            path: '/search',
+            title: __('Поиск'),
+            component: SearchPage,
+            roles,
+        },
+        [ROUTE_USER]: {
+            exact: true,
+            path: '/user/:userId',
+            title: __('Пользователь'),
+            component: UserPage,
+            roles,
         },
     },
 } as IRouteItem;

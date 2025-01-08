@@ -1,0 +1,36 @@
+@import "style/colors";
+
+.season-block {
+    &__name {
+        font-weight: 400;
+        font-size: 1.3rem;
+        display: inline-block;
+        margin-right: 7px;
+    }
+    &__rate {
+        display: inline-block;
+    }
+    &__check-all {
+        margin-left: 0.5rem;
+    }
+    &__episodes {
+        display: inline-block;
+        margin-bottom: 0px;
+        margin-top: 0px;
+        width: 100%;
+        cursor: pointer;
+    }
+    &__episodes-ul {
+        list-style-type: none;
+        padding-left: 0.5rem;
+    }
+    &__episode {
+        &:nth-child(odd) {
+            background-color: $newBackground2;
+        }
+        &:nth-child(even) {
+            background-color: $newBackground3;
+            border-radius: 5px;
+        }
+    }
+}
