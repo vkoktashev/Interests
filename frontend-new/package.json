@@ -1,0 +1,51 @@
+{
+  "name": "interests",
+  "description": "Interests",
+  "version": "2.0.0",
+  "main": "src/index.ts",
+  "license": "MIT",
+  "scripts": {
+    "watch": "node webpack",
+    "build": "node webpack production",
+    "lint": "eslint -c ./.eslintrc --ext .js,.jsx,.ts,.tsx ./src"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@sentry/browser": "^5.27.3",
+    "@steroidsjs/bootstrap": "^3.0.28",
+    "@steroidsjs/core": "^3.0.47",
+    "@steroidsjs/webpack": "^4.0.5",
+    "buffer": "^6.0.3",
+    "connected-react-router": "^6.9.1",
+    "jwt-decode": "^4.0.0",
+    "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
+    "rc-pagination": "^5.0.0",
+    "react": "^18.2.0",
+    "react-calendar": "3.3.1",
+    "react-content-loader": "^7.0.2",
+    "react-csv": "^2.2.2",
+    "react-dom": "^18.2.0",
+    "react-event-timeline": "^1.6.3",
+    "react-icons": "^5.4.0",
+    "react-loading-overlay": "^1.0.1",
+    "react-player": "^2.9.0",
+    "react-pro-sidebar": "^0.6.0",
+    "react-rating": "^2.0.5",
+    "react-responsive-carousel": "^3.2.21",
+    "react-reveal": "^1.2.2",
+    "recharts": "1.8.5",
+    "use-query-params": "^2.2.1"
+  },
+  "devDependencies": {
+    "@steroidsjs/eslint-config": "^2.1.6",
+    "@types/lodash": "^4.14.191",
+    "@types/react": "^18.0.27",
+    "@types/react-dom": "^18.0.10",
+    "@types/webpack-env": "^1.15.1",
+    "eslint": "^8.34.0",
+    "typescript": "^4.9.5"
+  }
+}

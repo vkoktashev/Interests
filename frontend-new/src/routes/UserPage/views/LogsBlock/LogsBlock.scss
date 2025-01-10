@@ -1,0 +1,75 @@
+@import "style/colors";
+@import "style/project-fonts";
+
+.LogsBlock {
+    &__header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        color: $newText2;
+        gap: 1rem;
+    }
+    &__header-left {
+        display: inline-flex;
+        max-width: 100%;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    &__header-first-row {
+        display: flex;
+        margin-right: 1rem;
+    }
+
+    &__mobile-expand {
+        border: none;
+        border-radius: 8px;
+        color: $newText3;
+        background-color: $newBackground3;
+        margin-left: 1rem;
+        padding: 4px 8px;
+        font-size: 20px;
+        height: 38px;
+        width: 40px;
+
+        @media (min-width: 746px) {
+            display: none;
+        }
+    }
+    &__page-size {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-end;
+    }
+    &__page-size-label {
+        margin-right: 5px;
+    }
+}
+@import "../../../../../node_modules/rc-pagination/assets/index.css";
+
+.rc-pagination-item,
+.rc-pagination-prev,
+.rc-pagination-next {
+    background: $newBackground2 !important;
+    border-radius: 8px !important;
+    border: none !important;
+
+    button {
+        background: $newBackground2 !important;
+        color: $newText3 !important;
+        border-radius: 8px !important;
+        border: none !important;
+    }
+    a {
+        color: $newText3 !important;
+    }
+}
+.rc-pagination-item-active {
+    background: $newAccent2 !important;
+    color: $newText3 !important;
+
+    a {
+        color: $newText3 !important;
+    }
+}

@@ -1,0 +1,56 @@
+@import src/styles/fonts
+@import src/styles/colors
+@import src/styles/mixins
+
+.season-page
+    @include content-page
+
+    &__poster
+        width: 25rem
+
+    &__info
+        width: 55rem
+    
+    &__review
+        margin-top: 1rem
+
+    &__review-input
+        background-color: $newBackground2
+        max-width: 100%
+        width: 30rem
+        border: 1px solid $newText2
+
+    &__episodes-header
+        font-weight: 400
+        font-size: 1.5rem
+        margin-top: 1rem
+
+    &__episodes-body
+        margin-bottom: 1rem
+        cursor: pointer
+    
+    &__episodes-ul
+        padding-left: 0.5rem
+
+    &__episode
+        &:nth-child(odd)
+            background-color: $newBackground2
+        &:nth-child(even)
+            background-color: $newBackground3
+            border-radius: 5px
+
+    &__save-episodes-block
+        position: fixed
+        bottom: 0
+        left: 0
+        width: 100%
+        height: 60px
+        z-index: 1000
+        text-align: center
+        padding-top: 5px
+        background-color: $newBackground3
+
+    &__save-episodes-button
+        @include default-button
+        width: 150px
+        height: 50px
