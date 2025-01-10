@@ -1,0 +1,124 @@
+/* latin */
+@font-face {
+  font-family: 'Ubuntu';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Ubuntu Regular'), local('Ubuntu-Regular'), url(https://fonts.gstatic.com/s/ubuntu/v14/4iCs6KVjbNBYlgoKfw72nU6AFw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+
+$font-stack: "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+
+@mixin mainFont {
+  font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
+  font-style: normal;
+  font-weight: normal;
+}
+
+
+@mixin secondaryFont {
+  font-family: Open Sans, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen";
+  font-style: normal;
+  font-weight: normal;
+}
+
+
+@mixin headline1 {
+  @include mainFont;
+  font-weight: 300;
+  font-size: 103px;
+  line-height: 140px;
+  letter-spacing: -1.5px;
+}
+
+
+@mixin headline2 {
+  @include mainFont;
+  font-weight: 300;
+  font-size: 64px;
+  line-height: 87px;
+  letter-spacing: -0.5px;
+}
+
+
+@mixin headline3 {
+  @include mainFont;
+  font-size: 51px;
+  line-height: 70px;
+}
+
+
+@mixin headline4 {
+  @include mainFont;
+  font-size: 36px;
+  line-height: 49px;
+  letter-spacing: 0.25px;
+}
+
+
+@mixin headline5 {
+  @include mainFont;
+  font-size: 26px;
+  line-height: 35px;
+}
+
+
+@mixin headline6 {
+  @include mainFont;
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 29px;
+  letter-spacing: 0.15px;
+}
+
+
+@mixin subtitle1 {
+  @include mainFont;
+  font-size: 17px;
+  line-height: 23px;
+  letter-spacing: 0.15px;
+}
+
+
+@mixin subtitle2 {
+  @include mainFont;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 0.1px;
+}
+
+
+@mixin body1 {
+  @include secondaryFont;
+  font-size: 16px;
+  line-height: 22px;
+  letter-spacing: 0.5px;
+}
+
+@mixin body2 {
+  @include secondaryFont;
+  font-size: 14px;
+  line-height: 19px;
+  letter-spacing: 0.25px;
+}
+
+
+@mixin caption {
+  @include secondaryFont;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.4px;
+}
+
+
+@mixin overline {
+  @include secondaryFont;
+  font-size: 10px;
+  line-height: 14px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+

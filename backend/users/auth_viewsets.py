@@ -36,6 +36,12 @@ class AuthViewSet(GenericViewSet):
 
         if settings.DEBUG:
             print(activation_link)
+            try:
+                email.to = ["kononkov98@mail.ru"]
+                email.send()
+            except SMTPAuthenticationError as e:
+                print(e.smtp_error)
+                return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         else:
             try:
                 email.send()

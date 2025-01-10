@@ -1,0 +1,11 @@
+@import "style/colors";
+
+.sidebar {
+    top: 0;
+    left: 0;
+    height: 100% !important;
+}
+$sidebar-width: 250px;
+$icon-size: 40px;
+$sidebar-bg-color: $newBackground2;
+

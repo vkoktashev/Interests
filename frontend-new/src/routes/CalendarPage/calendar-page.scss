@@ -1,0 +1,54 @@
+@import "style/colors";
+@import "style/mixins";
+
+.CalendarPage {
+    @include default-page;
+
+    &__header {
+        margin-bottom: 1rem;
+        font-weight: 300;
+        font-size: 2rem;
+    }
+
+    &__day {
+        padding: 0;
+        text-align: center;
+    }
+
+    &__dayBody {
+        height: auto;
+        margin-top: 10px;
+
+        > * {
+            display: inline-block;
+            color: $newText3;
+            padding: 0.25rem;
+            height: auto;
+            text-align: center;
+        }
+    }
+
+    &__game {
+        background-color: $calendarGamesColor;
+
+        &_hidden {
+            display: none;
+        }
+    }
+
+    &__movie {
+        background-color: $calendarMoviesColor;
+
+        &_hidden {
+            display: none;
+        }
+    }
+
+    &__episode {
+        background-color: $calendarEpisodesColor;
+
+        &_hidden {
+            display: none;
+        }
+    }
+}

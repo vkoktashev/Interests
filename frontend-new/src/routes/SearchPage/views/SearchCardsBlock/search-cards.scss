@@ -1,0 +1,37 @@
+@import "style/colors";
+
+.search-cards {
+    &__cards {
+        text-align: center;
+        width: 92%;
+        display: inline-block;
+        margin-left: 4%;
+    }
+    &__body {
+        position: relative;
+    }
+    &__card {
+        margin-right: 5px;
+        margin-left: 5px;
+        margin-bottom: 10px;
+    }
+    &__pagination {
+        position: absolute;
+        top: 0;
+        width: 4%;
+        height: 100%;
+        display: inline-block;
+        vertical-align: top;
+        border: none;
+        border-radius: 0.5rem;
+        background-color: $newBackground3;
+        color: $newText2;
+
+        &:hover {
+            background-color: $newBackground3;
+        }
+        &:disabled {
+            background-color: $newBackground1;
+        }
+    }
+}
