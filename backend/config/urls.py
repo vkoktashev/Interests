@@ -11,7 +11,6 @@ schema_view = get_schema_view(
         title="Interests API",
         default_version='v2',
     ),
-    url="https://your-interests.ru/api/",
     public=True,
     permission_classes=(permissions.AllowAny,),
     authentication_classes=[],
