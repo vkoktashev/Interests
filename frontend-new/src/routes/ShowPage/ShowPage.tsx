@@ -203,7 +203,7 @@ function ShowPage(props) {
                                 Список серий
                             </h3>
 							<SeasonsBlock
-                                showID={show?.id}
+								showId={show?.id}
                                 seasons={show?.seasons}
                                 userWatchedShow={userStatus !== "Не смотрел"}
                             />
