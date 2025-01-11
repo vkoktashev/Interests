@@ -19,6 +19,7 @@ function SeasonBlock({
 	userWatchedShow,
 	className,
 	onSeasonLoad,
+	 onSeasonUserInfoLoad,
 }) {
 	const bem = useBem('season-block');
 	const dispatch = useDispatch();
@@ -76,6 +77,12 @@ function SeasonBlock({
 		}
 	}, [showSeason]);
 
+	useEffect(() => {
+		if (showUserInfo) {
+			onSeasonUserInfoLoad(seasonNumber, showUserInfo);
+		}
+	}, [showUserInfo]);
+
 	return (
 		<LoadingOverlay active={showSeasonIsLoading} spinner text='Загрузка...'>
 			<div key={showSeason?.id} className={bem(bem.block(), className)}>
@@ -123,7 +130,7 @@ function SeasonBlock({
 										episode={episode}
 										showID={showID}
 										loggedIn={!!user}
-										userInfo={getEpisodeByID(showUserInfo?.episodes, episode?.id)}
+										userInfo={getEpisodeByID(showUserInfo?.episodes_user_info, episode?.id)}
 										setEpisodeUserStatus={setEpisodesStatus}
 										checkAll={isChecked}
 										userWatchedShow={userWatchedShow}

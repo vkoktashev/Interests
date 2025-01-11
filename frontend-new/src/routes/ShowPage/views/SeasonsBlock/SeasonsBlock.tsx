@@ -4,12 +4,14 @@ import LoadingOverlay from 'react-loading-overlay';
 import SeasonBlock from "../SeasonBlock";
 
 import "./seasons-block.scss";
-import {useDispatch, useSelector} from '@steroidsjs/core/hooks';
+import {useComponents, useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import { setSaveEpisodes } from "actions/modals";
 import {getSaveEpisodes} from '../../../../reducers/modals';
+import {showNotification} from '@steroidsjs/core/actions/notifications';
 
-function SeasonsBlock({ showID, seasons, userWatchedShow }) {
+function SeasonsBlock({ showId, seasons, userWatchedShow }) {
+	const {http} = useComponents();
 	const user = useSelector(getUser);
     const saveEpisodesBlockIsOpen = useSelector(getSaveEpisodes);
     const dispatch = useDispatch();
@@ -24,37 +26,54 @@ function SeasonsBlock({ showID, seasons, userWatchedShow }) {
 		}
 	} ,[]);
 
-	const sendEpisodes = useCallback(() => {
+	const setEpisodesStatus = useCallback(async (episodesList: any) => {
+		await http.send(
+			'PUT',
+			`api/shows/show/${showId}/episodes/`,
+			episodesList,
+		);
+	}, [showId]);
+
+	const sendEpisodes = useCallback(async () => {
 		let episodes = [];
 		let seasons = [];
-		for (let season in showSeasons) {
-			for (let episode in showSeasons[season].episodes) {
-				let currentValue = getEpisodeByID(showSeasonsUserInfo[season].episodes, showSeasons[season].episodes[episode].id);
-				let cbValue = (document.getElementById(`cbEpisode${showSeasons[season].episodes[episode].id}`) as any).checked;
+		for (const season of showSeasons) {
+			for (const episode of season.episodes) {
+				let currentValue = getEpisodeByID(showSeasonsUserInfo[season.season_number].episodes_user_info, episode.id);
+				let cbValue = (document.getElementById(`cbEpisode${episode.id}`) as any).checked;
 				let currentStatus = currentValue?.score > -1;
 				if (cbValue !== currentStatus) {
-					episodes.push({ tmdb_id: showSeasons[season].episodes[episode].id, score: cbValue ? 0 : -1 });
-					if (seasons.indexOf(season) === -1) seasons.push(season);
+					episodes.push({
+						tmdb_id: episode.id,
+						score: cbValue ? 0 : -1,
+					});
+					if (seasons.indexOf(season) === -1) {
+						seasons.push(season);
+					}
 				}
 			}
 		}
-		// setEpisodesStatus({ episodes }, showID, seasons);
+		await setEpisodesStatus({ episodes });
 		dispatch(setSaveEpisodes(false));
-	}, []);
+	}, [showSeasons, showSeasonsUserInfo]);
 
-	function sendAllEpisodes() {
+	const sendAllEpisodes = useCallback(async () => {
 		let episodes = [];
-		let seasons = [];
 		for (let season in showSeasons) {
-			if (showSeasons[season].name !== "Спецматериалы")
-				for (let episode in showSeasons[season].episodes) {
-					episodes.push({ tmdb_id: showSeasons[season].episodes[episode].id, score: 0 });
-					if (seasons.indexOf(season) === -1) seasons.push(season);
-				}
+			if (showSeasons[season].name === "Спецматериалы") {
+				continue;
+			}
+			for (let episode in showSeasons[season].episodes) {
+				episodes.push({
+					tmdb_id: showSeasons[season].episodes[episode].id,
+					score: 0,
+				});
+			}
 		}
-		// setEpisodesStatus({ episodes }, showID, seasons);
+		await setEpisodesStatus({ episodes });
+		dispatch(showNotification('Сериал отмечмен просмотренным'));
 		dispatch(setSaveEpisodes(false));
-	}
+	}, [showSeasons]);
 
 	useEffect(() => {
 		return () => {
@@ -71,40 +90,39 @@ function SeasonsBlock({ showID, seasons, userWatchedShow }) {
 		}
 	}, []);
 
+	const addSeasonUserInfo = useCallback((seasonId: string, userInfo: any) => {
+		setShowSeasonsUserInfo(prevState => ({
+			...prevState,
+			[seasonId]: userInfo,
+		}));
+	}, []);
+
 	return (
-		<div className='seasons-block'>
-			<LoadingOverlay
-				spinner
-				text='Обновление...'
-			>
+	<div className='seasons-block'>
+			<button
+				className='seasons-block__all-button'
+				hidden={!user || !userWatchedShow}
+				onClick={sendAllEpisodes}>
+				Посмотрел весь сериал
+			</button>
+			{seasons
+				?.map((season) => <SeasonBlock
+					className='seasons-block__season-block'
+					showID={showId}
+					seasonNumber={season.season_number}
+					key={season.season_number}
+					userWatchedShow={userWatchedShow}
+					onSeasonLoad={addSeason}
+					onSeasonUserInfoLoad={addSeasonUserInfo}
+				/>)
+				.reverse()}
+			<div className='seasons-block__save-episodes-block' hidden={!saveEpisodesBlockIsOpen}>
 				<button
-					className='seasons-block__all-button'
-					hidden={!user || !userWatchedShow}
-					onClick={() => {
-						sendAllEpisodes();
-					}}>
-					Посмотрел весь сериал
+					className='seasons-block__save-episodes-button'
+					onClick={sendEpisodes}>
+					Сохранить
 				</button>
-				{seasons
-					?.map((season) => <SeasonBlock
-                        className='seasons-block__season-block'
-                        showID={showID}
-                        seasonNumber={season.season_number}
-                        key={season.season_number}
-                        userWatchedShow={userWatchedShow}
-						onSeasonLoad={addSeason}
-                    />)
-					.reverse()}
-				<div className='seasons-block__save-episodes-block' hidden={!saveEpisodesBlockIsOpen}>
-					<button
-						className='seasons-block__save-episodes-button'
-						onClick={() => {
-							sendEpisodes();
-						}}>
-						Сохранить
-					</button>
-				</div>
-			</LoadingOverlay>
+			</div>
 		</div>
 	);
 }

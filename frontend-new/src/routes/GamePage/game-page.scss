@@ -2,5 +2,11 @@
 @import "style/mixins";
 
 .game-page {
-   @include content-page
+   @include content-page;
+
+   &__button {
+      max-width: 150px;
+      margin-bottom: 20px;
+      margin-top: 20px;
+   }
 }
