@@ -1,6 +1,10 @@
 import os
 from datetime import timedelta
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 SECRET_KEY = os.environ['SECRET_KEY']
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -48,14 +52,9 @@ REST_FRAMEWORK = {
 }
 
 SWAGGER_SETTINGS = {
-    'SECURITY_DEFINITIONS': {
-        'Bearer': {
-            'type': 'apiKey',
-            'name': 'Authorization',
-            'in': 'header',
-        }
-    },
-    'DEFAULT_MODEL_RENDERING': 'example'
+    'DEFAULT_INFO': 'config.urls.api_info',
+    'USE_SESSION_AUTH': False,
+    'SECURITY_DEFINITIONS': None,
 }
 
 SITE_ID = 1
@@ -194,3 +193,5 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
