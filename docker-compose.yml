@@ -19,7 +19,6 @@ services:
       - .env
     volumes:
       - /etc/letsencrypt/live/your-interests.ru/:/etc/letsencrypt/live/your-interests.ru/
-      - /code/staticfiles/:/app/static/
     ports:
       - "8001:8001"
     depends_on:
