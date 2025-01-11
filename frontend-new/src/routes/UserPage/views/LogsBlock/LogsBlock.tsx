@@ -57,7 +57,7 @@ function LogsBlock(props: ILogsBlockProps) {
 									<InputField
 										attribute='query'
 										placeholder='Поиск'
-										label={__('Запрос')}
+										label={__('Поиск')}
 										aria-label='Поиск'
 										className='LogsBlock__search-input'
 									/>
@@ -83,6 +83,7 @@ function LogsBlock(props: ILogsBlockProps) {
 								multiple
 								showReset
 								hidden={collapse && width < 748}
+								className={bem.element('dropdown')}
 							/>
 						</div>
 						<div className='LogsBlock__page-size' hidden={collapse && width < 748}>

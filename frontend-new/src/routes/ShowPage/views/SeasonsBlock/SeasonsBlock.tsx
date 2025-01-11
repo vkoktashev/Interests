@@ -1,26 +1,36 @@
-// import React, {useEffect} from "react";
+// import React, {useCallback, useEffect, useState} from 'react';
 // import LoadingOverlay from "react-loading-overlay";
 //
 // import SeasonBlock from "../SeasonBlock";
 //
 // import "./seasons-block.scss";
-// import {useSelector} from '@steroidsjs/core/hooks';
+// import {useDispatch, useSelector} from '@steroidsjs/core/hooks';
 // import {getUser} from '@steroidsjs/core/reducers/auth';
+// import { setSaveEpisodes } from "actions/modals";
+// import {getSaveEpisodes} from '../../../../reducers/modals';
 //
-// function SeasonsBlock(({ showID, seasons, userWatchedShow }) {
+// function SeasonsBlock({ showID, seasons, userWatchedShow }) {
 // 	const user = useSelector(getUser);
+//     const saveEpisodesBlockIsOpen = useSelector(getSaveEpisodes);
+//     const dispatch = useDispatch();
+// 	const [showSeasons, setShowSeasons] = useState([]);
+// 	const [showSeasonsUserInfo, setShowSeasonsUserInfo] = useState<any>({});
 //
-// 	function getEpisodeByID(episodes, id) {
-// 		for (let episode in episodes) if (episodes[episode].tmdb_id === id) return episodes[episode];
-// 	}
+// 	const getEpisodeByID = useCallback((episodes, id) => {
+// 		for (let episode in episodes) {
+// 			if (episodes[episode].tmdb_id === id) {
+// 				return episodes[episode];
+// 			}
+// 		}
+// 	} ,[]);
 //
-// 	function sendEpisodes() {
+// 	const sendEpisodes = useCallback(() => {
 // 		let episodes = [];
 // 		let seasons = [];
 // 		for (let season in showSeasons) {
 // 			for (let episode in showSeasons[season].episodes) {
 // 				let currentValue = getEpisodeByID(showSeasonsUserInfo[season].episodes, showSeasons[season].episodes[episode].id);
-// 				let cbValue = document.getElementById(`cbEpisode${showSeasons[season].episodes[episode].id}`).checked;
+// 				let cbValue = (document.getElementById(`cbEpisode${showSeasons[season].episodes[episode].id}`) as any).checked;
 // 				let currentStatus = currentValue?.score > -1;
 // 				if (cbValue !== currentStatus) {
 // 					episodes.push({ tmdb_id: showSeasons[season].episodes[episode].id, score: cbValue ? 0 : -1 });
@@ -29,8 +39,8 @@
 // 			}
 // 		}
 // 		setEpisodesStatus({ episodes }, showID, seasons);
-// 		setSaveEpisodes(false);
-// 	}
+// 		dispatch(setSaveEpisodes(false));
+// 	}, []);
 //
 // 	function sendAllEpisodes() {
 // 		let episodes = [];
@@ -43,29 +53,47 @@
 // 				}
 // 		}
 // 		setEpisodesStatus({ episodes }, showID, seasons);
-// 		setSaveEpisodes(false);
+// 		dispatch(setSaveEpisodes(false));
 // 	}
 //
 // 	useEffect(() => {
 // 		return () => {
-// 			setSaveEpisodes(false);
+// 			dispatch(setSaveEpisodes(false));
+// 		}
+// 	}, []);
+//
+// 	const addSeason = useCallback((season) => {
+// 		if (!showSeasons.some(showSeason => showSeason.tmdb_id === season.id)) {
+// 			setShowSeasons(prevState => [
+// 				...prevState,
+// 				season,
+// 			]);
 // 		}
 // 	}, []);
 //
 // 	return (
 // 		<div className='seasons-block'>
-// 			<LoadingOverlay active={setStatusState === "pending"} spinner text='Обновление...'>
+// 			<LoadingOverlay
+// 				spinner
+// 				text='Обновление...'
+// 			>
 // 				<button
 // 					className='seasons-block__all-button'
 // 					hidden={!user || !userWatchedShow}
-// 					disabled={anySeasonLoading}
 // 					onClick={() => {
 // 						sendAllEpisodes();
 // 					}}>
 // 					Посмотрел весь сериал
 // 				</button>
 // 				{seasons
-// 					?.map((season) => <SeasonBlock className='seasons-block__season-block' showID={showID} seasonNumber={season.season_number} key={season.season_number} userWatchedShow={userWatchedShow} />)
+// 					?.map((season) => <SeasonBlock
+//                         className='seasons-block__season-block'
+//                         showID={showID}
+//                         seasonNumber={season.season_number}
+//                         key={season.season_number}
+//                         userWatchedShow={userWatchedShow}
+// 						onSeasonLoad={addSeason}
+//                     />)
 // 					.reverse()}
 // 				<div className='seasons-block__save-episodes-block' hidden={!saveEpisodesBlockIsOpen}>
 // 					<button
@@ -79,6 +107,6 @@
 // 			</LoadingOverlay>
 // 		</div>
 // 	);
-// });
+// }
 //
 // export default SeasonsBlock;

@@ -29,7 +29,12 @@ function ShowCards({ shows, hidden }) {
 		[shows]
 	);
 
-	return <SearchCardsBlock name='Сериалы' hidden={hidden} objects={objects} />;
+	return (
+		<SearchCardsBlock
+			hidden={hidden}
+			objects={objects}
+		/>
+	);
 }
 
 export default ShowCards;
