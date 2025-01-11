@@ -7,14 +7,14 @@ import UserCards from './views/UserCards';
 import CategoriesTab from '../../shared/CategoriesTab';
 
 import './search-page.scss';
-import useScroll from '../../hooks/useScroll';
 import {useComponents, useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import {getRouteParams} from '@steroidsjs/core/reducers/router';
 import {Form, InputField} from '@steroidsjs/core/ui/form';
 import {formChange, formSubmit} from '@steroidsjs/core/actions/form';
 import {getFormValues} from '@steroidsjs/core/reducers/form';
+import Pagination from '@steroidsjs/core/ui/list/Pagination/Pagination';
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 10;
 const SEARCH_PAGE_FORM = 'search_page_form';
 
 function SearchPage() {
@@ -24,23 +24,12 @@ function SearchPage() {
 
 	let { query }: any = useSelector(state => getRouteParams(state));
 	const [isLoading, setLoading] = useState(false);
-	const [lastQuery, setLastQuery] = useState('');
+	const [lastQuery, setLastQuery] = useState(query);
 
 	const [games, setGames] = useState([]);
 	const [movies, setMovies] = useState([]);
 	const [shows, setShows] = useState([]);
 	const [users, setUsers] = useState([]);
-
-	const parentRef = useRef() as React.MutableRefObject<HTMLInputElement>;
-	const childRef = useRef() as React.MutableRefObject<HTMLInputElement>;
-
-	// TODO
-	const fetchItems = useCallback(() => {
-		// dispatch(formChange(SEARCH_PAGE_FORM, 'page', formValues.page + 1));
-		// dispatch(formSubmit(SEARCH_PAGE_FORM));
-	}, [formValues.page]);
-
-	// useScroll(parentRef, childRef, fetchItems);
 
 	const searchGames = useCallback(async (query: string, page: number) => {
 		const response = await http.get('api/games/search/rawg/', {
@@ -48,11 +37,7 @@ function SearchPage() {
 				page,
 				page_size: PAGE_SIZE,
 			});
-		if (page === 1) {
-			setGames(response);
-		} else {
-			setGames(prevState => [...prevState, ...response]);
-		}
+		setGames(response);
 	}, []);
 
 	const searchMovies = useCallback(async (query: string, page: number) => {
@@ -61,11 +46,7 @@ function SearchPage() {
 			page,
 			page_size: PAGE_SIZE,
 		});
-		if (page === 1) {
-			setMovies(response.results);
-		} else {
-			setMovies(prevState => [...prevState, ...response.results]);
-		}
+		setMovies(response.results);
 	}, []);
 
 	const searchShows = useCallback(async (query: string, page: number) => {
@@ -74,11 +55,7 @@ function SearchPage() {
 			page,
 			page_size: PAGE_SIZE,
 		});
-		if (page === 1) {
-			setShows(response.results);
-		} else {
-			setShows(prevState => [...prevState, ...response.results]);
-		}
+		setShows(response.results);
 	}, [setShows]);
 
 	const searchUsers = useCallback(async (query: string, page: number) => {
@@ -87,19 +64,16 @@ function SearchPage() {
 			page,
 			page_size: PAGE_SIZE,
 		});
-		if (page === 1) {
-			setUsers(response);
-		} else {
-			setUsers(prevState => [...prevState, ...response]);
-		}
+		setUsers(response);
 	}, []);
 
 	const onSubmit = useCallback(async (values) => {
 		setLoading(true);
-		// if (lastQuery !== values.query) {
-		// 	dispatch(formChange(SEARCH_PAGE_FORM, 'page', 1));
-		// 	values.page = 1;
-		// }
+		if (lastQuery !== values.query && values.page !== 1) {
+			dispatch(formChange(SEARCH_PAGE_FORM, 'page', 1));
+			values.page = 1;
+		}
+		setLastQuery(values.query);
 		if (values.activeCategory === 'Игры') {
 			await searchGames(values.query, values.page);
 		}
@@ -113,7 +87,7 @@ function SearchPage() {
 			await searchUsers(values.query, values.page);
 		}
 		setLoading(false);
-	}, [searchGames, searchMovies, searchShows, searchUsers]);
+	}, [searchGames, searchMovies, searchShows, searchUsers, lastQuery]);
 
 	useEffect(() => {
 		dispatch(formChange(SEARCH_PAGE_FORM, 'query', query));
@@ -146,10 +120,13 @@ function SearchPage() {
 					categories={['Игры', 'Фильмы', 'Сериалы', 'Пользователи']}
 					activeCategory={formValues.activeCategory}
 					onChangeCategory={(category: string) => {
-						dispatch(formChange(SEARCH_PAGE_FORM, 'activeCategory', category));
+						dispatch(formChange(SEARCH_PAGE_FORM, {
+							activeCategory: category,
+							page: 1,
+						}));
 						dispatch(formSubmit(SEARCH_PAGE_FORM));
 					}}>
-					<div className='search-page__results' ref={parentRef}>
+					<div className='search-page__results'>
 						{
 							formValues.activeCategory === 'Игры' && (
 								<LoadingOverlay
@@ -210,7 +187,18 @@ function SearchPage() {
 							)
 						}
 
-						<div ref={childRef} style={{ height: 20 }} />
+						<Pagination
+							aroundCount={5}
+							list={{
+								total: 100,
+								page: formValues?.page,
+								pageSize: PAGE_SIZE,
+							}}
+							onChange={page => {
+								dispatch(formChange(SEARCH_PAGE_FORM, 'page', page));
+								dispatch(formSubmit(SEARCH_PAGE_FORM));
+							}}
+						/>
 					</div>
 				</CategoriesTab>
 			</div>

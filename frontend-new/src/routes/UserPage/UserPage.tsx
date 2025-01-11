@@ -44,12 +44,6 @@ function UserPage() {
 		});
 	}, [fetch, userId]);
 
-	const userLogsFetchConfig = useMemo(() => userId && ({
-		url: `/api/users/user/${userId}/log/`,
-		method: 'get',
-	}), [userId]);
-	const {data: userLogs, isLoading: userLogsIsLoading, fetch: fetchUserLogs} = useFetch(userLogsFetchConfig);
-
 	useEffect(() => {
 		document.title = user?.username
 			? "Профиль " + user.username
@@ -111,13 +105,7 @@ function UserPage() {
 					>
 						<div hidden={activeCategory !== "Лента"}>
 							<div hidden={!user.is_available}>
-								<LoadingOverlay
-									active={userLogsIsLoading && !isLoading}
-									spinner
-									text='Загрузка активности...'
-								>
-									<UserLogs userId={userId} />
-								</LoadingOverlay>
+								<UserLogs userId={userId} />
 							</div>
 							<h4 hidden={user.is_available || isLoading}>
 								<FaLock style={{ marginRight: "1rem" }} />

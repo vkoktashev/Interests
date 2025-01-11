@@ -45,6 +45,10 @@
     &__page-size-label {
         margin-right: 5px;
     }
+
+    &__dropdown {
+        width: 170px;
+    }
 }
 @import "../../../../../node_modules/rc-pagination/assets/index.css";
 

@@ -4,7 +4,8 @@
 
 @mixin default-page {
     //width: 80rem;
-    max-width: 100%;
+    width: 100%;
+    max-width: 80rem;
     padding: 1rem;
     color: $newText3;
     background-color: $newBackground2;
@@ -59,14 +60,15 @@
     }
 
     &__body {
-        width: 80rem;
-        max-width: 100%;
         margin-left: auto;
         margin-right: auto;
     }
 
     &__header {
         position: relative;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
         width: 100%;
         background-color: $newBackground1;
         color: $newText3;
@@ -81,8 +83,8 @@
     }
 
     &__poster {
-        display: inline-block;
-        width: 35rem;
+        width: 700px;
+        flex-shrink: 1;
         max-width: 100%;
         padding: 0;
         overflow: hidden;
@@ -98,15 +100,14 @@
     &__trailers {
         overflow: hidden;
         background-color: black;
-    }
 
-
-    @media (max-width: 640px) {
-        display: none;
+        @media (max-width: 640px) {
+            display: none;
+        }
     }
 
     &__trailer {
-        width: 640px;
+        //width: 640px;
         background-color: black;
     }
 
@@ -119,12 +120,11 @@
         padding-left: 1rem;
         padding-bottom: 1rem;
         padding-right: 1rem;
-        width: 45rem;
-    }
+        //width: 45rem;
 
-
-    @media (max-width: $mobile-width) {
-        font-size: 12px
+        @media (max-width: $mobile-width) {
+            font-size: 12px
+        }
     }
 
     &__info-header {
@@ -138,11 +138,11 @@
     }
 
     &__info-body {
-        margin-bottom: 10px
-    }
+        margin-bottom: 10px;
 
-    p {
-        margin-bottom: 2px
+        p {
+            margin-bottom: 2px;
+        }
     }
 
     &__rating {
@@ -199,8 +199,7 @@
     &__review-input {
         @include default-input;
         margin-bottom: 1rem;
-        width: 500px;
-        max-width: 100%;
+        max-width: 500px;
     }
 
     &__review-time {
@@ -221,23 +220,10 @@
         margin-right: 1rem;
     }
 
-    &__review-save-message {
-        background-color: $newAccent2;
-        width: 500px;
-        max-width: 100%;
-        padding: 3px 5px;
-        border-radius: 8px;
-        display: none;
-    }
-
-    &_active {
-        display: inline;
-    }
-
     &__friends {
         position: relative;
         max-width: 100%;
-        width: 78rem;
+        //width: 78rem;
     }
 }
 

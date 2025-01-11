@@ -1,3 +1,3 @@
-// import SeasonBlock from "./SeasonBlock";
-//
-// export default SeasonBlock;
+import SeasonBlock from "./SeasonBlock";
+
+export default SeasonBlock;

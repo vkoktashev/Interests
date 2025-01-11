@@ -17,14 +17,17 @@ import {ReactRouter5Adapter} from 'use-query-params/adapters/react-router-5';
 
 export default function Layout(props: React.PropsWithChildren<any>) {
     const bem = useBem('Layout');
+    const {http} = useComponents();
     const {setTheme} = useTheme();
 
     setTheme('dark');
 
     const components = useComponents();
+
     const {status} = useLayout(
          async () => {
         const accessToken = localStorage.getItem('accessToken');
+
         if (accessToken) {
             const userData: any = jwtDecode(accessToken);
             const user = {
@@ -46,18 +49,18 @@ export default function Layout(props: React.PropsWithChildren<any>) {
         <div className={bem.block()}>
             <ModalPortal />
             <Navbar className={bem.element('header')} />
-            <Sidebar />
-            <div className={bem.element('content')}>
-                <Notifications />
-                <QueryParamProvider adapter={ReactRouter5Adapter}>
-                    {props.children}
-                </QueryParamProvider>
-                {
-                    process.env.IS_SSR
-                        ? null
-                        : <Portal />
-                }
-            </div>
+            <Sidebar className={bem.element('sidebar')} />
+            <QueryParamProvider adapter={ReactRouter5Adapter}>
+                <div className={bem.element('content')}>
+                    <Notifications />
+                        {props.children}
+                    {
+                        process.env.IS_SSR
+                            ? null
+                            : <Portal />
+                    }
+                </div>
+            </QueryParamProvider>
             <Footer className={bem.element('footer')} />
         </div>
     );

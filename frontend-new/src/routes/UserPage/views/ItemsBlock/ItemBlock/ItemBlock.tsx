@@ -3,7 +3,7 @@ import { CSVLink } from "react-csv";
 import { FaAngleDown, FaAngleUp, FaStar, FaClock, FaArrowsAltV } from "react-icons/fa";
 import { LuLetterText } from "react-icons/lu";
 import Pagination from "rc-pagination";
-import {useDispatch} from '@steroidsjs/core/hooks';
+import {useBem, useDispatch} from '@steroidsjs/core/hooks';
 
 import ItemRow from "../ItemRow/ItemRow";
 import useWindowDimensions from '../../../../../hooks/useWindowDimensions';
@@ -14,6 +14,7 @@ import {formChange} from '@steroidsjs/core/actions/form';
 
 function ItemBlock({ items, statuses, fields, name, formId }) {
 	const dispatch = useDispatch();
+	const bem = useBem('item-block');
 	const [formValues, setFormValues] = useState<any>({
 		page: 1,
 		pageSize: 25,
@@ -56,7 +57,7 @@ function ItemBlock({ items, statuses, fields, name, formId }) {
 	);
 
 	return (
-		<div className='item-block'>
+		<div className={bem.block()}>
 			<Form
 				formId={formId}
 				onChange={setFormValues}
@@ -71,7 +72,6 @@ function ItemBlock({ items, statuses, fields, name, formId }) {
 								attribute="query"
 								placeholder="Поиск"
 								label={__('Поиск')}
-								className="item-block__search-input"
 							/>
 							<button className="item-block__mobile-expand" onClick={toggleCollapse}>
 								{collapse ? <FaAngleDown/> : <FaAngleUp/>}
@@ -84,6 +84,7 @@ function ItemBlock({ items, statuses, fields, name, formId }) {
 							items={statuses}
 							multiple
 							showReset
+							className={bem.element('dropdown')}
 						/>
 						<div className="item-block__sort-buttons" hidden={collapse && width <= 515}>
 							<button
