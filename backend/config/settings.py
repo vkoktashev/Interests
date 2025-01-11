@@ -54,7 +54,13 @@ REST_FRAMEWORK = {
 SWAGGER_SETTINGS = {
     'DEFAULT_INFO': 'config.urls.api_info',
     'USE_SESSION_AUTH': False,
-    'SECURITY_DEFINITIONS': None,
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+        }
+    },
 }
 
 SITE_ID = 1
