@@ -34,6 +34,7 @@ services:
       - "443:443"
     volumes:
       - /etc/letsencrypt/:/etc/letsencrypt/
+      - staticfiles:/code/staticfiles
     restart: always
     depends_on:
       - back
@@ -54,4 +55,3 @@ services:
 
 volumes:
   postgres_data_interests:
-  staticfiles:
