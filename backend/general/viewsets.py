@@ -8,6 +8,8 @@ from users.serializers import UserInfoSerializer
 
 
 class GeneralViewSet(GenericViewSet):
+    serializer_class = UserInfoSerializer
+
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def init(self, request):
         result = {"user": None}

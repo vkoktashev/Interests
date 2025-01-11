@@ -20,6 +20,7 @@ from utils.constants import SITE_URL, ERROR, EMAIL_ERROR, WRONG_URL, USER_NOT_FO
 
 
 class AuthViewSet(GenericViewSet):
+    serializer_class = UserSerializer
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def signup(self, request):

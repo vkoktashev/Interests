@@ -8,6 +8,8 @@ from users.serializers import UserSerializer
 
 
 class SearchUsersViewSet(GenericViewSet, mixins.ListModelMixin):
+    serializer_class = UserSerializer
+
     def list(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
         results = User.objects.annotate(similarity=TrigramSimilarity('username', query)) \
