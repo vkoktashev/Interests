@@ -6,8 +6,12 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from users.serializers import UserSerializer
+
 
 class ProxyViewSet(GenericViewSet):
+    serializer_class = UserSerializer
+
     @action(detail=False, methods=['get'])
     def image(self, request):
         url = request.GET.get('url')
