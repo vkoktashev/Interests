@@ -21,7 +21,7 @@ import {
 import useWindowDimensions from '../../../hooks/useWindowDimensions';
 
 import './sidebar.scss';
-import {useDispatch, useSelector} from '@steroidsjs/core/hooks';
+import {useBem, useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {collapseSidebar, toggleSidebar} from '../../../actions/modals';
 import {getSidebarIsCollapsed, getSidebarIsOpen} from '../../../reducers/modals';
@@ -32,11 +32,13 @@ import {openModal} from '@steroidsjs/core/actions/modal';
 import LoginForm from '../../../modals/LoginForm';
 import {logout} from '@steroidsjs/core/actions/auth';
 import RegisterForm from '../../../modals/RegisterForm';
+import {goToRouteWithParams} from '../../../actions/router';
 
 /**
  * Основная страница приложения
  */
-export function Sidebar() {
+export function Sidebar(props) {
+	const bem = useBem('sidebar');
 	const dispatch = useDispatch();
 	const { width } = useWindowDimensions();
 	const user = useSelector(getUser);
@@ -48,16 +50,17 @@ export function Sidebar() {
 	}, []);
 
 	function toggleSidebarIfSmallScreen() {
-		if (width < 1780 && width > 1440 && !sidebarIsCollapsed) {
-			dispatch(collapseSidebar());
-		}
-		if (width <= 1440) {
+		if (width < 540) {
 			dispatch(toggleSidebar());
 		}
 	}
 
 	return (
-		<ProSidebar className='sidebar' collapsed={sidebarIsCollapsed} hidden={!sidebarIsToggled}>
+		<ProSidebar
+			className={bem(bem.block(), props.className)}
+			collapsed={sidebarIsCollapsed}
+			hidden={!sidebarIsToggled}
+		>
 			<Menu iconShape='round' hidden={!user}>
 				<MenuItem icon={<FaUserCircle />}>
 					<a
@@ -77,7 +80,7 @@ export function Sidebar() {
 						href={`/user/${user?.id}?сategory=Друзья`}
 						onClick={(event) => {
 							event.preventDefault();
-							dispatch(goToRoute(ROUTE_USER, {
+							dispatch(goToRouteWithParams(ROUTE_USER, {
 								userId: user?.id,
 								сategory: 'Друзья',
 							}));

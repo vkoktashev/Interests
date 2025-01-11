@@ -44,7 +44,12 @@ function GameCards({ games, hidden }) {
 		return newObjects;
 	}, []), [games]);
 
-	return <SearchCardsBlock name='Игры' hidden={hidden} objects={objects} />;
+	return (
+		<SearchCardsBlock
+			hidden={hidden}
+			objects={objects}
+		/>
+	);
 }
 
 export default GameCards;

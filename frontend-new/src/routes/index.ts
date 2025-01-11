@@ -11,6 +11,9 @@ import ConfirmPasswordPage from './ConfirmPasswordPage';
 import NotFoundPage from './NotFoundPage';
 import SearchPage from './SearchPage';
 import UserPage from './UserPage';
+import ShowPage from './ShowPage';
+import ShowEpisodePage from './ShowEpisodePage';
+import ShowSeasonPage from './ShowSeasonPage';
 
 export const ROUTE_ROOT = 'root';
 
@@ -120,6 +123,27 @@ export default {
             path: '/user/:userId',
             title: __('Пользователь'),
             component: UserPage,
+            roles,
+        },
+        [ROUTE_SHOW]: {
+            exact: true,
+            path: '/show/:showId',
+            title: __('Сериал'),
+            component: ShowPage,
+            roles,
+        },
+        [ROUTE_SHOW_SEASON]: {
+            exact: true,
+            path: `/show/:showId/season/:showSeasonId`,
+            title: __('Сезон сериала'),
+            component: ShowSeasonPage,
+            roles,
+        },
+        [ROUTE_SHOW_EPISODE]: {
+            exact: true,
+            path: `/show/:showId/season/:showSeasonId/episode/:showEpisodeId`,
+            title: __('Серия сериала'),
+            component: ShowEpisodePage,
             roles,
         },
     },

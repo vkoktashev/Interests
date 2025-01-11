@@ -29,7 +29,13 @@ function MovieCards({ movies, hidden }) {
 		[movies]
 	);
 
-	return <SearchCardsBlock name='Фильмы' hidden={hidden} objects={objects} />;
+	return (
+		<SearchCardsBlock
+			name='Фильмы'
+			hidden={hidden}
+			objects={objects}
+		/>
+	);
 }
 
 export default MovieCards;

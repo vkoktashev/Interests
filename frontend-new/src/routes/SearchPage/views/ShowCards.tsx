@@ -12,7 +12,7 @@ function ShowCards({ shows, hidden }) {
 					poster: show.backdrop_path,
 					route: ROUTE_SHOW,
 					routeParams: {
-						movieId: show.id,
+						showId: show.id,
 					},
 					overview: show.overview,
 				};
@@ -29,7 +29,12 @@ function ShowCards({ shows, hidden }) {
 		[shows]
 	);
 
-	return <SearchCardsBlock name='Сериалы' hidden={hidden} objects={objects} />;
+	return (
+		<SearchCardsBlock
+			hidden={hidden}
+			objects={objects}
+		/>
+	);
 }
 
 export default ShowCards;

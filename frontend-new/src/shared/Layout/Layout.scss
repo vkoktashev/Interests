@@ -3,6 +3,7 @@
 @import "style/colors";
 @import "style/project-fonts";
 @import "style/toast";
+@import "style/breakpoints";
 
 .Layout {
     .HeaderView__logo-image svg {
@@ -13,6 +14,7 @@
     padding-top: 52px;
     overflow-x: hidden;
     height: 100%;
+    //max-width: 100%;
 
     display: grid;
     grid-template-columns: min-content auto;
@@ -23,6 +25,17 @@
     ". ."
     "footer footer";
 
+    @media (max-width: $mobile-width) {
+        display: grid;
+        grid-template-columns: auto;
+        grid-template-rows: 1fr;
+        gap: 0 0;
+        grid-template-areas:
+            "header"
+            "."
+            "footer";
+    }
+
     &__header {
         grid-area: header;
     }
@@ -31,7 +44,16 @@
         grid-area: footer;
     }
 
+    &__sidebar {
+        @media (max-width: $mobile-width) {
+            position: absolute !important;
+            padding-top: 3.2rem;
+        }
+    }
+
     &__content {
         padding: 15px;
+        display: flex;
+        justify-content: center;
     }
 }
