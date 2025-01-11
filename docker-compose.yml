@@ -19,7 +19,7 @@ services:
       - .env
     volumes:
       - /etc/letsencrypt/live/your-interests.ru/:/etc/letsencrypt/live/your-interests.ru/
-      - staticfiles:/code/staticfiles
+      - ./staticfiles:/code/staticfiles
     ports:
       - "8001:8001"
     depends_on:
@@ -34,7 +34,7 @@ services:
       - "443:443"
     volumes:
       - /etc/letsencrypt/:/etc/letsencrypt/
-      - staticfiles:/code/staticfiles
+      - ./staticfiles:/code/staticfiles
     restart: always
     depends_on:
       - back
