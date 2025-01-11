@@ -19,6 +19,8 @@ from utils.openapi_params import DEFAULT_PAGE_NUMBER
 
 
 class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
+    serializer_class = MovieSerializer
+
     @action(detail=False, methods=['get'])
     def tmdb(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
@@ -61,5 +63,3 @@ def get_movie_search_results(query, page):
         results = tmdb.Search().movie(query=query, page=page, language=LANGUAGE)
         cache.set(key, results, CACHE_TIMEOUT)
     return results
-
-

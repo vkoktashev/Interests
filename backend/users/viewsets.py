@@ -20,7 +20,7 @@ from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, 
 from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogSerializer, EpisodeLogSerializer, \
     EpisodeShowSerializer, TypedShowSerializer
 from users.serializers import UserFollowSerializer, UserLogSerializer, \
-    UserInfoSerializer, SettingsSerializer
+    UserInfoSerializer, SettingsSerializer, UserSerializer
 from utils.constants import ERROR, ID_VALUE_ERROR, \
     USER_NOT_FOUND, MINUTES_IN_HOUR, TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, \
     TYPE_SEASON, TYPE_EPISODE, TYPE_USER, CANNOT_DELETE_ANOTHER_USER_LOG, WRONG_LOG_TYPE, LOG_NOT_FOUND
@@ -31,6 +31,9 @@ from .models import User, UserFollow, UserLog
 
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
+
     @action(detail=True, methods=['get', 'delete'])
     def log(self, request, **kwargs):
         try:

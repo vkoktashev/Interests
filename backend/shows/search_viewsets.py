@@ -17,6 +17,7 @@ from utils.functions import get_page_size
 
 
 class SearchShowsViewSet(GenericViewSet, mixins.ListModelMixin):
+    serializer_class = ShowSerializer
 
     @action(detail=False, methods=['get'])
     def tmdb(self, request, *args, **kwargs):

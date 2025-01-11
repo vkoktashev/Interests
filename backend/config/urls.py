@@ -9,10 +9,11 @@ from rest_framework import permissions
 schema_view = get_schema_view(
     openapi.Info(
         title="Interests API",
-        default_version='v1',
+        default_version='v2',
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
+    authentication_classes=[],
 )
 
 urlpatterns = [
@@ -26,6 +27,7 @@ urlpatterns = [
     path('', include('general.urls')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.DEBUG:
     urlpatterns += [

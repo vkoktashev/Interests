@@ -28,6 +28,7 @@ from utils.functions import int_to_hours, get_page_size, objects_to_str, float_t
 
 
 class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
+    serializer_class = GameSerializer
     queryset = Game.objects.all()
 
     @action(detail=False, methods=['get'])
