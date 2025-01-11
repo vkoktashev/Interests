@@ -1,0 +1,14 @@
+@import "style/project-fonts";
+@import "style/colors";
+@import "style/mixins";
+
+.show-page {
+    @include content-page;
+
+    &__poster {
+        width: 25rem;
+    }
+    &__info {
+        width: 55rem;
+    }
+}

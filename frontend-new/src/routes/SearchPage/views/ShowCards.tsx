@@ -12,7 +12,7 @@ function ShowCards({ shows, hidden }) {
 					poster: show.backdrop_path,
 					route: ROUTE_SHOW,
 					routeParams: {
-						movieId: show.id,
+						showId: show.id,
 					},
 					overview: show.overview,
 				};
