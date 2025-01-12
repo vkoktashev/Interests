@@ -20,12 +20,12 @@ function UserLogs(props: IUserLogsProps) {
     const [logs, setLogs] = useState<any>({count: 0, log: []});
 
     const requestUserLogs = useCallback(async (values) => {
-        const response = await http.get(`api/users/user/${props.userId}/log/`, values);
+        const response = await http.get(`/users/user/${props.userId}/log/`, values);
         setLogs(response);
     }, []);
 
     const onDeleteLog = useCallback((logType: string, logId: number) => {
-        http.delete(`api/users/user/${props.userId}/log/`, { type: logType, id: logId })
+        http.delete(`/users/user/${props.userId}/log/`, { type: logType, id: logId })
             .catch(e => {
                 dispatch(showNotification('Не удалось удалить лог', 'danger'));
             })

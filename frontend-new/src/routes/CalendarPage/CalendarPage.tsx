@@ -17,7 +17,7 @@ function CalendarPage() {
 	const [currentDay, setCurrentDay] = useState({});
 
 	const calendarFetchConfig = useMemo(() => ({
-		url: `/api/users/user/release_calendar/`,
+		url: `/users/user/release_calendar/`,
 		method: 'get',
 	}), []);
 	const {data: calendar, isLoading} = useFetch(calendarFetchConfig);

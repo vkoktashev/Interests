@@ -3,7 +3,7 @@ import LoadingOverlay from "react-loading-overlay";
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getRouteParam} from '@steroidsjs/core/reducers/router';
 import {openModal} from '@steroidsjs/core/actions/modal';
-import {useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
+import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
 import _uniq from 'lodash/uniq';
 import {Loader} from '@steroidsjs/core/ui/layout'
@@ -16,8 +16,10 @@ import InputNumber from '../../shared/InputNumber';
 import GameStores from "../../shared/GameStores";
 import LoginForm from '../../modals/LoginForm';
 import "./game-page.scss";
+import {Button, TextField} from '@steroidsjs/core/ui/form';
 
 export function GamePage() {
+	const bem = useBem('game-page');
 	const user = useSelector(getUser);
 	const dispatch = useDispatch();
 	const {http} = useComponents();
@@ -29,13 +31,13 @@ export function GamePage() {
 	const [userRate, setUserRate] = useState(0);
 
 	const gameFetchConfig = useMemo(() => gameId && ({
-		url: `/api/games/game/${gameId}/`,
+		url: `/games/game/${gameId}/`,
 		method: 'get',
 	}), [gameId]);
 	const {data: game, isLoading} = useFetch(gameFetchConfig);
 
 	const userInfoFetchConfig = useMemo(() => gameId && user && ({
-		url: `/api/games/game/${gameId}/user_info/`,
+		url: `/games/game/${gameId}/user_info/`,
 		method: 'get',
 	}), [gameId]);
 	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
@@ -44,7 +46,7 @@ export function GamePage() {
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 
 	const setGameStatus = useCallback(async (payload) => {
-		http.send('PUT', `/api/games/game/${gameId}/`, payload).catch(e => {
+		http.send('PUT', `/games/game/${gameId}/`, payload).catch(e => {
 			fetchUserInfo();
 		});
 	}, [gameId]);
@@ -111,7 +113,7 @@ export function GamePage() {
 		if (hltbInfo?.gameplay_completionist !== -1) {
 			newData.push(strToFloat(hltbInfo?.gameplay_completionist));
 		}
-		return _uniq(newData);
+		return _uniq(newData).filter(Boolean);
 	}
 
 	if (!game) {
@@ -119,17 +121,19 @@ export function GamePage() {
 	}
 
 	return (
-		<div className='game-page'>
+		<div className={bem.block()}>
 			<div style={{ backgroundImage: `url(${game?.background})` }} className='game-page__background' />
 			<LoadingOverlay active={isLoading} spinner text='Загрузка...'>
-				<div className='game-page__body'>
-					<div className='game-page__header'>
-						<div className='game-page__poster'>
+				<div className={bem.element('body')}>
+					<div className={bem.element('header')}>
+						<div className={bem.element('poster')}>
 							<img src={game.poster} className='img-fluid' alt='' />
 						</div>
-						<div className='game-page__info'>
-							<h1 className='game-page__info-header'>{game.name}</h1>
-							<div className='game-page__info-body'>
+						<div className={bem.element('info')}>
+							<h1 className={bem.element('info-header')}>
+								{game.name}
+							</h1>
+							<div className={bem.element('info-body')}>
 								<p>Разработчики: {game.developers}</p>
 								<p>Дата релиза: {game.release_date}</p>
 								<p>Жанр: {game.genres}</p>
@@ -153,7 +157,7 @@ export function GamePage() {
 								/>
 								<StatusButtonGroup
 									statuses={["Не играл", "Буду играть", "Играю", "Дропнул", "Прошел"]}
-									className='game-page__info-statuses'
+									className={bem.element('info-statuses')}
 									userStatus={userStatus}
 									onChangeStatus={(status) => {
 										if (!user) {
@@ -172,33 +176,32 @@ export function GamePage() {
 							<ScoreBlock
 								score={game.metacritic}
 								text='Metascore'
-								className='game-page__info-score'
+								className={bem.element('info-score')}
 							/>
 						</div>
 					</div>
-					<div className='game-page__overview'>
+					<div className={bem.element('overview')}>
 						<div>
 							{/* <video width='800' height='450' controls='controls' poster={game.rawg?.clip?.preview} src={game.rawg?.clip?.clip} type='video' /> */}
 							<h3 className='game-page__overview-header'>Описание</h3>
 							<div dangerouslySetInnerHTML={{ __html: game.overview }} />
 						</div>
-						<h3 className='game-page__review-header'>Отзыв</h3>
+						<h3 className={bem.element('review-header')}>
+							Отзыв
+						</h3>
 						<LoadingOverlay
 							active={userInfoIsLoading && !isLoading}
 							spinner
 							text='Загрузка...'
 						>
-							<div className='game-page__review-body' hidden={!user}>
-								<div className='game-page__review'>
-									Ваш отзыв
-									<textarea
-										className='game-page__review-input'
-										value={review}
-										onChange={(event) => setReview(event.target.value)}
-									/>
-								</div>
+							<div className={bem.element('review-body')} hidden={!user}>
+								<TextField
+									label={__('Ваш отзыв')}
+									value={review}
+									onChange={(value) => setReview(value)}
+								/>
 
-								<div className='game-page__review-time'>
+								<div className={bem.element('review-time')}>
 									Время прохождения (часы)
 									<InputNumber
 										className='game-page__time-input'
@@ -209,8 +212,9 @@ export function GamePage() {
 										dataList={hltbToDatalist(game.hltb)}
 									/>
 								</div>
-								<button
-									className='game-page__review-save-button'
+								<Button
+									className={bem.element('button')}
+									label={__('Сохранить')}
 									disabled={!user || (userStatus === "Не играл")}
 									onClick={() => {
 										if (!user) {
@@ -226,12 +230,10 @@ export function GamePage() {
 												}));
 											});
 										}
-									}}>
-									Сохранить
-								</button>
+									}} />
 							</div>
 						</LoadingOverlay>
-						<div className='game-page__friends' hidden={!user || (friendsInfo?.length < 1)}>
+						<div className={bem.element('friends')} hidden={!user || (friendsInfo?.length < 1)}>
 							<h4>Отзывы друзей</h4>
 							<FriendsActivity info={friendsInfo} />
 						</div>

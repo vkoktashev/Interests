@@ -16,6 +16,9 @@
         min-width: 30px;
         text-align: center;
         width: auto;
+        padding: 5px 0 6px 0;
+        font-size: 16px;
+        font-weight: 600;
 
         &[type=number] {
             appearance: textfield;
@@ -35,6 +38,7 @@
         color: $newText3;
         border: none;
         outline: none;
+        padding: 4px 8px;
     }
     &__minus {
         border-radius: 8px 0 0 8px;

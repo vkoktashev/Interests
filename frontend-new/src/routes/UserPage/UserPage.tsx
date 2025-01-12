@@ -31,7 +31,7 @@ function UserPage() {
 	const [lastActivity, setLastActivity] = useState("");
 
 	const userFetchConfig = useMemo(() => userId && ({
-		url: `/api/users/user/${userId}/`,
+		url: `/users/user/${userId}/`,
 		method: 'get',
 	}), [userId]);
 	const {data: user, isLoading, fetch} = useFetch(userFetchConfig);
@@ -39,7 +39,7 @@ function UserPage() {
 	const isCurrentUser = user?.id === currentUser.id;
 
 	const setUserStatus = useCallback(async (payload: any) => {
-		http.send('PUT', `/api/users/user/${userId}/follow/`, payload).catch(e => {
+		http.send('PUT', `/users/user/${userId}/follow/`, payload).catch(e => {
 			fetch();
 		});
 	}, [fetch, userId]);

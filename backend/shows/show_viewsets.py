@@ -316,6 +316,65 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['put'])
+    def complete(self, request, *args, **kwargs):
+        first_watched_episode_log = None
+        watched_episodes_count = 0
+
+        try:
+            show = Show.objects.get(tmdb_id=kwargs.get('tmdb_id'))
+        except Show.DoesNotExist:
+            return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+
+        episode_list = Episode.objects.filter(tmdb_season__tmdb_show=show).exclude(tmdb_season__tmdb_season_number=0)
+
+        user_episodes = UserEpisode.objects.select_related('episode__tmdb_season__tmdb_show') \
+            .select_related('episode') \
+            .select_related('user') \
+            .filter(user=request.user, episode__in=episode_list)
+
+        existed_user_episodes = []
+        new_user_episodes = []
+
+        for episode in episode_list:
+            found = False
+            current_user_episode = None
+            for user_episode in user_episodes:
+                if episode == user_episode.episode:
+                    current_user_episode = user_episode
+                    found = True
+                    break
+
+            if found:
+                previous_score = current_user_episode.score
+                if current_user_episode.score == EPISODE_NOT_WATCHED_SCORE:
+                    current_user_episode.score = EPISODE_WATCHED_SCORE
+                existed_user_episodes.append(current_user_episode)
+
+            else:
+                previous_score = EPISODE_NOT_WATCHED_SCORE
+                new_user_episodes.append(
+                    UserEpisode(user=request.user, episode=episode, score=EPISODE_WATCHED_SCORE)
+                )
+
+            if previous_score == EPISODE_NOT_WATCHED_SCORE:
+                watched_episodes_count += 1
+                if watched_episodes_count == 1:
+                    first_watched_episode_log = EpisodeLog(user=request.user, episode=episode,
+                                                           action_type=EpisodeLog.ACTION_TYPE_SCORE,
+                                                           action_result=EPISODE_WATCHED_SCORE)
+
+        if watched_episodes_count > 1:
+            ShowLog.objects.create(user=request.user, show=show,
+                                   action_type=ShowLog.ACTION_TYPE_EPISODES, action_result=watched_episodes_count)
+        elif watched_episodes_count == 1 and first_watched_episode_log is not None:
+            first_watched_episode_log.save()
+
+        UserEpisode.objects.bulk_update(existed_user_episodes, fields=('score',))
+        UserEpisode.objects.bulk_create(new_user_episodes)
+
+        return Response(status=status.HTTP_200_OK)
+
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def unwatched_episodes(self, request):
         today_date = datetime.today().date()

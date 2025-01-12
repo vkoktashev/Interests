@@ -17,7 +17,7 @@ function ConfirmPage() {
 		setStatus('pending');
 			http.send(
 				'PATCH',
-				'api/users/auth/confirm_email/',
+				'/users/auth/confirm_email/',
 				{uid64, token}
 			)
 				.then(() => setStatus('done'))

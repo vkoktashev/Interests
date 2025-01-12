@@ -45,6 +45,7 @@
 
 @mixin content-page {
     width: 100%;
+    max-width: 1300px;
     color: $newText3;
     border-radius: 1rem;
 
@@ -77,14 +78,15 @@
         border-top-right-radius: 10px;
     }
 
-
     &__subheader {
         margin: 0;
     }
 
     &__poster {
-        width: 700px;
+        flex-basis: 7em;
+        min-width: 500px;
         flex-shrink: 1;
+        flex-grow: 1;
         max-width: 100%;
         padding: 0;
         overflow: hidden;
@@ -113,17 +115,18 @@
 
     &__info {
         position: relative;
-        display: inline-block;
-        white-space: normal;
-        vertical-align: top;
-        max-width: 100%;
+        min-width: 455px;
+        display: flex;
+        flex-direction: column;
         padding-left: 1rem;
         padding-bottom: 1rem;
         padding-right: 1rem;
-        //width: 45rem;
+        flex-basis: 6em;
+        flex-shrink: 1;
+        flex-grow: 1;
 
         @media (max-width: $mobile-width) {
-            font-size: 12px
+            font-size: 12px;
         }
     }
 

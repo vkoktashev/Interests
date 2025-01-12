@@ -6,37 +6,25 @@
 
     &__header {
         margin-bottom: 1rem;
-        font-weight: 300;
+        font-weight: 500;
         font-size: 2rem;
     }
     &__subheader {
-        font-weight: 300;
+        font-weight: 500;
         font-size: 1.5rem;
     }
     &__settings-row {
         font-size: 1.5em;
         cursor: pointer;
     }
-    &__settings-checkbox {
-        display: inline-block;
+
+    &__dropdown {
+        max-width: 250px;
     }
-    &__settings-select {
-        background-color: $newBackground2;
-        color: $newText3;
-        font-size: 1.2rem;
-        border-radius: 0.5rem;
-        margin-left: 1rem;
-        border: 1px solid;
-        padding: 2px 4px;
-    }
-    &__save-button {
-        padding: 4px 8px;
-        margin-top: 15px;
-        margin-bottom: 20px;
-        font-size: 1.1rem;
-        background-color: $newAccent2;
-        color: $newText3;
-        border: none;
-        border-radius: 0.5rem;
+
+    &__email {
+        margin-top: 20px;
+        font-size: 16px;
+        font-weight: 600;
     }
 }

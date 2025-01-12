@@ -10,7 +10,7 @@ function UnwatchedPage() {
 	const user = useSelector(getUser);
 
 	const fetchConfig = useMemo(() => user && ({
-		url: `/api/shows/show/unwatched_episodes/`,
+		url: `/shows/show/unwatched_episodes/`,
 		method: 'get',
 	}), [user]);
 	const {data: unwatched, isLoading} = useFetch(fetchConfig);
@@ -18,7 +18,7 @@ function UnwatchedPage() {
 	const setEpisodesStatus = useCallback((showId: string, episodesList: any[]) => {
 		http.send(
 			'PUT',
-			`api/shows/show/${showId}/episodes/`,
+			`/shows/show/${showId}/episodes/`,
 			episodesList,
 		)
 	}, []);

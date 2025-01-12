@@ -18,7 +18,7 @@ export const config = {
             apiUrl: process.env.APP_BACKEND_URL,
             clientStorageName: 'local',
             refreshTokenRequest: {
-                url: '/api/users/auth/refresh-token/',
+                url: '/users/auth/refresh-token/',
                 method: 'post',
             },
         },

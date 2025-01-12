@@ -21,7 +21,7 @@ export function LoginForm(props: IModalProps) {
 		event.preventDefault();
 		setError('');
 		setLoading(true);
-		http.post('api/users/auth/login/', {
+		http.post('/users/auth/login/', {
 			username: username,
 			password: password,
 		}).then(response => {

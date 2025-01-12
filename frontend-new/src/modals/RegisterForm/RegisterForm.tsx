@@ -23,7 +23,7 @@ export function RegisterForm(props: IModalProps) {
 	const onRegistration = useCallback(async () => {
 		setLoading(true);
 		setError('');
-		http.post('api/users/auth/signup/', {
+		http.post('/users/auth/signup/', {
 			username: login,
 			email: email,
 			password: password,

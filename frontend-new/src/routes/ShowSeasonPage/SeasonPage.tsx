@@ -32,23 +32,27 @@ function SeasonPage() {
 	const [isChecked, setIsChecked] = useState(0);
 
 	const showSeasonFetchConfig = useMemo(() => showId && ({
-		url: `/api/shows/show/${showId}/season/${showSeasonId}/`,
+		url: `/shows/show/${showId}/season/${showSeasonId}/`,
 		method: 'get',
 	}), [showId, showSeasonId]);
 	const {data: showSeason, isLoading} = useFetch(showSeasonFetchConfig);
 
 	const userInfoFetchConfig = useMemo(() => showId && user && ({
-		url: `/api/shows/show/${showId}/season/${showSeasonId}/user_info/`,
+		url: `/shows/show/${showId}/season/${showSeasonId}/user_info/`,
 		method: 'get',
 	}), [showId, showSeasonId]);
-	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
+	const {
+		data: userInfoResponse,
+		isLoading: userInfoIsLoading,
+		fetch: fetchUserInfo,
+	} = useFetch(userInfoFetchConfig);
 
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 	const userWatchedShow = useMemo(() => userInfoResponse?.user_watched_show, [userInfoResponse]);
 
 	const setShowSeasonStatus = useCallback(async (payload) => {
-		http.send('PUT', `/api/shows/show/${showId}/season/${showSeasonId}/`, payload).catch(e => {
+		http.send('PUT', `/shows/show/${showId}/season/${showSeasonId}/`, payload).catch(e => {
 			fetchUserInfo();
 		});
 	}, [showId]);
@@ -94,26 +98,31 @@ function SeasonPage() {
 		for (let episode in episodes) if (episodes[episode].tmdb_id === id) return episodes[episode];
 	}
 
-	const setEpisodesStatus = useCallback((showId: string, episodesList: any) => {
-		http.send(
+	const setEpisodesStatus = useCallback(async (showId: string, episodesList: any) => {
+		await http.send(
 			'PUT',
-			`api/shows/show/${showId}/episodes/`,
+			`/shows/show/${showId}/episodes/`,
 			episodesList,
-		)
+		);
 	}, []);
 
-	function sendEpisodes() {
+	const sendEpisodes = useCallback(async () => {
 		let episodes = [];
-		for (let episode in userInfo.episodes) {
-			let currentValue = userInfo.episodes[episode];
-			let cbValue = (document.getElementById(`cbEpisode${currentValue.tmdb_id}`) as any).checked;
+		for (let episode of showSeason.episodes) {
+			let currentValue = userInfoResponse.episodes_user_info.find(info => info.tmdb_id === episode.id);
+			let cbValue = (document.getElementById(`cbEpisode${episode.id}`) as any).checked;
 			let currentStatus = currentValue?.score > -1;
-			if (cbValue !== currentStatus) episodes.push({ tmdb_id: currentValue.tmdb_id, score: cbValue ? 0 : -1 });
+			if (cbValue !== currentStatus) {
+				episodes.push({
+					tmdb_id: episode.id,
+					score: cbValue ? 0 : -1,
+				});
+			}
 		}
-		setEpisodesStatus(showId, { episodes });
+		await setEpisodesStatus(showId, { episodes });
 		fetchUserInfo();
 		dispatch(setSaveEpisodes(false));
-	}
+	}, [showSeason, userInfoResponse]);
 
 	if (!showSeason) {
 		return <Loader />;
@@ -222,7 +231,7 @@ function SeasonPage() {
 										type='checkbox'
 										checked={isChecked > 0}
 										onChange={(res) => {
-											dispatch(setSaveEpisodes(false));
+											dispatch(setSaveEpisodes(true));
 											setIsChecked(res.target.checked ? 1 : -1);
 										}}
 									/>
@@ -230,12 +239,12 @@ function SeasonPage() {
 								<ul className='season-page__episodes-ul'>
 									{showSeason?.episodes
 										? showSeason?.episodes.map((episode, counter) => (
-												<li className='season-page__episode' key={counter}>
+												<li className='season-page__episode' key={episode.id}>
 													<DetailEpisodeRow
 														episode={episode}
 														showID={showId}
 														loggedIn={!!user}
-														userInfo={getEpisodeByID(userInfo?.episodes, episode.id)}
+														userInfo={getEpisodeByID(userInfoResponse?.episodes_user_info, episode.id)}
 														setEpisodeUserStatus={setEpisodesStatus}
 														checkAll={isChecked}
 														userWatchedShow={userWatchedShow}
@@ -246,7 +255,7 @@ function SeasonPage() {
 										: ""}
 								</ul>
 							</details>
-							<div hidden={!(chartData.length > 0)}>
+							<div hidden={!chartData?.length}>
 								{document.body.clientHeight < document.body.clientWidth ? (
 									<ResponsiveContainer width='100%' height={200}>
 										<AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
@@ -263,7 +272,7 @@ function SeasonPage() {
 										</AreaChart>
 									</ResponsiveContainer>
 								) : (
-									<ResponsiveContainer width='100%' height={chartData.length * 30}>
+									<ResponsiveContainer width='100%' height={chartData?.length * 30}>
 										<AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }} layout='vertical'>
 											<defs>
 												<linearGradient id='colorUv' x1='0' y1='0' x2='0' y2='1'>
@@ -280,7 +289,7 @@ function SeasonPage() {
 								)}
 							</div>
 						</div>
-						<div className='season-page__friends' hidden={!friendsInfo.length}>
+						<div className='season-page__friends' hidden={!friendsInfo?.length}>
 							<h4>Отзывы друзей</h4>
 							<FriendsActivity info={friendsInfo} />
 						</div>
@@ -290,9 +299,7 @@ function SeasonPage() {
 			<div className='season-page__save-episodes-block' hidden={!saveEpisodesBlockIsOpen}>
 				<button
 					className='season-page__save-episodes-button'
-					onClick={() => {
-						sendEpisodes();
-					}}>
+					onClick={sendEpisodes}>
 					Сохранить
 				</button>
 			</div>

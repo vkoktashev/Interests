@@ -27,7 +27,7 @@ $font-stack: "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
 
 @mixin headline1 {
   @include mainFont;
-  font-weight: 300;
+  font-weight: 400;
   font-size: 103px;
   line-height: 140px;
   letter-spacing: -1.5px;
@@ -36,7 +36,7 @@ $font-stack: "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
 
 @mixin headline2 {
   @include mainFont;
-  font-weight: 300;
+  font-weight: 400;
   font-size: 64px;
   line-height: 87px;
   letter-spacing: -0.5px;
