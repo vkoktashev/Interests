@@ -31,13 +31,13 @@ export function GamePage() {
 	const [userRate, setUserRate] = useState(0);
 
 	const gameFetchConfig = useMemo(() => gameId && ({
-		url: `/api/games/game/${gameId}/`,
+		url: `/games/game/${gameId}/`,
 		method: 'get',
 	}), [gameId]);
 	const {data: game, isLoading} = useFetch(gameFetchConfig);
 
 	const userInfoFetchConfig = useMemo(() => gameId && user && ({
-		url: `/api/games/game/${gameId}/user_info/`,
+		url: `/games/game/${gameId}/user_info/`,
 		method: 'get',
 	}), [gameId]);
 	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
@@ -46,7 +46,7 @@ export function GamePage() {
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 
 	const setGameStatus = useCallback(async (payload) => {
-		http.send('PUT', `/api/games/game/${gameId}/`, payload).catch(e => {
+		http.send('PUT', `/games/game/${gameId}/`, payload).catch(e => {
 			fetchUserInfo();
 		});
 	}, [gameId]);

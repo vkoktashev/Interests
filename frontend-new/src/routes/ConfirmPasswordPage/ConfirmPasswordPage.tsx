@@ -16,7 +16,7 @@ function ConfirmPasswordPage() {
 
 	const onSubmit = useCallback((values) => {
 		http
-			.send('PATCH', `api/users/auth/confirm_password_reset/?reset_token=${token}`, values)
+			.send('PATCH', `/users/auth/confirm_password_reset/?reset_token=${token}`, values)
 			.then(() => setState('done'))
 			.catch(e => {
 				setState(`error: ${Object.values(e?.response?.data).flat().flat().join('\n')}`);

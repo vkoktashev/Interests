@@ -29,13 +29,13 @@ export function MoviePage() {
 	const [userRate, setUserRate] = useState(0);
 
 	const movieFetchConfig = useMemo(() => movieId && ({
-		url: `/api/movies/movie/${movieId}/`,
+		url: `/movies/movie/${movieId}/`,
 		method: 'get',
 	}), [movieId]);
 	const {data: movie, isLoading} = useFetch(movieFetchConfig);
 
 	const userInfoFetchConfig = useMemo(() => movieId && user && ({
-		url: `/api/movies/movie/${movieId}/user_info/`,
+		url: `/movies/movie/${movieId}/user_info/`,
 		method: 'get',
 	}), [movieId]);
 	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
@@ -44,7 +44,7 @@ export function MoviePage() {
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 
 	const setMovieStatus = useCallback(async (payload) => {
-		http.send('PUT', `/api/movies/movie/${movieId}/`, payload).catch(e => {
+		http.send('PUT', `/movies/movie/${movieId}/`, payload).catch(e => {
 			fetchUserInfo();
 		});
 	}, [movieId]);

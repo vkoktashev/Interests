@@ -32,13 +32,13 @@ function SeasonPage() {
 	const [isChecked, setIsChecked] = useState(0);
 
 	const showSeasonFetchConfig = useMemo(() => showId && ({
-		url: `/api/shows/show/${showId}/season/${showSeasonId}/`,
+		url: `/shows/show/${showId}/season/${showSeasonId}/`,
 		method: 'get',
 	}), [showId, showSeasonId]);
 	const {data: showSeason, isLoading} = useFetch(showSeasonFetchConfig);
 
 	const userInfoFetchConfig = useMemo(() => showId && user && ({
-		url: `/api/shows/show/${showId}/season/${showSeasonId}/user_info/`,
+		url: `/shows/show/${showId}/season/${showSeasonId}/user_info/`,
 		method: 'get',
 	}), [showId, showSeasonId]);
 	const {
@@ -52,7 +52,7 @@ function SeasonPage() {
 	const userWatchedShow = useMemo(() => userInfoResponse?.user_watched_show, [userInfoResponse]);
 
 	const setShowSeasonStatus = useCallback(async (payload) => {
-		http.send('PUT', `/api/shows/show/${showId}/season/${showSeasonId}/`, payload).catch(e => {
+		http.send('PUT', `/shows/show/${showId}/season/${showSeasonId}/`, payload).catch(e => {
 			fetchUserInfo();
 		});
 	}, [showId]);
@@ -101,7 +101,7 @@ function SeasonPage() {
 	const setEpisodesStatus = useCallback(async (showId: string, episodesList: any) => {
 		await http.send(
 			'PUT',
-			`api/shows/show/${showId}/episodes/`,
+			`/shows/show/${showId}/episodes/`,
 			episodesList,
 		);
 	}, []);

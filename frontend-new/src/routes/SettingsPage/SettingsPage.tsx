@@ -33,13 +33,13 @@ function SettingsPage() {
 	const dispatch = useDispatch();
 
 	const settingsFetchConfig = useMemo(() => ({
-		url: '/api/users/user/user_settings/',
+		url: '/users/user/user_settings/',
 		method: 'get',
 	}), []);
 	const {data: settings, isLoading} = useFetch(settingsFetchConfig);
 
 	const patchSettings = useCallback(async (values) => {
-		http.send('PATCH', '/api/users/user/user_settings/', values)
+		http.send('PATCH', '/users/user/user_settings/', values)
 			.then(() => {
 				dispatch(showNotification('Настройки сохранены!'));
 			})

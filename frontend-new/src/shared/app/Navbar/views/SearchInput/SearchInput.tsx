@@ -18,7 +18,7 @@ export function SearchInput({ onSubmit, className }) {
 	});
 
 	const fetchGamesHints = useCallback((query: string) => {
-		http.get('api/games/search/', {
+		http.get('/games/search/', {
 			query,
 		}).then(response => {
 			setHints(prevState => ({
@@ -29,7 +29,7 @@ export function SearchInput({ onSubmit, className }) {
 	}, []);
 
 	const fetchMoviesHints = useCallback((query: string) => {
-		http.get('api/movies/search/', {
+		http.get('/movies/search/', {
 			query,
 		}).then(response => {
 			setHints(prevState => ({
@@ -40,7 +40,7 @@ export function SearchInput({ onSubmit, className }) {
 	}, []);
 
 	const fetchShowsHints = useCallback((query: string) => {
-		http.get('api/shows/search/', {
+		http.get('/shows/search/', {
 			query,
 		}).then(response => {
 			setHints(prevState => ({

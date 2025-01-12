@@ -32,7 +32,7 @@ function RandomPage() {
                     .map(([key]) => key),
                 endedOnly: values.endedOnly,
             };
-            http.get('api/users/user/random/', params)
+            http.get('/users/user/random/', params)
                 .then(response => {
                     setWinner(response[0]);
                 })

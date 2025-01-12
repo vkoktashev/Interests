@@ -17,7 +17,7 @@ function FriendsLogs(props: IUserLogsProps) {
     const [logs, setLogs] = useState<any>({count: 0, log: []});
 
     const requestUserLogs = useCallback(async (values) => {
-        const response = await http.get(`api/users/user/friends_log/`, values);
+        const response = await http.get(`/users/user/friends_log/`, values);
         setLogs(response);
     }, []);
 

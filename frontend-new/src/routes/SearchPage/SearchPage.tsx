@@ -32,7 +32,7 @@ function SearchPage() {
 	const [users, setUsers] = useState([]);
 
 	const searchGames = useCallback(async (query: string, page: number) => {
-		const response = await http.get('api/games/search/rawg/', {
+		const response = await http.get('/games/search/rawg/', {
 				query: query,
 				page,
 				page_size: PAGE_SIZE,
@@ -41,7 +41,7 @@ function SearchPage() {
 	}, []);
 
 	const searchMovies = useCallback(async (query: string, page: number) => {
-		const response = await http.get('api/movies/search/tmdb/', {
+		const response = await http.get('/movies/search/tmdb/', {
 			query: query,
 			page,
 			page_size: PAGE_SIZE,
@@ -50,7 +50,7 @@ function SearchPage() {
 	}, []);
 
 	const searchShows = useCallback(async (query: string, page: number) => {
-		const response = await http.get('api/shows/search/tmdb/', {
+		const response = await http.get('/shows/search/tmdb/', {
 			query: query,
 			page,
 			page_size: PAGE_SIZE,
@@ -59,7 +59,7 @@ function SearchPage() {
 	}, [setShows]);
 
 	const searchUsers = useCallback(async (query: string, page: number) => {
-		const response = await http.get('api/users/search/', {
+		const response = await http.get('/users/search/', {
 			query: query,
 			page,
 			page_size: PAGE_SIZE,

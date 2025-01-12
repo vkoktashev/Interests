@@ -28,13 +28,13 @@ function EpisodePage() {
 	const [userRate, setUserRate] = useState(-1);
 
 	const showEpisodeFetchConfig = useMemo(() => showId && ({
-		url: `/api/shows/show/${showId}/season/${showSeasonId}/episode/${showEpisodeId}/`,
+		url: `/shows/show/${showId}/season/${showSeasonId}/episode/${showEpisodeId}/`,
 		method: 'get',
 	}), [showId, showSeasonId, showEpisodeId]);
 	const {data: showEpisode, isLoading} = useFetch(showEpisodeFetchConfig);
 
 	const userInfoFetchConfig = useMemo(() => showId && user && ({
-		url: `/api/shows/show/${showId}/season/${showSeasonId}/episode/${showEpisodeId}/user_info/`,
+		url: `/shows/show/${showId}/season/${showSeasonId}/episode/${showEpisodeId}/user_info/`,
 		method: 'get',
 	}), [showId, showSeasonId, showEpisodeId]);
 	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
@@ -44,7 +44,7 @@ function EpisodePage() {
 	const userWatchedShow = useMemo(() => userInfoResponse?.user_watched_show, [userInfoResponse]);
 
 	const setEpisodesStatus = useCallback(async (payload) => {
-		http.send('PUT', `api/shows/show/${showId}/episodes/`, payload).catch(e => {
+		http.send('PUT', `/shows/show/${showId}/episodes/`, payload).catch(e => {
 			fetchUserInfo();
 		});
 	}, [showId]);

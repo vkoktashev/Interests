@@ -32,13 +32,13 @@ function ShowPage(props) {
 	const [userRate, setUserRate] = useState(0);
 
     const showFetchConfig = useMemo(() => showId && ({
-        url: `/api/shows/show/${showId}/`,
+        url: `/shows/show/${showId}/`,
         method: 'get',
     }), [showId]);
     const {data: show, isLoading} = useFetch(showFetchConfig);
 
     const userInfoFetchConfig = useMemo(() => showId && user && ({
-        url: `/api/shows/show/${showId}/user_info/`,
+        url: `/shows/show/${showId}/user_info/`,
         method: 'get',
     }), [showId]);
     const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
@@ -47,7 +47,7 @@ function ShowPage(props) {
     const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 
     const setShowStatus = useCallback(async (payload) => {
-        http.send('PUT', `/api/shows/show/${showId}/`, payload).catch(e => {
+        http.send('PUT', `/shows/show/${showId}/`, payload).catch(e => {
             fetchUserInfo();
         });
     }, [showId]);

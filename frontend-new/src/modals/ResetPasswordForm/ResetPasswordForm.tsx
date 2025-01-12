@@ -17,7 +17,7 @@ export function ResetPasswordForm(props: IModalProps) {
 		event.preventDefault();
 		setLoading(true);
 		setError('');
-		http.send('PUT', 'api/users/auth/password_reset/', {
+		http.send('PUT', '/users/auth/password_reset/', {
 			email,
 		})
 			.then(response => {

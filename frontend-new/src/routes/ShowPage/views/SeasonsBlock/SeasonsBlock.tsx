@@ -29,7 +29,7 @@ function SeasonsBlock({ showId, seasons, userWatchedShow }) {
 	const setEpisodesStatus = useCallback(async (episodesList: any) => {
 		await http.send(
 			'PUT',
-			`api/shows/show/${showId}/episodes/`,
+			`/shows/show/${showId}/episodes/`,
 			episodesList,
 		);
 	}, [showId]);
