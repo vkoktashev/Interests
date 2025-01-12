@@ -2,6 +2,8 @@
 .vscode
 *.pyc
 frontend/.eslintcache
+frontend/build/
 backend/src/rawgpy/
 frontend-new/.eslintcache
 frontend-new/node_modules
+frontend-new/build/
