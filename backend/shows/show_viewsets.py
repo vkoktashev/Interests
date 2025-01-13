@@ -209,7 +209,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         episode_list = Episode.objects \
-            .filter(tmdb_id__in=[episode.pop('tmdb_id') for episode in episodes], tmdb_season__tmdb_show=show)
+            .filter(tmdb_id__in=[episode['tmdb_id'] for episode in episodes], tmdb_season__tmdb_show=show)
 
         if len(episode_list) != len(episodes):
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -225,7 +225,8 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         new_user_episodes_data = []
 
         for i, data in enumerate(episodes):
-            episode = episode_list[i]
+            episode = next((x for x in episode_list if x.tmdb_id == data['tmdb_id']))
+            data.pop('tmdb_id')
 
             data.update({
                 'user': request.user,
