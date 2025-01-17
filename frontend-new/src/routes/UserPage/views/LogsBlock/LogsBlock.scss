@@ -3,23 +3,33 @@
 
 .LogsBlock {
     &__header {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
+        display: grid;
+        grid-template-columns: 1fr auto;
         margin-bottom: 1rem;
         flex-wrap: wrap;
         color: $newText2;
         gap: 1rem;
+
+        @media (max-width: 770px) {
+            grid-template-columns: 1fr;
+        }
     }
-    &__header-left {
-        display: inline-flex;
-        max-width: 100%;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-    &__header-first-row {
+
+    &__row {
         display: flex;
-        margin-right: 1rem;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+
+        &_hidden {
+            display: none;
+        }
+    }
+
+    &__search-input {
+        flex-grow: 1;
+        max-width: 300px;
     }
 
     &__mobile-expand {
@@ -33,7 +43,7 @@
         height: 38px;
         width: 40px;
 
-        @media (min-width: 746px) {
+        @media (min-width: 540px) {
             display: none;
         }
     }
@@ -48,6 +58,10 @@
 
     &__dropdown {
         width: 170px;
+
+        &_hidden {
+            display: none;
+        }
     }
 }
 @import "../../../../../node_modules/rc-pagination/assets/index.css";

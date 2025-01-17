@@ -66,12 +66,13 @@ function ItemBlock({ items, statuses, fields, name, formId }) {
 				useRedux
 			>
 				<div className='item-block__header'>
-					<div className="item-block__header-left">
-						<div className="item-block__header-first-row">
+					<div className={bem.element('row')}>
+						<div className={bem.element('row')}>
 							<InputField
 								attribute="query"
 								placeholder="Поиск"
 								label={__('Поиск')}
+								className={bem.element('input')}
 							/>
 							<button className="item-block__mobile-expand" onClick={toggleCollapse}>
 								{collapse ? <FaAngleDown/> : <FaAngleUp/>}
@@ -79,14 +80,14 @@ function ItemBlock({ items, statuses, fields, name, formId }) {
 						</div>
 						<DropDownField
 							attribute="statusFilters"
-							hidden={collapse && width <= 515}
 							label={__('Статус')}
 							items={statuses}
 							multiple
 							showReset
 							className={bem.element('dropdown')}
+							fieldLayoutClassName={bem.element('field-layout', {hidden: collapse && width <= 540})}
 						/>
-						<div className="item-block__sort-buttons" hidden={collapse && width <= 515}>
+						<div className={bem.element('sort-buttons', {hidden: collapse && width <= 540})}>
 							<button
 								className="item-block__sort-button"
 								hidden={!fields.some((field) => field.key === 'score')}
@@ -126,8 +127,7 @@ function ItemBlock({ items, statuses, fields, name, formId }) {
 							</button>
 						</div>
 					</div>
-
-					<div className="item-block__header-right" hidden={collapse && width <= 515}>
+					<div className={bem.element('row', {hidden: collapse && width <= 515})}>
 						<DropDownField
 							attribute="pageSize"
 							label={__('Записей на странице')}

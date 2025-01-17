@@ -11,6 +11,16 @@
     height: 300px;
     max-width: 450px;
     object-fit: cover;
+
+    @media(max-width: $tablet-width) {
+      height: auto;
+      max-width: 50%;
+    }
+  }
+
+  @media(max-width: $tablet-width) {
+    height: auto;
+    max-width: 100%;
   }
 
   &__link {

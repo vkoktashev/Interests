@@ -3,10 +3,9 @@
 
 .RandomPage {
   @include default-page;
-
-
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   gap: 30px;
   min-height: 500px;
 

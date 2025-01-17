@@ -1,27 +1,31 @@
 @import "style/colors";
 @import "style/project-fonts";
 @import "style/mixins";
+@import "style/breakpoints";
 
 .item-block {
     &__header {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
+        display: grid;
+        grid-template-columns: 1fr auto;
         color: $newText2;
         margin-bottom: 1rem;
-        flex-wrap: wrap;
+
+        @media (max-width: 770px) {
+            grid-template-columns: 1fr;
+        }
     }
-    &__header-left {
-        display: inline-flex;
-        max-width: 100%;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 1rem;
-    }
-    &__header-first-row {
+    &__row {
         display: flex;
-        margin-right: 1rem;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+
+        &_hidden {
+            display: none;
+        }
     }
+
     &__mobile-expand {
         border: none;
         color: $newText3;
@@ -33,7 +37,7 @@
         height: 38px;
         width: 40px;
 
-        @media (min-width: 516px) {
+        @media (min-width: 535px) {
             display: none;
         }
     }
@@ -42,6 +46,10 @@
         display: flex;
         flex-direction: row;
         gap: 10px;
+
+        &_hidden {
+            display: none;
+        }
     }
     &__sort-button {
         border: none;
@@ -51,15 +59,6 @@
         padding: 4px 8px;
         font-size: 20px;
         height: 38px;
-    }
-    &__header-right {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-
-        @media (max-width: 1080px) {
-            margin-top: 1rem;
-        }
     }
     &__label {
         margin-right: 0.5rem;
@@ -81,5 +80,13 @@
 
     &__dropdown {
         width: 170px;
+
+        &_hidden {
+            display: none;
+        }
+    }
+
+    &__field-layout_hidden {
+        display: none;
     }
 }
