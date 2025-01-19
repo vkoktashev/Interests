@@ -1,6 +1,7 @@
 import tmdbsimple as tmdb
 from django.core.cache import cache
 from django.db.models import F, ProtectedError
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError, ConnectionError
 from rest_framework import mixins, status
@@ -63,6 +64,20 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(parse_season(tmdb_season, request.scheme))
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'score': openapi.Schema(type=openapi.TYPE_INTEGER),
+                'review': openapi.Schema(type=openapi.TYPE_STRING),
+            },
+        ),
+        responses={
+            200: openapi.Response('OK'),
+            400: openapi.Response('Bad Request'),
+            404: openapi.Response('Show or Season Not Found'),
+        }
+    )
     def update(self, request, *args, **kwargs):
         try:
             show = Show.objects.get(tmdb_id=kwargs.get('show_tmdb_id'))

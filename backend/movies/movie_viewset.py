@@ -1,5 +1,6 @@
 import tmdbsimple as tmdb
 from django.core.cache import cache
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError, ConnectionError
 from rest_framework import mixins, status
@@ -23,6 +24,13 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     serializer_class = UserMovieReadSerializer
     lookup_field = 'tmdb_id'
 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('OK'),
+            404: openapi.Response('Movie not found'),
+            503: openapi.Response('TMDB unavailable'),
+        }
+    )
     def retrieve(self, request, *args, **kwargs):
         try:
             tmdb_movie, returned_from_cache = get_tmdb_movie(kwargs.get('tmdb_id'))
@@ -74,6 +82,22 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response({'user_info': user_info, 'friends_info': friends_info})
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'status': openapi.Schema(type=openapi.TYPE_STRING,
+                                         enum=[UserMovie.STATUS_WATCHED, UserMovie.STATUS_STOPPED,
+                                               UserMovie.STATUS_GOING, UserMovie.STATUS_NOT_WATCHED]),
+                'score': openapi.Schema(type=openapi.TYPE_INTEGER),
+                'review': openapi.Schema(type=openapi.TYPE_STRING),
+            },
+        ),
+        responses={
+            200: openapi.Response('OK'),
+            404: openapi.Response('Movie not found'),
+        }
+    )
     def update(self, request, *args, **kwargs):
         try:
             movie = Movie.objects.get(tmdb_id=kwargs.get('tmdb_id'))
