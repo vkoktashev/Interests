@@ -3,6 +3,8 @@ from django.contrib.postgres.search import TrigramSimilarity
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.db.models.functions import Greatest
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError
 from rest_framework import mixins, status
 from rest_framework.decorators import action
@@ -19,6 +21,16 @@ from utils.functions import get_page_size
 class SearchShowsViewSet(GenericViewSet, mixins.ListModelMixin):
     serializer_class = ShowSerializer
 
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('query', openapi.IN_QUERY, type=openapi.TYPE_STRING),
+            openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, default=DEFAULT_PAGE_NUMBER),
+        ],
+        responses={
+            200: openapi.Response('OK'),
+            503: openapi.Response('TMDB Unavailable'),
+        }
+    )
     @action(detail=False, methods=['get'])
     def tmdb(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
@@ -38,6 +50,16 @@ class SearchShowsViewSet(GenericViewSet, mixins.ListModelMixin):
 
         return Response(results, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('query', openapi.IN_QUERY, type=openapi.TYPE_STRING),
+            openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, default=DEFAULT_PAGE_NUMBER),
+            openapi.Parameter('page_size', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, default=DEFAULT_PAGE_SIZE),
+        ],
+        responses={
+            200: openapi.Response('OK'),
+        }
+    )
     def list(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)

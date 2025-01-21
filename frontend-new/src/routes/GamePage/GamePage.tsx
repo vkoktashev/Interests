@@ -127,7 +127,7 @@ export function GamePage() {
 				<div className={bem.element('body')}>
 					<div className={bem.element('header')}>
 						<div className={bem.element('poster')}>
-							<img src={game.poster} className='img-fluid' alt='' />
+							<img src={game.poster} className={bem.element('poster-image')} alt='' />
 						</div>
 						<div className={bem.element('info')}>
 							<h1 className={bem.element('info-header')}>

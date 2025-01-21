@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import { FaLock } from "react-icons/fa";
 import LoadingOverlay from "react-loading-overlay";
-import {useComponents, useFetch, useSelector} from '@steroidsjs/core/hooks';
+import {useBem, useComponents, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import { useQueryParam, StringParam, withDefault } from "use-query-params";
 
 import GameBlock from './views/ItemsBlock/GameBlock';
@@ -23,6 +23,7 @@ import FriendsLogs from './views/FriendsLogs/FriendsLogs';
  * Основная страница приложения
  */
 function UserPage() {
+	const bem = useBem('user-page');
 	const currentUser = useSelector(getUser);
 	const {http} = useComponents();
 	const {userId} = useSelector(getRouteParams);
@@ -68,7 +69,7 @@ function UserPage() {
 	}
 
 	return (
-		<div className='user-page'>
+		<div className={bem.block()}>
 			<LoadingOverlay
 				active={isLoading}
 				spinner
@@ -99,38 +100,39 @@ function UserPage() {
 					</div>
 
 					<CategoriesTab
+						className={bem.element('tabs')}
 						categories={["Лента", "Игры", "Фильмы", "Сериалы", "Статистика", "Друзья"]}
 						activeCategory={activeCategory}
 						onChangeCategory={setActiveCategory}
 					>
 						<div hidden={activeCategory !== "Лента"}>
 							<div hidden={!user.is_available}>
-								<UserLogs userId={userId} />
+								<UserLogs userId={userId}/>
 							</div>
 							<h4 hidden={user.is_available || isLoading}>
-								<FaLock style={{ marginRight: "1rem" }} />
+								<FaLock style={{marginRight: "1rem"}}/>
 								Профиль скрыт настройками приватности
 							</h4>
 						</div>
 						<div hidden={activeCategory !== "Игры"}>
-							<GameBlock games={user.games} />
+							<GameBlock games={user.games}/>
 						</div>
 						<div hidden={activeCategory !== "Фильмы"}>
-							<MovieBlock movies={user.movies} />
+							<MovieBlock movies={user.movies}/>
 						</div>
 						<div hidden={activeCategory !== "Сериалы"}>
-							<ShowBlock shows={user.shows} />
+							<ShowBlock shows={user.shows}/>
 						</div>
 						<div hidden={activeCategory !== "Статистика"}>
-							<StatisticsBlock stats={user.stats} />
+							<StatisticsBlock stats={user.stats}/>
 						</div>
 						<div hidden={activeCategory !== "Друзья"}>
-							<FriendBlock users={user.followed_users ? user.followed_users : []} />
+							<FriendBlock users={user.followed_users ? user.followed_users : []}/>
 							<div hidden={currentUser.username !== user.username}>
 								<h4 className='user-page__friends-header'>
 									{__('Активность друзей:')}
 								</h4>
-								<FriendsLogs userId={userId} />
+								<FriendsLogs userId={userId}/>
 							</div>
 						</div>
 					</CategoriesTab>

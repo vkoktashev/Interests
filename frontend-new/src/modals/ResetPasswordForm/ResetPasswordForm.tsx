@@ -4,6 +4,7 @@ import './reset-password-form.scss';
 import {useBem, useComponents} from '@steroidsjs/core/hooks';
 import {IModalProps} from '@steroidsjs/core/ui/modal/Modal/Modal';
 import Modal from '@steroidsjs/core/ui/modal/Modal';
+import {Button, EmailField, Form} from '@steroidsjs/core/ui/form';
 
 export function ResetPasswordForm(props: IModalProps) {
     const bem = useBem('reset-password-form');
@@ -11,18 +12,13 @@ export function ResetPasswordForm(props: IModalProps) {
 	const [error, setError] = useState('');
 	const [isLoading, setLoading] = useState(false);
 	const [emailSent, setEmailSent] = useState(false);
-	const [email, setEmail] = useState('');
 
-	const onSubmit = async (event: any) => {
-		event.preventDefault();
+	const onSubmit = async (values) => {
 		setLoading(true);
 		setError('');
-		http.send('PUT', '/users/auth/password_reset/', {
-			email,
-		})
+		http.send('PUT', '/users/auth/password_reset/', values)
 			.then(response => {
 				setEmailSent(true);
-				console.log(response);
 			})
 			.catch(error => {
 				const errorMessage = error?.response?.data?.error || __('Ошибка сервера');
@@ -39,7 +35,7 @@ export function ResetPasswordForm(props: IModalProps) {
             onClose={props.onClose}
 			title={__('Сбросить пароль')}
         >
-			<form onSubmit={onSubmit}>
+			<Form onSubmit={onSubmit} className={bem.element('form')}>
 				<p
 					className='reset-password-form__fail'
 					hidden={!error}
@@ -53,20 +49,18 @@ export function ResetPasswordForm(props: IModalProps) {
 					На вашу почту отправлено письмо
 				</p>
 
-				<label htmlFor='emailInput'>
-					Почта
-				</label>
-				<input
-					type='text'
-					className='reset-password-form__input'
-					value={email}
-					onChange={(e) => setEmail(e.target.value)}
+				<EmailField
+					attribute='email'
+					label={__('Почта')}
+					className={bem.element('input')}
 				/>
 
-				<button type='submit' className='reset-password-form__button'>
-					{isLoading ? __('Загрузка...') : __('Сбросить')}
-				</button>
-			</form>
+				<Button
+					type='submit'
+					className='reset-password-form__button'
+					label={isLoading ? __('Загрузка...') : __('Сбросить')}
+				/>
+			</Form>
 		</Modal>
 	);
 }

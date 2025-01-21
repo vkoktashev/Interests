@@ -2,18 +2,13 @@
 
 .search-cards {
     &__cards {
-        text-align: center;
-        width: 92%;
-        display: inline-block;
-        margin-left: 4%;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
     }
     &__body {
         position: relative;
-    }
-    &__card {
-        margin-right: 5px;
-        margin-left: 5px;
-        margin-bottom: 10px;
     }
     &__pagination {
         position: absolute;

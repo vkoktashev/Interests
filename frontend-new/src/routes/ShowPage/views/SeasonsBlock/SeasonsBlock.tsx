@@ -1,5 +1,4 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import LoadingOverlay from 'react-loading-overlay';
 
 import SeasonBlock from "../SeasonBlock";
 
@@ -15,6 +14,7 @@ function SeasonsBlock({ showId, seasons, userWatchedShow }) {
 	const user = useSelector(getUser);
     const saveEpisodesBlockIsOpen = useSelector(getSaveEpisodes);
     const dispatch = useDispatch();
+	const [dataVersion, setDataVersion] = useState(0);
 	const [showSeasons, setShowSeasons] = useState([]);
 	const [showSeasonsUserInfo, setShowSeasonsUserInfo] = useState<any>({});
 
@@ -54,24 +54,17 @@ function SeasonsBlock({ showId, seasons, userWatchedShow }) {
 			}
 		}
 		await setEpisodesStatus({ episodes });
+		setDataVersion(prevState => prevState + 1);
 		dispatch(setSaveEpisodes(false));
 	}, [showSeasons, showSeasonsUserInfo]);
 
 	const sendAllEpisodes = useCallback(async () => {
-		let episodes = [];
-		for (let season in showSeasons) {
-			if (showSeasons[season].name === "Спецматериалы") {
-				continue;
-			}
-			for (let episode in showSeasons[season].episodes) {
-				episodes.push({
-					tmdb_id: showSeasons[season].episodes[episode].id,
-					score: 0,
-				});
-			}
-		}
-		await setEpisodesStatus({ episodes });
-		dispatch(showNotification('Сериал отмечмен просмотренным'));
+		await http.send(
+			'PUT',
+			`/shows/show/${showId}/complete/`,
+		);
+		setDataVersion(prevState => prevState + 1);
+		dispatch(showNotification('Сериал отмечен просмотренным'));
 		dispatch(setSaveEpisodes(false));
 	}, [showSeasons]);
 
@@ -114,6 +107,7 @@ function SeasonsBlock({ showId, seasons, userWatchedShow }) {
 					userWatchedShow={userWatchedShow}
 					onSeasonLoad={addSeason}
 					onSeasonUserInfoLoad={addSeasonUserInfo}
+					dataVersion={dataVersion}
 				/>)
 				.reverse()}
 			<div className='seasons-block__save-episodes-block' hidden={!saveEpisodesBlockIsOpen}>

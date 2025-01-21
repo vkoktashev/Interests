@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {Loader} from '@steroidsjs/core/ui/layout';
-import {useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
+import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getRouteParams} from '@steroidsjs/core/reducers/router';
 import {Link} from '@steroidsjs/core/ui/nav';
@@ -15,10 +15,12 @@ import {ROUTE_SHOW, ROUTE_SHOW_SEASON} from '../index';
 import LoginForm from '../../modals/LoginForm';
 import "./episode-page.scss";
 import {showNotification} from '@steroidsjs/core/actions/notifications';
+import {Button, TextField} from '@steroidsjs/core/ui/form';
 
 
 
 function EpisodePage() {
+	const bem = useBem('episode-page');
 	const dispatch = useDispatch();
 	const {http} = useComponents();
 	const user = useSelector(getUser);
@@ -79,7 +81,7 @@ function EpisodePage() {
 	}
 
 	return (
-		<div className='episode-page'>
+		<div className={bem.block()}>
 			<Image
 				className='episode-page__background'
 				src={showEpisode?.show?.tmdb_backdrop_path}
@@ -143,16 +145,14 @@ function EpisodePage() {
 										}}
 										className='episode-page__rating'
 									/>
-									<div className='episode-page__review'>
-										Ваш отзыв
-										<textarea
-											className='episode-page__review-input'
-											value={review}
-											onChange={(event) => setReview(event.target.value)}
-										/>
-									</div>
-									<button
-										className='episode-page__review-save-button'
+									<TextField
+										label={__('Ваш отзыв')}
+										value={review}
+										onChange={(value) => setReview(value)}
+									/>
+									<Button
+										label={__('Сохранить')}
+										className={bem.element('button')}
 										hidden={!user || !userWatchedShow}
 										onClick={() => {
 											if (!user) {
@@ -166,9 +166,7 @@ function EpisodePage() {
 														}));
 													});
 											}
-										}}>
-										Сохранить
-									</button>
+										}} />
 								</LoadingOverlay>
 							</div>
 							<ScoreBlock

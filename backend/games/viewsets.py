@@ -10,6 +10,7 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db import IntegrityError
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
 from requests.exceptions import ConnectionError
@@ -31,6 +32,18 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
     serializer_class = GameSerializer
     queryset = Game.objects.all()
 
+    @swagger_auto_schema(
+        operation_description="Search for games using RAWG API with pagination.",
+        manual_parameters=[
+            openapi.Parameter('query', openapi.IN_QUERY, type=openapi.TYPE_STRING),
+            openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, default=DEFAULT_PAGE_NUMBER),
+            openapi.Parameter('page_size', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, default=DEFAULT_PAGE_SIZE),
+        ],
+        responses={
+            200: openapi.Response('OK'),
+            503: openapi.Response('Service Unavailable'),
+        }
+    )
     @action(detail=False, methods=['get'])
     async def rawg(self, request):
         query = request.GET.get('query', '')
@@ -44,6 +57,17 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
 
         return Response(results)
 
+    @swagger_auto_schema(
+        operation_description="List all games that match a search query, with pagination.",
+        manual_parameters=[
+            openapi.Parameter('query', openapi.IN_QUERY, type=openapi.TYPE_STRING),
+            openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, default=DEFAULT_PAGE_NUMBER),
+            openapi.Parameter('page_size', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, default=DEFAULT_PAGE_SIZE),
+        ],
+        responses={
+            200: openapi.Response('OK')
+        }
+    )
     def list(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
@@ -64,6 +88,17 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     serializer_class = UserGameSerializer
     lookup_field = 'slug'
 
+    @swagger_auto_schema(
+        operation_description="Retrieve details for a specific game by its slug.",
+        manual_parameters=[
+            openapi.Parameter('slug', openapi.IN_PATH, type=openapi.TYPE_STRING),
+        ],
+        responses={
+            200: openapi.Response('OK'),
+            404: openapi.Response('Game Not Found'),
+            503: openapi.Response('Service Unavailable'),
+        }
+    )
     async def retrieve(self, request, *args, **kwargs):
         slug = kwargs.get('slug')
 
@@ -96,6 +131,16 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         parsed_game = parse_game(rawg_game, None)
         return Response(parsed_game)
 
+    @swagger_auto_schema(
+        operation_description="Retrieve HLTB data for a specific game by its slug.",
+        manual_parameters=[
+            openapi.Parameter('slug', openapi.IN_PATH, type=openapi.TYPE_STRING),
+        ],
+        responses={
+            200: openapi.Response('OK'),
+            404: openapi.Response('Game Not Found'),
+        }
+    )
     @action(detail=True, methods=['get'])
     async def hltb(self, request, *args, **kwargs):
         slug = kwargs.get('slug')
@@ -138,6 +183,29 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response({'user_info': user_info, 'friends_info': friends_info})
 
+    @swagger_auto_schema(
+        operation_description="Update the user's game status or information for a specific game.",
+        manual_parameters=[
+            openapi.Parameter('slug', openapi.IN_PATH, type=openapi.TYPE_STRING),
+        ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'status': openapi.Schema(type=openapi.TYPE_STRING,
+                                         enum=[UserGame.STATUS_PLAYING, UserGame.STATUS_COMPLETED,
+                                               UserGame.STATUS_STOPPED, UserGame.STATUS_GOING,
+                                               UserGame.STATUS_NOT_PLAYED]),
+                'playtime': openapi.Schema(type=openapi.TYPE_NUMBER),
+                'score': openapi.Schema(type=openapi.TYPE_INTEGER),
+                'review': openapi.Schema(type=openapi.TYPE_STRING),
+            },
+        ),
+        responses={
+            200: 'OK',
+            404: 'Game Not Found',
+            400: 'Bad Request',
+        }
+    )
     async def update(self, request, **kwargs):
         try:
             game = await Game.objects.aget(rawg_slug=kwargs.get('slug'))

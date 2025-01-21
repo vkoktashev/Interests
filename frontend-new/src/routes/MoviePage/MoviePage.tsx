@@ -11,15 +11,17 @@ import Rating from '../../shared/Rating';
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import "./movie-page.scss";
 import Image from "../../shared/Image";
-import {useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
+import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getRouteParam} from '@steroidsjs/core/reducers/router';
 import {Loader} from '@steroidsjs/core/ui/layout';
 import {openModal} from '@steroidsjs/core/actions/modal';
 import LoginForm from '../../modals/LoginForm';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
+import {Button, TextField} from '@steroidsjs/core/ui/form';
 
 export function MoviePage() {
+	const bem = useBem('movie-page')
 	const user = useSelector(getUser);
 	const dispatch = useDispatch();
 	const {http} = useComponents();
@@ -94,7 +96,7 @@ export function MoviePage() {
 	}
 
 	return (
-		<div className='movie-page'>
+		<div className={bem.block()}>
 			<Image
 				className='movie-page__background'
 				src={movie?.backdrop_path}
@@ -159,12 +161,15 @@ export function MoviePage() {
 						<h3 className='movie-page__review-header'>Отзыв</h3>
 						<LoadingOverlay active={userInfoIsLoading && !isLoading} spinner text='Загрузка...'>
 							<div className='game-page__review-body' hidden={!user}>
-								<div className='movie-page__review'>
-									Ваш отзыв
-									<textarea className='movie-page__review-input' value={review} onChange={(event) => setReview(event.target.value)} />
-								</div>
-								<button
-									className='movie-page__review-save-button'
+								<TextField
+									label={__('Ваш отзыв')}
+									value={review}
+									onChange={(value) => setReview(value)}
+								/>
+
+								<Button
+									label={__('Сохранить')}
+									className={bem.element('button')}
 									disabled={!user || (userStatus === "Не смотрел")}
 									onClick={() => {
 										setMovieStatus({
@@ -175,9 +180,7 @@ export function MoviePage() {
 												timeOut: 1000,
 											}));
 										});
-									}}>
-									Сохранить
-								</button>
+								}} />
 							</div>
 						</LoadingOverlay>
 						<div className='movie-page__friends' hidden={!user || friendsInfo?.length < 1}>

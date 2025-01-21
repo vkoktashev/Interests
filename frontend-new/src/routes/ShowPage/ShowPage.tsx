@@ -2,7 +2,7 @@ import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import ReactPlayer from "react-player/youtube";
 import { Carousel } from "react-responsive-carousel";
 import LoadingOverlay from "react-loading-overlay";
-import {useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
+import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {Loader} from '@steroidsjs/core/ui/layout';
 import {getRouteParams} from '@steroidsjs/core/reducers/router';
@@ -18,11 +18,13 @@ import "./show-page.scss";
 import Image from "../../shared/Image";
 import LoginForm from '../../modals/LoginForm';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
+import {Button, TextField} from '@steroidsjs/core/ui/form';
 
 /**
  * Основная страница приложения
  */
 function ShowPage(props) {
+	const bem = useBem('show-page');
     const dispatch = useDispatch();
     const {http} = useComponents();
 	const user = useSelector(getUser);
@@ -85,7 +87,7 @@ function ShowPage(props) {
     }
 
 	return (
-		<div className='show-page'>
+		<div className={bem.block()}>
 			<div
                 className='show-page__background'
                 style={{ backgroundImage: `url(${show?.backdrop_path})` }}
@@ -217,16 +219,14 @@ function ShowPage(props) {
                                 spinner
                                 text='Загрузка...'
                             >
-								<div className='show-page__review'>
-									Ваш отзыв
-									<textarea
-                                        value={review}
-                                        onChange={(event) => setReview(event.target.value)}
-                                        className='show-page__review-input'
-                                    />
-								</div>
-								<button
-									className='show-page__review-save-button'
+								<TextField
+									label={__('Ваш отзыв')}
+									value={review}
+									onChange={(value) => setReview(value)}
+								/>
+								<Button
+									label={__('Сохранить')}
+									className={bem.element('button')}
 									disabled={!user || (userStatus === "Не смотрел")}
 									onClick={() => {
 										if (!user) {
@@ -240,9 +240,7 @@ function ShowPage(props) {
                                                     }));
                                                 });
 										}
-									}}>
-									Сохранить
-								</button>
+									}} />
 							</LoadingOverlay>
 						</div>
 						<div

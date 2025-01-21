@@ -1,19 +1,33 @@
 @import "style/colors";
 @import "style/project-fonts";
+@import "style/breakpoints";
 
 .categories-tabs {
     max-width: 100%;
     margin-top: 2rem;
 
     &__body {
-        white-space: pre;
-        overflow-x: auto;
+        max-width: 100%;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        overflow: scroll;
     }
+
     &__content {
         background-color: $newBackground2;
         padding: 1rem;
         border-radius: 0 8px 8px 8px;
+
+        @media (max-width: $tablet-width) {
+            padding: 8px;
+        }
+
+        @media (max-width: $mobile-width) {
+            padding: 8px 4px;
+        }
     }
+
     &__tab {
         @include headline6;
         background-color: $newBackground1;
@@ -21,7 +35,7 @@
         border-radius: 8px 8px 0 0;
         border: none;
         padding: 8px 16px;
-        margin-left: 0 0;
+        margin-left: 0;
         outline: none;
 
         &:focus {
