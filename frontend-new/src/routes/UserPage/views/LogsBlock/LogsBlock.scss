@@ -64,30 +64,3 @@
         }
     }
 }
-@import "../../../../../node_modules/rc-pagination/assets/index.css";
-
-.rc-pagination-item,
-.rc-pagination-prev,
-.rc-pagination-next {
-    background: $newBackground2 !important;
-    border-radius: 8px !important;
-    border: none !important;
-
-    button {
-        background: $newBackground2 !important;
-        color: $newText3 !important;
-        border-radius: 8px !important;
-        border: none !important;
-    }
-    a {
-        color: $newText3 !important;
-    }
-}
-.rc-pagination-item-active {
-    background: $newAccent2 !important;
-    color: $newText3 !important;
-
-    a {
-        color: $newText3 !important;
-    }
-}

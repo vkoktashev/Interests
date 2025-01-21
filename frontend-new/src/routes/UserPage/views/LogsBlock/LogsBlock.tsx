@@ -1,10 +1,10 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import Pagination from "rc-pagination";
 import { FaAngleDown, FaAngleUp } from "react-icons/fa";
 import {useBem, useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {DropDownField, Form, InputField} from '@steroidsjs/core/ui/form';
 import {formChange, formSubmit} from '@steroidsjs/core/actions/form';
+import Pagination from '@steroidsjs/core/ui/list/Pagination/Pagination';
 import {getFormValues} from '@steroidsjs/core/reducers/form';
 import LogsByDay from "./LogsByDay/LogsByDay";
 import useWindowDimensions from '../../../../hooks/useWindowDimensions';
@@ -100,12 +100,15 @@ function LogsBlock(props: ILogsBlockProps) {
 				onDeleteLog={props.onDeleteLog}
 			/>
 			<Pagination
-				total={props.logs.count}
-				pageSize={formValues?.page_size}
-				onChange={(e) => {
-					dispatch(formChange(props.formId, 'page', e));
+				aroundCount={3}
+				list={{
+					total: props.logs.count,
+					page: formValues?.page,
+					pageSize: formValues?.page_size,
 				}}
-				current={formValues?.page}
+				onChange={page => {
+					dispatch(formChange(props.formId, 'page', page));
+				}}
 			/>
 		</div>
 	);

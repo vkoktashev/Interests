@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { CSVLink } from "react-csv";
 import { FaAngleDown, FaAngleUp, FaStar, FaClock, FaArrowsAltV } from "react-icons/fa";
 import { LuLetterText } from "react-icons/lu";
-import Pagination from "rc-pagination";
 import {useBem, useDispatch} from '@steroidsjs/core/hooks';
+import Pagination from '@steroidsjs/core/ui/list/Pagination/Pagination';
 
 import ItemRow from "../ItemRow/ItemRow";
 import useWindowDimensions from '../../../../../hooks/useWindowDimensions';
@@ -148,12 +148,15 @@ function ItemBlock({ items, statuses, fields, name, formId }) {
 			</div>
 			<div className="item-block__footer">
 				<Pagination
-					total={filteredItems?.length}
-					pageSize={formValues.pageSize}
-					onChange={(e) => {
-						dispatch(formChange(formId, 'page', e));
+					aroundCount={3}
+					list={{
+						total: filteredItems?.length,
+						page: formValues.page,
+						pageSize: formValues.pageSize,
 					}}
-					current={formValues.page}
+					onChange={page => {
+						dispatch(formChange(formId, 'page', page));
+					}}
 				/>
 				<CSVLink
 					data={items ? items : []}
