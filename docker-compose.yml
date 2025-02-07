@@ -27,8 +27,21 @@ services:
       - redis
     restart: always
 
+#  front:
+#    build: ./frontend
+#    ports:
+#      - "80:80"
+#      - "443:443"
+#    volumes:
+#      - /etc/letsencrypt/:/etc/letsencrypt/
+#      - staticfiles:/code/staticfiles
+#    restart: always
+#    depends_on:
+#      - back
+#      - redis
+
   front:
-    build: ./frontend
+    build: ./frontend-new
     ports:
       - "80:80"
       - "443:443"
