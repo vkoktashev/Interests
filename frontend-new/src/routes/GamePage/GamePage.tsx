@@ -36,6 +36,12 @@ export function GamePage() {
 	}), [gameId]);
 	const {data: game, isLoading} = useFetch(gameFetchConfig);
 
+	const gameTimeFetchConfig = useMemo(() => gameId && ({
+		url: `/games/game/${gameId}/hltb/`,
+		method: 'get',
+	}), [gameId]);
+	const {data: gameTime, isLoading: isTimeLoading} = useFetch(gameTimeFetchConfig);
+
 	const userInfoFetchConfig = useMemo(() => gameId && user && ({
 		url: `/games/game/${gameId}/user_info/`,
 		method: 'get',
@@ -127,7 +133,7 @@ export function GamePage() {
 				<div className={bem.element('body')}>
 					<div className={bem.element('header')}>
 						<div className={bem.element('poster')}>
-							<img src={game.poster} className='img-fluid' alt='' />
+							<img src={game.poster} className={bem.element('poster-image')} alt='' />
 						</div>
 						<div className={bem.element('info')}>
 							<h1 className={bem.element('info-header')}>
@@ -138,7 +144,7 @@ export function GamePage() {
 								<p>Дата релиза: {game.release_date}</p>
 								<p>Жанр: {game.genres}</p>
 								<p>Платформы: {game.platforms}</p>
-								<TimeToBeat hltbInfo={game.hltb || game.playtime} />
+								<TimeToBeat hltbInfo={gameTime} rawgPlayTime={game.playtime} />
 								<GameStores stores={game.stores} />
 							</div>
 							<LoadingOverlay

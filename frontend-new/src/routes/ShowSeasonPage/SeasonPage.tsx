@@ -3,7 +3,7 @@ import LoadingOverlay from "react-loading-overlay";
 import { AreaChart, XAxis, Tooltip, YAxis, Area, ResponsiveContainer } from "recharts";
 import {showNotification} from '@steroidsjs/core/actions/notifications';
 import {openModal} from '@steroidsjs/core/actions/modal';
-import {useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
+import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getRouteParams} from '@steroidsjs/core/reducers/router';
 import {Link} from '@steroidsjs/core/ui/nav';
@@ -18,8 +18,10 @@ import './season-page.scss';
 import {getSaveEpisodes} from '../../reducers/modals';
 import {setSaveEpisodes} from '../../actions/modals';
 import {Loader} from '@steroidsjs/core/ui/layout';
+import {Button, TextField} from '@steroidsjs/core/ui/form';
 
 function SeasonPage() {
+	const bem = useBem('');
 	const dispatch = useDispatch();
 	const {http} = useComponents();
 	const user = useSelector(getUser);
@@ -129,7 +131,7 @@ function SeasonPage() {
 	}
 
 	return (
-		<div className='season-page'>
+		<div className={bem.element('season-page')}>
 			<Image
 				className='season-page__background'
 				src={showSeason?.show?.tmdb_backdrop_path}
@@ -188,16 +190,14 @@ function SeasonPage() {
 										}}
 										className='season-page__rating'
 									/>
-									<div className='season-page__review'>
-										Ваш отзыв
-										<textarea
-											className='season-page__review-input'
-											value={review}
-											onChange={(event) => setReview(event.target.value)}
-										/>
-									</div>
-									<button
-										className='season-page__review-save-button'
+									<TextField
+										label={__('Ваш отзыв')}
+										value={review}
+										onChange={(value) => setReview(value)}
+									/>
+									<Button
+										className={bem.element('review-save-button')}
+										label={__('Сохранить')}
 										hidden={!user || !userWatchedShow}
 										onClick={() => {
 											setShowSeasonStatus({ review })
@@ -207,9 +207,7 @@ function SeasonPage() {
 														timeOut: 1000,
 													}));
 												});
-										}}>
-										Сохранить
-									</button>
+										}} />
 								</LoadingOverlay>
 							</div>
 						</div>
@@ -297,11 +295,11 @@ function SeasonPage() {
 				</div>
 			</LoadingOverlay>
 			<div className='season-page__save-episodes-block' hidden={!saveEpisodesBlockIsOpen}>
-				<button
+				<Button
 					className='season-page__save-episodes-button'
 					onClick={sendEpisodes}>
 					Сохранить
-				</button>
+				</Button>
 			</div>
 		</div>
 	);
