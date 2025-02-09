@@ -12,6 +12,11 @@
         flex-direction: row;
         flex-wrap: nowrap;
         overflow: scroll;
+        scrollbar-width: none; /* для Firefox */
+
+        &::-webkit-scrollbar {
+            display: none; /* для Chrome, Safari */
+        }
     }
 
     &__content {

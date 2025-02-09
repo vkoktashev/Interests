@@ -20,6 +20,7 @@ function SeasonBlock({
 	className,
 	onSeasonLoad,
 	 onSeasonUserInfoLoad,
+	dataVersion
 }) {
 	const bem = useBem('season-block');
 	const dispatch = useDispatch();
@@ -62,6 +63,12 @@ function SeasonBlock({
 			setUserRate(0);
 		}
 	}, [showUserInfo]);
+
+	useEffect(() => {
+		if (dataVersion > 0) {
+			fetchUserInfo();
+		}
+	}, [dataVersion]);
 
 	function getEpisodeByID(episodes, id) {
 		for (let episode in episodes) if (episodes[episode].tmdb_id === id) return episodes[episode];

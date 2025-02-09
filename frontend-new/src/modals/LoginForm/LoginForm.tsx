@@ -7,6 +7,8 @@ import {openModal} from '@steroidsjs/core/actions/modal';
 import RegisterForm from '../RegisterForm';
 import ResetPasswordForm from '../ResetPasswordForm';
 import {login} from '@steroidsjs/core/actions/auth';
+import {Button, Form, InputField, PasswordField} from '@steroidsjs/core/ui/form';
+import {Link} from '@steroidsjs/core/ui/nav';
 
 export function LoginForm(props: IModalProps) {
 	const bem = useBem('login-form');
@@ -14,17 +16,11 @@ export function LoginForm(props: IModalProps) {
 	const {http} = useComponents();
 	const [isLoading, setLoading] = useState(false);
 	const [error, setError] = useState('');
-	const [password, setPassword] = useState('');
-	const [username, setUsername] = useState('');
 
-	const onSubmit = async (event: any) => {
-		event.preventDefault();
+	const onSubmit = async (values: any) => {
 		setError('');
 		setLoading(true);
-		http.post('/users/auth/login/', {
-			username: username,
-			password: password,
-		}).then(response => {
+		http.post('/users/auth/login/', values).then(response => {
 			dispatch(login(response.access, false, {
 				refreshToken: response.refresh,
 			}));
@@ -53,7 +49,7 @@ export function LoginForm(props: IModalProps) {
 			className={bem.block()}
 			onClose={props.onClose}
 		>
-			<form onSubmit={onSubmit}>
+			<Form onSubmit={onSubmit} className={bem.element('form')}>
 				<p
 					className='login-form__fail'
 					hidden={!error}
@@ -61,53 +57,30 @@ export function LoginForm(props: IModalProps) {
 					{error}
 				</p>
 
-				<label
-					htmlFor='loginInput'
-					className='grey-text'
-				>
-					Логин
-				</label>
-				<input
-					type='text'
-					id='loginInput'
-					className='login-form__input'
-					value={username}
-					onChange={(e) => setUsername(e.target.value)}
+				<InputField
+					attribute='username'
+					label={__('Логин')}
+					className={bem.element('input')}
 				/>
 
-				<label
-					htmlFor='passwordInput'
-					className='grey-text'
-				>
-					Пароль
-				</label>
-				<input
-					type='password'
-					id='passwordInput'
-					className='login-form__input'
-					value={password}
-					onChange={(e) => setPassword(e.target.value)}
+				<PasswordField
+					attribute='password'
+					label={__('Пароль')}
+					className={bem.element('input')}
 				/>
 
-				<div className='text-center mt-4'>
-					<button
-						type='submit'
-						className='login-form__auth-button'
-					>
-						{isLoading ? __('Загрузка...') : __('Войти')}
-					</button>
-					<label
-						className='login-form__link-label'
-						onClick={onPasswordRecovery}>
-						Восстановить пароль
-					</label>
-					<label
-						className='login-form__link-label'
-						onClick={onRegistration}>
-						Зарегистрироваться
-					</label>
-				</div>
-			</form>
+				<Button
+					type='submit'
+					className='login-form__auth-button'
+					label={isLoading ? __('Загрузка...') : __('Войти')}
+				/>
+				<Link onClick={onPasswordRecovery}>
+					Восстановить пароль
+				</Link>
+				<Link onClick={onRegistration}>
+					Зарегистрироваться
+				</Link>
+			</Form>
 		</Modal>
 	);
 }

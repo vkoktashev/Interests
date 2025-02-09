@@ -126,7 +126,7 @@ export function SearchInput({ onSubmit, className }) {
 							className='search-input__hint'
 							onClick={(e) => {
 								dispatch(goToRoute(ROUTE_SHOW, {
-									movieId: hint.tmdb_id,
+									showId: hint.tmdb_id,
 								}));
 								e.preventDefault();
 								setQuery("");
