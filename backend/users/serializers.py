@@ -143,3 +143,10 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['email'] = user.email
 
         return token
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        return {
+            "refreshToken": data["refresh"],
+            "accessToken": data["access"],
+        }
