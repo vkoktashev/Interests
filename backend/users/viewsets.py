@@ -32,7 +32,16 @@ from .models import User, UserFollow, UserLog
 
 
 class MyTokenRefreshView(TokenRefreshView):
-    _serializer_class = MyTokenRefreshSerializer
+    serializer_class = MyTokenRefreshSerializer
+
+    def post(self, request, *args, **kwargs):
+        data = request.data.copy()
+
+        if 'refreshToken' in data:
+            data['refresh'] = data.pop('refreshToken')[0]
+
+        request._full_data = data
+        return super().post(request, *args, **kwargs)
 
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
