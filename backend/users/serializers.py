@@ -5,6 +5,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.settings import api_settings
 
 from games.models import Game
 from movies.models import Movie
@@ -144,6 +145,14 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         return token
 
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        return {
+            "refreshToken": data["refresh"],
+            "accessToken": data["access"],
+        }
+
+class MyTokenRefreshSerializer(api_settings.TOKEN_REFRESH_SERIALIZER):
     def validate(self, attrs):
         data = super().validate(attrs)
         return {

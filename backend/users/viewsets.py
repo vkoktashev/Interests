@@ -11,6 +11,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from rest_framework_simplejwt.views import TokenRefreshView
 
 from games.models import UserGame, GameLog, Game
 from games.serializers import GameStatsSerializer, GameLogSerializer, GameSerializer, TypedGameSerializer
@@ -20,7 +21,7 @@ from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, 
 from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogSerializer, EpisodeLogSerializer, \
     EpisodeShowSerializer, TypedShowSerializer
 from users.serializers import UserFollowSerializer, UserLogSerializer, \
-    UserInfoSerializer, SettingsSerializer, UserSerializer
+    UserInfoSerializer, SettingsSerializer, UserSerializer, MyTokenRefreshSerializer
 from utils.constants import ERROR, ID_VALUE_ERROR, \
     USER_NOT_FOUND, MINUTES_IN_HOUR, TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, \
     TYPE_SEASON, TYPE_EPISODE, TYPE_USER, CANNOT_DELETE_ANOTHER_USER_LOG, WRONG_LOG_TYPE, LOG_NOT_FOUND
@@ -28,6 +29,10 @@ from utils.functions import get_page_size
 from utils.models import Round
 from .functions import is_user_available
 from .models import User, UserFollow, UserLog
+
+
+class MyTokenRefreshView(TokenRefreshView):
+    _serializer_class = MyTokenRefreshSerializer
 
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
