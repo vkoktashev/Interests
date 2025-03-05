@@ -6,3 +6,4 @@ __pycache__/
 /celerybeat-schedule.dat
 /celerybeat-schedule.dir
 /.env
+/staticfiles
