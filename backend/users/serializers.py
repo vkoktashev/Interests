@@ -145,12 +145,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         return token
 
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        return {
-            "refreshToken": data["refresh"],
-            "accessToken": data["access"],
-        }
 
 class MyTokenRefreshSerializer(api_settings.TOKEN_REFRESH_SERIALIZER):
     def validate(self, attrs):
