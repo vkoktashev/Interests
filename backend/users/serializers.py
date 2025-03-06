@@ -147,11 +147,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class MyTokenRefreshSerializer(TokenRefreshSerializer):
     def validate(self, attrs):
-        if "refreshToken" in attrs:
-            attrs["refresh"] = attrs.pop("refreshToken")
-
         data = super().validate(attrs)
-
         result = {"accessToken": data["access"]}
         if "refresh" in data:
             result["refreshToken"] = data["refresh"]
