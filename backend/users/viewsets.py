@@ -39,8 +39,10 @@ class MyTokenRefreshView(TokenRefreshView):
         data = request.data.copy()
 
         if 'refreshToken' in data:
-            data['refresh'] = data.pop('refreshToken')[0]
-
+            refresh_token = data.pop('refreshToken')
+            if isinstance(refresh_token, list):
+                refresh_token = refresh_token[0]
+            data['refresh'] = refresh_token
         request._full_data = data
         return super().post(request, *args, **kwargs)
 
