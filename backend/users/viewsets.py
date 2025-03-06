@@ -8,7 +8,7 @@ from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, 
 from django.db.models.functions import ExtractYear, Coalesce
 from rest_framework import status, mixins
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -32,6 +32,7 @@ from .models import User, UserFollow, UserLog
 
 
 class MyTokenRefreshView(TokenRefreshView):
+    permission_classes = [AllowAny]
     serializer_class = MyTokenRefreshSerializer
 
     def post(self, request, *args, **kwargs):
