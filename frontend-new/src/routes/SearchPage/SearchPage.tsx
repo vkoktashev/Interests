@@ -22,7 +22,7 @@ function SearchPage() {
 	const {http} = useComponents();
 	const formValues = useSelector(state => getFormValues(state, SEARCH_PAGE_FORM) || {});
 
-	let { query }: any = useSelector(state => getRouteParams(state));
+	let query = useSelector(state => decodeURIComponent(getRouteParams(state)?.query));
 	const [isLoading, setLoading] = useState(false);
 	const [lastQuery, setLastQuery] = useState(query);
 
