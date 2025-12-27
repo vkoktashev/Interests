@@ -8,6 +8,7 @@
     transition: transform 0.1s linear;
 
     &:hover {
+        z-index: 1000;
         color: $newAccent2;
         transform: scale(1.01);
     }

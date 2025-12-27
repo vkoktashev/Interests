@@ -148,6 +148,7 @@ function ItemBlock({ items, statuses, fields, name, formId }) {
 			</div>
 			<div className="item-block__footer">
 				<Pagination
+					showSteps
 					aroundCount={3}
 					list={{
 						total: filteredItems?.length,

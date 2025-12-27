@@ -1,5 +1,5 @@
 import React from "react";
-import {useBem} from '@steroidsjs/core/hooks';
+import {useBem, useSelector} from '@steroidsjs/core/hooks';
 import Rating from '../../../../../shared/Rating';
 import "./log-row.scss";
 import {Link} from '@steroidsjs/core/ui/nav';
@@ -11,21 +11,23 @@ import {
 	ROUTE_SHOW_SEASON,
 	ROUTE_USER
 } from '../../../../index';
+import {getUser} from '@steroidsjs/core/reducers/auth';
 
 function LogRow({ log, showUsername, onDeleteLog, className }) {
 	const bem = useBem('log-row');
+	const isOwnLog = useSelector(state => getUser(state)?.username === log.user);
 
 	function translateActionType(action, actionResult, logType) {
 		switch (action) {
-			case "score":
+			case 'score':
 				switch (actionResult) {
-					case "0":
+					case '0':
 						if (logType !== 'episode') {
 							return 'оценил(а)';
 						}
-						return "посмотрел(а)";
-					case "-1":
-						return "не смотрела(а)";
+						return 'посмотрел(а)';
+					case '-1':
+						return 'не смотрела(а)';
 					default:
 						return "оценил(а)";
 				}
@@ -226,7 +228,7 @@ function LogRow({ log, showUsername, onDeleteLog, className }) {
 			&thinsp;
 			{actionResultToStr(log.action_type, log.action_result, log.type)}
 			<button
-				className={bem.element('delete-button', {hidden: showUsername})}
+				className={bem.element('delete-button', {hidden: !isOwnLog})}
 				onClick={(event) => {
 					onDeleteLog(log.type, log.id);
 				}}>
