@@ -106,6 +106,7 @@ function LogsBlock(props: ILogsBlockProps) {
 					page: formValues?.page,
 					pageSize: formValues?.page_size,
 				}}
+				showSteps
 				onChange={page => {
 					dispatch(formChange(props.formId, 'page', page));
 				}}

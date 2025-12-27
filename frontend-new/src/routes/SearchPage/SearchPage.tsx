@@ -188,6 +188,7 @@ function SearchPage() {
 						}
 
 						<Pagination
+							showSteps
 							aroundCount={5}
 							list={{
 								total: 100,

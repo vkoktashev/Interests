@@ -1,14 +1,36 @@
 @import "style/colors";
 @import "style/mixins";
 
-.unwatched-page {
+.UnwatchedPage {
     @include default-page;
+    position: relative;
 
     &__show-block {
         margin-bottom: 1rem;
     }
+
     &__header {
         font-weight: 400;
         font-size: 2rem;
+    }
+
+    &__save-episodes-block {
+        position: sticky;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        z-index: 1000;
+        text-align: center;
+        padding-top: 5px;
+        background-color: $newBackground3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        &_hidden {
+            display: none;
+        }
     }
 }

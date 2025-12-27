@@ -90,6 +90,10 @@ function SeasonBlock({
 		}
 	}, [showUserInfo]);
 
+	if (showSeason && !showSeason?.episodes?.length) {
+		return null;
+	}
+
 	return (
 		<LoadingOverlay active={showSeasonIsLoading} spinner text='Загрузка...'>
 			<div key={showSeason?.id} className={bem(bem.block(), className)}>
