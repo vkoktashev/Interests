@@ -46,7 +46,7 @@ function UnwatchedPage() {
 			}
 
 			const [showId, episodeId] = key.split('_');
-			const show = shows.find(show => show.showID === showId);
+			const show = shows.find(show => show.showId === showId);
 			if (!show) {
 				shows.push({
 					showId,
