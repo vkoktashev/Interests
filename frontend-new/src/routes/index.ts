@@ -103,14 +103,6 @@ export default {
             title: __('Подтверждение пароля'),
             roles,
         },
-        [NOT_FOUND]: {
-            // exact: true,
-            path: '/404',
-            role: '404',
-            title: __('404'),
-            component: NotFoundPage,
-            // roles,
-        },
         [ROUTE_SEARCH]: {
             // exact: true,
             path: '/search',
@@ -145,6 +137,14 @@ export default {
             title: __('Серия сериала'),
             component: ShowEpisodePage,
             roles,
+        },
+        [NOT_FOUND]: {
+            exact: false,
+            path: '*',
+            role: '404',
+            title: __('404'),
+            component: NotFoundPage,
+            // roles,
         },
     },
 } as IRouteItem;
