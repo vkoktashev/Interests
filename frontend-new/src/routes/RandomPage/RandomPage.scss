@@ -1,33 +1,222 @@
 @import "style/colors";
 @import "style/mixins";
+@import "style/project-fonts";
 
 .RandomPage {
   @include default-page;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 30px;
-  min-height: 500px;
+  --rp-bg: #{$newBackground2};
+  --rp-surface: #{$newBackground3};
+  --rp-ink: #{$newText3};
+  --rp-muted: #{$newText2};
+  --rp-accent: #{$newAccent1};
+  --rp-accent-2: #{$newAccent2};
+  --rp-line: rgba(255, 255, 255, 0.08);
+  background: radial-gradient(circle at top left, #0d1254 0%, #191a1b 45%, #040405 100%);
+  color: var(--rp-ink);
+  padding: 2.5rem;
+  position: relative;
+  display: grid;
+  gap: 2.5rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+
+  @media(max-width: $tablet-width) {
+    grid-template-columns: 1fr;
+    padding: 1.5rem;
+  }
+
+  &__form {
+    display: grid;
+    gap: 1.6rem;
+  }
+
+  &__hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
 
   &__header {
-    margin-bottom: 1rem;
-    font-weight: 500;
-    font-size: 2rem;
-  }
-  &__form {
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    gap: 20px;
+    @include headline4;
+    margin: 0 0 0.4rem;
   }
 
-  &__image {
-    max-width: 500px;
+  &__subtitle {
+    @include body1;
+    margin: 0;
+    color: var(--rp-muted);
+  }
+
+  &__pill {
+    @include overline;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    background: rgba(101, 31, 255, 0.18);
+    color: var(--rp-accent);
+    white-space: nowrap;
+  }
+
+  &__panel {
+    background: rgba(16, 17, 18, 0.9);
+    border-radius: 24px;
+    padding: 1.6rem;
+    border: 1px solid var(--rp-line);
+    display: grid;
+    gap: 1.2rem;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  }
+
+  &__label {
+    @include subtitle2;
+    color: var(--rp-muted);
+  }
+
+  &__checkbox-grid {
+    display: grid;
+    gap: 0.6rem;
   }
 
   &__checkbox {
     .CheckboxFieldView__label-text {
-      color: $newText3 !important;
+      color: var(--rp-ink) !important;
     }
+  }
+
+  &__spin {
+    @include subtitle2;
+    padding: 0.8rem 1.5rem;
+    border-radius: 999px;
+    background: linear-gradient(120deg, $newAccent1, $newAccent2);
+    box-shadow: 0 12px 28px rgba(101, 31, 255, 0.35);
+  }
+
+  &__hint {
+    @include caption;
+    color: var(--rp-muted);
+  }
+
+  &__result {
+    position: relative;
+    min-height: 420px;
+    border-radius: 28px;
+    border: 1px solid var(--rp-line);
+    background: rgba(16, 17, 18, 0.9);
+    padding: 2rem;
+    display: grid;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 24px 50px rgba(0, 0, 0, 0.5);
+  }
+
+  &__result--empty {
+    border-style: dashed;
+  }
+
+  &__result--reveal {
+    animation: result-reveal 0.9s ease forwards;
+  }
+
+  &__result-placeholder {
+    @include body2;
+    color: var(--rp-muted);
+    text-align: center;
+  }
+
+  &__preload {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
+  &__reel {
+    width: 100%;
+    height: 260px;
+    border-radius: 18px;
+    border: 1px dashed rgba(255, 255, 255, 0.12);
+    background: rgba(8, 9, 12, 0.9);
+    overflow: hidden;
+    display: grid;
+    align-items: center;
+    position: relative;
+  }
+
+  &__reel-focus {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    right: 12px;
+    height: 44px;
+    transform: translateY(-50%);
+    border-radius: 14px;
+    border: 1px solid rgba(101, 31, 255, 0.6);
+    box-shadow: 0 0 24px rgba(101, 31, 255, 0.45);
+    background: linear-gradient(90deg, rgba(101, 31, 255, 0.18), rgba(79, 93, 234, 0.18));
+    pointer-events: none;
+  }
+
+  &__reel-focus--hold {
+    box-shadow: 0 0 32px rgba(101, 31, 255, 0.8);
+  }
+
+  &__reel-track {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  &__reel-track-inner {
+    display: grid;
+    gap: 0;
+    padding: 0;
+    will-change: transform;
+  }
+
+  &__reel-track-inner--spinning {
+    animation: none;
+  }
+
+  &__reel-track-inner--settling {
+    transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  &__reel-track-inner--hold {
+    filter: drop-shadow(0 0 14px rgba(101, 31, 255, 0.6));
+  }
+
+  &__reel-item {
+    @include subtitle1;
+    color: var(--rp-ink);
+    text-align: center;
+    height: 36px;
+    line-height: 36px;
+    text-transform: none;
+  }
+}
+
+@keyframes result-reveal {
+  0% {
+    transform: translateY(60px) scale(0.96);
+    filter: blur(6px);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+@keyframes reel-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, var(--reel-distance, -240px), 0);
   }
 }
