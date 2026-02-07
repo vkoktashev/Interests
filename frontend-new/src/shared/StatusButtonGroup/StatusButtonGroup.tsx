@@ -8,7 +8,6 @@ export function StatusButtonGroup({ statuses, onChangeStatus, userStatus, classN
 	const activeIndex = Math.max(statuses?.indexOf(userStatus) || 0, 0);
 
 	return (
-		<div className={classnames("content-statuses", className)}>
 		<div
 			className={bem(bem.block(), className)}
 			style={
