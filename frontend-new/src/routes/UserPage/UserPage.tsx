@@ -105,36 +105,48 @@ function UserPage() {
 						activeCategory={activeCategory}
 						onChangeCategory={setActiveCategory}
 					>
-						<div hidden={activeCategory !== "Лента"}>
-							<div hidden={!user.is_available}>
-								<UserLogs userId={userId}/>
-							</div>
-							<h4 hidden={user.is_available || isLoading}>
-								<FaLock style={{marginRight: "1rem"}}/>
-								Профиль скрыт настройками приватности
-							</h4>
-						</div>
-						<div hidden={activeCategory !== "Игры"}>
-							<GameBlock games={user.games}/>
-						</div>
-						<div hidden={activeCategory !== "Фильмы"}>
-							<MovieBlock movies={user.movies}/>
-						</div>
-						<div hidden={activeCategory !== "Сериалы"}>
-							<ShowBlock shows={user.shows}/>
-						</div>
-						<div hidden={activeCategory !== "Статистика"}>
-							<StatisticsBlock stats={user.stats}/>
-						</div>
-						<div hidden={activeCategory !== "Друзья"}>
-							<FriendBlock users={user.followed_users ? user.followed_users : []}/>
-							<div hidden={currentUser.username !== user.username}>
-								<h4 className='user-page__friends-header'>
-									{__('Активность друзей:')}
+						{activeCategory === "Лента" && (
+							<div>
+								<div hidden={!user.is_available}>
+									<UserLogs userId={userId}/>
+								</div>
+								<h4 hidden={user.is_available || isLoading}>
+									<FaLock style={{marginRight: "1rem"}}/>
+									Профиль скрыт настройками приватности
 								</h4>
-								<FriendsLogs userId={userId}/>
 							</div>
-						</div>
+						)}
+						{activeCategory === "Игры" && (
+							<div>
+								<GameBlock games={user.games}/>
+							</div>
+						)}
+						{activeCategory === "Фильмы" && (
+							<div>
+								<MovieBlock movies={user.movies}/>
+							</div>
+						)}
+						{activeCategory === "Сериалы" && (
+							<div>
+								<ShowBlock shows={user.shows}/>
+							</div>
+						)}
+						{activeCategory === "Статистика" && (
+							<div>
+								<StatisticsBlock stats={user.stats}/>
+							</div>
+						)}
+						{activeCategory === "Друзья" && (
+							<div>
+								<FriendBlock users={user.followed_users ? user.followed_users : []}/>
+								<div hidden={currentUser.username !== user.username}>
+									<h4 className='user-page__friends-header'>
+										{__('Активность друзей:')}
+									</h4>
+									<FriendsLogs userId={userId}/>
+								</div>
+							</div>
+						)}
 					</CategoriesTab>
 				</div>
 			</LoadingOverlay>

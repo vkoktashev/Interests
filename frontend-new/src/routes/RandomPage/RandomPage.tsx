@@ -82,6 +82,9 @@ function RandomPage() {
     const spinTimeRef = useRef<number | null>(null);
 
     const onSubmit = useCallback((values: any) => {
+        if (!values.games && !values.movies && !values.shows) {
+            return false;
+        }
         if (user) {
             setWinner(null);
             setCandidates([]);
@@ -106,7 +109,7 @@ function RandomPage() {
             if (!params.categories.length) {
                 dispatch(showNotification('Выберите хотя бы одну категорию', 'warning'));
                 setLoading(false);
-                return;
+                return false;
             }
 
             http.get('/users/user/random/', params)

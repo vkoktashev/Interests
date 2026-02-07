@@ -3,28 +3,89 @@
 
 .settings-page {
     @include default-page;
+    position: relative;
 
     &__header {
-        margin-bottom: 1rem;
-        font-weight: 500;
-        font-size: 2rem;
+        margin: 0;
+        font-weight: 600;
+        font-size: 2.2rem;
+        letter-spacing: 0.01em;
     }
     &__subheader {
         font-weight: 500;
-        font-size: 1.5rem;
+        font-size: 1.2rem;
+        margin-bottom: 0.75rem;
     }
-    &__settings-row {
-        font-size: 1.5em;
-        cursor: pointer;
+    &__subtitle {
+        margin: 0.35rem 0 0;
+        color: $newText2;
+        font-size: 1rem;
     }
 
     &__dropdown {
         max-width: 250px;
     }
 
+    &__hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 1rem;
+        padding: 1.5rem;
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba($newBackground2, 0.95), rgba($newBackground1, 0.85));
+        border: 1px solid rgba($newBackground3, 0.9);
+        margin-bottom: 1.5rem;
+    }
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.5rem;
+
+        @media (max-width: $tablet-width) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__card {
+        padding: 1.25rem;
+        border-radius: 16px;
+        background: rgba($newBackground1, 0.75);
+        border: 1px solid rgba($newBackground3, 0.8);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
+    }
+
+    &__option-list {
+        display: grid;
+        gap: 0.5rem;
+    }
+
+    &__warning {
+        margin-top: 0.75rem;
+        padding: 0.75rem 0.9rem;
+        border-radius: 12px;
+        background: rgba($newAccent3, 0.35);
+        border: 1px solid rgba($newAccent3, 0.6);
+        color: $newText3;
+        font-size: 0.95rem;
+    }
+
+    &__actions {
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: flex-start;
+    }
+
     &__email {
-        margin-top: 20px;
-        font-size: 16px;
-        font-weight: 600;
+        margin: 0;
+        font-size: 0.95rem;
+        color: $newText2;
+    }
+
+    &__footer {
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba($newBackground3, 0.7);
     }
 }
