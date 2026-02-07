@@ -6,8 +6,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from utils.constants import USER_EMAIL_EXISTS, USER_USERNAME_EXISTS, TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, TYPE_SEASON, \
-    TYPE_EPISODE, TYPE_USER, LOG_REACTIONS
+from utils.constants import USER_EMAIL_EXISTS, USER_USERNAME_EXISTS
 from .managers import UserManager
 
 
@@ -113,26 +112,3 @@ class UserPasswordToken(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     reset_token = models.CharField(max_length=500, unique=True)
     is_active = models.BooleanField(default=True)
-
-
-class LogReaction(models.Model):
-    LOG_TYPE_CHOICES = (
-        (TYPE_GAME, 'Game'),
-        (TYPE_MOVIE, 'Movie'),
-        (TYPE_SHOW, 'Show'),
-        (TYPE_SEASON, 'Season'),
-        (TYPE_EPISODE, 'Episode'),
-        (TYPE_USER, 'User'),
-    )
-
-    REACTION_CHOICES = tuple((reaction, reaction) for reaction in LOG_REACTIONS)
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    log_type = models.CharField(max_length=30, choices=LOG_TYPE_CHOICES)
-    log_id = models.IntegerField()
-    reaction = models.CharField(max_length=10, choices=REACTION_CHOICES)
-    created = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = (("user", "log_type", "log_id"),)

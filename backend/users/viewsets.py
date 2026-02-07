@@ -24,12 +24,11 @@ from users.serializers import UserFollowSerializer, UserLogSerializer, \
     UserInfoSerializer, SettingsSerializer, UserSerializer, MyTokenRefreshSerializer
 from utils.constants import ERROR, ID_VALUE_ERROR, \
     USER_NOT_FOUND, MINUTES_IN_HOUR, TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, \
-    TYPE_SEASON, TYPE_EPISODE, TYPE_USER, CANNOT_DELETE_ANOTHER_USER_LOG, WRONG_LOG_TYPE, LOG_NOT_FOUND, \
-    CANNOT_REACT_TO_OWN_LOG, WRONG_REACTION, LOG_REACTIONS
+    TYPE_SEASON, TYPE_EPISODE, TYPE_USER, CANNOT_DELETE_ANOTHER_USER_LOG, WRONG_LOG_TYPE, LOG_NOT_FOUND
 from utils.functions import get_page_size
 from utils.models import Round
 from .functions import is_user_available
-from .models import User, UserFollow, UserLog, LogReaction
+from .models import User, UserFollow, UserLog
 
 
 class MyTokenRefreshView(TokenRefreshView):
@@ -46,22 +45,6 @@ class MyTokenRefreshView(TokenRefreshView):
             data['refresh'] = refresh_token
         request._full_data = data
         return super().post(request, *args, **kwargs)
-
-
-def get_log_model_by_type(log_type):
-    if log_type == TYPE_GAME:
-        return GameLog
-    if log_type == TYPE_MOVIE:
-        return MovieLog
-    if log_type == TYPE_SHOW:
-        return ShowLog
-    if log_type == TYPE_SEASON:
-        return SeasonLog
-    if log_type == TYPE_EPISODE:
-        return EpisodeLog
-    if log_type == TYPE_USER:
-        return UserLog
-    return None
 
 
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -84,8 +67,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             results, count = get_logs((user,), request.GET.get('page_size'), request.GET.get('page'),
                                       request.GET.get('query', ''),
                                       request.query_params.getlist('filters[]',
-                                                                   (TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, TYPE_USER)),
-                                      current_user=request.user)
+                                                                   (TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, TYPE_USER)))
 
             return Response({'log': results, 'count': count})
 
@@ -120,52 +102,13 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
-    def log_reaction(self, request):
-        log_id = request.data.get('id')
-        log_type = request.data.get('type')
-        reaction = request.data.get('reaction')
-
-        if reaction not in LOG_REACTIONS:
-            return Response({ERROR: WRONG_REACTION}, status=status.HTTP_400_BAD_REQUEST)
-
-        Model = get_log_model_by_type(log_type)
-        if not Model:
-            return Response({ERROR: WRONG_LOG_TYPE}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            log_id = int(log_id)
-        except (ValueError, TypeError):
-            return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            log = Model.objects.select_related('user').get(id=log_id)
-        except Model.DoesNotExist:
-            return Response({ERROR: LOG_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-
-        if log.user == request.user:
-            return Response({ERROR: CANNOT_REACT_TO_OWN_LOG}, status=status.HTTP_403_FORBIDDEN)
-
-        if not is_user_available(request.user, log.user):
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        reaction_obj, _ = LogReaction.objects.update_or_create(
-            user=request.user,
-            log_type=log_type,
-            log_id=log_id,
-            defaults={'reaction': reaction}
-        )
-
-        return Response({'reaction': reaction_obj.reaction})
-
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def friends_log(self, request):
         user_follow_query = UserFollow.objects.filter(user=request.user, is_following=True).values('followed_user')
         results, count = get_logs(user_follow_query, request.GET.get('page_size'), request.GET.get('page'),
                                   request.GET.get('query', ''),
                                   request.query_params.getlist('filters[]',
-                                                               (TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, TYPE_USER)),
-                                  current_user=request.user)
+                                                               (TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, TYPE_USER)))
 
         return Response({'log': results, 'count': count})
 
@@ -568,83 +511,26 @@ def calculate_shows_stats(user: User) -> dict:
     return result
 
 
-def get_log_type(entry):
-    if isinstance(entry, GameLog):
-        return TYPE_GAME
-    if isinstance(entry, MovieLog):
-        return TYPE_MOVIE
-    if isinstance(entry, ShowLog):
-        return TYPE_SHOW
-    if isinstance(entry, SeasonLog):
-        return TYPE_SEASON
-    if isinstance(entry, EpisodeLog):
-        return TYPE_EPISODE
-    return TYPE_USER
-
-
-def serialize_logs(logs, current_user=None):
-    reactions_map = {}
-    reactions_for_logs = {}
-    log_types = set()
-    log_ids = set()
-
-    for entry in logs:
-        log_types.add(get_log_type(entry))
-        log_ids.add(entry.id)
-
-    if log_types and log_ids:
-        reactions = LogReaction.objects.filter(
-            log_type__in=log_types,
-            log_id__in=log_ids
-        ).select_related('user')
-
-        for reaction in reactions:
-            if reaction.reaction not in LOG_REACTIONS:
-                continue
-            key = (reaction.log_type, reaction.log_id)
-            reactions_for_logs.setdefault(key, {}).setdefault(reaction.reaction, []).append({
-                'id': reaction.user_id,
-                'username': reaction.user.username
-            })
-
-        if current_user and current_user.is_authenticated:
-            for reaction in reactions:
-                if reaction.user_id == current_user.id:
-                    reactions_map[(reaction.log_type, reaction.log_id)] = reaction.reaction
-
+def serialize_logs(logs):
     results = []
-    context = {'reactions_map': reactions_map}
     for entry in logs:
         if isinstance(entry, GameLog):
-            serializer = GameLogSerializer(entry, context=context)
+            serializer = GameLogSerializer(entry)
         elif isinstance(entry, MovieLog):
-            serializer = MovieLogSerializer(entry, context=context)
+            serializer = MovieLogSerializer(entry)
         elif isinstance(entry, ShowLog):
-            serializer = ShowLogSerializer(entry, context=context)
+            serializer = ShowLogSerializer(entry)
         elif isinstance(entry, SeasonLog):
-            serializer = SeasonLogSerializer(entry, context=context)
+            serializer = SeasonLogSerializer(entry)
         elif isinstance(entry, EpisodeLog):
-            serializer = EpisodeLogSerializer(entry, context=context)
+            serializer = EpisodeLogSerializer(entry)
         else:
-            serializer = UserLogSerializer(entry, context=context)
-
-        data = serializer.data
-        key = (get_log_type(entry), entry.id)
-        reactions_by_type = reactions_for_logs.get(key, {})
-        reactions_list = []
-        for reaction_type in LOG_REACTIONS:
-            users = reactions_by_type.get(reaction_type, [])
-            if users:
-                reactions_list.append({
-                    'reaction': reaction_type,
-                    'users': users,
-                })
-        data['reactions'] = reactions_list
-        results.append(data)
+            serializer = UserLogSerializer(entry)
+        results.append(serializer.data)
     return results
 
 
-def get_logs(user_query, page_size, page_number, search_query, filters, current_user=None):
+def get_logs(user_query, page_size, page_number, search_query, filters):
     page_size = get_page_size(page_size)
     page = page_number
 
@@ -681,7 +567,7 @@ def get_logs(user_query, page_size, page_number, search_query, filters, current_
     paginator = Paginator(union_logs, page_size)
     paginator_page = paginator.get_page(page)
 
-    results = serialize_logs(paginator_page.object_list, current_user=current_user)
+    results = serialize_logs(paginator_page.object_list)
     return results, paginator.count
 
 
