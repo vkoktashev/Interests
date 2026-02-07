@@ -3,27 +3,32 @@
 @import "style/project-fonts";
 
 .RandomCard {
-  display: flex;
-  flex-direction: row;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: center;
 
   &__poster {
-    height: 300px;
-    max-width: 450px;
+    width: 160px;
+    height: 240px;
     object-fit: cover;
+    border-radius: 16px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
 
     @media(max-width: $tablet-width) {
-      height: auto;
-      max-width: 50%;
+      width: 140px;
+      height: 210px;
     }
   }
 
   @media(max-width: $tablet-width) {
-    height: auto;
-    max-width: 100%;
+    grid-template-columns: 140px minmax(0, 1fr);
   }
 
   &__link {
-    @include headline5
+    @include headline5;
+    color: $newText3;
+    display: inline-flex;
+    line-height: 1.2;
   }
 }
