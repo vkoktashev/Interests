@@ -81,6 +81,7 @@ class UserLogSerializer(ModelSerializer):
     type = SerializerMethodField('get_type')
     target = SerializerMethodField('get_target')
     target_id = SerializerMethodField('get_target_id')
+    my_reaction = SerializerMethodField('get_my_reaction')
 
     @staticmethod
     def get_username(user_log):
@@ -101,6 +102,10 @@ class UserLogSerializer(ModelSerializer):
     @staticmethod
     def get_target_id(user_log):
         return user_log.followed_user.id
+
+    def get_my_reaction(self, user_log):
+        reactions_map = self.context.get('reactions_map', {})
+        return reactions_map.get((TYPE_USER, user_log.id))
 
     class Meta:
         model = UserLog

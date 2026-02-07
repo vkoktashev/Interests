@@ -75,6 +75,7 @@ class ShowLogSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField('get_type')
     target = serializers.SerializerMethodField('get_target')
     target_id = serializers.SerializerMethodField('get_target_id')
+    my_reaction = serializers.SerializerMethodField('get_my_reaction')
 
     @staticmethod
     def get_username(show_log):
@@ -96,6 +97,10 @@ class ShowLogSerializer(serializers.ModelSerializer):
     def get_target_id(show_log):
         return show_log.show.tmdb_id
 
+    def get_my_reaction(self, show_log):
+        reactions_map = self.context.get('reactions_map', {})
+        return reactions_map.get((TYPE_SHOW, show_log.id))
+
     class Meta:
         model = ShowLog
         exclude = ('show',)
@@ -107,6 +112,7 @@ class SeasonLogSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField('get_type')
     target = serializers.SerializerMethodField('get_target')
     target_id = serializers.SerializerMethodField('get_target_id')
+    my_reaction = serializers.SerializerMethodField('get_my_reaction')
 
     @staticmethod
     def get_username(season_log):
@@ -130,6 +136,10 @@ class SeasonLogSerializer(serializers.ModelSerializer):
         return {'show_id': season_log.season.tmdb_show.tmdb_id,
                 'season_number': season_log.season.tmdb_season_number}
 
+    def get_my_reaction(self, season_log):
+        reactions_map = self.context.get('reactions_map', {})
+        return reactions_map.get((TYPE_SEASON, season_log.id))
+
     class Meta:
         model = SeasonLog
         exclude = ('season',)
@@ -141,6 +151,7 @@ class EpisodeLogSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField('get_type')
     target = serializers.SerializerMethodField('get_target')
     target_id = serializers.SerializerMethodField('get_target_id')
+    my_reaction = serializers.SerializerMethodField('get_my_reaction')
 
     @staticmethod
     def get_username(episode_log):
@@ -164,6 +175,10 @@ class EpisodeLogSerializer(serializers.ModelSerializer):
         return {'show_id': episode_log.episode.tmdb_season.tmdb_show.tmdb_id,
                 'season_number': episode_log.episode.tmdb_season.tmdb_season_number,
                 'episode_number': episode_log.episode.tmdb_episode_number}
+
+    def get_my_reaction(self, episode_log):
+        reactions_map = self.context.get('reactions_map', {})
+        return reactions_map.get((TYPE_EPISODE, episode_log.id))
 
     class Meta:
         model = EpisodeLog
