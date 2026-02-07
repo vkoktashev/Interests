@@ -47,6 +47,7 @@ class GameLogSerializer(ModelSerializer):
     type = SerializerMethodField('get_type')
     target = SerializerMethodField('get_target')
     target_id = SerializerMethodField('get_target_id')
+    my_reaction = SerializerMethodField('get_my_reaction')
 
     @staticmethod
     def get_username(game_log):
@@ -67,6 +68,10 @@ class GameLogSerializer(ModelSerializer):
     @staticmethod
     def get_target_id(game_log):
         return game_log.game.rawg_slug
+
+    def get_my_reaction(self, game_log):
+        reactions_map = self.context.get('reactions_map', {})
+        return reactions_map.get((TYPE_GAME, game_log.id))
 
     class Meta:
         model = GameLog

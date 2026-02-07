@@ -58,6 +58,7 @@ class MovieLogSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField('get_type')
     target = serializers.SerializerMethodField('get_target')
     target_id = serializers.SerializerMethodField('get_target_id')
+    my_reaction = serializers.SerializerMethodField('get_my_reaction')
 
     @staticmethod
     def get_username(movie_log):
@@ -78,6 +79,10 @@ class MovieLogSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_target_id(movie_log):
         return movie_log.movie.tmdb_id
+
+    def get_my_reaction(self, movie_log):
+        reactions_map = self.context.get('reactions_map', {})
+        return reactions_map.get((TYPE_MOVIE, movie_log.id))
 
     class Meta:
         model = MovieLog
