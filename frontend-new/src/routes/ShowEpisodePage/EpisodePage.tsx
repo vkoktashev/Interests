@@ -94,22 +94,35 @@ function EpisodePage() {
 				<div className='episode-page__body'>
 					<div className='episode-page__header'>
 						<div className='episode-page__poster'>
-							<Image src={showEpisode?.still_path}  alt='' />
+							<Image
+								src={showEpisode?.still_path}
+								className='episode-page__poster-img'
+								alt=''
+							/>
 						</div>
 						<div className='episode-page__info'>
-							<h1 className='episode-page__info-header'>
-								<Link
-									toRoute={ROUTE_SHOW}
-									toRouteParams={{
-										showId,
-									}}>
-									{showEpisode?.show?.tmdb_name}
-								</Link>
-								{" - " + showEpisode?.name}
-							</h1>
-							<h5 className='episode-page__info-subheader'>
-								{showEpisode?.show?.tmdb_original_name + " - Season " + showEpisode?.season_number + " - Episode " + showEpisode?.episode_number}
-							</h5>
+							<div className='episode-page__info-top'>
+								<div className='episode-page__title-block'>
+									<h1 className='episode-page__info-header'>
+										<Link
+											toRoute={ROUTE_SHOW}
+											toRouteParams={{
+												showId,
+											}}>
+											{showEpisode?.show?.tmdb_name}
+										</Link>
+										{" - " + showEpisode?.name}
+									</h1>
+									<h5 className='episode-page__info-subheader'>
+										{showEpisode?.show?.tmdb_original_name + " - Season " + showEpisode?.season_number + " - Episode " + showEpisode?.episode_number}
+									</h5>
+								</div>
+								<ScoreBlock
+									score={showEpisode?.score}
+									text='TMDB score'
+									className='episode-page__info-score'
+								/>
+							</div>
 							<div className='episode-page__info-body'>
 								<p hidden={!showEpisode?.air_date}>
 									Дата выхода: {showEpisode?.air_date}
@@ -126,54 +139,51 @@ function EpisodePage() {
 									Сезон: {showEpisode?.season_number}
 								</Link>
 							</div>
-							<div hidden={!user || !userWatchedShow}>
+							<div className='episode-page__actions' hidden={!user || !userWatchedShow}>
 								<LoadingOverlay
 									active={userInfoIsLoading && !isLoading}
 									spinner
 									text='Загрузка...'
 								>
-									<Rating
-										withEye={true}
-										initialRating={userRate}
-										onChange={(score) => {
-											if (!user) {
-												dispatch(openModal(LoginForm));
-											} else {
-												setUserRate(score);
-												setEpisodesStatus({ episodes: [{ tmdb_id: showEpisode?.id, score: score }] });
-											}
-										}}
-										className='episode-page__rating'
-									/>
-									<TextField
-										label={__('Ваш отзыв')}
-										value={review}
-										onChange={(value) => setReview(value)}
-									/>
-									<Button
-										label={__('Сохранить')}
-										className={bem.element('button')}
-										hidden={!user || !userWatchedShow}
-										onClick={() => {
-											if (!user) {
-												dispatch(openModal(LoginForm));
-											} else {
-												setEpisodesStatus({ episodes: [{ tmdb_id: showEpisode?.id, review: review }] })
-													.then(() => {
-														dispatch(showNotification('Отзыв сохранен!', 'success', {
-															position: 'top-right',
-															timeOut: 1000,
-														}));
-													});
-											}
-										}} />
+									<div className='episode-page__actions-group'>
+										<Rating
+											withEye={true}
+											initialRating={userRate}
+											onChange={(score) => {
+												if (!user) {
+													dispatch(openModal(LoginForm));
+												} else {
+													setUserRate(score);
+													setEpisodesStatus({ episodes: [{ tmdb_id: showEpisode?.id, score: score }] });
+												}
+											}}
+											className='episode-page__rating'
+										/>
+										<TextField
+											label={__('Ваш отзыв')}
+											value={review}
+											onChange={(value) => setReview(value)}
+										/>
+										<Button
+											label={__('Сохранить')}
+											className={bem.element('button')}
+											hidden={!user || !userWatchedShow}
+											onClick={() => {
+												if (!user) {
+													dispatch(openModal(LoginForm));
+												} else {
+													setEpisodesStatus({ episodes: [{ tmdb_id: showEpisode?.id, review: review }] })
+														.then(() => {
+															dispatch(showNotification('Отзыв сохранен!', 'success', {
+																position: 'top-right',
+																timeOut: 1000,
+															}));
+														});
+												}
+											}} />
+									</div>
 								</LoadingOverlay>
 							</div>
-							<ScoreBlock
-								score={showEpisode?.score}
-								text='TMDB score'
-								className='episode-page__info-score'
-							/>
 						</div>
 					</div>
 					<div className='episode-page__overview'>

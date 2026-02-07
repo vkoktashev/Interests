@@ -21,7 +21,7 @@ import {Loader} from '@steroidsjs/core/ui/layout';
 import {Button, TextField} from '@steroidsjs/core/ui/form';
 
 function SeasonPage() {
-	const bem = useBem('');
+	const bem = useBem('season-page');
 	const dispatch = useDispatch();
 	const {http} = useComponents();
 	const user = useSelector(getUser);
@@ -131,7 +131,7 @@ function SeasonPage() {
 	}
 
 	return (
-		<div className={bem.element('season-page')}>
+		<div className={bem.block()}>
 			<Image
 				className='season-page__background'
 				src={showSeason?.show?.tmdb_backdrop_path}
@@ -146,24 +146,28 @@ function SeasonPage() {
 						<div className='season-page__poster'>
 							<Image
 								src={showSeason?.poster_path}
-								className='img-fluid'
+								className='season-page__poster-img'
 								alt=''
 							/>
 						</div>
 						<div className='season-page__info'>
-							<h1 className='season-page__info-header'>
-								<Link
-									toRoute={ROUTE_SHOW}
-									toRouteParams={{
-										showId: showId,
-									}}>
-									{showSeason?.show?.tmdb_name}
-								</Link>
-								{" - " + showSeason?.name}
-							</h1>
-							<h5 className='season-page__info-subheader'>
-								{showSeason?.show?.tmdb_original_name + " - Season " + showSeason?.season_number}
-							</h5>
+							<div className='season-page__info-top'>
+								<div className='season-page__title-block'>
+									<h1 className='season-page__info-header'>
+										<Link
+											toRoute={ROUTE_SHOW}
+											toRouteParams={{
+												showId: showId,
+											}}>
+											{showSeason?.show?.tmdb_name}
+										</Link>
+										{" - " + showSeason?.name}
+									</h1>
+									<h5 className='season-page__info-subheader'>
+										{showSeason?.show?.tmdb_original_name + " - Season " + showSeason?.season_number}
+									</h5>
+								</div>
+							</div>
 							<div className='season-page__info-body'>
 								<p hidden={!showSeason?.air_date}>
 									Дата выхода: {showSeason?.air_date}
@@ -172,42 +176,44 @@ function SeasonPage() {
 									Количество серий: {showSeason?.episodes?.length}
 								</p>
 							</div>
-							<div hidden={!user || !userWatchedShow}>
+							<div className='season-page__actions' hidden={!user || !userWatchedShow}>
 								<LoadingOverlay
 									active={userInfoIsLoading && !isLoading}
 									spinner
 									text='Загрузка...'
 								>
-									<Rating
-										initialRating={userRate}
-										onChange={(score) => {
-											if (!user) {
-												dispatch(openModal(LoginForm));
-											} else {
-												setUserRate(score);
-												setShowSeasonStatus({ score: score });
-											}
-										}}
-										className='season-page__rating'
-									/>
-									<TextField
-										label={__('Ваш отзыв')}
-										value={review}
-										onChange={(value) => setReview(value)}
-									/>
-									<Button
-										className={bem.element('review-save-button')}
-										label={__('Сохранить')}
-										hidden={!user || !userWatchedShow}
-										onClick={() => {
-											setShowSeasonStatus({ review })
-												.then(() => {
-													dispatch(showNotification('Отзыв сохранен!', 'success', {
-														position: 'top-right',
-														timeOut: 1000,
-													}));
-												});
-										}} />
+									<div className='season-page__actions-group'>
+										<Rating
+											initialRating={userRate}
+											onChange={(score) => {
+												if (!user) {
+													dispatch(openModal(LoginForm));
+												} else {
+													setUserRate(score);
+													setShowSeasonStatus({ score: score });
+												}
+											}}
+											className='season-page__rating'
+										/>
+										<TextField
+											label={__('Ваш отзыв')}
+											value={review}
+											onChange={(value) => setReview(value)}
+										/>
+										<Button
+											className={bem.element('review-save-button')}
+											label={__('Сохранить')}
+											hidden={!user || !userWatchedShow}
+											onClick={() => {
+												setShowSeasonStatus({ review })
+													.then(() => {
+														dispatch(showNotification('Отзыв сохранен!', 'success', {
+															position: 'top-right',
+															timeOut: 1000,
+														}));
+													});
+											}} />
+									</div>
 								</LoadingOverlay>
 							</div>
 						</div>

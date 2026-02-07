@@ -107,12 +107,21 @@ function ShowPage(props) {
                             />
 						</div>
 						<div className='show-page__info'>
-							<h1 className='show-page__info-header'>
-                                {show?.name}
-                            </h1>
-							<h5 className='show-page__info-subheader'>
-                                {show?.original_name}
-                            </h5>
+							<div className='show-page__info-top'>
+								<div className='show-page__title-block'>
+									<h1 className='show-page__info-header'>
+										{show?.name}
+									</h1>
+									<h5 className='show-page__info-subheader'>
+										{show?.original_name}
+									</h5>
+								</div>
+								<ScoreBlock
+									score={show?.score}
+									text='TMDB score'
+									className='show-page__info-score'
+								/>
+							</div>
 							<div className='show-page__info-body'>
 								<p hidden={!show?.genres}>
                                     Жанр: {show?.genres}
@@ -139,47 +148,46 @@ function ShowPage(props) {
                                     Статус: {show?.status}
                                 </p>
 							</div>
-							<LoadingOverlay
-                                active={userInfoIsLoading && !isLoading}
-                                spinner
-                                text='Загрузка...'
-                            >
-								<Rating
-									initialRating={userRate}
-									readonly={!user || (userStatus === "Не смотрел")}
-									onChange={(score) => {
-										if (!user) {
-											dispatch(openModal(LoginForm));
-										} else {
-											setUserRate(score);
-											setShowStatus({ score: score });
-										}
-									}}
-									className='show-page__rating'
-								/>
-								<StatusButtonGroup
-									statuses={["Не смотрел", "Буду смотреть", "Смотрю", "Дропнул", "Посмотрел"]}
-									className='show-page__info-statuses'
-									userStatus={userStatus}
-									onChangeStatus={(status) => {
-										if (!user) {
-                                            dispatch(openModal(LoginForm));
-										} else {
-											setUserStatus(status);
-											setShowStatus({ status: status });
-											if (status === "Не смотрел") {
-												setReview("");
-												setUserRate(0);
-											}
-										}
-									}}
-								/>
-							</LoadingOverlay>
-							<ScoreBlock
-                                score={show?.score}
-                                text='TMDB score'
-                                className='show-page__info-score'
-                            />
+							<div className='show-page__actions'>
+								<LoadingOverlay
+									active={userInfoIsLoading && !isLoading}
+									spinner
+									text='Загрузка...'
+								>
+									<div className='show-page__actions-group'>
+										<Rating
+											initialRating={userRate}
+											readonly={!user || (userStatus === "Не смотрел")}
+											onChange={(score) => {
+												if (!user) {
+													dispatch(openModal(LoginForm));
+												} else {
+													setUserRate(score);
+													setShowStatus({ score: score });
+												}
+											}}
+											className='show-page__rating'
+										/>
+										<StatusButtonGroup
+											statuses={["Не смотрел", "Буду смотреть", "Смотрю", "Дропнул", "Посмотрел"]}
+											className='show-page__info-statuses'
+											userStatus={userStatus}
+											onChangeStatus={(status) => {
+												if (!user) {
+													dispatch(openModal(LoginForm));
+												} else {
+													setUserStatus(status);
+													setShowStatus({ status: status });
+													if (status === "Не смотрел") {
+														setReview("");
+														setUserRate(0);
+													}
+												}
+											}}
+										/>
+									</div>
+								</LoadingOverlay>
+							</div>
 						</div>
 					</div>
 					<Carousel

@@ -108,8 +108,13 @@ export function MoviePage() {
 							<Image src={movie?.poster_path} className='movie-page__poster-img' alt='' />
 						</div>
 						<div className='movie-page__info'>
-							<h1 className='movie-page__info-header'>{movie?.name}</h1>
-							<h5 className='movie-page__info-subheader'>{movie?.original_name}</h5>
+							<div className='movie-page__info-top'>
+								<div className='movie-page__title-block'>
+									<h1 className='movie-page__info-header'>{movie?.name}</h1>
+									<h5 className='movie-page__info-subheader'>{movie?.original_name}</h5>
+								</div>
+								<ScoreBlock score={movie?.score} text='TMDB score' className='movie-page__info-score' />
+							</div>
 							<div className='movie-page__info-body'>
 								<p>Дата релиза: {movie?.release_date}</p>
 								<p>Продолжительность (мин): {movie?.runtime}</p>
@@ -119,35 +124,38 @@ export function MoviePage() {
 								<p>В ролях: {movie?.cast}</p>
 								<p>Режиссер: {movie?.directors}</p>
 							</div>
-							<LoadingOverlay active={userInfoIsLoading && !isLoading} spinner text='Загрузка...'>
-								<Rating
-									initialRating={userRate}
-									readonly={!user || (userStatus === "Не смотрел")}
-									onChange={(score) => {
-										setUserRate(score);
-										setMovieStatus({ score: score });
-									}}
-									className='movie-page__rating'
-								/>
-								<StatusButtonGroup
-									statuses={["Не смотрел", "Буду смотреть", "Дропнул", "Посмотрел"]}
-									className='movie-page__info-statuses'
-									userStatus={userStatus}
-									onChangeStatus={(status) => {
-										if (!user) {
-											dispatch(openModal(LoginForm));
-										} else {
-											setUserStatus(status);
-											setMovieStatus({ status: status });
-											if (status === "Не смотрел") {
-												setReview("");
-												setUserRate(0);
-											}
-										}
-									}}
-								/>
-							</LoadingOverlay>
-							<ScoreBlock score={movie?.score} text='TMDB score' className='movie-page__info-score' />
+							<div className='movie-page__actions'>
+								<LoadingOverlay active={userInfoIsLoading && !isLoading} spinner text='Загрузка...'>
+									<div className='movie-page__actions-group'>
+										<Rating
+											initialRating={userRate}
+											readonly={!user || (userStatus === "Не смотрел")}
+											onChange={(score) => {
+												setUserRate(score);
+												setMovieStatus({ score: score });
+											}}
+											className='movie-page__rating'
+										/>
+										<StatusButtonGroup
+											statuses={["Не смотрел", "Буду смотреть", "Дропнул", "Посмотрел"]}
+											className='movie-page__info-statuses'
+											userStatus={userStatus}
+											onChangeStatus={(status) => {
+												if (!user) {
+													dispatch(openModal(LoginForm));
+												} else {
+													setUserStatus(status);
+													setMovieStatus({ status: status });
+													if (status === "Не смотрел") {
+														setReview("");
+														setUserRate(0);
+													}
+												}
+											}}
+										/>
+									</div>
+								</LoadingOverlay>
+							</div>
 						</div>
 					</div>
 					<Carousel className='movie-page__trailers' showArrows centerMode centerSlidePercentage={50} showThumbs={false} showStatus={false} showIndicators={false}>

@@ -55,9 +55,16 @@ function SettingsPage() {
 	return (
 		<div className={bem.block()}>
 			<div className={bem.element('body')}>
-				<h1 className={bem.element('header')}>
-					Настройки
-				</h1>
+				<div className={bem.element('hero')}>
+					<div>
+						<h1 className={bem.element('header')}>
+							Настройки
+						</h1>
+						<p className={bem.element('subtitle')}>
+							Управляйте уведомлениями и приватностью профиля.
+						</p>
+					</div>
+				</div>
 
 				<LoadingOverlay
 					active={isLoading}
@@ -70,45 +77,60 @@ function SettingsPage() {
 						onSubmit={patchSettings}
 						useRedux
 					>
-						<h3 className={bem.element('subheader')}>
-							Подписка на почтовые уведомления:
-						</h3>
-						<CheckboxField
-							attribute="receive_games_releases"
-							label={__('релиз новых игр')}
-						/>
-						<CheckboxField
-							attribute="receive_movies_releases"
-							label={__('релиз новых фильмов')}
-						/>
-						<CheckboxField
-							attribute="receive_episodes_releases"
-							label={__('релиз новых серий сериалов')}
-						/>
-						<DropDownField
-							attribute='privacy'
-							items={privacyItems}
-							label={__('Кто может видеть мой профиль')}
-							className={bem.element('dropdown')}
-						/>
-						{
-							settings?.privacy !== formValues?.privacy && formValues?.privacy === 'Никто' && (
-								<div className={bem.element('settings-row')}>
-									{__('Внимание! Полное закрытие профиля удалит вас из подписок других пользователей!')}
+						<div className={bem.element('grid')}>
+							<section className={bem.element('card')}>
+								<h3 className={bem.element('subheader')}>
+									Подписка на почтовые уведомления
+								</h3>
+								<div className={bem.element('option-list')}>
+									<CheckboxField
+										attribute="receive_games_releases"
+										label={__('релиз новых игр')}
+									/>
+									<CheckboxField
+										attribute="receive_movies_releases"
+										label={__('релиз новых фильмов')}
+									/>
+									<CheckboxField
+										attribute="receive_episodes_releases"
+										label={__('релиз новых серий сериалов')}
+									/>
 								</div>
-							)
-						}
-						<Button
-							className={bem.element('save-button')}
-							disabled={!user}
-							label={__('Сохранить')}
-							type="submit"
-						/>
+							</section>
+							<section className={bem.element('card')}>
+								<h3 className={bem.element('subheader')}>
+									Приватность
+								</h3>
+								<DropDownField
+									attribute='privacy'
+									items={privacyItems}
+									label={__('Кто может видеть мой профиль')}
+									fieldLayoutClassName={bem.element('dropdown')}
+								/>
+								{
+									settings?.privacy !== formValues?.privacy && formValues?.privacy === 'Никто' && (
+										<div className={bem.element('warning')}>
+											{__('Внимание! Полное закрытие профиля удалит вас из подписок других пользователей!')}
+										</div>
+									)
+								}
+							</section>
+						</div>
+						<div className={bem.element('actions')}>
+							<Button
+								className={bem.element('save-button')}
+								disabled={!user}
+								label={__('Сохранить')}
+								type="submit"
+							/>
+						</div>
 					</Form>
 				</LoadingOverlay>
-				<p className={bem.element('email')}>
-					Ваша почта {user.email}
-				</p>
+				<div className={bem.element('footer')}>
+					<p className={bem.element('email')}>
+						Ваша почта {user.email}
+					</p>
+				</div>
 			</div>
 		</div>
 	);
