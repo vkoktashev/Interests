@@ -27,7 +27,7 @@ export function HomePage() {
 			<section className={bem.element('hero')}>
 				<div className={bem.element('hero-content')}>
 					<span className={bem.element('badge')}>Interests • личная медиатека</span>
-					<h1 className={bem.element('title')}>Соберите всё, что вам интересно, в одном красивом месте.</h1>
+					<h1 className={bem.element('title')}>Соберите всё, что вам интересно, в одном месте.</h1>
 					<p className={bem.element('subtitle')}>
 						Фильмы, сериалы и игры — без разрозненных заметок. Interests
 						объединяет списки, оценки, отзывы и друзей, чтобы вы видели свою
