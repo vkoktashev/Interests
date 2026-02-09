@@ -2,13 +2,20 @@
 @import "style/project-fonts";
 
 .LogsBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
     &__header {
         display: grid;
         grid-template-columns: 1fr auto;
-        margin-bottom: 1rem;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background-color: $newBackground2;
+        box-shadow: inset 0 0 0 1px rgba(63, 64, 65, 0.35);
         flex-wrap: wrap;
         color: $newText2;
-        gap: 1rem;
+        gap: 12px;
 
         @media (max-width: 770px) {
             grid-template-columns: 1fr;
@@ -20,7 +27,7 @@
         flex-direction: row;
         align-items: center;
         flex-wrap: wrap;
-        gap: 12px;
+        gap: 10px;
 
         &_hidden {
             display: none;
@@ -29,7 +36,7 @@
 
     &__search-input {
         flex-grow: 1;
-        max-width: 300px;
+        max-width: 360px;
     }
 
     &__mobile-expand {
@@ -37,11 +44,11 @@
         border-radius: 8px;
         color: $newText3;
         background-color: $newBackground3;
-        margin-left: 1rem;
-        padding: 4px 8px;
-        font-size: 20px;
-        height: 38px;
-        width: 40px;
+        margin-left: auto;
+        padding: 4px 6px;
+        font-size: 18px;
+        height: 34px;
+        width: 36px;
 
         @media (min-width: 540px) {
             display: none;
@@ -57,7 +64,7 @@
     }
 
     &__dropdown {
-        width: 170px;
+        min-width: 170px;
 
         &_hidden {
             display: none;

@@ -1,31 +1,129 @@
 @import "style/colors";
+@import "style/breakpoints";
 
 .log-row {
-    flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background-color: transparent;
+    color: $newText2;
+    font-size: 14px;
+    line-height: 1.4;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+        background-color: rgba(63, 64, 65, 0.22);
+    }
 
     &:hover > &__delete-button {
-        display: inline-block;
-        margin: 0;
+        opacity: 1;
+        pointer-events: auto;
     }
-    &__link {
+
+    &__time {
+        flex: 0 0 auto;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background-color: $newBackground3;
+        color: $newText3;
+        font-size: 12px;
+        line-height: 1.2;
+        letter-spacing: 0.2px;
+    }
+
+    &__content {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        column-gap: 2px;
+        row-gap: 4px;
+        min-width: 0;
+        color: $newText2;
+        flex: 0 1 auto;
+    }
+
+    &__action {
+        color: $newText3;
         font-weight: 600;
     }
+
+    &__type {
+        color: $newText2;
+    }
+
+    &__target,
+    &__user,
+    &__result {
+        color: $newText3;
+    }
+
+    &__separator {
+        color: $newText2;
+        margin: 0;
+    }
+
+    &__link {
+        font-weight: 600;
+        color: $newText3;
+        text-decoration: none;
+        border-bottom: 1px solid transparent;
+
+        &:hover {
+            border-bottom-color: rgba(241, 241, 251, 0.5);
+        }
+    }
+    &__inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    &__muted {
+        color: $newText2;
+        font-weight: 400;
+    }
     &__delete-button {
-        border: none;
-        border-radius: 8px;
+        margin-left: 6px;
+        border: 1px solid $newBackground3;
+        border-radius: 10px;
         color: $newText3;
         background-color: $newBackground2;
-        margin-left: 2px;
-        padding: 0 8px;
-        display: none;
+        padding: 4px 8px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 
         &:hover {
             background-color: $newBackground3;
             color: $newText3;
+            border-color: $newText2;
         }
 
         &_hidden {
             display: none !important;
+        }
+    }
+    &__delete-icon {
+        font-size: 16px;
+        line-height: 1;
+        display: inline-block;
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: $mobile-width) {
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px 10px;
+
+        &__content {
+            gap: 4px;
+        }
+
+        &__delete-button {
+            opacity: 1;
+            pointer-events: auto;
+            align-self: flex-end;
         }
     }
 }

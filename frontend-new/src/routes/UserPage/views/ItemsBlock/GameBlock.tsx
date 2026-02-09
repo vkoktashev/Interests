@@ -7,6 +7,7 @@ function GameBlock({ games }) {
 			formId='gameBlock'
 			items={games?.map((game) => {
 				return {
+					key: game.game.rawg_slug,
 					link: window.location.origin + "/game/" + game.game.rawg_slug,
 					name: game.game.rawg_name,
 					status: game.status,

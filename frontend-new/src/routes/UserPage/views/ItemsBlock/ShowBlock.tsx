@@ -7,6 +7,7 @@ function ShowBlock({ shows }) {
 			formId='showsBlock'
 			items={shows?.map((show) => {
 				return {
+					key: String(show.show.tmdb_id),
 					link: window.location.origin + "/show/" + show.show.tmdb_id,
 					name: show.show.tmdb_name,
 					status: show.status,
