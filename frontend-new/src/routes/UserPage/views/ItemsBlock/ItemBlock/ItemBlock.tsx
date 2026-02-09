@@ -142,7 +142,7 @@ function ItemBlock({ items, statuses, fields, name, formId }) {
 						(formValues.page - 1) * formValues.pageSize,
 						formValues.page * formValues.pageSize,
 					).map((item, counter) => (
-						<ItemRow data={item} fields={fields} key={counter}/>
+						<ItemRow data={item} fields={fields} key={item.key}/>
 					))
 				}
 			</div>

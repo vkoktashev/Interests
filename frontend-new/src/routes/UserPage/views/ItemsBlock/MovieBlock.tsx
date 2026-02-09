@@ -7,6 +7,7 @@ function MovieBlock({ movies }) {
 			formId='movieBlock'
 			items={movies?.map((movie) => {
 				return {
+					key: String(movie.movie.tmdb_id),
 					link: window.location.origin + "/movie/" + movie.movie.tmdb_id,
 					name: movie.movie.tmdb_name,
 					status: movie.status,
