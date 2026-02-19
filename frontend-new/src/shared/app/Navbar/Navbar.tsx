@@ -1,5 +1,4 @@
-import React, {useCallback, useState} from 'react';
-import classnames from 'classnames';
+import React, {FormEvent, useCallback, useMemo, useState} from 'react';
 import { FaBars, FaAngleUp, FaAngleDown, FaUserCircle, FaSignInAlt } from 'react-icons/fa';
 
 import useWindowDimensions from '../../../hooks/useWindowDimensions';
@@ -15,70 +14,87 @@ import {toggleSidebar} from '../../../actions/modals';
 import './navbar.scss';
 import {goToRouteWithParams} from '../../../actions/router';
 
+const MOBILE_BREAKPOINT = 600;
+
 export function Navbar(props: any) {
 	const dispatch = useDispatch();
 	const bem = useBem('navbar');
 	const { width } = useWindowDimensions();
 	const user = useSelector(getUser);
-	const [collapse, setCollapse] = useState(true);
+	const [isCollapsed, setCollapsed] = useState(true);
+	const isMobile = useMemo(() => width <= MOBILE_BREAKPOINT, [width]);
 
 	const toggleSidebarAction = useCallback(() => {
 		dispatch(toggleSidebar());
-	}, []);
+	}, [dispatch]);
 
 	const openLogin = useCallback(() => {
-		dispatch(openModal(LoginForm, {}))
+		dispatch(openModal(LoginForm, {}));
+	}, [dispatch]);
+
+	const toggleCollapse = useCallback(() => {
+		setCollapsed(prev => !prev);
 	}, []);
 
-
-	const toggleCollapse = () => {
-		setCollapse(!collapse);
-	};
-
-	function toggleIfSmallScreen() {
-		if (width <= 600) {
-			setCollapse(true);
+	const closeOnMobile = useCallback(() => {
+		if (isMobile) {
+			setCollapsed(true);
 		}
-	}
+	}, [isMobile]);
+
+	const onSearchSubmit = useCallback((event: FormEvent, value: string) => {
+		event.preventDefault();
+		closeOnMobile();
+		dispatch(goToRouteWithParams(ROUTE_SEARCH, {
+			query: value,
+		}));
+	}, [closeOnMobile, dispatch]);
+
+	const onUserClick = useCallback(() => {
+		dispatch(goToRoute(ROUTE_USER, {
+			userId: user?.id,
+		}));
+		closeOnMobile();
+	}, [closeOnMobile, dispatch, user?.id]);
+
+	const onTitleClick = useCallback(() => {
+		dispatch(goToRoute(ROUTE_ROOT));
+		closeOnMobile();
+	}, [closeOnMobile, dispatch]);
 
 	return (
 		<div className={bem(bem.block(), props.className)}>
-			<div className='navbar__left'>
-				<FaBars onClick={toggleSidebarAction} className='navbar__sidebar-button' />
-				<div onClick={() => dispatch(goToRoute(ROUTE_ROOT))} className='navbar__logo'>
+			<div className={bem.element('left')}>
+				<button type='button' onClick={toggleSidebarAction} className={bem.element('sidebar-button')}>
+					<FaBars />
+				</button>
+				<button type='button' onClick={onTitleClick} className={bem.element('title')}>
 					Interests
-				</div>
-				<div onClick={toggleCollapse} className='navbar__collapse-button'>
-					{collapse ? <FaAngleDown /> : <FaAngleUp />}
-				</div>
+				</button>
+				<button type='button' onClick={toggleCollapse} className={bem.element('collapse-button')}>
+					{isCollapsed ? <FaAngleDown /> : <FaAngleUp />}
+				</button>
 			</div>
-			<div className={classnames('navbar__center', collapse && width <= 600 ? 'navbar__center_collapsed' : '')}>
+
+			<div className={bem.element('center', {collapsed: isMobile && isCollapsed})}>
 				<SearchInput
-					onSubmit={(event, value) => {
-						event.preventDefault();
-						toggleIfSmallScreen();
-						dispatch(goToRouteWithParams(ROUTE_SEARCH, {
-							query: value,
-						}));
-					}}
-					className='navbar__search-input'
+					onSubmit={onSearchSubmit}
+					className={bem.element('search-input')}
 				/>
 			</div>
-			<div className={classnames('navbar__right', collapse && width <= 600 ? 'navbar__right_collapsed' : '')}>
-				<div
-					onClick={() => {
-						dispatch(goToRoute(ROUTE_USER, {
-							userId: user?.id,
-						}))
-						toggleIfSmallScreen();
-					}}
-					className='navbar__user-button'
-					hidden={!user}>
-					<FaUserCircle /> {user?.username}
-				</div>
-				<div onClick={openLogin} className='navbar__user-button' hidden={!!user}>
-					<FaSignInAlt /> Войти
-				</div>
+
+			<div className={bem.element('right', {collapsed: isMobile && isCollapsed})}>
+				{user && (
+					<button type='button' onClick={onUserClick} className={bem.element('user-button')}>
+						<FaUserCircle /> {user?.username}
+					</button>
+				)}
+
+				{!user && (
+					<button type='button' onClick={openLogin} className={bem.element('login-button')}>
+						<FaSignInAlt /> {__('Войти')}
+					</button>
+				)}
 			</div>
 		</div>
 	);
