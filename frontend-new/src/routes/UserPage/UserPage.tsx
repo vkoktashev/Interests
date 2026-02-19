@@ -18,6 +18,7 @@ import {getUser} from '@steroidsjs/core/reducers/auth';
 import {Loader} from '@steroidsjs/core/ui/layout';
 import UserLogs from './views/UserLogs/UserLogs';
 import FriendsLogs from './views/FriendsLogs/FriendsLogs';
+import UserHeader from './views/UserHeader';
 
 /**
  * Основная страница приложения
@@ -76,28 +77,12 @@ function UserPage() {
 				text='Загрузка...'
 			>
 				<div className='user-page__body'>
-					<div className='user-page__header'>
-						<div className='user-page__user-card'>
-							<div className='user-page__user-avatar' style={{ backgroundImage: `url(${"https://upload.wikimedia.org/wikipedia/commons/f/f4/User_Avatar_2.png"})` }} />
-							<div>
-								<h2 className='user-page__username'>
-									{user.username}
-								</h2>
-								<div hidden={!user.is_available} className='user-page__last-activity'>
-									Последняя активность {lastActivity}
-								</div>
-							</div>
-						</div>
-
-						<button
-							hidden={isCurrentUser || !user.is_available}
-							className='user-page__subscribe-button'
-							onClick={() => {
-								setUserStatus({ is_following: !user.is_followed });
-							}}>
-							{user.is_followed ? "Отписаться" : "Подписаться"}
-						</button>
-					</div>
+					<UserHeader
+						user={user}
+						lastActivity={lastActivity}
+						isCurrentUser={isCurrentUser}
+						onToggleFollow={() => setUserStatus({is_following: !user.is_followed})}
+					/>
 
 					<CategoriesTab
 						className={bem.element('tabs')}

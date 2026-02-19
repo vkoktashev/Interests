@@ -13,10 +13,9 @@
     &__image {
         height: inherit;
         width: 30%;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: cover;
-        background-color: $newBackground3;
+        object-fit: cover;
+        object-position: center;
+        background-color: rgba(255, 255, 255, 0.06);
         display: inline-block;
         margin: 0;
         border-top-left-radius: 10px;

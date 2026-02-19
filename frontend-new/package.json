@@ -13,14 +13,12 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@sentry/browser": "^5.27.3",
-    "@steroidsjs/bootstrap": "^3.0.42",
-    "@steroidsjs/core": "^3.0.84",
+    "@steroidsjs/bootstrap": "^3.0.44",
+    "@steroidsjs/core": "^3.0.93",
     "@steroidsjs/webpack": "^4.1.0",
     "buffer": "^6.0.3",
     "connected-react-router": "^6.9.1",
     "jwt-decode": "^4.0.0",
-    "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
     "react": "^18.2.0",
     "react-calendar": "3.3.1",
@@ -40,7 +38,7 @@
   },
   "devDependencies": {
     "@steroidsjs/eslint-config": "^2.1.6",
-    "@types/lodash": "^4.14.191",
+    "@types/lodash-es": "^4.17.12",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "@types/webpack-env": "^1.15.1",

@@ -18,27 +18,30 @@ export function RegisterForm(props: IModalProps) {
     const [isLoading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 	const {username, email, password, passwordConfirm} = useSelector(state => getFormValues(state, REGISTRATION_FORM) || {});
+	const isInvalid = password !== passwordConfirm
+		|| !username?.length
+		|| !email?.length
+		|| !password?.length;
 
-	const onRegistration = useCallback(async (values) => {
+	const onRegistration = useCallback(async (values: Record<string, string>) => {
 		setLoading(true);
 		setError('');
-		http.post('/users/auth/signup/', values)
-			.then(response => {
-				const user = {
-					login: response.username,
-					email: response.email,
-				};
-				dispatch(setUser(user));
-			})
-			.catch(error => {
-				const data = error?.response?.data;
-				const errorMessage = data?.error
-					|| Object.values(data).flat().flat().join('\n')
-					|| __('Ошибка сервера');
-				setError(errorMessage);
-			})
-			.finally(() => setLoading(false));
-    }, []);
+		try {
+			const response = await http.post('/users/auth/signup/', values);
+			dispatch(setUser({
+				login: response.username,
+				email: response.email,
+			}));
+		} catch (error) {
+			const data = error?.response?.data;
+			const errorMessage = data?.error
+				|| (data && Object.values(data).flat().flat().join('\n'))
+				|| __('Ошибка сервера');
+			setError(errorMessage);
+		} finally {
+			setLoading(false);
+		}
+    }, [dispatch, http]);
 
 	return (
 		<Modal
@@ -55,51 +58,47 @@ export function RegisterForm(props: IModalProps) {
 				useRedux
 			>
 				<p
-					className='register-form__fail'
+					className={bem.element('fail')}
 					hidden={!error}
 				>
 					{error}
 				</p>
 				<p
-					className='register-form__success'
+					className={bem.element('success')}
 					hidden={!user?.email}
 				>
 					{user?.login}, добро пожаловать! Осталось только подтвердить вашу почту
 				</p>
-				<InputField
-					attribute='username'
-					label={__('Никнейм')}
-					className={bem.element('input')}
-				/>
-				<EmailField
-					attribute='email'
-					label={__('Электронная почта')}
-					className={bem.element('input')}
-				/>
+				<div className={bem.element('fields')}>
+					<InputField
+						attribute='username'
+						label={__('Никнейм')}
+						className={bem.element('input')}
+					/>
+					<EmailField
+						attribute='email'
+						label={__('Электронная почта')}
+						className={bem.element('input')}
+					/>
 
-				<PasswordField
-					attribute='password'
-					label={__('Пароль')}
-					className={bem.element('input')}
-				/>
-				<PasswordField
-					attribute='passwordConfirm'
-					label={__('Подтверждение пароля')}
-					className={bem.element('input')}
-					errors={[passwordConfirm !== password && __('Пароли не совпадают')].filter(Boolean)}
-				/>
+					<PasswordField
+						attribute='password'
+						label={__('Пароль')}
+						className={bem.element('input')}
+					/>
+					<PasswordField
+						attribute='passwordConfirm'
+						label={__('Подтверждение пароля')}
+						className={bem.element('input')}
+						errors={[passwordConfirm !== password && __('Пароли не совпадают')].filter(Boolean)}
+					/>
+				</div>
 
-				<div className='text-center mt-4'>
+				<div className={bem.element('actions')}>
 					<Button
-						type='button'
-						className='register-form__auth-button'
-						disabled={
-							password !== passwordConfirm
-								|| !username?.length
-								|| !email?.length
-								|| !password?.length
-						}
-						onClick={onRegistration}
+						type='submit'
+						className={bem.element('auth-button')}
+						disabled={isInvalid}
 						label={isLoading ? __('Загрузка...') : __('Зарегистрироваться')}
 					/>
 				</div>
