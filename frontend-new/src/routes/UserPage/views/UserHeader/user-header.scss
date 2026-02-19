@@ -1,0 +1,167 @@
+@import "style/colors";
+@import "style/mixins";
+
+.user-header {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    background:
+        linear-gradient(120deg, rgba(79, 93, 234, 0.18), transparent 45%),
+        $newBackground2;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 16px 20px;
+
+    &__main {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+    }
+
+    &__avatar {
+        flex: 0 0 72px;
+        height: 72px;
+        width: 72px;
+        object-fit: cover;
+        object-position: center;
+        background-color: rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        border: 2px solid rgba(255, 255, 255, 0.14);
+    }
+
+    &__meta {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        min-width: 0;
+    }
+
+    &__title-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    &__username {
+        @include headline5;
+        margin: 0;
+    }
+
+    &__status {
+        font-size: 0.78rem;
+        line-height: 1.2;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 999px;
+        color: #a8f5d9;
+        background: rgba(64, 196, 142, 0.14);
+        border: 1px solid rgba(64, 196, 142, 0.35);
+
+        &_private {
+            color: #ffced4;
+            background: rgba(255, 108, 124, 0.12);
+            border: 1px solid rgba(255, 108, 124, 0.34);
+        }
+    }
+
+    &__last-activity {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        width: fit-content;
+        border-radius: 999px;
+        padding: 4px 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    &__activity-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: #49d68e;
+        box-shadow: 0 0 0 4px rgba(73, 214, 142, 0.15);
+    }
+
+    &__activity-label {
+        font-size: 0.8rem;
+        color: $newText2;
+    }
+
+    &__activity-value {
+        font-size: 0.85rem;
+        color: $newText3;
+        font-weight: 500;
+    }
+
+    &__stats {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    &__stat {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 6px;
+        padding: 4px 8px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    &__stat-label {
+        font-size: 0.8rem;
+        color: $newText2;
+    }
+
+    &__stat-value {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: $newText3;
+    }
+
+    &__subscribe-button {
+        @include secondaryFont;
+        font-weight: 600;
+        font-size: 14px;
+        line-height: 19px;
+        letter-spacing: 1.25px;
+        text-transform: uppercase;
+        background-color: $newAccent2;
+        color: $newText3;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 14px;
+        min-width: 164px;
+
+        &:hover {
+            background-color: $newAccent1;
+        }
+    }
+
+    @media (max-width: 640px) {
+        padding: 12px 14px;
+        gap: 12px;
+
+        &__main {
+            width: 100%;
+            align-items: flex-start;
+        }
+
+        &__avatar {
+            flex-basis: 58px;
+            width: 58px;
+            height: 58px;
+        }
+
+        &__subscribe-button {
+            width: 100%;
+        }
+    }
+}

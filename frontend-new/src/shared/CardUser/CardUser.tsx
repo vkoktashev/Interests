@@ -3,9 +3,11 @@ import "./card-user.scss";
 import {Link} from '@steroidsjs/core/ui/nav';
 import {ROUTE_USER} from '../../routes';
 import {useBem} from '@steroidsjs/core/hooks';
+import {getDefaultAvatarUrl} from '../avatar';
 
 function CardUser({ user, className }: any) {
 	const bem = useBem('card-user');
+	const avatarUrl = user?.avatar || user?.image || getDefaultAvatarUrl(user?.username || user?.id || 'user');
 
 	return (
 		<Link
@@ -14,9 +16,10 @@ function CardUser({ user, className }: any) {
 				userId: user.id,
 			}}
 			className={bem(bem.block(), className)}>
-			<div
+			<img
 				className={bem.element('image')}
-				style={{ backgroundImage: `url(${"https://upload.wikimedia.org/wikipedia/commons/f/f4/User_Avatar_2.png"})` }}
+				src={avatarUrl}
+				alt={user?.username || 'User avatar'}
 			/>
 			<div className={bem.element('text')}>
 				{user.username}
