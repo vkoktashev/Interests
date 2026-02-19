@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 
 import './reset-password-form.scss';
 import {useBem, useComponents} from '@steroidsjs/core/hooks';
@@ -13,19 +13,19 @@ export function ResetPasswordForm(props: IModalProps) {
 	const [isLoading, setLoading] = useState(false);
 	const [emailSent, setEmailSent] = useState(false);
 
-	const onSubmit = async (values) => {
+	const onSubmit = useCallback(async (values: Record<string, string>) => {
 		setLoading(true);
 		setError('');
-		http.send('PUT', '/users/auth/password_reset/', values)
-			.then(response => {
-				setEmailSent(true);
-			})
-			.catch(error => {
-				const errorMessage = error?.response?.data?.error || __('Ошибка сервера');
-				setError(errorMessage);
-			})
-			.finally(() => setLoading(false));
-	};
+		try {
+			await http.send('PUT', '/users/auth/password_reset/', values);
+			setEmailSent(true);
+		} catch (error) {
+			const errorMessage = error?.response?.data?.error || __('Ошибка сервера');
+			setError(errorMessage);
+		} finally {
+			setLoading(false);
+		}
+	}, [http]);
 
 	return (
 		<Modal
@@ -37,29 +37,33 @@ export function ResetPasswordForm(props: IModalProps) {
         >
 			<Form onSubmit={onSubmit} className={bem.element('form')}>
 				<p
-					className='reset-password-form__fail'
+					className={bem.element('fail')}
 					hidden={!error}
 				>
 					{error}
 				</p>
 				<p
-					className='reset-password-form__success'
+					className={bem.element('success')}
 					hidden={!emailSent}
 				>
-					На вашу почту отправлено письмо
+					{__('На вашу почту отправлено письмо')}
 				</p>
 
-				<EmailField
-					attribute='email'
-					label={__('Почта')}
-					className={bem.element('input')}
-				/>
+				<div className={bem.element('fields')}>
+					<EmailField
+						attribute='email'
+						label={__('Почта')}
+						className={bem.element('input')}
+					/>
+				</div>
 
-				<Button
-					type='submit'
-					className='reset-password-form__button'
-					label={isLoading ? __('Загрузка...') : __('Сбросить')}
-				/>
+				<div className={bem.element('actions')}>
+					<Button
+						type='submit'
+						className={bem.element('button')}
+						label={isLoading ? __('Загрузка...') : __('Сбросить')}
+					/>
+				</div>
 			</Form>
 		</Modal>
 	);
