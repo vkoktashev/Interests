@@ -46,11 +46,6 @@
 
     &__sidebar {
         grid-area: sidebar;
-
-        @media (max-width: $mobile-width) {
-            position: absolute !important;
-            padding-top: 3.2rem;
-        }
     }
 
     &__content {

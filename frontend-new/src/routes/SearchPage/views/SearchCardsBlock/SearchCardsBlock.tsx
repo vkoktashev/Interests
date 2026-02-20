@@ -1,28 +1,40 @@
-import React from "react";
-import SearchCard from "../SearchCard";
-import "./search-cards.scss";
+import React from 'react';
 import {useBem} from '@steroidsjs/core/hooks';
+import SearchCard from '../SearchCard';
+import {ISearchCardData} from '../searchTypes';
+import './search-cards.scss';
 
-function SearchCardsBlock({ objects, hidden, className }: any) {
+interface ISearchCardsBlockProps {
+	objects: ISearchCardData[];
+	emptyText: string;
+	hidden?: boolean;
+	className?: string;
+}
+
+function SearchCardsBlock({objects, hidden, className, emptyText}: ISearchCardsBlockProps) {
 	const bem = useBem('search-cards');
 
 	return (
 		<div hidden={hidden} className={bem(bem.block(), className)}>
-			<div className='search-cards__body'>
-				<div className='search-cards__cards'>
-					{objects?.map((object) => (
-						<SearchCard
-							info={object}
-							key={object.id}
-							className='search-cards__card'
-						/>
-					))}
-					{objects?.length < 1 ? `${name} не найдены` : ""}
-				</div>
+			<div className={bem.element('body')}>
+				{objects.length > 0 ? (
+					<div className={bem.element('cards')}>
+						{objects.map(object => (
+							<SearchCard
+								info={object}
+								key={object.id}
+								className={bem.element('card')}
+							/>
+						))}
+					</div>
+				) : (
+					<div className={bem.element('empty')}>
+						{emptyText}
+					</div>
+				)}
 			</div>
 		</div>
 	);
 }
-//onMouseDown={mouseDownHandler}
 
 export default SearchCardsBlock;

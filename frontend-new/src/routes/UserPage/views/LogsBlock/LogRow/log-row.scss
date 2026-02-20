@@ -112,18 +112,22 @@
     }
 
     @media (max-width: $mobile-width) {
-        flex-direction: column;
-        gap: 8px;
+        flex-wrap: nowrap;
+        align-items: flex-start;
+        gap: 6px;
         padding: 8px 10px;
 
         &__content {
+            flex: 1 1 auto;
+            min-width: 0;
             gap: 4px;
         }
 
         &__delete-button {
             opacity: 1;
             pointer-events: auto;
-            align-self: flex-end;
+            margin-left: auto;
+            flex: 0 0 auto;
         }
     }
 }

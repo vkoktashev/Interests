@@ -8,179 +8,168 @@ import {
 	FaUserPlus,
 	FaArrowRight,
 	FaArrowLeft,
-	FaRandom
+	FaRandom,
+	FaTimes,
 } from 'react-icons/fa';
-import { MdLiveTv, MdSettings } from 'react-icons/md';
-import {
-	ProSidebar,
-	Menu,
-	MenuItem,
-	SidebarFooter,
-} from 'react-pro-sidebar';
+import {MdLiveTv, MdSettings} from 'react-icons/md';
+import {useBem, useDispatch, useSelector} from '@steroidsjs/core/hooks';
+import {goToRoute} from '@steroidsjs/core/actions/router';
+import {openModal} from '@steroidsjs/core/actions/modal';
+import {logout} from '@steroidsjs/core/actions/auth';
 
 import useWindowDimensions from '../../../hooks/useWindowDimensions';
-
-import './sidebar.scss';
-import {useBem, useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {collapseSidebar, toggleSidebar} from '../../../actions/modals';
 import {getSidebarIsCollapsed, getSidebarIsOpen} from '../../../reducers/modals';
-import {goToRoute} from '@steroidsjs/core/actions/router';
-import {ROUTE_CALENDAR, ROUTE_RANDOMIZER, ROUTE_SETTINGS, ROUTE_UNWATCHED, ROUTE_USER} from '../../../routes';
-import 'react-pro-sidebar/dist/css/styles.css';
-import {openModal} from '@steroidsjs/core/actions/modal';
-import LoginForm from '../../../modals/LoginForm';
-import {logout} from '@steroidsjs/core/actions/auth';
-import RegisterForm from '../../../modals/RegisterForm';
 import {goToRouteWithParams} from '../../../actions/router';
+import {
+	ROUTE_CALENDAR,
+	ROUTE_RANDOMIZER,
+	ROUTE_SETTINGS,
+	ROUTE_UNWATCHED,
+	ROUTE_USER,
+} from '../../../routes';
+import LoginForm from '../../../modals/LoginForm';
+import RegisterForm from '../../../modals/RegisterForm';
+import './sidebar.scss';
 
-/**
- * Основная страница приложения
- */
-export function Sidebar(props) {
+interface ISidebarAction {
+	key: string;
+	title: string;
+	icon: React.ReactNode;
+	onClick: () => void;
+	accent?: boolean;
+}
+
+const MOBILE_BREAKPOINT = 540;
+
+export function Sidebar(props: {className?: string}) {
 	const bem = useBem('sidebar');
 	const dispatch = useDispatch();
-	const { width } = useWindowDimensions();
+	const {width} = useWindowDimensions();
 	const user = useSelector(getUser);
 	const sidebarIsCollapsed = useSelector(getSidebarIsCollapsed);
-	const sidebarIsToggled = useSelector(getSidebarIsOpen);
+	const sidebarIsOpen = useSelector(getSidebarIsOpen);
+	const isMobile = width <= MOBILE_BREAKPOINT;
+
+	const closeSidebarOnMobile = useCallback(() => {
+		if (isMobile) {
+			dispatch(toggleSidebar());
+		}
+	}, [dispatch, isMobile]);
+
+	const openProfile = useCallback(() => {
+		dispatch(goToRoute(ROUTE_USER, {userId: user?.id}));
+		closeSidebarOnMobile();
+	}, [closeSidebarOnMobile, dispatch, user?.id]);
+
+	const openFriends = useCallback(() => {
+		dispatch(goToRouteWithParams(ROUTE_USER, {
+			userId: user?.id,
+			сategory: 'Друзья',
+		}));
+		closeSidebarOnMobile();
+	}, [closeSidebarOnMobile, dispatch, user?.id]);
+
+	const openRoute = useCallback((route: string) => {
+		dispatch(goToRoute(route));
+		closeSidebarOnMobile();
+	}, [closeSidebarOnMobile, dispatch]);
 
 	const logoutAction = useCallback(() => {
 		dispatch(logout());
-	}, []);
+		closeSidebarOnMobile();
+	}, [closeSidebarOnMobile, dispatch]);
 
-	function toggleSidebarIfSmallScreen() {
-		if (width < 540) {
+	const openLogin = useCallback(() => {
+		dispatch(openModal(LoginForm));
+		closeSidebarOnMobile();
+	}, [closeSidebarOnMobile, dispatch]);
+
+	const openRegister = useCallback(() => {
+		dispatch(openModal(RegisterForm));
+		closeSidebarOnMobile();
+	}, [closeSidebarOnMobile, dispatch]);
+
+	const handleCollapseAction = useCallback(() => {
+		if (isMobile) {
 			dispatch(toggleSidebar());
+			return;
 		}
-	}
+		dispatch(collapseSidebar());
+	}, [dispatch, isMobile]);
+
+	const authenticatedActions: ISidebarAction[] = [
+		{key: 'profile', title: 'Профиль', icon: <FaUserCircle />, onClick: openProfile},
+		{key: 'friends', title: 'Друзья', icon: <FaUserFriends />, onClick: openFriends},
+		{key: 'unwatched', title: 'Непросмотренное', icon: <MdLiveTv />, onClick: () => openRoute(ROUTE_UNWATCHED)},
+		{key: 'calendar', title: 'Календарь', icon: <FaCalendar />, onClick: () => openRoute(ROUTE_CALENDAR)},
+		{key: 'randomizer', title: 'Рандомайзер', icon: <FaRandom />, onClick: () => openRoute(ROUTE_RANDOMIZER)},
+		{key: 'settings', title: 'Настройки', icon: <MdSettings />, onClick: () => openRoute(ROUTE_SETTINGS)},
+		{key: 'logout', title: 'Выход', icon: <FaSignOutAlt />, onClick: logoutAction, accent: true},
+	];
+
+	const guestActions: ISidebarAction[] = [
+		{key: 'login', title: 'Войти', icon: <FaSignInAlt />, onClick: openLogin},
+		{key: 'register', title: 'Зарегистрироваться', icon: <FaUserPlus />, onClick: openRegister},
+	];
+
+	const sidebarClassName = [
+		bem.block(),
+		props.className,
+		sidebarIsCollapsed ? 'sidebar_collapsed' : '',
+		sidebarIsOpen ? 'sidebar_open' : '',
+		isMobile ? 'sidebar_mobile' : '',
+	].filter(Boolean).join(' ');
 
 	return (
-		<ProSidebar
-			className={bem(bem.block(), props.className)}
-			collapsed={sidebarIsCollapsed}
-			hidden={!sidebarIsToggled}
-		>
-			<Menu iconShape='round' hidden={!user}>
-				<MenuItem icon={<FaUserCircle />}>
-					<a
-						href={`/user/${user?.id}`}
-						onClick={(event) => {
-							event.preventDefault();
-							dispatch(goToRoute(ROUTE_USER, {
-								userId: user?.id,
-							}));
-							toggleSidebarIfSmallScreen();
-						}}>
-						Профиль
-					</a>
-				</MenuItem>
-				<MenuItem icon={<FaUserFriends />}>
-					<a
-						href={`/user/${user?.id}?сategory=Друзья`}
-						onClick={(event) => {
-							event.preventDefault();
-							dispatch(goToRouteWithParams(ROUTE_USER, {
-								userId: user?.id,
-								сategory: 'Друзья',
-							}));
-							toggleSidebarIfSmallScreen();
-						}}>
-						Друзья
-					</a>
-				</MenuItem>
+		<>
+			{isMobile && sidebarIsOpen && (
+				<button
+					type='button'
+					className={bem.element('overlay')}
+					onClick={() => dispatch(toggleSidebar())}
+					aria-label='Закрыть боковое меню'
+				/>
+			)}
 
-				<MenuItem icon={<MdLiveTv />}>
-					<a
-						href={`/unwatched`}
-						onClick={(event) => {
-							event.preventDefault();
-							dispatch(goToRoute(ROUTE_UNWATCHED));
-							toggleSidebarIfSmallScreen();
-						}}>
-						Непросмотренное
-					</a>
-				</MenuItem>
-				<MenuItem icon={<FaCalendar />}>
-					<a
-						href={`/calendar`}
-						onClick={(event) => {
-							event.preventDefault();
-							dispatch(goToRoute(ROUTE_CALENDAR));
-							toggleSidebarIfSmallScreen();
-						}}>
-						Календарь
-					</a>
-				</MenuItem>
-				<MenuItem icon={<FaRandom />}>
-					<a
-						href={`/random`}
-						onClick={(event) => {
-							event.preventDefault();
-							dispatch(goToRoute(ROUTE_RANDOMIZER));
-							toggleSidebarIfSmallScreen();
-						}}>
-						Рандомайзер
-					</a>
-				</MenuItem>
-				<MenuItem icon={<MdSettings />}>
-					<a
-						href={`/settings`}
-						onClick={(event) => {
-							event.preventDefault();
-							dispatch(goToRoute(ROUTE_SETTINGS));
-							toggleSidebarIfSmallScreen();
-						}}>
-						Настройки
-					</a>
-				</MenuItem>
-				<MenuItem icon={<FaSignOutAlt />}>
-					<a
-						href={`/`}
-						onClick={(event) => {
-							event.preventDefault();
-							logoutAction();
-						}}>
-						Выход
-					</a>
-				</MenuItem>
-			</Menu>
-			<Menu iconShape='round' hidden={user}>
-				<MenuItem icon={<FaSignInAlt />}>
-					<a
-						href={`/`}
-						onClick={(event) => {
-							event.preventDefault();
-							dispatch(openModal(LoginForm));
-							toggleSidebarIfSmallScreen();
-						}}>
-						Войти
-					</a>
-				</MenuItem>
-				<MenuItem icon={<FaUserPlus />}>
-					<a
-						href={`/`}
-						onClick={(event) => {
-							event.preventDefault();
-							dispatch(openModal(RegisterForm));
-							toggleSidebarIfSmallScreen();
-						}}>
-						Зарегистрироваться
-					</a>
-				</MenuItem>
-			</Menu>
-			<SidebarFooter>
-				<Menu iconShape='round'>
-					<MenuItem
-						icon={sidebarIsCollapsed ? <FaArrowRight /> : <FaArrowLeft />}
-						onClick={() => {
-							dispatch(collapseSidebar());
-						}}>
-						Свернуть
-					</MenuItem>
-				</Menu>
-			</SidebarFooter>
-		</ProSidebar>
+			<aside
+				className={sidebarClassName}
+			>
+				<div className={bem.element('panel')}>
+					<nav className={bem.element('menu')} aria-label='Основная навигация'>
+						{(user ? authenticatedActions : guestActions).map(action => (
+							<button
+								type='button'
+								key={action.key}
+								className={bem.element('item', {accent: action.accent})}
+								onClick={action.onClick}
+								title={sidebarIsCollapsed ? action.title : undefined}
+							>
+								<span className={bem.element('item-icon')}>{action.icon}</span>
+								<span className={bem.element('item-title')}>{action.title}</span>
+							</button>
+						))}
+					</nav>
+
+					<div className={bem.element('footer')}>
+						<button
+							type='button'
+							className={bem.element('collapse')}
+							onClick={handleCollapseAction}
+							title={isMobile ? 'Закрыть меню' : (sidebarIsCollapsed ? 'Развернуть' : 'Свернуть')}
+						>
+							<span className={bem.element('item-icon')}>
+								{isMobile ? <FaTimes /> : (sidebarIsCollapsed ? <FaArrowRight /> : <FaArrowLeft />)}
+							</span>
+							<span className={bem.element('item-title')}>
+								{isMobile ? 'Закрыть меню' : (sidebarIsCollapsed ? 'Развернуть' : 'Свернуть')}
+							</span>
+						</button>
+					</div>
+				</div>
+			</aside>
+		</>
 	);
 }
 

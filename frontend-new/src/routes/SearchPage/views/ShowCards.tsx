@@ -1,38 +1,21 @@
-import React, { useMemo } from "react";
-import SearchCardsBlock from "./SearchCardsBlock";
-import {ROUTE_MOVIE, ROUTE_SHOW} from "../../index";
+import React, {useMemo} from 'react';
+import SearchCardsBlock from './SearchCardsBlock';
+import {mapShowToCard} from './searchMappers';
+import {ITmdbMediaItem} from './searchTypes';
 
-function ShowCards({ shows, hidden }) {
-	const objects = useMemo(
-		() =>
-			shows?.reduce((newObjects, show) => {
-				let object: any = {
-					name: show.name,
-					id: show.id,
-					poster: show.backdrop_path,
-					route: ROUTE_SHOW,
-					routeParams: {
-						showId: show.id,
-					},
-					overview: show.overview,
-				};
+interface IShowCardsProps {
+	shows: ITmdbMediaItem[];
+	hidden?: boolean;
+}
 
-				if (show.first_air_date) {
-					let mas = show.first_air_date.split("-");
-					let newDate = mas[2] + "." + mas[1] + "." + mas[0];
-					object.release_date = newDate;
-				} else object.release_date = "";
-
-				if (object) newObjects.push(object);
-				return newObjects;
-			}, []),
-		[shows]
-	);
+function ShowCards({shows, hidden}: IShowCardsProps) {
+	const objects = useMemo(() => shows.map(mapShowToCard), [shows]);
 
 	return (
 		<SearchCardsBlock
 			hidden={hidden}
 			objects={objects}
+			emptyText='Сериалы не найдены'
 		/>
 	);
 }

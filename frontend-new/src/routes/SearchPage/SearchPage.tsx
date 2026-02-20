@@ -1,99 +1,256 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from 'react-loading-overlay';
+import {Form, InputField} from '@steroidsjs/core/ui/form';
+import Pagination from '@steroidsjs/core/ui/list/Pagination/Pagination';
+import {formChange, formSubmit} from '@steroidsjs/core/actions/form';
+import {getFormValues} from '@steroidsjs/core/reducers/form';
+import {getRouteParams} from '@steroidsjs/core/reducers/router';
+import {useComponents, useDispatch, useSelector} from '@steroidsjs/core/hooks';
+import CategoriesTab from '../../shared/CategoriesTab';
 import GameCards from './views/GameCards';
 import MovieCards from './views/MovieCards';
 import ShowCards from './views/ShowCards';
 import UserCards from './views/UserCards';
-import CategoriesTab from '../../shared/CategoriesTab';
-
+import {
+	IRawgGame,
+	ITmdbMediaItem,
+	ITmdbSearchResponse,
+	IUserSearchItem,
+	SEARCH_CATEGORIES,
+	TSearchCategory,
+} from './views/searchTypes';
 import './search-page.scss';
-import {useComponents, useDispatch, useSelector} from '@steroidsjs/core/hooks';
-import {getRouteParams} from '@steroidsjs/core/reducers/router';
-import {Form, InputField} from '@steroidsjs/core/ui/form';
-import {formChange, formSubmit} from '@steroidsjs/core/actions/form';
-import {getFormValues} from '@steroidsjs/core/reducers/form';
-import Pagination from '@steroidsjs/core/ui/list/Pagination/Pagination';
 
 const PAGE_SIZE = 10;
 const SEARCH_PAGE_FORM = 'search_page_form';
 
+interface ISearchFormValues {
+	query: string;
+	page: number;
+	activeCategory: TSearchCategory;
+}
+
+interface ISearchResultsState {
+	Игры: IRawgGame[];
+	Фильмы: ITmdbMediaItem[];
+	Сериалы: ITmdbMediaItem[];
+	Пользователи: IUserSearchItem[];
+}
+
+function getInitialResults(): ISearchResultsState {
+	return {
+		Игры: [],
+		Фильмы: [],
+		Сериалы: [],
+		Пользователи: [],
+	};
+}
+
+function getInitialTotals(): Record<TSearchCategory, number> {
+	return {
+		Игры: 0,
+		Фильмы: 0,
+		Сериалы: 0,
+		Пользователи: 0,
+	};
+}
+
+const INITIAL_FORM_VALUES: ISearchFormValues = {
+	query: '',
+	page: 1,
+	activeCategory: SEARCH_CATEGORIES[0],
+};
+
+
+const CATEGORY_LOADING_TEXT: Record<TSearchCategory, string> = {
+	Игры: 'Ищем игры...',
+	Фильмы: 'Ищем фильмы...',
+	Сериалы: 'Ищем сериалы...',
+	Пользователи: 'Ищем пользователей...',
+};
+
+function normalizeQuery(value: unknown): string {
+	if (!value) {
+		return '';
+	}
+	return String(value).trim();
+}
+
+function getCategory(value: unknown): TSearchCategory {
+	if (SEARCH_CATEGORIES.includes(value as TSearchCategory)) {
+		return value as TSearchCategory;
+	}
+	return SEARCH_CATEGORIES[0];
+}
+
+function resolveTotalWithoutMeta(itemsLength: number, page: number): number {
+	if (itemsLength < PAGE_SIZE) {
+		return (page - 1) * PAGE_SIZE + itemsLength;
+	}
+	return page * PAGE_SIZE + 1;
+}
+
 function SearchPage() {
 	const dispatch = useDispatch();
 	const {http} = useComponents();
-	const formValues = useSelector(state => getFormValues(state, SEARCH_PAGE_FORM) || {});
+	const formValues = useSelector(state => (getFormValues(state, SEARCH_PAGE_FORM) || INITIAL_FORM_VALUES) as ISearchFormValues);
 
 	const rawQuery = useSelector(state => getRouteParams(state)?.query);
-	const query = rawQuery ? decodeURIComponent(String(rawQuery)) : '';
+	const queryFromRoute = rawQuery ? decodeURIComponent(String(rawQuery)) : '';
+	const activeCategory = getCategory(formValues.activeCategory);
+	const currentPage = Number(formValues.page) || 1;
+	const normalizedQuery = normalizeQuery(formValues.query);
+
 	const [isLoading, setLoading] = useState(false);
-	const [lastQuery, setLastQuery] = useState(query);
+	const [results, setResults] = useState<ISearchResultsState>(getInitialResults());
+	const [totals, setTotals] = useState<Record<TSearchCategory, number>>(getInitialTotals());
+	const lastQueryRef = useRef(normalizeQuery(queryFromRoute));
+	const requestIdRef = useRef(0);
 
-	const [games, setGames] = useState([]);
-	const [movies, setMovies] = useState([]);
-	const [shows, setShows] = useState([]);
-	const [users, setUsers] = useState([]);
+	const clearResults = useCallback(() => {
+		setResults(getInitialResults());
+		setTotals(getInitialTotals());
+	}, []);
 
-	const searchGames = useCallback(async (query: string, page: number) => {
+	const updateCategoryResults = useCallback(
+		<T extends TSearchCategory>(category: T, items: ISearchResultsState[T], total: number, requestId: number) => {
+			if (requestId !== requestIdRef.current) {
+				return;
+			}
+			setResults(prev => ({
+				...prev,
+				[category]: items,
+			}));
+			setTotals(prev => ({
+				...prev,
+				[category]: total,
+			}));
+		},
+		[]
+	);
+
+	const searchGames = useCallback(async (query: string, page: number, requestId: number) => {
 		const response = await http.get('/games/search/rawg/', {
-				query: query,
-				page,
-				page_size: PAGE_SIZE,
-			});
-		setGames(response);
-	}, []);
-
-	const searchMovies = useCallback(async (query: string, page: number) => {
-		const response = await http.get('/movies/search/tmdb/', {
-			query: query,
+			query,
 			page,
 			page_size: PAGE_SIZE,
 		});
-		setMovies(response.results);
-	}, []);
+		const items = (Array.isArray(response) ? response : []) as IRawgGame[];
+		updateCategoryResults('Игры', items, resolveTotalWithoutMeta(items.length, page), requestId);
+	}, [http, updateCategoryResults]);
 
-	const searchShows = useCallback(async (query: string, page: number) => {
-		const response = await http.get('/shows/search/tmdb/', {
-			query: query,
+	const searchMovies = useCallback(async (query: string, page: number, requestId: number) => {
+		const response = (await http.get('/movies/search/tmdb/', {
+			query,
 			page,
 			page_size: PAGE_SIZE,
-		});
-		setShows(response.results);
-	}, [setShows]);
+		})) as ITmdbSearchResponse;
+		const items = Array.isArray(response?.results) ? response.results : [];
+		const total = Number(response?.total_results) || resolveTotalWithoutMeta(items.length, page);
+		updateCategoryResults('Фильмы', items, total, requestId);
+	}, [http, updateCategoryResults]);
 
-	const searchUsers = useCallback(async (query: string, page: number) => {
+	const searchShows = useCallback(async (query: string, page: number, requestId: number) => {
+		const response = (await http.get('/shows/search/tmdb/', {
+			query,
+			page,
+			page_size: PAGE_SIZE,
+		})) as ITmdbSearchResponse;
+		const items = Array.isArray(response?.results) ? response.results : [];
+		const total = Number(response?.total_results) || resolveTotalWithoutMeta(items.length, page);
+		updateCategoryResults('Сериалы', items, total, requestId);
+	}, [http, updateCategoryResults]);
+
+	const searchUsers = useCallback(async (query: string, page: number, requestId: number) => {
 		const response = await http.get('/users/search/', {
-			query: query,
+			query,
 			page,
 			page_size: PAGE_SIZE,
 		});
-		setUsers(response);
-	}, []);
+		const items = (Array.isArray(response) ? response : []) as IUserSearchItem[];
+		updateCategoryResults('Пользователи', items, resolveTotalWithoutMeta(items.length, page), requestId);
+	}, [http, updateCategoryResults]);
 
-	const onSubmit = useCallback(async (values) => {
-		setLoading(true);
-		if (lastQuery !== values.query && values.page !== 1) {
+	const runSearch = useCallback(async (values: ISearchFormValues) => {
+		const nextQuery = normalizeQuery(values.query);
+		const nextPage = Number(values.page) || 1;
+		const nextCategory = getCategory(values.activeCategory);
+
+		if (lastQueryRef.current !== nextQuery && nextPage !== 1) {
 			dispatch(formChange(SEARCH_PAGE_FORM, 'page', 1));
-			values.page = 1;
+			dispatch(formSubmit(SEARCH_PAGE_FORM));
+			return;
 		}
-		setLastQuery(values.query);
-		if (values.activeCategory === 'Игры') {
-			await searchGames(values.query, values.page);
+
+		if (!nextQuery) {
+			lastQueryRef.current = '';
+			clearResults();
+			setLoading(false);
+			return;
 		}
-		if (values.activeCategory === 'Фильмы') {
-			await searchMovies(values.query, values.page);
+
+		lastQueryRef.current = nextQuery;
+		const requestId = ++requestIdRef.current;
+		setLoading(true);
+
+		try {
+			if (nextCategory === 'Игры') {
+				await searchGames(nextQuery, nextPage, requestId);
+			}
+			if (nextCategory === 'Фильмы') {
+				await searchMovies(nextQuery, nextPage, requestId);
+			}
+			if (nextCategory === 'Сериалы') {
+				await searchShows(nextQuery, nextPage, requestId);
+			}
+			if (nextCategory === 'Пользователи') {
+				await searchUsers(nextQuery, nextPage, requestId);
+			}
+		} finally {
+			if (requestId === requestIdRef.current) {
+				setLoading(false);
+			}
 		}
-		if (values.activeCategory === 'Сериалы') {
-			await searchShows(values.query, values.page);
-		}
-		if (values.activeCategory === 'Пользователи') {
-			await searchUsers(values.query, values.page);
-		}
-		setLoading(false);
-	}, [searchGames, searchMovies, searchShows, searchUsers, lastQuery]);
+	}, [clearResults, dispatch, searchGames, searchMovies, searchShows, searchUsers]);
 
 	useEffect(() => {
-		dispatch(formChange(SEARCH_PAGE_FORM, 'query', query));
-		dispatch(formSubmit(SEARCH_PAGE_FORM));
-	}, [query]);
+		const normalizedRouteQuery = normalizeQuery(queryFromRoute);
+		dispatch(formChange(SEARCH_PAGE_FORM, {
+			query: normalizedRouteQuery,
+			page: 1,
+		}));
+
+		if (normalizedRouteQuery) {
+			dispatch(formSubmit(SEARCH_PAGE_FORM));
+		} else {
+			clearResults();
+			setLoading(false);
+		}
+	}, [clearResults, dispatch, queryFromRoute]);
+
+	const content = useMemo(() => {
+		if (!normalizedQuery) {
+			return (
+				<div className='search-page__empty-state'>
+					Введите запрос, чтобы начать поиск
+				</div>
+			);
+		}
+
+		if (activeCategory === 'Игры') {
+			return <GameCards games={results['Игры']} />;
+		}
+		if (activeCategory === 'Фильмы') {
+			return <MovieCards movies={results['Фильмы']} />;
+		}
+		if (activeCategory === 'Сериалы') {
+			return <ShowCards shows={results['Сериалы']} />;
+		}
+		return <UserCards users={results['Пользователи']} />;
+	}, [activeCategory, normalizedQuery, results]);
+
+	const totalForActiveCategory = totals[activeCategory] || 0;
+	const showPagination = normalizedQuery.length > 0 && totalForActiveCategory > PAGE_SIZE;
 
 	return (
 		<div className='search-page'>
@@ -102,105 +259,64 @@ function SearchPage() {
 					formId={SEARCH_PAGE_FORM}
 					className='search-page__form'
 					initialValues={{
-						query,
-						page: 1,
-						activeCategory: 'Игры',
+						...INITIAL_FORM_VALUES,
+						query: normalizeQuery(queryFromRoute),
 					}}
-					onSubmit={onSubmit}
+					onSubmit={runSearch}
 					useRedux
 				>
-					<h1>
-						Поиск
-					</h1>
-					<InputField
-						attribute='query'
-						label={__('Запрос')}
-					/>
+					<div className='search-page__form-head'>
+						<div>
+							<h1 className='search-page__title'>Поиск</h1>
+							<p className='search-page__subtitle'>Найдите игры, фильмы, сериалы и пользователей</p>
+						</div>
+					</div>
+					<div className='search-page__input-wrap'>
+						<InputField
+							attribute='query'
+							label={__('Что ищем?')}
+						/>
+					</div>
 				</Form>
+
 				<CategoriesTab
-					categories={['Игры', 'Фильмы', 'Сериалы', 'Пользователи']}
-					activeCategory={formValues.activeCategory}
+					categories={[...SEARCH_CATEGORIES]}
+					activeCategory={activeCategory}
 					onChangeCategory={(category: string) => {
+						const normalizedCategory = getCategory(category);
 						dispatch(formChange(SEARCH_PAGE_FORM, {
-							activeCategory: category,
+							activeCategory: normalizedCategory,
 							page: 1,
 						}));
-						dispatch(formSubmit(SEARCH_PAGE_FORM));
-					}}>
+						if (normalizeQuery(formValues.query)) {
+							dispatch(formSubmit(SEARCH_PAGE_FORM));
+						}
+					}}
+				>
 					<div className='search-page__results'>
-						{
-							formValues.activeCategory === 'Игры' && (
-								<LoadingOverlay
-									active={isLoading}
-									spinner
-									text='Ищем игры...'
-								>
-									<GameCards
-										games={games}
-										hidden={formValues.activeCategory !== 'Игры'}
-									/>
-								</LoadingOverlay>
-							)
-						}
+						<LoadingOverlay
+							active={isLoading}
+							spinner
+							text={CATEGORY_LOADING_TEXT[activeCategory]}
+						>
+							{content}
+						</LoadingOverlay>
 
-						{
-							formValues.activeCategory === 'Фильмы' && (
-								<LoadingOverlay
-									active={isLoading}
-									spinner
-									text='Ищем фильмы...'
-								>
-									<MovieCards
-										movies={movies}
-										hidden={formValues.activeCategory !== 'Фильмы'}
-									/>
-								</LoadingOverlay>
-							)
-						}
-
-						{
-							formValues.activeCategory === 'Сериалы' && (
-								<LoadingOverlay
-									active={isLoading}
-									spinner
-									text='Ищем сериалы...'
-								>
-									<ShowCards
-										shows={shows}
-										hidden={formValues.activeCategory !== 'Сериалы'}
-									/>
-								</LoadingOverlay>
-							)
-						}
-
-						{
-							formValues.activeCategory === 'Пользователи' && (
-								<LoadingOverlay
-									active={isLoading}
-									spinner
-									text='Ищем пользователей...'
-								>
-									<UserCards
-										users={users}
-										hidden={formValues.activeCategory !== 'Пользователи'}
-									/>
-								</LoadingOverlay>
-							)
-						}
-
-						<Pagination
-							showSteps
-							aroundCount={5}
-							list={{
-								total: 100,
-								page: formValues?.page,
-								pageSize: PAGE_SIZE,
-							}}
-							onChange={page => {
-								dispatch(formChange(SEARCH_PAGE_FORM, 'page', page));
-								dispatch(formSubmit(SEARCH_PAGE_FORM));
-							}}
-						/>
+						{showPagination && (
+							<Pagination
+								showSteps
+								aroundCount={2}
+								list={{
+									total: totalForActiveCategory,
+									page: currentPage,
+									pageSize: PAGE_SIZE,
+								}}
+								onChange={page => {
+									dispatch(formChange(SEARCH_PAGE_FORM, 'page', page));
+									dispatch(formSubmit(SEARCH_PAGE_FORM));
+								}}
+							/>
+						)}
 					</div>
 				</CategoriesTab>
 			</div>

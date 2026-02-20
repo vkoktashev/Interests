@@ -1,39 +1,21 @@
-import React, { useMemo } from "react";
-import SearchCardsBlock from "./SearchCardsBlock";
-import {ROUTE_MOVIE} from '../../index';
+import React, {useMemo} from 'react';
+import SearchCardsBlock from './SearchCardsBlock';
+import {mapMovieToCard} from './searchMappers';
+import {ITmdbMediaItem} from './searchTypes';
 
-function MovieCards({ movies, hidden }) {
-	const objects = useMemo(
-		() =>
-			movies?.reduce((newObjects, movie) => {
-				let object: any = {
-					name: movie.title,
-					id: movie.id,
-					poster: movie.backdrop_path,
-					route: ROUTE_MOVIE,
-					routeParams: {
-						movieId: movie.id,
-					},
-					overview: movie.overview,
-				};
+interface IMovieCardsProps {
+	movies: ITmdbMediaItem[];
+	hidden?: boolean;
+}
 
-				if (movie.release_date) {
-					let mas = movie.release_date.split("-");
-					let newDate = mas[2] + "." + mas[1] + "." + mas[0];
-					object.release_date = newDate;
-				} else object.release_date = "";
-
-				if (object) newObjects.push(object);
-				return newObjects;
-			}, []),
-		[movies]
-	);
+function MovieCards({movies, hidden}: IMovieCardsProps) {
+	const objects = useMemo(() => movies.map(mapMovieToCard), [movies]);
 
 	return (
 		<SearchCardsBlock
-			name='Фильмы'
 			hidden={hidden}
 			objects={objects}
+			emptyText='Фильмы не найдены'
 		/>
 	);
 }
