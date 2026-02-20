@@ -21,7 +21,7 @@ import {
 } from './views/searchTypes';
 import './search-page.scss';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12;
 const SEARCH_PAGE_FORM = 'search_page_form';
 
 interface ISearchFormValues {
@@ -274,7 +274,7 @@ function SearchPage() {
 					<div className='search-page__input-wrap'>
 						<InputField
 							attribute='query'
-							label={__('Что ищем?')}
+							label={__('Что ищем')}
 						/>
 					</div>
 				</Form>
