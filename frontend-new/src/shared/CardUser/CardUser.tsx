@@ -5,9 +5,22 @@ import {ROUTE_USER} from '../../routes';
 import {useBem} from '@steroidsjs/core/hooks';
 import {getDefaultAvatarUrl} from '../avatar';
 
-function CardUser({ user, className }: any) {
+interface IUserCard {
+	id: number | string;
+	username?: string;
+	avatar?: string;
+	image?: string;
+}
+
+interface ICardUserProps {
+	user: IUserCard;
+	className?: string;
+}
+
+function CardUser({ user, className }: ICardUserProps) {
 	const bem = useBem('card-user');
-	const avatarUrl = user?.avatar || user?.image || getDefaultAvatarUrl(user?.username || user?.id || 'user');
+	const username = user?.username || 'Пользователь';
+	const avatarUrl = user?.avatar || user?.image || getDefaultAvatarUrl(username || user?.id || 'user');
 
 	return (
 		<Link
@@ -19,10 +32,13 @@ function CardUser({ user, className }: any) {
 			<img
 				className={bem.element('image')}
 				src={avatarUrl}
-				alt={user?.username || 'User avatar'}
+				alt={username}
+				loading='lazy'
 			/>
-			<div className={bem.element('text')}>
-				{user.username}
+			<div className={bem.element('body')}>
+				<div className={bem.element('text')}>
+					{username}
+				</div>
 			</div>
 		</Link>
 	);

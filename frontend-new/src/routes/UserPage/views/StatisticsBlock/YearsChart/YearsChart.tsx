@@ -1,45 +1,100 @@
-import React, { useEffect, useState } from "react";
-import { AreaChart, linearGradient, XAxis, Tooltip, YAxis, Area, ResponsiveContainer } from "recharts";
+import React, {useMemo} from "react";
+import {ResponsiveLine} from '@nivo/line';
+import {nivoTheme} from "../chartConfig";
+import {IYearStat} from "../types";
 
-function YearsChart(props) {
-	const [chartData, setChartData] = useState([]);
-	const [maxCount, setMaxCount] = useState(0);
+interface IYearsChartProps {
+	chartData: IYearStat[];
+	hidden?: boolean;
+}
 
-	useEffect(() => {
-		setChartData([]);
-		if (props.chartData && props.chartData?.length > 0) {
-			let newMaxCount = 0;
-			let newData = props.chartData
-				?.map((value, index, array) => {
-					if (value.count > maxCount) {
-						newMaxCount = value.count;
-					}
-					return { name: value.year, Количество: value.count };
-				})
-				.sort((a, b) => a.name - b.name);
-			setMaxCount(newMaxCount);
-			setChartData(newData);
+function YearsChart({ chartData, hidden }: IYearsChartProps) {
+	const data = useMemo(() => {
+		const points = (chartData || [])
+			.filter(entry => entry?.year !== null && entry?.year !== undefined)
+			.map(entry => ({
+				x: String(entry.year),
+				y: Number(entry.count || 0),
+			}))
+			.sort((a, b) => Number(a.x) - Number(b.x));
+
+		return [
+			{
+				id: 'items',
+				data: points,
+			},
+		];
+	}, [chartData]);
+
+	const xTickValues = useMemo(() => {
+		const points = data[0].data;
+		if (points.length <= 8) {
+			return points.map(point => point.x);
 		}
-	}, [props.chartData, setChartData]);
+
+		const step = Math.ceil(points.length / 8);
+		const ticks = points
+			.filter((_, index) => index % step === 0)
+			.map(point => point.x);
+
+		const lastTick = points[points.length - 1]?.x;
+		if (lastTick && ticks[ticks.length - 1] !== lastTick) {
+			ticks.push(lastTick);
+		}
+
+		return ticks;
+	}, [data]);
+
+	if (hidden || data[0].data.length < 1) {
+		return (
+			<div className='stats-block__empty'>
+				Нет данных по годам
+			</div>
+		);
+	}
 
 	return (
-		<div hidden={props.hidden}>
-			{/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? null : (
-				<ResponsiveContainer width={"100%"} height={200}>
-					<AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-						<defs>
-							<linearGradient id='colorUv' x1='0' y1='0' x2='0' y2='1'>
-								<stop offset='5%' stopColor='#8884d8' stopOpacity={0.8} />
-								<stop offset='95%' stopColor='#8884d8' stopOpacity={0} />
-							</linearGradient>
-						</defs>
-						<XAxis dataKey='name' tick={{ fill: "rgb(238, 238, 238)" }} allowDataOverflow={false} />
-						<YAxis tickLine={false} domain={[0, maxCount + 1]} tick={{ fill: "rgb(238, 238, 238)" }} tickCount={2} />
-						<Tooltip contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }} />
-						<Area type='monotone' dataKey='Количество' stroke='#8884d8' fillOpacity={1} fill='url(#colorUv)' />
-					</AreaChart>
-				</ResponsiveContainer>
-			)}
+		<div className='stats-block__years-chart'>
+			<ResponsiveLine
+				data={data}
+				theme={nivoTheme}
+				margin={{top: 14, right: 18, bottom: 38, left: 44}}
+				colors={['#4f5dea']}
+				enableArea
+				areaOpacity={0.18}
+				curve='monotoneX'
+				lineWidth={3}
+				pointSize={8}
+				pointColor='#4f5dea'
+				pointBorderWidth={2}
+				pointBorderColor='#191a1b'
+				enableGridX={false}
+				enableGridY
+				useMesh
+				axisTop={null}
+				axisRight={null}
+				axisBottom={{
+					tickValues: xTickValues,
+					tickSize: 0,
+					tickPadding: 8,
+					legend: 'Год',
+					legendOffset: 32,
+					legendPosition: 'middle',
+				}}
+				axisLeft={{
+					tickSize: 0,
+					tickPadding: 8,
+					legend: 'Количество',
+					legendOffset: -34,
+					legendPosition: 'middle',
+				}}
+				tooltip={({point}) => (
+					<div className='stats-block__tooltip'>
+						<div>{point.data.xFormatted}</div>
+						<strong>{point.data.yFormatted}</strong>
+					</div>
+				)}
+			/>
 		</div>
 	);
 }
