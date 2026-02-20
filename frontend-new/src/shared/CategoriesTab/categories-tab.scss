@@ -42,16 +42,26 @@
         padding: 8px 16px;
         margin-left: 0;
         outline: none;
+        transition: transform 0.16s ease, background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
 
-        &:focus {
-            outline: 0 !important;
+        &:focus-visible {
+            box-shadow: inset 0 -2px 0 rgba(79, 93, 234, 0.65), 0 0 0 2px rgba(79, 93, 234, 0.25);
         }
+
         &:hover {
+            transform: translateY(-1px);
             background-color: $newBackground2;
+            color: $newText2;
         }
+
         &_active {
             color: $newText3;
             background-color: $newBackground2;
+            box-shadow: inset 0 -2px 0 rgba(79, 93, 234, 0.6);
+        }
+
+        &_active:hover {
+            transform: translateY(-1px);
         }
     }
 }
