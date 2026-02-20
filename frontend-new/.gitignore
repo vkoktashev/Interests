@@ -1,0 +1,16 @@
+.cache-loader
+/.idea
+*.dump
+*.sql
+.DS_Store
+Thumbs.db
+public/index-lang.json
+node_modules
+!.gitempty
+/.env
+public/bundle-all.js
+public/stats.json
+public/server.js
+public/frontend/*
+.env
+.vscode
