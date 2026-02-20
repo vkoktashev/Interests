@@ -5,32 +5,138 @@
     @include default-page;
     position: relative;
 
-    &__show-block {
-        margin-bottom: 1rem;
+    &__body {
+        width: 100%;
     }
 
-    &__header {
-        font-weight: 400;
-        font-size: 2rem;
+    &__hero {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border: 1px solid rgba(79, 93, 234, 0.3);
+        border-radius: 16px;
+        background:
+            radial-gradient(circle at right top, rgba(79, 93, 234, 0.2), transparent 46%),
+            linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01)),
+            $newBackground2;
+    }
+
+    &__title {
+        margin: 0;
+        color: $newText3;
+        font-size: clamp(1.4rem, 2.8vw, 2.05rem);
+        line-height: 1.1;
+    }
+
+    &__subtitle {
+        margin: 0.4rem 0 0;
+        color: $newText2;
+        font-size: 0.95rem;
+    }
+
+    &__stats {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    &__stat {
+        min-width: 90px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.04);
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__stat-value {
+        color: $newText3;
+        font-size: 1.15rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    &__stat-label {
+        margin-top: 3px;
+        color: $newText2;
+        font-size: 0.75rem;
+    }
+
+    &__shows {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    &__show-block {
+        margin-bottom: 0;
+    }
+
+    &__empty {
+        border: 1px dashed rgba(255, 255, 255, 0.14);
+        border-radius: 14px;
+        padding: 18px;
+        text-align: center;
+        color: $newText2;
+        background: rgba(255, 255, 255, 0.02);
     }
 
     &__save-episodes-block {
         position: sticky;
-        bottom: 0;
-        left: 0;
+        bottom: 10px;
+        margin-top: 10px;
         width: 100%;
-        height: 60px;
+        min-height: 56px;
         z-index: 1000;
-        text-align: center;
-        padding-top: 5px;
-        background-color: $newBackground3;
+        border-radius: 12px;
+        border: 1px solid rgba(79, 93, 234, 0.4);
+        background:
+            linear-gradient(145deg, rgba(79, 93, 234, 0.22), rgba(79, 93, 234, 0.08)),
+            rgba(19, 20, 21, 0.95);
         display: flex;
-        flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 10px;
+        backdrop-filter: blur(6px);
 
         &_hidden {
             display: none;
+        }
+    }
+
+    &__save-info {
+        color: $newText3;
+        font-size: 0.92rem;
+        font-weight: 600;
+    }
+
+    &__save-episodes-button {
+        min-width: 132px;
+    }
+
+    @media (max-width: 760px) {
+        &__hero {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        &__stats {
+            justify-content: flex-start;
+        }
+
+        &__save-episodes-block {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        &__save-episodes-button {
+            width: 100%;
         }
     }
 }

@@ -1,25 +1,201 @@
 @import "style/colors";
 
 .show-block {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
+        $newBackground2;
+    overflow: hidden;
+
+    &__head {
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    &__poster {
+        width: 56px;
+        height: 56px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.04);
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+    }
+
+    &__poster-fallback {
+        width: 100%;
+        height: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: $newText3;
+        font-weight: 700;
+        font-size: 1.1rem;
+        background:
+            linear-gradient(145deg, rgba(79, 93, 234, 0.24), rgba(79, 93, 234, 0.08)),
+            rgba(255, 255, 255, 0.04);
+    }
+
+    &__name-link {
+        text-decoration: none;
+        min-width: 0;
+        flex: 1;
+    }
+
     &__name {
-        font-weight: 400;
-        font-size: 1.5rem;
+        margin: 0;
+        color: $newText3;
+        font-weight: 600;
+        font-size: 1.18rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
+
+    &__meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: $newText2;
+        font-size: 0.84rem;
+
+        > span {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            padding: 3px 8px;
+            white-space: nowrap;
+            background: rgba(255, 255, 255, 0.04);
+        }
+    }
+
+    &__seasons {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px;
+    }
+
     &__season {
-        margin-bottom: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.02);
+        overflow: hidden;
+
+        &[open] {
+            border-color: rgba(79, 93, 234, 0.35);
+        }
+    }
+
+    &__season-summary {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
         cursor: pointer;
+        padding: 8px 10px;
+        color: $newText3;
+        background: rgba(255, 255, 255, 0.02);
+
+        &::-webkit-details-marker {
+            display: none;
+        }
     }
-    &__season-ul {
-        padding-left: 0.5rem;
-        list-style-type: none;
+
+    &__season-summary-left {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
     }
+
+    &__season-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__season-count {
+        color: $newText2;
+        font-size: 0.78rem;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        padding: 2px 8px;
+        white-space: nowrap;
+    }
+
+    &__season-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: $newText2;
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+
+    &__season-toggle-text {
+        display: inline-block;
+    }
+
+    &__season-toggle-icon {
+        font-size: 0.72rem;
+        transition: transform 0.15s ease;
+    }
+
+    &__season[open] &__season-toggle-icon {
+        transform: rotate(180deg);
+    }
+
+    &__season-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
     &__episode {
-        &:nth-child(odd) {
-            background-color: $newBackground2;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+        &:first-child {
+            border-top: none;
         }
-        &:nth-child(even) {
-            background-color: $newBackground3;
-            border-radius: 5px;
+    }
+
+    @media (max-width: 760px) {
+        &__head {
+            grid-template-columns: 48px minmax(0, 1fr);
+            align-items: center;
         }
+
+        &__meta {
+            flex-wrap: wrap;
+        }
+
+        &__poster {
+            width: 48px;
+            height: 48px;
+        }
+
+        &__meta {
+            grid-column: 1 / -1;
+        }
+
+        &__season-summary-left {
+            gap: 6px;
+        }
+
     }
 }
