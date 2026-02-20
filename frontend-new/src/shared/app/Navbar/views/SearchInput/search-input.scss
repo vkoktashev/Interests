@@ -162,6 +162,12 @@
             background: rgba(79, 93, 234, 0.18);
             color: #ffffff;
         }
+
+        &_active {
+            transform: translateX(2px);
+            background: rgba(79, 93, 234, 0.18);
+            color: #ffffff;
+        }
     }
 
     &__hint-title {

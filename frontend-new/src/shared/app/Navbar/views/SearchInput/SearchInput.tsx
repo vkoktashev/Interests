@@ -37,12 +37,16 @@ interface IHintItem {
 	onClick: () => void;
 }
 
+interface IHintItemWithIndex extends IHintItem {
+	flatIndex: number;
+}
+
 interface IHintSection {
 	id: string;
 	title: string;
 	icon: React.ReactNode;
 	emptyText: string;
-	items: IHintItem[];
+	items: IHintItemWithIndex[];
 }
 
 interface ISearchInputProps {
@@ -63,6 +67,7 @@ export function SearchInput({ onSubmit, className }: ISearchInputProps) {
 	const [query, setQuery] = useState('');
 	const [isFocused, setIsFocused] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const [activeHintIndex, setActiveHintIndex] = useState(-1);
 	const [hints, setHints] = useState<IHintsState>({
 		games: [],
 		movies: [],
@@ -124,48 +129,104 @@ export function SearchInput({ onSubmit, className }: ISearchInputProps) {
 		};
 	}, []);
 
+	useEffect(() => {
+		setActiveHintIndex(-1);
+	}, [normalizedQuery, hints.games, hints.movies, hints.shows]);
+
 	const hasHints = hints.games.length > 0 || hints.movies.length > 0 || hints.shows.length > 0;
 	const shouldShowHints = normalizedQuery.length > 0 && isFocused;
 	const showNoResults = shouldShowHints && !isLoading && !hasHints;
 
-	const sections = useMemo<IHintSection[]>(() => [
+	const sections = useMemo<IHintSection[]>(() => {
+		let currentIndex = 0;
+		const withIndexes = (items: IHintItem[]): IHintItemWithIndex[] => items.map(item => ({
+			...item,
+			flatIndex: currentIndex++,
+		}));
+
+		return [
 		{
 			id: 'games',
 			title: 'Игры',
 			icon: <MdVideogameAsset />,
 			emptyText: '🎮 В играх ничего не найдено',
-			items: hints.games.map(hint => ({
+			items: withIndexes(hints.games.map(hint => ({
 				id: String(hint.rawg_slug),
 				title: hint.rawg_name,
 				year: getReleaseYear(hint.rawg_release_date),
 				onClick: () => dispatch(goToRoute(ROUTE_GAME, {gameId: hint.rawg_slug})),
-			})),
+			}))),
 		},
 		{
 			id: 'movies',
 			title: 'Фильмы',
 			icon: <MdLocalMovies />,
 			emptyText: '🎬 В фильмах ничего не найдено',
-			items: hints.movies.map(hint => ({
+			items: withIndexes(hints.movies.map(hint => ({
 				id: String(hint.tmdb_id),
 				title: hint.tmdb_name,
 				year: getReleaseYear(hint.tmdb_release_date),
 				onClick: () => dispatch(goToRoute(ROUTE_MOVIE, {movieId: hint.tmdb_id})),
-			})),
+			}))),
 		},
 		{
 			id: 'shows',
 			title: 'Сериалы',
 			icon: <MdLiveTv />,
 			emptyText: '📺 В сериалах ничего не найдено',
-			items: hints.shows.map(hint => ({
+			items: withIndexes(hints.shows.map(hint => ({
 				id: String(hint.tmdb_id),
 				title: hint.tmdb_name,
 				year: getReleaseYear(hint.tmdb_release_date),
 				onClick: () => dispatch(goToRoute(ROUTE_SHOW, {showId: hint.tmdb_id})),
-			})),
+			}))),
 		},
-	], [dispatch, hints.games, hints.movies, hints.shows]);
+	];
+	}, [dispatch, hints.games, hints.movies, hints.shows]);
+	const selectableHints = useMemo(() => sections.flatMap(section => section.items), [sections]);
+
+	const handleInputKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
+		if (!normalizedQuery) {
+			return;
+		}
+
+		if (event.key === 'ArrowDown') {
+			event.preventDefault();
+			if (!isFocused) {
+				setIsFocused(true);
+			}
+			if (!selectableHints.length) {
+				return;
+			}
+			setActiveHintIndex(prev => (prev < 0 ? 0 : (prev + 1) % selectableHints.length));
+			return;
+		}
+
+		if (event.key === 'ArrowUp') {
+			event.preventDefault();
+			if (!isFocused) {
+				setIsFocused(true);
+			}
+			if (!selectableHints.length) {
+				return;
+			}
+			setActiveHintIndex(prev => (prev < 0 ? selectableHints.length - 1 : (prev - 1 + selectableHints.length) % selectableHints.length));
+			return;
+		}
+
+		if (event.key === 'Enter' && activeHintIndex >= 0 && selectableHints[activeHintIndex]) {
+			event.preventDefault();
+			selectableHints[activeHintIndex].onClick();
+			setQuery('');
+			setActiveHintIndex(-1);
+			return;
+		}
+
+		if (event.key === 'Escape') {
+			setIsFocused(false);
+			setActiveHintIndex(-1);
+		}
+	}, [activeHintIndex, isFocused, normalizedQuery, selectableHints]);
 
 	return (
 		<form
@@ -194,9 +255,11 @@ export function SearchInput({ onSubmit, className }: ISearchInputProps) {
 				onBlur={() => {
 					blurTimeoutRef.current = window.setTimeout(() => {
 						setIsFocused(false);
+						setActiveHintIndex(-1);
 					}, 120);
 				}}
 				onChange={(event) => setQuery(event.target.value)}
+				onKeyDown={handleInputKeyDown}
 			/>
 
 			{normalizedQuery && (
@@ -208,6 +271,7 @@ export function SearchInput({ onSubmit, className }: ISearchInputProps) {
 					onClick={() => {
 						setQuery('');
 						setIsFocused(false);
+						setActiveHintIndex(-1);
 					}}
 				>
 					<FaTimes />
@@ -231,13 +295,15 @@ export function SearchInput({ onSubmit, className }: ISearchInputProps) {
 						{section.items.length > 0 ? (
 							section.items.map(item => (
 								<button
-									type='button'
-									key={item.id}
-									className={bem.element('hint')}
+								type='button'
+								key={item.id}
+								className={bem.element('hint', {active: activeHintIndex === item.flatIndex})}
 								onMouseDown={(event) => event.preventDefault()}
+								onMouseEnter={() => setActiveHintIndex(item.flatIndex)}
 								onClick={() => {
 									item.onClick();
 									setQuery('');
+									setActiveHintIndex(-1);
 								}}
 							>
 									<span className={bem.element('hint-title')}>
