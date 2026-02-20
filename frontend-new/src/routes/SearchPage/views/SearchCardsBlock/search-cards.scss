@@ -1,32 +1,35 @@
 @import "style/colors";
 
 .search-cards {
-    &__cards {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-    &__body {
-        position: relative;
-    }
-    &__pagination {
-        position: absolute;
-        top: 0;
-        width: 4%;
-        height: 100%;
-        display: inline-block;
-        vertical-align: top;
-        border: none;
-        border-radius: 0.5rem;
-        background-color: $newBackground3;
-        color: $newText2;
+    width: 100%;
 
-        &:hover {
-            background-color: $newBackground3;
-        }
-        &:disabled {
-            background-color: $newBackground1;
+    &__body {
+        width: 100%;
+    }
+
+    &__cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+        gap: 12px;
+    }
+
+    &__card {
+        min-width: 0;
+    }
+
+    &__empty {
+        width: 100%;
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px dashed rgba(255, 255, 255, 0.14);
+        color: $newText2;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    @media (max-width: 760px) {
+        &__cards {
+            grid-template-columns: 1fr;
         }
     }
 }

@@ -1,0 +1,31 @@
+@import "style/colors";
+
+.search-users {
+    width: 100%;
+
+    &__grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    &__card {
+        flex: 0 1 auto;
+    }
+
+    @media (max-width: 760px) {
+        &__grid {
+            justify-content: center;
+        }
+    }
+
+    &__empty {
+        width: 100%;
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px dashed rgba(255, 255, 255, 0.14);
+        color: $newText2;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.02);
+    }
+}

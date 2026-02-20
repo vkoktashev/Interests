@@ -1,91 +1,127 @@
 @import "style/colors";
 
 .search-card {
-    width: 540px;
-    max-width: 100%;
-    height: 140px;
-    display: inline-block;
-    transition: transform 0.1s linear;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(155deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 
-    &:hover {
-        z-index: 1000;
-        color: $newAccent2;
-        transform: scale(1.01);
-    }
-    &:hover &__poster {
-        border-bottom-left-radius: 0;
-    }
-    &:hover &__body {
-        border-bottom-right-radius: 0;
-        background: $newBackground1;
+    &:hover,
+    &:focus-within {
+        transform: translateY(-2px);
+        border-color: rgba(79, 93, 234, 0.45);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
     }
 
     &__link {
+        display: block;
+        color: $newText3;
+        text-decoration: none;
+
+        .ButtonView,
+        .ButtonView__link {
+            width: 100%;
+            display: block;
+        }
+
         .ButtonView__text {
-            width: 540px !important;
-            color: $newText3;
+            width: 100%;
+            min-height: 142px;
+            display: grid;
+            grid-template-columns: minmax(140px, 42%) 1fr;
+            align-items: stretch;
+        }
+
+        &:focus-visible {
+            outline: none;
         }
     }
 
     &__poster {
-        height: 140px;
-        width: 50%;
+        width: 100%;
+        height: 100%;
+        min-height: 142px;
         background-position: center;
         background-repeat: no-repeat;
         background-size: cover;
-        background-color: grey;
-        display: inline-block;
-        margin: 0;
-        border-top-left-radius: 10px;
-        border-bottom-left-radius: 10px;
+        background-color: rgba(255, 255, 255, 0.05);
+        display: block;
+        object-fit: cover;
     }
+
+    &__poster-placeholder {
+        width: 100%;
+        height: 100%;
+        min-height: 142px;
+        background:
+            linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
+            rgba(255, 255, 255, 0.05);
+    }
+
     &__body {
-        padding: 10px;
-        text-align: center;
-        vertical-align: top;
-        font-weight: 200;
-        background-color: $newBackground3;
-        height: 140px;
-        width: 50%;
-        display: inline-block;
-        margin: 0;
-        border-top-right-radius: 10px;
-        border-bottom-right-radius: 10px;
-        transition: background 0.2s linear;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px;
+        background: rgba(0, 0, 0, 0.1);
     }
+
     &__name {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        height: 70%;
-        font-size: 1.3rem;
-        transition: color 0.2s linear;
-    }
-    &__date {
-        transition: color 0.2s linear;
-    }
-    &__wrapper {
-        position: absolute;
-        top: 140px;
-        padding: 1rem;
-        background: $newBackground3;
+        margin: 0;
+        font-size: 1.08rem;
+        line-height: 1.3;
         color: $newText3;
-        border-radius: 0 0 10px 10px;
-        width: 540px;
-        height: 0;
-        transition: opacity 0.2s linear, background 0.2s linear, height 0.2s linear;
-        z-index: -1;
-        opacity: 0;
-        overflow-y: auto;
-        max-height: 200px;
-        max-width: 100%;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
-    &__wrapper > * {
-        text-align: start;
+
+    &__date {
+        margin: 0;
+        color: $newText2;
+        font-size: 0.88rem;
+        font-weight: 500;
     }
-    &:hover &__wrapper {
-        z-index: 1;
-        opacity: 1;
-        background: $newBackground1;
-        height: auto;
+
+    &__details {
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    &__detail-row {
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: 1.35;
+        color: $newText2;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    &__detail-title {
+        color: $newText3;
+        font-weight: 600;
+    }
+
+    @media (max-width: 760px) {
+        &__link .ButtonView__text {
+            grid-template-columns: 1fr;
+        }
+
+        &__poster {
+            min-height: 170px;
+        }
+
+        &__poster-placeholder {
+            min-height: 170px;
+        }
     }
 }
