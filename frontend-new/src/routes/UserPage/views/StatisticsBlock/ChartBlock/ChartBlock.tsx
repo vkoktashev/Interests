@@ -1,36 +1,65 @@
-import React, { useEffect, useState } from "react";
-import { PieChart, Pie, Legend, Cell, Tooltip } from "recharts";
-import { COLORS } from "../Colors";
+import React, {useMemo} from "react";
+import {ResponsivePie} from '@nivo/pie';
+import {CHART_COLORS, nivoTheme} from "../chartConfig";
+import {IUserStats} from "../types";
 
-function ChartBlock({ stats }) {
-	const [chartData, setChartData] = useState([]);
+interface IChartBlockProps {
+	stats?: IUserStats;
+}
 
-	useEffect(() => {
-		setChartData([]);
-		if (stats?.games) {
-			let newData = [];
-			if (stats?.games?.total_spent_time > 0) newData.push({ name: "Часов в играх", value: stats?.games?.total_spent_time });
-			if (stats?.movies?.total_spent_time > 0) newData.push({ name: "Часов в фильмах", value: stats?.movies?.total_spent_time });
-			if (stats?.episodes?.total_spent_time > 0) newData.push({ name: "Часов в сериалах", value: stats?.episodes?.total_spent_time });
-			setChartData(newData);
-		}
+function ChartBlock({ stats }: IChartBlockProps) {
+	const chartData = useMemo(() => {
+		const values = [
+			{id: 'games', label: 'Игры', value: stats?.games?.total_spent_time || 0},
+			{id: 'movies', label: 'Фильмы', value: stats?.movies?.total_spent_time || 0},
+			{id: 'episodes', label: 'Сериалы', value: stats?.episodes?.total_spent_time || 0},
+		];
+
+		return values.filter(item => item.value > 0);
 	}, [stats]);
 
+	if (chartData.length < 1) {
+		return (
+			<div className='stats-block__empty'>
+				Нет данных по потраченному времени
+			</div>
+		);
+	}
+
 	return (
-		<div hidden={chartData.length < 1}>
-			<PieChart width={350} height={260}>
-				<Pie dataKey='value' data={chartData} cx='50%' cy='50%' outerRadius={80} fill='#8884d8' labelLine={true} label minAngle={5}>
-					{chartData.map((entry, index) => (
-						<Cell fill={COLORS[index]} key={index} />
-					))}
-				</Pie>
-				<Tooltip
-					itemStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }}
-					contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)", borderRadius: "10px" }}
-					cursor={false}
-				/>
-				<Legend verticalAlign='bottom' horizontalAlign='center' />
-			</PieChart>
+		<div className='stats-block__overview-chart'>
+			<ResponsivePie
+				data={chartData}
+				theme={nivoTheme}
+				margin={{top: 10, right: 60, bottom: 50, left: 60}}
+				innerRadius={0.58}
+				padAngle={1.8}
+				cornerRadius={6}
+				activeOuterRadiusOffset={8}
+				colors={CHART_COLORS}
+				enableArcLinkLabels={false}
+				arcLabelsSkipAngle={9}
+				arcLabelsTextColor='#f1f1fb'
+				tooltip={({datum}) => (
+					<div className='stats-block__tooltip'>
+						<div>{datum.label}</div>
+						<strong>{datum.value} ч</strong>
+					</div>
+				)}
+				legends={[
+					{
+						anchor: 'bottom',
+						direction: 'row',
+						justify: false,
+						translateY: 32,
+						itemWidth: 96,
+						itemHeight: 20,
+						itemsSpacing: 8,
+						symbolSize: 12,
+						itemTextColor: '#f1f1fb',
+					},
+				]}
+			/>
 		</div>
 	);
 }

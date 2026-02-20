@@ -224,6 +224,23 @@
             border-radius: 5px;
         }
     }
+
+    &__rating-chart {
+        height: 260px;
+        margin-top: 8px;
+        border-radius: 10px;
+        padding: 6px;
+        background: rgba($newBackground1, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    &__chart-tooltip {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        color: $newText3;
+    }
+
     &__save-episodes-block {
         position: fixed;
         bottom: 0;
@@ -239,5 +256,12 @@
         @include default-button;
         width: 150px;
         height: 50px;
+    }
+
+    @media (max-width: $mobile-width) {
+        &__rating-chart {
+            height: 230px;
+            padding: 2px;
+        }
     }
 }

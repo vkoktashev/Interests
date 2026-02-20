@@ -1,54 +1,72 @@
-import React, { useState, useEffect } from "react";
-import { Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
-import { COLORS } from "../Colors";
+import React, {useMemo} from "react";
+import {ResponsiveBar} from '@nivo/bar';
+import {CHART_COLORS, nivoTheme} from "../chartConfig";
+import {IGenreStat} from "../types";
 
-function ChartBlock(props) {
-	const [chartData, setChartData] = useState([]);
+interface IGenresChartProps {
+	chartData: IGenreStat[];
+	hidden?: boolean;
+}
 
-	useEffect(() => {
-		setChartData([]);
-		if (props.chartData && props.chartData?.length > 0) {
-			let newData = props.chartData?.map((value) => ({ name: value.name, Процент: value.spent_time_percent })).sort((a, b) => b.Процент - a.Процент);
-			newData = newData.slice(0, 12);
-			setChartData(newData);
-		}
-	}, [props.chartData, setChartData]);
+function GenresChart({ chartData, hidden }: IGenresChartProps) {
+	const preparedData = useMemo(() => {
+		return (chartData || [])
+			.filter(entry => !!entry?.name)
+			.map(entry => ({
+				name: entry.name as string,
+				percent: Number(entry.spent_time_percent || 0),
+			}))
+			.sort((a, b) => b.percent - a.percent)
+			.slice(0, 10);
+	}, [chartData]);
+
+	if (hidden || preparedData.length < 1) {
+		return (
+			<div className='stats-block__empty'>
+				Нет данных по жанрам
+			</div>
+		);
+	}
 
 	return (
-		<div hidden={props.hidden}>
-			{/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? (
-				<BarChart width={document.body.clientWidth - 50} height={chartData?.length * 40} data={chartData} margin={{ top: 5, right: 0, left: 45, bottom: 20 }} layout='vertical'>
-					<YAxis dataKey='name' tickLine={false} tick={{ fill: "rgb(238, 238, 238)" }} interval={0} tickMargin={0} type='category' />
-					<XAxis domain={[0, "dataMax"]} tick={{ fill: "rgb(238, 238, 238)" }} type='number' />
-					<Tooltip
-						itemStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }}
-						contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)", borderRadius: "10px" }}
-						cursor={false}
-					/>
-					<Bar dataKey='Процент'>
-						{chartData.map((entry, index) => (
-							<Cell fill={COLORS[index]} key={index} />
-						))}
-					</Bar>
-				</BarChart>
-			) : (
-				<BarChart width={Math.min(chartData?.length * 100, document.body.clientWidth - 50)} height={300} data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
-					<XAxis dataKey='name' tickLine={false} tick={{ fill: "rgb(238, 238, 238)" }} interval={0} angle={-10} tickMargin={15} />
-					<YAxis domain={[0, "dataMax"]} tick={{ fill: "rgb(238, 238, 238)" }} />
-					<Tooltip
-						itemStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }}
-						contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)", borderRadius: "10px" }}
-						cursor={false}
-					/>
-					<Bar dataKey='Процент'>
-						{chartData?.map((entry, index) => (
-							<Cell fill={COLORS[index]} key={index} />
-						))}
-					</Bar>
-				</BarChart>
-			)}
+		<div className='stats-block__genres-chart' style={{height: Math.max(260, preparedData.length * 34)}}>
+			<ResponsiveBar
+				data={preparedData}
+				keys={['percent']}
+				indexBy='name'
+				layout='horizontal'
+				theme={nivoTheme}
+				margin={{top: 8, right: 18, bottom: 24, left: 120}}
+				padding={0.26}
+				valueScale={{type: 'linear'}}
+				indexScale={{type: 'band', round: true}}
+				colors={({index}) => CHART_COLORS[index % CHART_COLORS.length]}
+				borderRadius={6}
+				enableGridX
+				enableGridY={false}
+				axisTop={null}
+				axisRight={null}
+				axisBottom={{
+					tickSize: 0,
+					tickPadding: 8,
+					legend: 'Доля времени, %',
+					legendPosition: 'middle',
+					legendOffset: 34,
+				}}
+				axisLeft={{
+					tickSize: 0,
+					tickPadding: 10,
+				}}
+				enableLabel={false}
+				tooltip={({value, indexValue}) => (
+					<div className='stats-block__tooltip'>
+						<div>{indexValue}</div>
+						<strong>{value}%</strong>
+					</div>
+				)}
+			/>
 		</div>
 	);
 }
 
-export default ChartBlock;
+export default GenresChart;

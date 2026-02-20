@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
-import { AreaChart, XAxis, Tooltip, YAxis, Area, ResponsiveContainer } from "recharts";
+import {ResponsiveLine} from '@nivo/line';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
 import {openModal} from '@steroidsjs/core/actions/modal';
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
@@ -19,6 +19,7 @@ import {getSaveEpisodes} from '../../reducers/modals';
 import {setSaveEpisodes} from '../../actions/modals';
 import {Loader} from '@steroidsjs/core/ui/layout';
 import {Button, TextField} from '@steroidsjs/core/ui/form';
+import {nivoTheme} from '../UserPage/views/StatisticsBlock/chartConfig';
 
 function SeasonPage() {
 	const bem = useBem('season-page');
@@ -30,7 +31,6 @@ function SeasonPage() {
 
 	const [review, setReview] = useState("");
 	const [userRate, setUserRate] = useState(0);
-	const [chartData, setChartData] = useState([]);
 	const [isChecked, setIsChecked] = useState(0);
 
 	const showSeasonFetchConfig = useMemo(() => showId && ({
@@ -71,21 +71,20 @@ function SeasonPage() {
 		}
 	}, [showSeason]);
 
-	useEffect(() => {
-		setChartData([]);
-		if (showSeason?.episodes)
-			if (showSeason?.episodes.length > 0) {
-				let newData = [];
-				for (let episode in showSeason?.episodes) {
-					if (showSeason?.episodes[episode].vote_average > 0) {
-						newData.push({
-							name: "Ep " + showSeason?.episodes[episode].episode_number,
-							Оценка: showSeason?.episodes[episode].vote_average
-						});
-					}
-				}
-				setChartData(newData);
-			}
+	const chartData = useMemo(() => {
+		const points = (showSeason?.episodes || [])
+			.filter(episode => Number(episode?.vote_average) > 0)
+			.map(episode => ({
+				x: `Ep ${episode.episode_number}`,
+				y: Number(episode.vote_average),
+			}));
+
+		return [
+			{
+				id: 'rating',
+				data: points,
+			},
+		];
 	}, [showSeason]);
 
 	useEffect(() => {
@@ -259,38 +258,51 @@ function SeasonPage() {
 										: ""}
 								</ul>
 							</details>
-							<div hidden={!chartData?.length}>
-								{document.body.clientHeight < document.body.clientWidth ? (
-									<ResponsiveContainer width='100%' height={200}>
-										<AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-											<defs>
-												<linearGradient id='colorUv' x1='0' y1='0' x2='0' y2='1'>
-													<stop offset='5%' stopColor='#8884d8' stopOpacity={0.8} />
-													<stop offset='95%' stopColor='#8884d8' stopOpacity={0} />
-												</linearGradient>
-											</defs>
-											<XAxis dataKey='name' interval={0} tick={{ fill: "rgb(238, 238, 238)" }} />
-											<YAxis tickLine={false} domain={[0, 10]} tick={{ fill: "rgb(238, 238, 238)" }} tickCount={2} />
-											<Tooltip contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }} />
-											<Area type='monotone' dataKey='Оценка' stroke='#8884d8' fillOpacity={1} fill='url(#colorUv)' />
-										</AreaChart>
-									</ResponsiveContainer>
-								) : (
-									<ResponsiveContainer width='100%' height={chartData?.length * 30}>
-										<AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }} layout='vertical'>
-											<defs>
-												<linearGradient id='colorUv' x1='0' y1='0' x2='0' y2='1'>
-													<stop offset='5%' stopColor='#8884d8' stopOpacity={0.8} />
-													<stop offset='95%' stopColor='#8884d8' stopOpacity={0} />
-												</linearGradient>
-											</defs>
-											<YAxis dataKey='name' interval={0} tick={{ fill: "rgb(238, 238, 238)" }} type='category' />
-											<XAxis tickLine={false} domain={[0, 10]} tick={{ fill: "rgb(238, 238, 238)" }} tickCount={2} type='number' />
-											<Tooltip contentStyle={{ color: "rgb(238, 238, 238)", backgroundColor: "rgb(30, 30, 30)" }} />
-											<Area type='monotone' dataKey='Оценка' stroke='#8884d8' fillOpacity={1} fill='url(#colorUv)' />
-										</AreaChart>
-									</ResponsiveContainer>
-								)}
+							<div hidden={chartData[0].data.length < 1} className='season-page__rating-chart'>
+								<ResponsiveLine
+									data={chartData}
+									theme={nivoTheme}
+									margin={{top: 14, right: 18, bottom: 44, left: 46}}
+									colors={['#4f5dea']}
+									enableArea
+									areaOpacity={0.2}
+									curve='monotoneX'
+									lineWidth={3}
+									pointSize={8}
+									pointColor='#4f5dea'
+									pointBorderWidth={2}
+									pointBorderColor='#191a1b'
+									enableGridX={false}
+									enableGridY
+									yScale={{
+										type: 'linear',
+										min: 0,
+										max: 10,
+									}}
+									axisTop={null}
+									axisRight={null}
+									axisBottom={{
+										tickSize: 0,
+										tickPadding: 10,
+										legend: 'Серии',
+										legendOffset: 32,
+										legendPosition: 'middle',
+									}}
+									axisLeft={{
+										tickSize: 0,
+										tickPadding: 8,
+										legend: 'Оценка',
+										legendOffset: -34,
+										legendPosition: 'middle',
+									}}
+									useMesh
+									tooltip={({point}) => (
+										<div className='season-page__chart-tooltip'>
+											<div>{point.data.xFormatted}</div>
+											<strong>{point.data.yFormatted}</strong>
+										</div>
+									)}
+								/>
 							</div>
 						</div>
 						<div className='season-page__friends' hidden={!friendsInfo?.length}>

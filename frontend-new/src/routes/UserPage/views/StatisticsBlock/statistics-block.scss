@@ -1,0 +1,158 @@
+@import "style/colors";
+@import "style/breakpoints";
+
+.stats-block {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    &__overview,
+    &__section {
+        background:
+            linear-gradient(120deg, rgba(79, 93, 234, 0.14), transparent 45%),
+            $newBackground2;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 14px;
+    }
+
+    &__title,
+    &__section-title {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: $newText3;
+    }
+
+    &__overview-chart {
+        height: 280px;
+    }
+
+    &__sections {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    &__section-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    &__metrics {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    &__metric {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 6px;
+        padding: 5px 9px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    &__metric-label {
+        color: $newText2;
+        font-size: 0.78rem;
+    }
+
+    &__metric-value {
+        color: $newText3;
+        font-size: 0.92rem;
+        font-weight: 600;
+    }
+
+    &__charts {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    &__chart-card {
+        background-color: rgba(4, 4, 5, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 10px;
+        padding: 10px;
+        transition: transform 0.18s ease, border-color 0.18s ease;
+
+        &:hover {
+            transform: translateY(-1px);
+            border-color: rgba(79, 93, 234, 0.45);
+        }
+    }
+
+    &__chart-title {
+        margin: 0 0 8px;
+        color: $newText2;
+        font-size: 0.84rem;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+    }
+
+    &__genres-chart,
+    &__years-chart {
+        height: 260px;
+    }
+
+    &__empty {
+        min-height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: $newText2;
+        font-size: 0.88rem;
+        border-radius: 10px;
+        border: 1px dashed rgba(255, 255, 255, 0.16);
+        background: rgba(4, 4, 5, 0.25);
+        padding: 12px;
+    }
+
+    &__tooltip {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        color: $newText3;
+        background: rgba($newBackground2, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 10px;
+        padding: 8px 10px;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32);
+        backdrop-filter: blur(2px);
+    }
+
+    @media (max-width: $tablet-width) {
+        &__overview-chart {
+            height: 250px;
+        }
+
+        &__charts {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: $mobile-width) {
+        gap: 12px;
+
+        &__overview,
+        &__section {
+            padding: 10px;
+        }
+
+        &__section-head {
+            margin-bottom: 8px;
+        }
+
+        &__metric {
+            padding: 4px 8px;
+        }
+    }
+}

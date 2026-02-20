@@ -13,6 +13,10 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@nivo/bar": "^0.99.0",
+    "@nivo/core": "^0.99.0",
+    "@nivo/line": "^0.99.0",
+    "@nivo/pie": "^0.99.0",
     "@steroidsjs/bootstrap": "^3.0.44",
     "@steroidsjs/core": "^3.0.93",
     "@steroidsjs/webpack": "^4.1.0",
@@ -33,7 +37,6 @@
     "react-rating": "^2.0.5",
     "react-responsive-carousel": "^3.2.21",
     "react-reveal": "^1.2.2",
-    "recharts": "1.8.5",
     "use-query-params": "^2.2.1"
   },
   "devDependencies": {
