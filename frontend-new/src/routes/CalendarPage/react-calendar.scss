@@ -1,40 +1,85 @@
 @import "style/colors";
 
 .react-calendar {
-    display: inline-block;
-    vertical-align: top;
-    width: 500px !important;
+    width: 100% !important;
     max-width: 100% !important;
-    background-color: $newBackground2 !important;
-    border: 1px solid rgb(100, 100, 100) !important;
-    margin-right: 1rem;
+    background: transparent !important;
+    border: none !important;
+    color: $newText3;
 }
+
+.react-calendar__navigation {
+    margin-bottom: 8px;
+}
+
+.react-calendar__navigation button {
+    min-width: 40px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: $newText3 !important;
+    transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+
+    &:enabled:hover,
+    &:enabled:focus {
+        background: rgba(79, 93, 234, 0.2);
+        border-color: rgba(79, 93, 234, 0.45);
+        color: #fff !important;
+    }
+}
+
+.react-calendar__month-view__weekdays {
+    text-transform: uppercase;
+    font-size: 0.66rem;
+    color: $newText2;
+}
+
+.react-calendar__month-view__days__day--neighboringMonth {
+    color: rgba(166, 166, 171, 0.55) !important;
+}
+
+.react-calendar__tile {
+    min-height: 76px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.035);
+    color: $newText3;
+    transition: background-color 0.14s ease, border-color 0.14s ease, transform 0.14s ease;
+
+    &:enabled:hover,
+    &:enabled:focus {
+        background: rgba(79, 93, 234, 0.12);
+        border-color: rgba(79, 93, 234, 0.45);
+        transform: translateY(-1px);
+    }
+}
+
+.react-calendar__tile--now {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.react-calendar__tile:disabled,
+.react-calendar button:disabled {
+    background: rgba(255, 255, 255, 0.015) !important;
+    color: rgba(166, 166, 171, 0.38) !important;
+    border-color: rgba(255, 255, 255, 0.03) !important;
+    opacity: 1;
+}
+
+.react-calendar__month-view__days__day--neighboringMonth:disabled {
+    background: rgba(255, 255, 255, 0.02) !important;
+    color: rgba(166, 166, 171, 0.38) !important;
+}
+
 .react-calendar__tile--active,
 .react-calendar__tile--hasActive {
-    background: $newBackground3 !important;
+    background: rgba(79, 93, 234, 0.34) !important;
+    border-color: rgba(120, 133, 255, 0.95) !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 0 0 1px rgba(120, 133, 255, 0.3);
 }
-.react-calendar__navigation button:enabled:hover,
-.react-calendar__navigation button:enabled:focus,
-.react-calendar__tile--now,
-.react-calendar button {
-    background-color: $newBackground2;
-    color: $newText3 !important;
-    border-radius: 0;
-}
-.react-calendar button:active,
-.react-calendar button:focus {
-    background-color: $newBackground3 !important;
-}
-.react-calendar__month-view__days__day--neighboringMonth {
-    background-color: $newBackground1 !important;
-}
-.react-calendar button:hover {
-    color: $newAccent2 !important;
-    background-color: $newBackground3 !important;
-}
-.react-calendar button:disabled {
-    background-color: $newBackground1 !important;
-}
+
 .react-calendar__navigation__next2-button,
 .react-calendar__navigation__prev2-button {
     display: none;
