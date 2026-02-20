@@ -17,22 +17,22 @@
     //max-width: 100%;
 
     display: grid;
-    grid-template-columns: min-content auto;
-    grid-template-rows: 1fr auto min-content;
+    grid-template-columns: min-content minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
     gap: 0 0;
     grid-template-areas:
     "header header"
-    ". ."
+    "sidebar content"
     "footer footer";
 
     @media (max-width: $mobile-width) {
         display: grid;
         grid-template-columns: auto;
-        grid-template-rows: 1fr;
+        grid-template-rows: auto 1fr auto;
         gap: 0 0;
         grid-template-areas:
             "header"
-            "."
+            "content"
             "footer";
     }
 
@@ -45,6 +45,8 @@
     }
 
     &__sidebar {
+        grid-area: sidebar;
+
         @media (max-width: $mobile-width) {
             position: absolute !important;
             padding-top: 3.2rem;
@@ -52,6 +54,7 @@
     }
 
     &__content {
+        grid-area: content;
         padding: 15px;
         display: flex;
         justify-content: center;
