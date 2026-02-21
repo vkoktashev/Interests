@@ -1,5 +1,6 @@
-import tmdbsimple as tmdb
-from django.core.cache import cache
+from datetime import timedelta
+
+from django.utils import timezone
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError, ConnectionError
@@ -9,14 +10,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from movies.functions import get_movie_new_fields, get_tmdb_movie_key
-from movies.models import UserMovie, Movie, MovieGenre, Genre
+from movies.functions import get_movie_new_fields, update_movie_genres, get_tmdb_movie, get_tmdb_movie_videos, \
+    get_cast_crew, update_movie_people
+from movies.models import UserMovie, Movie, MoviePerson
 from movies.serializers import UserMovieReadSerializer, FollowedUserMovieSerializer, UserMovieWriteSerializer
+from movies.tasks import refresh_movie_details
 from proxy.functions import get_proxy_url
 from users.models import UserFollow
-from utils.constants import ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, LANGUAGE, CACHE_TIMEOUT, YOUTUBE_PREFIX, \
-    TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX
-from utils.functions import update_fields_if_needed, objects_to_str
+from utils.constants import ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE
+from utils.functions import update_fields_if_needed
+
+MOVIE_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
 
 
 class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -32,31 +36,41 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         }
     )
     def retrieve(self, request, *args, **kwargs):
-        try:
-            tmdb_movie, returned_from_cache = get_tmdb_movie(kwargs.get('tmdb_id'))
-            tmdb_cast_crew = get_cast_crew(kwargs.get('tmdb_id'))
-            tmdb_movie['cast'] = tmdb_cast_crew.get('cast')
-            tmdb_movie['crew'] = tmdb_cast_crew.get('crew')
-            tmdb_movie['videos'] = get_tmdb_movie_videos(kwargs.get('tmdb_id'))
-        except HTTPError as e:
-            error_code = int(e.args[0].split(' ', 1)[0])
-            if error_code == 404:
-                return Response({ERROR: MOVIE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-        except ConnectionError:
-            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        tmdb_id = kwargs.get('tmdb_id')
+        movie = Movie.objects.filter(tmdb_id=tmdb_id).first()
 
-        new_fields = get_movie_new_fields(tmdb_movie)
+        should_fetch_from_tmdb = movie is None or movie.tmdb_last_update is None
 
-        movie, created = Movie.objects.filter().get_or_create(tmdb_id=tmdb_movie.get('id'),
-                                                              defaults=new_fields)
-        if not created and not returned_from_cache:
-            update_fields_if_needed(movie, new_fields)
+        if should_fetch_from_tmdb:
+            try:
+                tmdb_movie = get_tmdb_movie(tmdb_id)
+                tmdb_cast_crew = get_cast_crew(tmdb_id)
+                tmdb_movie_videos = get_tmdb_movie_videos(tmdb_id)
+            except HTTPError as e:
+                error_code = int(e.args[0].split(' ', 1)[0])
+                if error_code == 404:
+                    return Response({ERROR: MOVIE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            except ConnectionError:
+                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        if created or not returned_from_cache:
+            new_fields = get_movie_new_fields(tmdb_movie, tmdb_movie_videos)
+
+            movie, created = Movie.objects.filter().get_or_create(tmdb_id=tmdb_movie.get('id'),
+                                                                  defaults=new_fields)
+            if not created:
+                update_fields_if_needed(movie, new_fields)
+
             update_movie_genres(movie, tmdb_movie)
+            update_movie_people(movie, tmdb_cast_crew)
 
-        return Response(parse_movie(tmdb_movie, request.scheme))
+        response = Response(parse_movie(movie, request.scheme))
+
+        if movie.tmdb_last_update and movie.tmdb_last_update <= timezone.now() - MOVIE_DETAILS_REFRESH_INTERVAL:
+            movie_id = movie.tmdb_id
+            response.add_post_render_callback(lambda _: enqueue_movie_refresh(movie_id))
+
+        return response
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserMovieSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
@@ -119,84 +133,35 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-def update_movie_genres(movie: Movie, tmdb_movie: dict) -> None:
-    existing_movie_genres = MovieGenre.objects.filter(movie=movie)
-    new_movie_genres = []
-    movie_genres_to_delete_ids = []
-
-    for genre in tmdb_movie.get('genres'):
-        genre_obj, created = Genre.objects.get_or_create(tmdb_id=genre.get('id'),
-                                                         defaults={
-                                                             'tmdb_name': genre.get('name')
-                                                         })
-        movie_genre_obj, created = MovieGenre.objects.get_or_create(genre=genre_obj, movie=movie)
-        new_movie_genres.append(movie_genre_obj)
-
-    for existing_movie_genre in existing_movie_genres:
-        if existing_movie_genre not in new_movie_genres:
-            movie_genres_to_delete_ids.append(existing_movie_genre.id)
-
-    MovieGenre.objects.filter(id__in=movie_genres_to_delete_ids).delete()
-
-
-def get_tmdb_movie(tmdb_id):
-    returned_from_cache = True
-    key = get_tmdb_movie_key(tmdb_id)
-    tmdb_movie = cache.get(key, None)
-    if tmdb_movie is None:
-        tmdb_movie = tmdb.Movies(tmdb_id).info(language=LANGUAGE)
-        cache.set(key, tmdb_movie, CACHE_TIMEOUT)
-        returned_from_cache = False
-    return tmdb_movie, returned_from_cache
-
-
-def get_tmdb_movie_videos(tmdb_id):
-    key = f'movie_{tmdb_id}_videos'
-    tmdb_movie_videos = cache.get(key, None)
-    if tmdb_movie_videos is None:
-        tmdb_movie_videos = tmdb.Movies(tmdb_id).videos(language=LANGUAGE)['results']
-        tmdb_movie_videos = [x for x in tmdb_movie_videos if x['site'] == 'YouTube']
-        for index, video in enumerate(tmdb_movie_videos):
-            tmdb_movie_videos[index] = {
-                'name': video['name'],
-                'url': YOUTUBE_PREFIX + video['key']
-            }
-        cache.set(key, tmdb_movie_videos, CACHE_TIMEOUT)
-    return tmdb_movie_videos
-
-
-def get_cast_crew(tmdb_id):
-    key = f'movie_{tmdb_id}_cast_crew'
-    tmdb_cast_crew = cache.get(key, None)
-    if tmdb_cast_crew is None:
-        tmdb_cast_crew = tmdb.Movies(tmdb_id).credits(language=LANGUAGE)
-        cache.set(key, tmdb_cast_crew, CACHE_TIMEOUT)
-    return tmdb_cast_crew
-
-
-def parse_movie(tmdb_movie, scheme):
-    directors = []
-    for i in tmdb_movie['crew']:
-        if i['job'] == 'Director':
-            directors.append(i)
-
+def parse_movie(movie, scheme):
+    genres = [movie_genre.genre.tmdb_name for movie_genre in movie.moviegenre_set.select_related('genre').all()]
+    cast_names = [movie_person.person.name for movie_person in movie.movieperson_set.select_related('person')
+                  .filter(role=MoviePerson.ROLE_ACTOR).order_by('sort_order')]
+    director_names = [movie_person.person.name for movie_person in movie.movieperson_set.select_related('person')
+                      .filter(role=MoviePerson.ROLE_DIRECTOR).order_by('sort_order')]
     new_movie = {
-        'id': tmdb_movie.get('id'),
-        'name': tmdb_movie.get('title'),
-        'original_name': tmdb_movie.get('original_title'),
-        'overview': tmdb_movie.get('overview'),
-        'runtime': tmdb_movie.get('runtime'),
-        'release_date': '.'.join(reversed(tmdb_movie['release_date'].split('-')))
-        if tmdb_movie.get('air_date') != "" else None,
-        'score': int(tmdb_movie['vote_average'] * 10) if tmdb_movie.get('vote_average') else None,
-        'tagline': tmdb_movie.get('tagline'),
-        'backdrop_path': get_proxy_url(scheme, TMDB_BACKDROP_PATH_PREFIX, tmdb_movie.get('backdrop_path')),
-        'poster_path': get_proxy_url(scheme, TMDB_POSTER_PATH_PREFIX, tmdb_movie.get('poster_path')),
-        'genres': objects_to_str(tmdb_movie['genres']),
-        'production_companies': objects_to_str(tmdb_movie['production_companies']),
-        'cast': objects_to_str(tmdb_movie['cast'][:5]),
-        'directors': objects_to_str(directors),
-        'videos': tmdb_movie.get('videos')
+        'id': movie.tmdb_id,
+        'name': movie.tmdb_name,
+        'original_name': movie.tmdb_original_name,
+        'overview': movie.tmdb_overview,
+        'runtime': movie.tmdb_runtime,
+        'release_date': movie.tmdb_release_date.strftime('%d.%m.%Y') if movie.tmdb_release_date else None,
+        'score': movie.tmdb_score,
+        'tagline': movie.tmdb_tagline,
+        'backdrop_path': get_proxy_url(scheme, movie.tmdb_backdrop_path),
+        'poster_path': get_proxy_url(scheme, movie.tmdb_poster_path),
+        'genres': ', '.join(genres),
+        'production_companies': movie.tmdb_production_companies,
+        'cast': ', '.join(cast_names),
+        'directors': ', '.join(director_names),
+        'videos': movie.tmdb_videos
     }
 
     return new_movie
+
+
+def enqueue_movie_refresh(tmdb_id):
+    try:
+        refresh_movie_details.delay(tmdb_id)
+    except Exception:
+        pass
