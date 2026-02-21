@@ -102,7 +102,16 @@ class MovieSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Movie
-        exclude = ('id',)
+        fields = (
+            'imdb_id',
+            'tmdb_id',
+            'tmdb_original_name',
+            'tmdb_name',
+            'tmdb_runtime',
+            'tmdb_release_date',
+            'tmdb_backdrop_path',
+            'tmdb_poster_path',
+        )
 
 
 class TypedMovieSerializer(MovieSerializer):

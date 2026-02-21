@@ -14,6 +14,12 @@ class Movie(models.Model):
     tmdb_release_date = models.DateField(null=True)
     tmdb_backdrop_path = models.CharField(max_length=200, blank=True)
     tmdb_poster_path = models.CharField(max_length=200, blank=True)
+    tmdb_overview = models.TextField(blank=True)
+    tmdb_score = models.IntegerField(null=True)
+    tmdb_tagline = models.TextField(blank=True)
+    tmdb_production_companies = models.TextField(blank=True)
+    tmdb_videos = models.JSONField(default=list, blank=True)
+    tmdb_last_update = models.DateTimeField(null=True)
 
 
 class UserMovie(UserScore):
@@ -52,3 +58,20 @@ class MovieGenre(models.Model):
 
     class Meta:
         unique_together = (("movie", "genre"),)
+
+
+class MoviePerson(models.Model):
+    ROLE_ACTOR = 'actor'
+    ROLE_DIRECTOR = 'director'
+    ROLE_CHOICES = (
+        (ROLE_ACTOR, 'Actor'),
+        (ROLE_DIRECTOR, 'Director'),
+    )
+
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    person = models.ForeignKey('people.Person', on_delete=models.CASCADE)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = (("movie", "person", "role"),)

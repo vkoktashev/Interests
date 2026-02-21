@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'config',
     'users',
     'games',
+    'people',
     'movies',
     'shows'
 ]

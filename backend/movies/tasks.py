@@ -1,14 +1,14 @@
 from datetime import datetime
 
-import tmdbsimple as tmdb
 from celery.schedules import crontab
-from django.core.cache import cache
 from django.db.models import Q
+from requests import HTTPError, ConnectionError
 
 from config.celery import app
-from movies.functions import get_movie_new_fields, get_tmdb_movie_key
+from movies.functions import get_movie_new_fields, get_tmdb_movie, get_cast_crew, get_tmdb_movie_videos, \
+    update_movie_genres, update_movie_people
 from movies.models import Movie
-from utils.constants import CACHE_TIMEOUT, LANGUAGE, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
+from utils.constants import UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
 from utils.functions import update_fields_if_needed
 
 
@@ -28,10 +28,31 @@ def update_upcoming_movies():
         .filter(Q(tmdb_release_date__gte=today_date) | Q(tmdb_release_date=None))
 
     for movie in movies:
-        tmdb_id = movie.tmdb_id
-        key = get_tmdb_movie_key(tmdb_id)
-        tmdb_movie = tmdb.Movies(tmdb_id).info(language=LANGUAGE)
-        cache.set(key, tmdb_movie, CACHE_TIMEOUT)
-        new_fields = get_movie_new_fields(tmdb_movie)
-        update_fields_if_needed(movie, new_fields)
+        update_movie_details(movie.tmdb_id, movie)
         print(movie.tmdb_name)
+
+
+@app.task
+def refresh_movie_details(tmdb_id):
+    update_movie_details(tmdb_id)
+
+
+def update_movie_details(tmdb_id, movie_obj=None):
+    try:
+        tmdb_movie = get_tmdb_movie(tmdb_id)
+        tmdb_cast_crew = get_cast_crew(tmdb_id)
+        tmdb_movie_videos = get_tmdb_movie_videos(tmdb_id)
+    except (HTTPError, ConnectionError):
+        return
+
+    new_fields = get_movie_new_fields(tmdb_movie, tmdb_movie_videos)
+
+    if movie_obj is None:
+        movie_obj, created = Movie.objects.get_or_create(tmdb_id=tmdb_id, defaults=new_fields)
+        if not created:
+            update_fields_if_needed(movie_obj, new_fields)
+    else:
+        update_fields_if_needed(movie_obj, new_fields)
+
+    update_movie_genres(movie_obj, tmdb_movie)
+    update_movie_people(movie_obj, tmdb_cast_crew)
