@@ -50,6 +50,12 @@ export interface IScoresStats {
 	shows: IScoreCategoryStats;
 }
 
+export interface ITimeDistribution {
+	games: number;
+	movies: number;
+	episodes: number;
+}
+
 export interface IUserStats {
 	games?: ICategoryStats;
 	movies?: ICategoryStats;
@@ -58,4 +64,5 @@ export interface IUserStats {
 	top_directors?: IPersonalityScoreStat[];
 	status_funnel?: IStatusFunnel;
 	scores?: IScoresStats;
+	time_distribution_last_year?: ITimeDistribution;
 }

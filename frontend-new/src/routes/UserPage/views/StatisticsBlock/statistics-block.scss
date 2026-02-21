@@ -26,7 +26,12 @@
 
     &__overview-chart {
         height: 280px;
-        margin-bottom: 10px;
+    }
+
+    &__overview-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
     }
 
     &__sections {
@@ -307,6 +312,10 @@
     @media (max-width: $tablet-width) {
         &__overview-chart {
             height: 250px;
+        }
+
+        &__overview-grid {
+            grid-template-columns: 1fr;
         }
 
         &__charts {

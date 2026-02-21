@@ -1,11 +1,12 @@
 import collections
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from itertools import chain
 
 from django.core.paginator import Paginator
 from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, QuerySet, Case, When
 from django.db.models.functions import ExtractYear, Coalesce
+from django.utils import timezone
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -301,6 +302,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         stats.update(calculate_top_personality_points(user))
         stats.update(calculate_status_funnel(user))
         stats.update(calculate_scores_stats(user))
+        stats.update(calculate_time_distribution_last_year(user))
 
         return Response(stats, status=status.HTTP_200_OK)
 
@@ -630,6 +632,38 @@ def calculate_scores_stats(user: User) -> dict:
                 'average': to_average(shows_scores),
                 'distribution': to_distribution(shows_scores),
             },
+        }
+    }
+
+
+def calculate_time_distribution_last_year(user: User) -> dict:
+    cutoff = timezone.now() - timedelta(days=365)
+
+    games_time = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED) \
+        .filter(user=user, updated_at__gte=cutoff) \
+        .aggregate(total_spent_time=Sum('spent_time'))['total_spent_time'] or 0
+
+    movies_minutes = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_WATCHED, updated_at__gte=cutoff) \
+        .aggregate(total_time_spent=Sum('movie__tmdb_runtime')) \
+        .get('total_time_spent') or 0
+
+    watched_episode_ids_last_year = EpisodeLog.objects \
+        .filter(user=user, action_type=EpisodeLog.ACTION_TYPE_SCORE, created__gte=cutoff) \
+        .exclude(action_result='-1') \
+        .values_list('episode_id', flat=True) \
+        .distinct()
+
+    episodes_minutes = UserEpisode.objects.exclude(score=-1) \
+        .filter(user=user, episode_id__in=watched_episode_ids_last_year) \
+        .aggregate(total_spent_time=Sum(
+        Case(When(episode__tmdb_runtime=0, then='episode__tmdb_season__tmdb_show__tmdb_episode_runtime'),
+             default='episode__tmdb_runtime')))['total_spent_time'] or 0
+
+    return {
+        'time_distribution_last_year': {
+            'games': float(games_time),
+            'movies': round(movies_minutes / MINUTES_IN_HOUR, 1),
+            'episodes': round(episodes_minutes / MINUTES_IN_HOUR, 1),
         }
     }
 
