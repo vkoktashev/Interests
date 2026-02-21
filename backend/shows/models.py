@@ -4,6 +4,7 @@ from django.db.models import UniqueConstraint, Deferrable
 from django.utils import timezone
 
 from movies.models import Genre
+from people.models import Person
 from users.models import UserScore, UserLogAbstract
 
 
@@ -34,6 +35,13 @@ class Show(models.Model):
     tmdb_release_date = models.DateField(null=True)
     tmdb_status = models.CharField(max_length=30, blank=True, choices=TMDB_STATUS_CHOICES)
     tmdb_number_of_episodes = models.IntegerField(default=0)
+    tmdb_number_of_seasons = models.IntegerField(default=0)
+    tmdb_last_air_date = models.DateField(null=True)
+    tmdb_overview = models.TextField(blank=True)
+    tmdb_score = models.IntegerField(null=True)
+    tmdb_production_companies = models.TextField(blank=True)
+    tmdb_videos = models.JSONField(default=list, blank=True)
+    tmdb_last_update = models.DateTimeField(null=True)
 
 
 class Season(models.Model):
@@ -41,6 +49,10 @@ class Season(models.Model):
     tmdb_season_number = models.IntegerField()
     tmdb_name = models.CharField(max_length=200)
     tmdb_show = models.ForeignKey(Show, on_delete=models.CASCADE)
+    tmdb_overview = models.TextField(blank=True)
+    tmdb_poster_path = models.CharField(max_length=200, blank=True)
+    tmdb_air_date = models.DateField(null=True)
+    tmdb_last_update = models.DateTimeField(null=True)
 
     class Meta:
         unique_together = (("tmdb_season_number", "tmdb_show"),)
@@ -53,6 +65,10 @@ class Episode(models.Model):
     tmdb_name = models.CharField(max_length=200)
     tmdb_release_date = models.DateField(null=True)
     tmdb_runtime = models.IntegerField(default=0)
+    tmdb_overview = models.TextField(blank=True)
+    tmdb_score = models.IntegerField(null=True)
+    tmdb_still_path = models.CharField(max_length=200, blank=True)
+    tmdb_last_update = models.DateTimeField(null=True)
 
     class Meta:
         UniqueConstraint(
@@ -121,3 +137,54 @@ class ShowGenre(models.Model):
 
     class Meta:
         unique_together = (("show", "genre"),)
+
+
+class ShowPerson(models.Model):
+    ROLE_ACTOR = 'actor'
+    ROLE_DIRECTOR = 'director'
+    ROLE_CHOICES = (
+        (ROLE_ACTOR, 'Actor'),
+        (ROLE_DIRECTOR, 'Director'),
+    )
+
+    show = models.ForeignKey(Show, on_delete=models.CASCADE)
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = (("show", "person", "role"),)
+
+
+class SeasonPerson(models.Model):
+    ROLE_ACTOR = 'actor'
+    ROLE_DIRECTOR = 'director'
+    ROLE_CHOICES = (
+        (ROLE_ACTOR, 'Actor'),
+        (ROLE_DIRECTOR, 'Director'),
+    )
+
+    season = models.ForeignKey(Season, on_delete=models.CASCADE)
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = (("season", "person", "role"),)
+
+
+class EpisodePerson(models.Model):
+    ROLE_ACTOR = 'actor'
+    ROLE_DIRECTOR = 'director'
+    ROLE_CHOICES = (
+        (ROLE_ACTOR, 'Actor'),
+        (ROLE_DIRECTOR, 'Director'),
+    )
+
+    episode = models.ForeignKey(Episode, on_delete=models.CASCADE)
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = (("episode", "person", "role"),)

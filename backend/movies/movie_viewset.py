@@ -145,7 +145,7 @@ def parse_movie(movie, scheme):
         'original_name': movie.tmdb_original_name,
         'overview': movie.tmdb_overview,
         'runtime': movie.tmdb_runtime,
-        'release_date': movie.tmdb_release_date.strftime('%d.%m.%Y') if movie.tmdb_release_date else None,
+        'release_date': format_date(movie.tmdb_release_date),
         'score': movie.tmdb_score,
         'tagline': movie.tmdb_tagline,
         'backdrop_path': get_proxy_url(scheme, movie.tmdb_backdrop_path),
@@ -165,3 +165,14 @@ def enqueue_movie_refresh(tmdb_id):
         refresh_movie_details.delay(tmdb_id)
     except Exception:
         pass
+
+
+def format_date(value):
+    if value is None:
+        return None
+    if isinstance(value, str):
+        parts = value.split('-')
+        if len(parts) == 3:
+            return '.'.join(reversed(parts))
+        return value
+    return value.strftime('%d.%m.%Y')

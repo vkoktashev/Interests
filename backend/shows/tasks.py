@@ -1,17 +1,16 @@
 from datetime import datetime
 
-import tmdbsimple as tmdb
 from celery.schedules import crontab
-from django.core.cache import cache
 from django.db.models import Q
-from requests import HTTPError
-from requests.exceptions import ConnectionError
+from requests import HTTPError, ConnectionError
 
 from config.celery import app
-from shows.functions import get_show_new_fields, get_season_new_fields, get_tmdb_show_key, \
-    get_tmdb_season_key, get_episodes_to_create_update_delete
-from shows.models import Show, Episode, UserShow, Season
-from utils.constants import LANGUAGE, CACHE_TIMEOUT, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
+from shows.functions import get_show_new_fields, get_tmdb_show, get_tmdb_show_videos, sync_show_genres, \
+    get_tmdb_show_credits, sync_show_people, upsert_season_from_tmdb, get_tmdb_season, sync_season_episodes, \
+    get_tmdb_season_credits, sync_season_people, get_tmdb_episode, get_episode_new_fields, get_tmdb_episode_credits, \
+    sync_episode_people
+from shows.models import Show, UserShow, Season, Episode
+from utils.constants import UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
 from utils.functions import update_fields_if_needed
 
 
@@ -21,6 +20,94 @@ def setup_periodic_tasks(sender, **kwargs):
         crontab(hour=UPDATE_DATES_HOUR, minute=UPDATE_DATES_MINUTE),
         update_shows.s(),
     )
+
+
+@app.task
+def refresh_show_details(tmdb_id):
+    update_show_details(tmdb_id)
+
+
+@app.task
+def refresh_season_details(show_tmdb_id, season_number):
+    update_season_details(show_tmdb_id, season_number)
+
+
+@app.task
+def refresh_episode_details(show_tmdb_id, season_number, episode_number):
+    update_episode_details(show_tmdb_id, season_number, episode_number)
+
+
+def update_show_details(show_tmdb_id):
+    try:
+        tmdb_show = get_tmdb_show(show_tmdb_id)
+        tmdb_show_videos = get_tmdb_show_videos(show_tmdb_id)
+        tmdb_show_credits = get_tmdb_show_credits(show_tmdb_id)
+    except (HTTPError, ConnectionError):
+        return None
+
+    new_fields = get_show_new_fields(tmdb_show, tmdb_show_videos)
+    show, created = Show.objects.get_or_create(tmdb_id=show_tmdb_id, defaults=new_fields)
+    if not created:
+        update_fields_if_needed(show, new_fields)
+
+    sync_show_genres(show, tmdb_show)
+    sync_show_people(show, tmdb_show_credits)
+
+    for tmdb_season in tmdb_show.get('seasons') or []:
+        upsert_season_from_tmdb(show, tmdb_season)
+
+    return show
+
+
+def update_season_details(show_tmdb_id, season_number):
+    show = Show.objects.filter(tmdb_id=show_tmdb_id).first()
+    if show is None:
+        show = update_show_details(show_tmdb_id)
+        if show is None:
+            return None
+
+    try:
+        tmdb_season = get_tmdb_season(show_tmdb_id, season_number)
+        tmdb_season_credits = get_tmdb_season_credits(show_tmdb_id, season_number)
+    except (HTTPError, ConnectionError):
+        return None
+
+    season = upsert_season_from_tmdb(show, tmdb_season)
+    if season is None:
+        return None
+
+    sync_season_episodes(season, tmdb_season.get('episodes') or [])
+    sync_season_people(season, tmdb_season_credits)
+    return season
+
+
+def update_episode_details(show_tmdb_id, season_number, episode_number):
+    season = Season.objects.filter(
+        tmdb_show__tmdb_id=show_tmdb_id,
+        tmdb_season_number=season_number
+    ).first()
+    if season is None:
+        season = update_season_details(show_tmdb_id, season_number)
+        if season is None:
+            return None
+
+    try:
+        tmdb_episode = get_tmdb_episode(show_tmdb_id, season_number, episode_number)
+        tmdb_episode_credits = get_tmdb_episode_credits(show_tmdb_id, season_number, episode_number)
+    except (HTTPError, ConnectionError):
+        return None
+
+    defaults = get_episode_new_fields(tmdb_episode, season.id)
+    episode, created = Episode.objects.get_or_create(
+        tmdb_season=season,
+        tmdb_episode_number=episode_number,
+        defaults=defaults
+    )
+    if not created:
+        update_fields_if_needed(episode, defaults)
+
+    sync_episode_people(episode, tmdb_episode_credits)
+    return episode
 
 
 @app.task
@@ -39,137 +126,14 @@ def update_shows():
         Q(tmdb_release_date__gte=today_date) | Q(tmdb_release_date=None)
     ).distinct()
 
-    episodes_to_create = []
-    episodes_to_update = []
-    episodes_to_delete_pks = []
-
-    for i, show in enumerate(shows):
-        show_tmdb_id = show.tmdb_id
-        current_number_of_episodes = Episode.objects.filter(tmdb_season__tmdb_show=show).count()
-        key = get_tmdb_show_key(show_tmdb_id)
-        try:
-            tmdb_show = tmdb.TV(show_tmdb_id).info(language=LANGUAGE)
-            try:
-                print(show.tmdb_name)
-            except UnicodeError:
-                print(f'utf-8 {show.tmdb_name.encode("utf-8")}')
-        except (HTTPError, ConnectionError):
-            try:
-                print(f'ERROR {show.tmdb_name}')
-            except UnicodeError:
-                print(f'ERROR utf-8  {show.tmdb_name.encode("utf-8")}')
-            continue
-        cache.set(key, tmdb_show, CACHE_TIMEOUT)
-
-        new_fields = get_show_new_fields(tmdb_show)
-        update_fields_if_needed(show, new_fields)
-
-        if current_number_of_episodes != show.tmdb_number_of_episodes:
-            season_number = tmdb_show.get('seasons')[-1]['season_number']
-            key = get_tmdb_season_key(show_tmdb_id, season_number)
-
-            try:
-                tmdb_season = tmdb.TV_Seasons(show_tmdb_id, season_number).info(language=LANGUAGE)
-            except HTTPError:
-                continue
-            cache.set(key, tmdb_season, CACHE_TIMEOUT)
-
-            new_fields = get_season_new_fields(tmdb_season)
-            season, created = Season.objects.get_or_create(tmdb_show_id=show.id,
-                                                           tmdb_season_number=tmdb_season.get('season_number'),
-                                                           defaults=new_fields)
-            if not created:
-                update_fields_if_needed(season, new_fields)
-
-            print(season.tmdb_name, season.id)
-
-            episodes = tmdb_season.get('episodes')
-            existed_episodes = Episode.objects.select_related('tmdb_season').filter(tmdb_season=season)
-
-            temp1, temp2, temp3 = get_episodes_to_create_update_delete(existed_episodes, episodes, season.id)
-            episodes_to_create += temp1
-            episodes_to_update += temp2
-            episodes_to_delete_pks += temp3
-
-        if (i + 1) % 10 == 0:
-            Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
-            Episode.objects.bulk_update(episodes_to_update,
-                                        ['tmdb_episode_number', 'tmdb_season', 'tmdb_name',
-                                         'tmdb_release_date', 'tmdb_runtime'])
-            Episode.objects.bulk_create(episodes_to_create)
-            episodes_to_create = []
-            episodes_to_update = []
-            episodes_to_delete_pks = []
-
-    Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
-    Episode.objects.bulk_update(episodes_to_update,
-                                ['tmdb_episode_number', 'tmdb_season', 'tmdb_name',
-                                 'tmdb_release_date', 'tmdb_runtime'])
-    Episode.objects.bulk_create(episodes_to_create)
+    for show in shows:
+        update_show_details(show.tmdb_id)
 
 
 @app.task
 def update_all_shows_task(start_index):
-    shows = Show.objects.all()[start_index:]
-    count = len(shows)
-    episodes_to_create = []
-    episodes_to_update = []
-    episodes_to_delete_pks = []
+    for show in Show.objects.all()[start_index:]:
+        update_show_details(show.tmdb_id)
 
-    for i, show in enumerate(shows):
-        tmdb_show_id = show.tmdb_id
-        key = get_tmdb_show_key(tmdb_show_id)
-        try:
-            tmdb_show = tmdb.TV(tmdb_show_id).info(language=LANGUAGE)
-        except HTTPError as e:
-            print(e)
-            break
-        cache.set(key, tmdb_show, CACHE_TIMEOUT)
-
-        new_fields = get_show_new_fields(tmdb_show)
-
-        update_fields_if_needed(show, new_fields)
-
-        for season in tmdb_show.get('seasons'):
-            season_number = season['season_number']
-            key = get_tmdb_season_key(tmdb_show_id, season_number)
-
-            try:
-                tmdb_season = tmdb.TV_Seasons(tmdb_show_id, season_number).info(language=LANGUAGE)
-            except HTTPError as e:
-                print(e)
-                break
-            cache.set(key, tmdb_season, CACHE_TIMEOUT)
-
-            new_fields = get_season_new_fields(tmdb_season)
-            season, created = Season.objects.get_or_create(tmdb_show_id=show.id,
-                                                           tmdb_season_number=tmdb_season.get('season_number'),
-                                                           defaults=new_fields)
-            if not created:
-                update_fields_if_needed(season, new_fields)
-
-            episodes = tmdb_season.get('episodes')
-            existed_episodes = Episode.objects.select_related('tmdb_season').filter(tmdb_season=season)
-
-            temp1, temp2, temp3 = get_episodes_to_create_update_delete(existed_episodes, episodes, season.id)
-            episodes_to_create += temp1
-            episodes_to_update += temp2
-            episodes_to_delete_pks += temp3
-
-        print(f'updated {i + 1} of {count}')
-
-        if (i + 1) % 10 == 0:
-            Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
-            Episode.objects.bulk_update(episodes_to_update,
-                                        ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date',
-                                         'tmdb_runtime'])
-            Episode.objects.bulk_create(episodes_to_create)
-            episodes_to_create = []
-            episodes_to_update = []
-            episodes_to_delete_pks = []
-
-    Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
-    Episode.objects.bulk_update(episodes_to_update,
-                                ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date',
-                                 'tmdb_runtime'])
-    Episode.objects.bulk_create(episodes_to_create)
+        for season in show.season_set.all():
+            update_season_details(show.tmdb_id, season.tmdb_season_number)

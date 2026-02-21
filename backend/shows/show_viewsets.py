@@ -1,8 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
-import tmdbsimple as tmdb
-from django.core.cache import cache
 from django.db.models import Q
+from django.utils import timezone
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError, ConnectionError
@@ -12,17 +11,18 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from movies.models import Genre
 from proxy.functions import get_proxy_url
-from shows.functions import get_tmdb_show_key, get_show_new_fields
-from shows.models import Show, ShowGenre, UserShow, Episode, UserEpisode, EpisodeLog, ShowLog
+from shows.functions import get_show_new_fields, get_tmdb_show, get_tmdb_show_videos, get_tmdb_show_credits, \
+    sync_show_genres, sync_show_people, upsert_season_from_tmdb
+from shows.models import Show, UserShow, Episode, UserEpisode, EpisodeLog, ShowLog, ShowPerson
 from shows.serializers import ShowSerializer, UserShowReadSerializer, FollowedUserShowSerializer, UserEpisodeSerializer, \
     SeasonSerializer, EpisodeSerializer, UserShowWriteSerializer
-from shows.tasks import update_shows, update_all_shows_task
+from shows.tasks import update_shows, update_all_shows_task, refresh_show_details
 from users.models import UserFollow
-from utils.constants import LANGUAGE, CACHE_TIMEOUT, YOUTUBE_PREFIX, TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, \
-    ERROR, SHOW_NOT_FOUND, TMDB_UNAVAILABLE, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE
-from utils.functions import objects_to_str, update_fields_if_needed
+from utils.constants import ERROR, SHOW_NOT_FOUND, TMDB_UNAVAILABLE, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE
+from utils.functions import update_fields_if_needed
+
+SHOW_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
 
 
 class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -41,28 +41,42 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         }
     )
     def retrieve(self, request, *args, **kwargs):
-        try:
-            tmdb_show, returned_from_cache = get_tmdb_show(kwargs.get('tmdb_id'))
-            tmdb_show['videos'] = get_tmdb_show_videos(kwargs.get('tmdb_id'))
-        except HTTPError as e:
-            error_code = int(e.args[0].split(' ', 1)[0])
-            if error_code == 404:
-                return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-        except ConnectionError:
-            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        tmdb_id = kwargs.get('tmdb_id')
+        show = Show.objects.filter(tmdb_id=tmdb_id).first()
 
-        new_fields = get_show_new_fields(tmdb_show)
+        should_fetch_from_tmdb = show is None or show.tmdb_last_update is None
 
-        show, created = Show.objects.filter().get_or_create(tmdb_id=tmdb_show['id'],
-                                                            defaults=new_fields)
-        if not created and not returned_from_cache:
-            update_fields_if_needed(show, new_fields)
+        if should_fetch_from_tmdb:
+            try:
+                tmdb_show = get_tmdb_show(tmdb_id)
+                tmdb_show_videos = get_tmdb_show_videos(tmdb_id)
+                tmdb_show_credits = get_tmdb_show_credits(tmdb_id)
+            except HTTPError as e:
+                error_code = int(e.args[0].split(' ', 1)[0])
+                if error_code == 404:
+                    return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            except ConnectionError:
+                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        if created or not returned_from_cache:
-            update_show_genres(show, tmdb_show)
+            new_fields = get_show_new_fields(tmdb_show, tmdb_show_videos)
+            show, created = Show.objects.filter().get_or_create(tmdb_id=tmdb_show.get('id'), defaults=new_fields)
+            if not created:
+                update_fields_if_needed(show, new_fields)
 
-        return Response(parse_show(tmdb_show, request.scheme))
+            sync_show_genres(show, tmdb_show)
+            sync_show_people(show, tmdb_show_credits)
+
+            for tmdb_season in tmdb_show.get('seasons') or []:
+                upsert_season_from_tmdb(show, tmdb_season)
+
+        response = Response(parse_show(show, request.scheme))
+
+        if show.tmdb_last_update and show.tmdb_last_update <= timezone.now() - SHOW_DETAILS_REFRESH_INTERVAL:
+            show_id = show.tmdb_id
+            response.add_post_render_callback(lambda _: enqueue_show_refresh(show_id))
+
+        return response
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -431,26 +445,6 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response()
 
 
-def update_show_genres(show: Show, tmdb_show: dict) -> None:
-    existing_show_genres = ShowGenre.objects.filter(show=show)
-    new_show_genres = []
-    show_genres_to_delete_ids = []
-
-    for genre in tmdb_show.get('genres'):
-        genre_obj, created = Genre.objects.get_or_create(tmdb_id=genre.get('id'),
-                                                         defaults={
-                                                             'tmdb_name': genre.get('name')
-                                                         })
-        show_genre_obj, created = ShowGenre.objects.get_or_create(genre=genre_obj, show=show)
-        new_show_genres.append(show_genre_obj)
-
-    for existing_show_genre in existing_show_genres:
-        if existing_show_genre not in new_show_genres:
-            show_genres_to_delete_ids.append(existing_show_genre.id)
-
-    ShowGenre.objects.filter(id__in=show_genres_to_delete_ids).delete()
-
-
 def user_watched_show(show, user):
     if show is None:
         return False
@@ -468,56 +462,42 @@ def get_show_info(show_id, request):
     return {'show': show_data}
 
 
-def get_tmdb_show(tmdb_id):
-    returned_from_cache = True
-    key = get_tmdb_show_key(tmdb_id)
-    tmdb_show = cache.get(key, None)
-    if tmdb_show is None:
-        tmdb_show = tmdb.TV(tmdb_id).info(language=LANGUAGE)
-        cache.set(key, tmdb_show, CACHE_TIMEOUT)
-        returned_from_cache = False
-    return tmdb_show, returned_from_cache
+def parse_show(show, schema):
+    genres = [show_genre.genre.tmdb_name for show_genre in show.showgenre_set.select_related('genre').all()]
+    cast_names = [show_person.person.name for show_person in show.showperson_set.select_related('person')
+                  .filter(role=ShowPerson.ROLE_ACTOR).order_by('sort_order')]
+    director_names = [show_person.person.name for show_person in show.showperson_set.select_related('person')
+                      .filter(role=ShowPerson.ROLE_DIRECTOR).order_by('sort_order')]
+    seasons = [{
+        'id': season.tmdb_id,
+        'name': season.tmdb_name,
+        'overview': season.tmdb_overview,
+        'poster_path': get_proxy_url(schema, season.tmdb_poster_path),
+        'air_date': season.tmdb_air_date.strftime('%d.%m.%Y') if season.tmdb_air_date else None,
+        'season_number': season.tmdb_season_number,
+    } for season in show.season_set.order_by('tmdb_season_number').all()]
 
-
-def get_tmdb_show_videos(tmdb_id):
-    key = f'show_{tmdb_id}_videos'
-    tmdb_show_videos = cache.get(key, None)
-    if tmdb_show_videos is None:
-        tmdb_show_videos = tmdb.TV(tmdb_id).videos(language=LANGUAGE)['results']
-        tmdb_show_videos = [x for x in tmdb_show_videos if x['site'] == 'YouTube']
-        for index, video in enumerate(tmdb_show_videos):
-            tmdb_show_videos[index] = {
-                'name': video['name'],
-                'url': YOUTUBE_PREFIX + video['key']
-            }
-        cache.set(key, tmdb_show_videos, CACHE_TIMEOUT)
-    return tmdb_show_videos
-
-
-def parse_show(tmdb_show, schema):
-    new_show = {
-        'id': tmdb_show.get('id'),
-        'name': tmdb_show.get('name'),
-        'original_name': tmdb_show.get('original_name'),
-        'overview': tmdb_show.get('overview'),
-        'episode_run_time': tmdb_show['episode_run_time'][0] if len(tmdb_show['episode_run_time']) > 0 else 0,
-        'seasons_count': tmdb_show.get('number_of_seasons'),
-        'episodes_count': tmdb_show.get('number_of_episodes'),
-        'score': int(tmdb_show['vote_average'] * 10) if tmdb_show.get('vote_average') is not None else None,
-        'backdrop_path': get_proxy_url(schema, TMDB_BACKDROP_PATH_PREFIX, tmdb_show.get('backdrop_path')),
-        'poster_path': get_proxy_url(schema, TMDB_POSTER_PATH_PREFIX, tmdb_show.get('poster_path')),
-        'genres': objects_to_str(tmdb_show['genres']),
-        'production_companies': objects_to_str(tmdb_show['production_companies']),
-        'status': translate_tmdb_status(tmdb_show['status']),
-        'first_air_date': '.'.join(reversed(tmdb_show['first_air_date'].split('-')))
-        if tmdb_show.get('first_air_date') is not None else None,
-        'last_air_date': '.'.join(reversed(tmdb_show['last_air_date'].split('-')))
-        if tmdb_show.get('last_air_date') is not None else None,
-        'videos': tmdb_show.get('videos'),
-        'seasons': tmdb_show['seasons'],
+    return {
+        'id': show.tmdb_id,
+        'name': show.tmdb_name,
+        'original_name': show.tmdb_original_name,
+        'overview': show.tmdb_overview,
+        'episode_run_time': show.tmdb_episode_runtime,
+        'seasons_count': show.tmdb_number_of_seasons,
+        'episodes_count': show.tmdb_number_of_episodes,
+        'score': show.tmdb_score,
+        'backdrop_path': get_proxy_url(schema, show.tmdb_backdrop_path),
+        'poster_path': get_proxy_url(schema, show.tmdb_poster_path),
+        'genres': ', '.join(genres),
+        'production_companies': show.tmdb_production_companies,
+        'status': translate_tmdb_status(show.tmdb_status),
+        'first_air_date': format_date(show.tmdb_release_date),
+        'last_air_date': format_date(show.tmdb_last_air_date),
+        'videos': show.tmdb_videos,
+        'seasons': seasons,
+        'cast': ', '.join(cast_names),
+        'directors': ', '.join(director_names),
     }
-
-    return new_show
 
 
 def translate_tmdb_status(tmdb_status):
@@ -525,3 +505,21 @@ def translate_tmdb_status(tmdb_status):
         if tmdb_status in choice:
             return choice[1]
     return tmdb_status
+
+
+def enqueue_show_refresh(tmdb_id):
+    try:
+        refresh_show_details.delay(tmdb_id)
+    except Exception:
+        pass
+
+
+def format_date(value):
+    if value is None:
+        return None
+    if isinstance(value, str):
+        parts = value.split('-')
+        if len(parts) == 3:
+            return '.'.join(reversed(parts))
+        return value
+    return value.strftime('%d.%m.%Y')
