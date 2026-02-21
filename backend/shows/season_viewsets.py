@@ -1,6 +1,7 @@
-import tmdbsimple as tmdb
-from django.core.cache import cache
-from django.db.models import F, ProtectedError
+from datetime import timedelta
+
+from django.db.models import F
+from django.utils import timezone
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from requests import HTTPError, ConnectionError
@@ -11,14 +12,19 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from proxy.functions import get_proxy_url
-from shows.functions import get_season_new_fields, get_episodes_to_create_update_delete, get_tmdb_season_key
-from shows.models import UserSeason, Show, Season, Episode, UserShow, UserEpisode
-from shows.serializers import UserSeasonSerializer, FollowedUserSeasonSerializer, UserEpisodeInSeasonSerializer
-from shows.show_viewsets import get_show_info, user_watched_show
+from shows.functions import get_tmdb_season, get_season_new_fields, sync_season_episodes, \
+    get_tmdb_season_credits, sync_season_people, get_tmdb_show, get_tmdb_show_videos, get_tmdb_show_credits, \
+    get_show_new_fields, sync_show_genres, sync_show_people
+from shows.models import UserSeason, Show, Season, Episode, UserShow, UserEpisode, SeasonPerson
+from shows.serializers import UserSeasonSerializer, FollowedUserSeasonSerializer, UserEpisodeInSeasonSerializer, \
+    ShowSerializer
+from shows.show_viewsets import user_watched_show
+from shows.tasks import refresh_season_details
 from users.models import UserFollow
-from utils.constants import ERROR, SEASON_NOT_FOUND, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, LANGUAGE, CACHE_TIMEOUT, \
-    TMDB_POSTER_PATH_PREFIX
+from utils.constants import ERROR, SEASON_NOT_FOUND, TMDB_UNAVAILABLE, SHOW_NOT_FOUND
 from utils.functions import update_fields_if_needed
+
+SEASON_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
 
 
 class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -27,42 +33,63 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     lookup_field = 'number'
 
     def retrieve(self, request, *args, **kwargs):
-        try:
-            tmdb_season, returned_from_cache = get_season(kwargs.get('show_tmdb_id'),
-                                                          kwargs.get('number'))
-        except HTTPError as e:
-            error_code = int(e.args[0].split(' ', 1)[0])
-            if error_code == 404:
-                return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-        except ConnectionError:
-            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        show_tmdb_id = kwargs.get('show_tmdb_id')
+        season_number = kwargs.get('number')
 
-        try:
-            show_info = get_show_info(kwargs.get('show_tmdb_id'), request)
-        except Show.DoesNotExist:
-            return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+        show = Show.objects.filter(tmdb_id=show_tmdb_id).first()
+        if show is None:
+            try:
+                tmdb_show = get_tmdb_show(show_tmdb_id)
+                tmdb_show_videos = get_tmdb_show_videos(show_tmdb_id)
+                tmdb_show_credits = get_tmdb_show_credits(show_tmdb_id)
+            except HTTPError as e:
+                error_code = int(e.args[0].split(' ', 1)[0])
+                if error_code == 404:
+                    return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            except ConnectionError:
+                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        tmdb_season.update(show_info)
-        new_fields = get_season_new_fields(tmdb_season)
-        season, created = Season.objects.get_or_create(tmdb_show_id=tmdb_season.get('show').get('id'),
-                                                       tmdb_season_number=tmdb_season.get('season_number'),
-                                                       defaults=new_fields)
-        if not created and not returned_from_cache:
-            update_fields_if_needed(season, new_fields)
+            show_fields = get_show_new_fields(tmdb_show, tmdb_show_videos)
+            show, created = Show.objects.get_or_create(tmdb_id=show_tmdb_id, defaults=show_fields)
+            if not created:
+                update_fields_if_needed(show, show_fields)
+            sync_show_genres(show, tmdb_show)
+            sync_show_people(show, tmdb_show_credits)
 
-        episodes = tmdb_season.get('episodes')
-        existed_episodes = Episode.objects.select_related('tmdb_season').filter(tmdb_season=season)
-        episodes_to_create, episodes_to_update, episodes_to_delete_pks = get_episodes_to_create_update_delete(
-            existed_episodes, episodes, season.id)
+        season = Season.objects.filter(tmdb_show=show, tmdb_season_number=season_number).first()
+        should_fetch_from_tmdb = season is None or season.tmdb_last_update is None
 
-        Episode.objects.filter(pk__in=episodes_to_delete_pks).delete()
-        Episode.objects.bulk_update(episodes_to_update,
-                                    ['tmdb_episode_number', 'tmdb_season', 'tmdb_name', 'tmdb_release_date',
-                                     'tmdb_runtime'])
-        Episode.objects.bulk_create(episodes_to_create)
+        if should_fetch_from_tmdb:
+            try:
+                tmdb_season = get_tmdb_season(show_tmdb_id, season_number)
+                tmdb_season_credits = get_tmdb_season_credits(show_tmdb_id, season_number)
+            except HTTPError as e:
+                error_code = int(e.args[0].split(' ', 1)[0])
+                if error_code == 404:
+                    return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            except ConnectionError:
+                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        return Response(parse_season(tmdb_season, request.scheme))
+            defaults = get_season_new_fields(tmdb_season, show.id)
+            season, created = Season.objects.get_or_create(
+                tmdb_show=show,
+                tmdb_season_number=tmdb_season.get('season_number'),
+                defaults=defaults
+            )
+            if not created:
+                update_fields_if_needed(season, defaults)
+
+            sync_season_episodes(season, tmdb_season.get('episodes') or [])
+            sync_season_people(season, tmdb_season_credits)
+
+        response = Response(parse_season(season, request))
+        if season.tmdb_last_update and season.tmdb_last_update <= timezone.now() - SEASON_DETAILS_REFRESH_INTERVAL:
+            response.add_post_render_callback(
+                lambda _: enqueue_season_refresh(show.tmdb_id, season.tmdb_season_number)
+            )
+        return response
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -144,28 +171,51 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                          'user_watched_show': user_watched_show(show, request.user)})
 
 
-def get_season(show_tmdb_id, season_number):
-    returned_from_cache = True
-    key = get_tmdb_season_key(show_tmdb_id, season_number)
-    tmdb_season = cache.get(key, None)
-    if tmdb_season is None:
-        tmdb_season = tmdb.TV_Seasons(show_tmdb_id, season_number).info(language=LANGUAGE)
-        cache.set(key, tmdb_season, CACHE_TIMEOUT)
-        returned_from_cache = False
-    return tmdb_season, returned_from_cache
+def parse_season(season, request):
+    episodes = [{
+        'id': episode.tmdb_id,
+        'name': episode.tmdb_name,
+        'overview': episode.tmdb_overview,
+        'air_date': format_date(episode.tmdb_release_date),
+        'episode_number': episode.tmdb_episode_number,
+        'runtime': episode.tmdb_runtime,
+        'score': episode.tmdb_score,
+        'still_path': get_proxy_url(request.scheme, episode.tmdb_still_path),
+        'season_number': season.tmdb_season_number,
+    } for episode in season.episode_set.order_by('tmdb_episode_number').all()]
 
+    cast_names = [season_person.person.name for season_person in season.seasonperson_set.select_related('person')
+                  .filter(role=SeasonPerson.ROLE_ACTOR).order_by('sort_order')]
+    director_names = [season_person.person.name for season_person in season.seasonperson_set.select_related('person')
+                      .filter(role=SeasonPerson.ROLE_DIRECTOR).order_by('sort_order')]
 
-def parse_season(tmdb_season, schema):
-    new_season = {
-        'id': tmdb_season.get('id'),
-        'name': tmdb_season.get('name'),
-        'overview': tmdb_season.get('overview'),
-        'poster_path': get_proxy_url(schema, TMDB_POSTER_PATH_PREFIX, tmdb_season.get('poster_path')),
-        'air_date': '.'.join(reversed(tmdb_season['air_date'].split('-')))
-        if tmdb_season.get('air_date') is not None else None,
-        'season_number': tmdb_season.get('season_number'),
-        'show': tmdb_season.get('show'),
-        'episodes': tmdb_season.get('episodes')
+    return {
+        'id': season.tmdb_id,
+        'name': season.tmdb_name,
+        'overview': season.tmdb_overview,
+        'poster_path': get_proxy_url(request.scheme, season.tmdb_poster_path),
+        'air_date': format_date(season.tmdb_air_date),
+        'season_number': season.tmdb_season_number,
+        'show': ShowSerializer(season.tmdb_show, context={'request': request}).data,
+        'episodes': episodes,
+        'cast': ', '.join(cast_names),
+        'directors': ', '.join(director_names),
     }
 
-    return new_season
+
+def enqueue_season_refresh(show_tmdb_id, season_number):
+    try:
+        refresh_season_details.delay(show_tmdb_id, season_number)
+    except Exception:
+        pass
+
+
+def format_date(value):
+    if value is None:
+        return None
+    if isinstance(value, str):
+        parts = value.split('-')
+        if len(parts) == 3:
+            return '.'.join(reversed(parts))
+        return value
+    return value.strftime('%d.%m.%Y')

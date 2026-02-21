@@ -216,7 +216,18 @@ class ShowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Show
-        fields = '__all__'
+        fields = (
+            'imdb_id',
+            'tmdb_id',
+            'tmdb_original_name',
+            'tmdb_name',
+            'tmdb_episode_runtime',
+            'tmdb_backdrop_path',
+            'tmdb_poster_path',
+            'tmdb_release_date',
+            'tmdb_status',
+            'tmdb_number_of_episodes',
+        )
 
 
 class TypedShowSerializer(ShowSerializer):
@@ -230,7 +241,12 @@ class TypedShowSerializer(ShowSerializer):
 class SeasonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Season
-        fields = '__all__'
+        fields = (
+            'tmdb_id',
+            'tmdb_season_number',
+            'tmdb_name',
+            'tmdb_show',
+        )
 
 
 class EpisodeShowSerializer(serializers.ModelSerializer):
@@ -246,10 +262,24 @@ class EpisodeShowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Episode
-        exclude = ('tmdb_season',)
+        fields = (
+            'tmdb_id',
+            'tmdb_episode_number',
+            'tmdb_name',
+            'tmdb_release_date',
+            'tmdb_runtime',
+            'tmdb_show',
+            'tmdb_season_number',
+        )
 
 
 class EpisodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Episode
-        exclude = ('tmdb_season',)
+        fields = (
+            'tmdb_id',
+            'tmdb_episode_number',
+            'tmdb_name',
+            'tmdb_release_date',
+            'tmdb_runtime',
+        )
