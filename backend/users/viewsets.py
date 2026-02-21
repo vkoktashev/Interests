@@ -269,6 +269,15 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             .exclude(status=UserShow.STATUS_NOT_WATCHED) \
             .filter(user=user) \
             .order_by('-updated_at') \
+            .annotate(watched_episodes_count=Coalesce(
+                Count(
+                    'show__season__episode__userepisode__id',
+                    filter=Q(show__season__episode__userepisode__user=user) &
+                           ~Q(show__season__episode__userepisode__score=-1),
+                    distinct=True,
+                ),
+                0,
+            )) \
             .annotate(watched_episodes_time=
                       Coalesce(Sum(Case(When(show__season__episode__tmdb_runtime=0, then='show__tmdb_episode_runtime'),
                                         default='show__season__episode__tmdb_runtime'),

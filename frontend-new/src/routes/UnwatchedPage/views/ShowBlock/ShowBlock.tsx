@@ -6,6 +6,7 @@ import {FaChevronDown} from 'react-icons/fa';
 import EpisodeRow from '../EpisodeRow';
 import {ROUTE_SHOW} from '../../../index';
 import {ISetEpisodesPayload, IUnwatchedShow} from '../types';
+import pluralizeRu from '../pluralizeRu';
 import './show-block.scss';
 
 function getSeasonStorageKey(showId: number, seasonNumber: number): string {
@@ -108,8 +109,12 @@ function ShowBlock({
 					<h3 className={bem.element('name')}>{show.tmdb_name}</h3>
 				</Link>
 				<div className={bem.element('meta')}>
-					<span>{show.seasons?.length || 0} сезонов</span>
-					<span>{totalEpisodes} серий</span>
+					<span>
+						{show.seasons?.length || 0} {pluralizeRu(show.seasons?.length || 0, 'сезон', 'сезона', 'сезонов')}
+					</span>
+					<span>
+						{totalEpisodes} {pluralizeRu(totalEpisodes, 'серия', 'серии', 'серий')}
+					</span>
 				</div>
 			</div>
 
@@ -128,7 +133,9 @@ function ShowBlock({
 							<summary className={bem.element('season-summary')}>
 								<div className={bem.element('season-summary-left')}>
 									<span className={bem.element('season-name')}>{season.tmdb_name}</span>
-									<span className={bem.element('season-count')}>{season.episodes?.length || 0} серий</span>
+									<span className={bem.element('season-count')}>
+										{season.episodes?.length || 0} {pluralizeRu(season.episodes?.length || 0, 'серия', 'серии', 'серий')}
+									</span>
 								</div>
 								<div className={bem.element('season-toggle')}>
 									<span className={bem.element('season-toggle-text')}>
