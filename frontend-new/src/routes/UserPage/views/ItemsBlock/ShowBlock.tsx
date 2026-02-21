@@ -6,6 +6,9 @@ function ShowBlock({ shows }) {
 		<ItemBlock
 			formId='showsBlock'
 			items={shows?.map((show) => {
+				const watchedEpisodes = Number(show.watched_episodes_count || 0);
+				const totalEpisodes = Number(show.show.tmdb_number_of_episodes || 0);
+
 				return {
 					key: String(show.show.tmdb_id),
 					link: window.location.origin + "/show/" + show.show.tmdb_id,
@@ -15,6 +18,7 @@ function ShowBlock({ shows }) {
 					review: show.review,
 					poster: show.show.tmdb_backdrop_path,
 					spent_time: show.spent_time,
+					progress: `${watchedEpisodes}/${totalEpisodes > 0 ? totalEpisodes : '?'}`,
 				};
 			})}
 			statuses={[
@@ -28,6 +32,7 @@ function ShowBlock({ shows }) {
 				{ label: "Название", key: "name" },
 				{ label: "Статус", key: "status" },
 				{ label: "Оценка", key: "score" },
+				{ label: "Прогресс", key: "progress" },
 				{ label: "Отзыв", key: "review" },
 				{ label: "Время просмотра", key: "spent_time" },
 				{ label: "Картинка", key: "poster" },

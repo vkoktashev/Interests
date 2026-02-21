@@ -73,9 +73,9 @@
         line-height: 1.2;
         text-decoration: none;
         display: inline-block;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
 
         &:hover,
         &:focus-visible {

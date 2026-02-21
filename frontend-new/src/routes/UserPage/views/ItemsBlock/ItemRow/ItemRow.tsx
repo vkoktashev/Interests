@@ -15,6 +15,7 @@ interface IItemRowData {
 	status?: string;
 	score?: number;
 	spent_time?: number;
+	progress?: string;
 	review?: string;
 }
 
@@ -50,6 +51,7 @@ function formatSpentTime(value?: number): string {
 function ItemRow({data, fields}: IItemRowProps) {
 	const hasReview = Boolean(data.review && String(data.review).trim());
 	const hasSpentTime = fields.some(field => field.key === 'spent_time');
+	const hasProgress = fields.some(field => field.key === 'progress');
 	const itemName = data.name || 'Без названия';
 	const itemLink = data.link || '#';
 	const hasPoster = Boolean(data.poster);
@@ -95,6 +97,13 @@ function ItemRow({data, fields}: IItemRowProps) {
 									{formatSpentTime(data.spent_time)}
 									<FaClock className='item-row__value-icon' />
 								</span>
+							</div>
+						)}
+
+						{hasProgress && (
+							<div className='item-row__meta-item item-row__meta-item_progress'>
+								<span className='item-row__meta-label'>Прогресс</span>
+								<span className='item-row__value'>{data.progress || '-'}</span>
 							</div>
 						)}
 					</div>

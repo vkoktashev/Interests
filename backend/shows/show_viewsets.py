@@ -390,7 +390,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             show_found = False
             for element in shows_info:
-                if show.id == element['id']:
+                if show.tmdb_id == element['tmdb_id']:
                     show_found = True
                     show_index = shows_info.index(element)
                     break
@@ -399,10 +399,11 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 show_data = ShowSerializer(show, context={'request': request}).data
                 show_data.update({'seasons': []})
                 shows_info.append(show_data)
+                show_index = len(shows_info) - 1
 
             season_found = False
             for element in shows_info[show_index]['seasons']:
-                if season.id == element['id']:
+                if season.tmdb_id == element['tmdb_id']:
                     season_found = True
                     season_index = shows_info[show_index]['seasons'].index(element)
                     break
@@ -411,6 +412,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 season_data = SeasonSerializer(season).data
                 season_data.update({'episodes': []})
                 shows_info[show_index]['seasons'].append(season_data)
+                season_index = len(shows_info[show_index]['seasons']) - 1
 
             show_episodes = shows_info[show_index]['seasons'][season_index]['episodes']
             show_episodes.append(EpisodeSerializer(episode).data)

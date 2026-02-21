@@ -9,6 +9,7 @@ import {showNotification} from '@steroidsjs/core/actions/notifications';
 
 import ShowBlock from './views/ShowBlock';
 import {ISetEpisodesPayload, IUnwatchedShow} from './views/types';
+import pluralizeRu from './views/pluralizeRu';
 import './unwatched-page.scss';
 
 const FORM_ID = 'unwatchedEpisodesForm';
@@ -99,15 +100,21 @@ function UnwatchedPage() {
 					<div className={bem.element('stats')}>
 						<div className={bem.element('stat')}>
 							<span className={bem.element('stat-value')}>{stats.shows}</span>
-							<span className={bem.element('stat-label')}>сериалов</span>
+							<span className={bem.element('stat-label')}>
+								{pluralizeRu(stats.shows, 'сериал', 'сериала', 'сериалов')}
+							</span>
 						</div>
 						<div className={bem.element('stat')}>
 							<span className={bem.element('stat-value')}>{stats.seasons}</span>
-							<span className={bem.element('stat-label')}>сезонов</span>
+							<span className={bem.element('stat-label')}>
+								{pluralizeRu(stats.seasons, 'сезон', 'сезона', 'сезонов')}
+							</span>
 						</div>
 						<div className={bem.element('stat')}>
 							<span className={bem.element('stat-value')}>{stats.episodes}</span>
-							<span className={bem.element('stat-label')}>серий</span>
+							<span className={bem.element('stat-label')}>
+								{pluralizeRu(stats.episodes, 'серия', 'серии', 'серий')}
+							</span>
 						</div>
 					</div>
 				</section>
@@ -134,7 +141,7 @@ function UnwatchedPage() {
 
 				<div className={bem.element('save-episodes-block', {hidden: !hasCheckedEpisodes})}>
 					<div className={bem.element('save-info')}>
-						Отмечено серий: {checkedCount}
+						Отмечено: {checkedCount} {pluralizeRu(checkedCount, 'серия', 'серии', 'серий')}
 					</div>
 					<Button
 						className={bem.element('save-episodes-button')}

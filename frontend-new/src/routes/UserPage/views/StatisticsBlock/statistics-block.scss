@@ -28,6 +28,12 @@
         height: 280px;
     }
 
+    &__overview-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
     &__sections {
         display: flex;
         flex-direction: column;
@@ -89,6 +95,233 @@
         }
     }
 
+    &__panel-card {
+        background-color: rgba(4, 4, 5, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 10px;
+        padding: 10px;
+    }
+
+    &__extra-sections {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    &__top-personalities {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    &__personalities {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    &__person-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 7px 9px;
+    }
+
+    &__person-main {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    &__person-name {
+        color: $newText3;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &__person-count {
+        color: $newText3;
+        font-size: 0.88rem;
+        font-weight: 600;
+        min-width: 24px;
+        text-align: right;
+    }
+
+    &__status-funnel-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    &__funnel-pie-card {
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 8px;
+    }
+
+    &__funnel-pie-title {
+        margin: 0 0 6px;
+        color: $newText2;
+        font-size: 0.82rem;
+        font-weight: 500;
+        text-align: center;
+    }
+
+    &__funnel-pie {
+        height: 240px;
+    }
+
+    &__scores {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    &__scores-overall {
+        color: $newText3;
+        font-size: 0.9rem;
+    }
+
+    &__scores-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    &__scores-metric {
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 8px;
+        color: $newText2;
+        font-size: 0.82rem;
+    }
+
+    &__score-distribution-chart {
+        height: 320px;
+    }
+
+    &__backlog {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    &__backlog-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    &__backlog-metric {
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    &__backlog-metric-label {
+        color: $newText2;
+        font-size: 0.74rem;
+    }
+
+    &__backlog-metric-value {
+        color: $newText3;
+        font-size: 0.92rem;
+        font-weight: 600;
+    }
+
+    &__backlog-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    &__backlog-card {
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 8px;
+    }
+
+    &__backlog-card-title {
+        margin: 0 0 8px;
+        color: $newText2;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    &__backlog-counts-chart {
+        height: 180px;
+    }
+
+    &__backlog-age-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    &__backlog-age-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        color: $newText2;
+        font-size: 0.82rem;
+
+        strong {
+            color: $newText3;
+            font-weight: 600;
+        }
+    }
+
+    &__activity {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    &__activity-metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    &__activity-metric {
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 7px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    &__activity-metric-label {
+        color: $newText2;
+        font-size: 0.74rem;
+    }
+
+    &__activity-metric-value {
+        color: $newText3;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    &__activity-heatmap {
+        height: 240px;
+    }
+
     &__chart-title {
         margin: 0 0 8px;
         color: $newText2;
@@ -134,8 +367,36 @@
             height: 250px;
         }
 
+        &__overview-grid {
+            grid-template-columns: 1fr;
+        }
+
         &__charts {
             grid-template-columns: 1fr;
+        }
+
+        &__top-personalities {
+            grid-template-columns: 1fr;
+        }
+
+        &__status-funnel-grid {
+            grid-template-columns: 1fr;
+        }
+
+        &__scores-metrics {
+            grid-template-columns: 1fr;
+        }
+
+        &__backlog-metrics {
+            grid-template-columns: 1fr;
+        }
+
+        &__backlog-grid {
+            grid-template-columns: 1fr;
+        }
+
+        &__activity-metrics {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 

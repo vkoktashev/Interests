@@ -1,11 +1,14 @@
 import collections
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from itertools import chain
+from typing import Optional
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.core.paginator import Paginator
 from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, QuerySet, Case, When
 from django.db.models.functions import ExtractYear, Coalesce
+from django.utils import timezone
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -15,9 +18,9 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from games.models import UserGame, GameLog, Game
 from games.serializers import GameStatsSerializer, GameLogSerializer, GameSerializer, TypedGameSerializer
-from movies.models import UserMovie, MovieLog, Movie
+from movies.models import UserMovie, MovieLog, Movie, MoviePerson
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer, MovieSerializer, TypedMovieSerializer
-from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, Show, Episode
+from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, Show, Episode, ShowPerson
 from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogSerializer, EpisodeLogSerializer, \
     EpisodeShowSerializer, TypedShowSerializer
 from users.serializers import UserFollowSerializer, UserLogSerializer, \
@@ -29,6 +32,16 @@ from utils.functions import get_page_size
 from utils.models import Round
 from .functions import is_user_available
 from .models import User, UserFollow, UserLog
+
+
+def resolve_user_timezone(tz_name: Optional[str]):
+    if not tz_name:
+        return timezone.get_current_timezone()
+
+    try:
+        return ZoneInfo(tz_name)
+    except ZoneInfoNotFoundError:
+        return timezone.get_current_timezone()
 
 
 class MyTokenRefreshView(TokenRefreshView):
@@ -238,16 +251,12 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         if not is_available:
             return Response({'username': user.username, 'is_available': is_available})
 
-        stats = {}
-
         user_games = UserGame.objects.select_related('game') \
             .exclude(status=UserGame.STATUS_NOT_PLAYED) \
             .filter(user=user) \
             .order_by('-updated_at')
         serializer = GameStatsSerializer(user_games, many=True)
         games = serializer.data
-
-        stats.update(calculate_games_stats(user_games, user))
 
         user_movies = UserMovie.objects.select_related('movie') \
             .exclude(status=UserMovie.STATUS_NOT_WATCHED) \
@@ -256,12 +265,19 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         serializer = MovieStatsSerializer(user_movies, many=True, context={'request': request})
         movies = serializer.data
 
-        stats.update(calculate_movies_stats(user))
-
         user_shows = UserShow.objects.select_related('show') \
             .exclude(status=UserShow.STATUS_NOT_WATCHED) \
             .filter(user=user) \
             .order_by('-updated_at') \
+            .annotate(watched_episodes_count=Coalesce(
+                Count(
+                    'show__season__episode__userepisode__id',
+                    filter=Q(show__season__episode__userepisode__user=user) &
+                           ~Q(show__season__episode__userepisode__score=-1),
+                    distinct=True,
+                ),
+                0,
+            )) \
             .annotate(watched_episodes_time=
                       Coalesce(Sum(Case(When(show__season__episode__tmdb_runtime=0, then='show__tmdb_episode_runtime'),
                                         default='show__season__episode__tmdb_runtime'),
@@ -273,8 +289,6 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         serializer = ShowStatsSerializer(user_shows, many=True, context={'request': request})
         shows = serializer.data
 
-        stats.update(calculate_shows_stats(user))
-
         # followed_users
         followed_users = User.objects.filter(
             id__in=UserFollow.objects.filter(user=user, is_following=True).values('followed_user')) \
@@ -282,12 +296,39 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         response_data = {'is_available': is_available, 'is_followed': user_is_followed,
                          'followed_users': followed_users,
-                         'games': games, 'movies': movies, 'shows': shows, 'stats': stats}
+                         'games': games, 'movies': movies, 'shows': shows}
 
         serializer = UserInfoSerializer(user)
         response_data.update(serializer.data)
 
         return Response(response_data)
+
+    @action(detail=True, methods=['get'])
+    def stats(self, request, **kwargs):
+        try:
+            user = get_user_by_id(kwargs.get('pk'), request.user)
+        except ValueError:
+            return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+
+        if not is_user_available(request.user, user):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        user_timezone = resolve_user_timezone(request.query_params.get('tz'))
+        stats = {}
+        user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).filter(user=user)
+        stats.update(calculate_games_stats(user_games, user))
+        stats.update(calculate_movies_stats(user))
+        stats.update(calculate_shows_stats(user))
+        stats.update(calculate_top_personality_points(user))
+        stats.update(calculate_status_funnel(user))
+        stats.update(calculate_scores_stats(user))
+        stats.update(calculate_backlog_metrics(user))
+        stats.update(calculate_time_distribution_last_year(user))
+        stats.update(calculate_activity_stats(user, user_timezone))
+
+        return Response(stats, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['put'])
     def follow(self, request, **kwargs):
@@ -509,6 +550,275 @@ def calculate_shows_stats(user: User) -> dict:
         'years': watched_shows_by_years
     }}
     return result
+
+
+def calculate_top_personality_points(user: User) -> dict:
+    actors_points = collections.defaultdict(int)
+    directors_points = collections.defaultdict(int)
+
+    movies_persons = MoviePerson.objects \
+        .filter(movie__usermovie__user=user,
+                movie__usermovie__status__in=[UserMovie.STATUS_WATCHED, UserMovie.STATUS_STOPPED],
+                movie__usermovie__score__gt=0) \
+        .values('person__name', 'role') \
+        .annotate(points=Sum('movie__usermovie__score'))
+
+    shows_persons = ShowPerson.objects \
+        .filter(show__usershow__user=user,
+                show__usershow__score__gt=0) \
+        .exclude(show__usershow__status__in=[UserShow.STATUS_NOT_WATCHED, UserShow.STATUS_GOING]) \
+        .values('person__name', 'role') \
+        .annotate(points=Sum('show__usershow__score'))
+
+    for item in chain(movies_persons, shows_persons):
+        name = item.get('person__name')
+        role = item.get('role')
+        points = int(item.get('points') or 0)
+        if not name:
+            continue
+
+        if role == MoviePerson.ROLE_ACTOR:
+            actors_points[name] += points
+        elif role == MoviePerson.ROLE_DIRECTOR:
+            directors_points[name] += points
+
+    top_actors = [{'name': name, 'points': points} for name, points in actors_points.items()]
+    top_actors.sort(key=lambda entry: (-entry['points'], entry['name']))
+    top_actors = top_actors[:10]
+
+    top_directors = [{'name': name, 'points': points} for name, points in directors_points.items()]
+    top_directors.sort(key=lambda entry: (-entry['points'], entry['name']))
+    top_directors = top_directors[:10]
+
+    return {'top_actors': top_actors, 'top_directors': top_directors}
+
+
+def calculate_status_funnel(user: User) -> dict:
+    games = UserGame.objects.filter(user=user)
+    movies = UserMovie.objects.filter(user=user)
+    shows = UserShow.objects.filter(user=user)
+
+    return {
+        'status_funnel': {
+            'games': {
+                'planned': games.filter(status=UserGame.STATUS_GOING).count(),
+                'in_progress': games.filter(status=UserGame.STATUS_PLAYING).count(),
+                'completed': games.filter(status=UserGame.STATUS_COMPLETED).count(),
+                'dropped': games.filter(status=UserGame.STATUS_STOPPED).count(),
+            },
+            'movies': {
+                'planned': movies.filter(status=UserMovie.STATUS_GOING).count(),
+                'in_progress': 0,
+                'completed': movies.filter(status=UserMovie.STATUS_WATCHED).count(),
+                'dropped': movies.filter(status=UserMovie.STATUS_STOPPED).count(),
+            },
+            'shows': {
+                'planned': shows.filter(status=UserShow.STATUS_GOING).count(),
+                'in_progress': shows.filter(status=UserShow.STATUS_WATCHING).count(),
+                'completed': shows.filter(status=UserShow.STATUS_WATCHED).count(),
+                'dropped': shows.filter(status=UserShow.STATUS_STOPPED).count(),
+            },
+        }
+    }
+
+
+def calculate_scores_stats(user: User) -> dict:
+    games_scores = list(UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED)
+                        .filter(user=user, score__gt=0).values_list('score', flat=True))
+    movies_scores = list(UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED)
+                         .filter(user=user, score__gt=0).values_list('score', flat=True))
+    shows_scores = list(UserShow.objects.exclude(status=UserShow.STATUS_NOT_WATCHED)
+                        .filter(user=user, score__gt=0).values_list('score', flat=True))
+
+    overall_scores = games_scores + movies_scores + shows_scores
+
+    def to_average(scores):
+        if not scores:
+            return 0
+        return round(sum(scores) / len(scores), 1)
+
+    def to_distribution(scores):
+        score_counter = collections.Counter(scores)
+        return [{'score': score, 'count': score_counter.get(score, 0)} for score in range(1, 11)]
+
+    return {
+        'scores': {
+            'overall_average': to_average(overall_scores),
+            'games': {
+                'average': to_average(games_scores),
+                'distribution': to_distribution(games_scores),
+            },
+            'movies': {
+                'average': to_average(movies_scores),
+                'distribution': to_distribution(movies_scores),
+            },
+            'shows': {
+                'average': to_average(shows_scores),
+                'distribution': to_distribution(shows_scores),
+            },
+        }
+    }
+
+
+def calculate_backlog_metrics(user: User) -> dict:
+    now = timezone.now()
+
+    planned_games = UserGame.objects.filter(user=user, status=UserGame.STATUS_GOING)
+    planned_movies = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_GOING)
+    planned_shows = UserShow.objects.filter(user=user, status=UserShow.STATUS_GOING)
+
+    def average_age_days(values):
+        datetimes = [item for item in values if item is not None]
+        if not datetimes:
+            return 0
+        age_seconds = sum((now - dt).total_seconds() for dt in datetimes)
+        return round(age_seconds / len(datetimes) / 86400, 1)
+
+    games_updated = list(planned_games.values_list('updated_at', flat=True))
+    movies_updated = list(planned_movies.values_list('updated_at', flat=True))
+    shows_updated = list(planned_shows.values_list('updated_at', flat=True))
+    all_updated = games_updated + movies_updated + shows_updated
+
+    movies_minutes = planned_movies.aggregate(total=Sum('movie__tmdb_runtime')).get('total') or 0
+
+    shows_minutes = 0
+    for show in planned_shows.values('show__tmdb_number_of_episodes', 'show__tmdb_episode_runtime'):
+        episodes_count = int(show.get('show__tmdb_number_of_episodes') or 0)
+        episode_runtime = int(show.get('show__tmdb_episode_runtime') or 0)
+        shows_minutes += max(0, episodes_count) * max(0, episode_runtime)
+
+    movies_hours = round(movies_minutes / MINUTES_IN_HOUR, 1)
+    shows_hours = round(shows_minutes / MINUTES_IN_HOUR, 1)
+
+    counts = {
+        'games': planned_games.count(),
+        'movies': planned_movies.count(),
+        'shows': planned_shows.count(),
+    }
+
+    return {
+        'backlog': {
+            'counts': {
+                **counts,
+                'total': counts['games'] + counts['movies'] + counts['shows'],
+            },
+            'average_age_days': {
+                'games': average_age_days(games_updated),
+                'movies': average_age_days(movies_updated),
+                'shows': average_age_days(shows_updated),
+                'overall': average_age_days(all_updated),
+            },
+            'estimated_hours_to_close': {
+                'movies': movies_hours,
+                'shows': shows_hours,
+                'total': round(movies_hours + shows_hours, 1),
+            },
+        }
+    }
+
+
+def calculate_time_distribution_last_year(user: User) -> dict:
+    cutoff = timezone.now() - timedelta(days=365)
+
+    games_time = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED) \
+        .filter(user=user, updated_at__gte=cutoff) \
+        .aggregate(total_spent_time=Sum('spent_time'))['total_spent_time'] or 0
+
+    movies_minutes = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_WATCHED, updated_at__gte=cutoff) \
+        .aggregate(total_time_spent=Sum('movie__tmdb_runtime')) \
+        .get('total_time_spent') or 0
+
+    watched_episode_ids_last_year = EpisodeLog.objects \
+        .filter(user=user, action_type=EpisodeLog.ACTION_TYPE_SCORE, created__gte=cutoff) \
+        .exclude(action_result='-1') \
+        .values_list('episode_id', flat=True) \
+        .distinct()
+
+    episodes_minutes = UserEpisode.objects.exclude(score=-1) \
+        .filter(user=user, episode_id__in=watched_episode_ids_last_year) \
+        .aggregate(total_spent_time=Sum(
+        Case(When(episode__tmdb_runtime=0, then='episode__tmdb_season__tmdb_show__tmdb_episode_runtime'),
+             default='episode__tmdb_runtime')))['total_spent_time'] or 0
+
+    return {
+        'time_distribution_last_year': {
+            'games': float(games_time),
+            'movies': round(movies_minutes / MINUTES_IN_HOUR, 1),
+            'episodes': round(episodes_minutes / MINUTES_IN_HOUR, 1),
+        }
+    }
+
+
+def calculate_activity_stats(user: User, user_timezone=None) -> dict:
+    effective_timezone = user_timezone or timezone.get_current_timezone()
+    heatmap = [[0 for _ in range(24)] for _ in range(7)]
+    active_dates = set()
+    total_events = 0
+    active_minutes_by_cell = collections.defaultdict(set)
+
+    log_datetimes = chain(
+        GameLog.objects.filter(user=user).values_list('created', flat=True),
+        MovieLog.objects.filter(user=user).values_list('created', flat=True),
+        ShowLog.objects.filter(user=user).values_list('created', flat=True),
+        SeasonLog.objects.filter(user=user).values_list('created', flat=True),
+        EpisodeLog.objects.filter(user=user).values_list('created', flat=True),
+        UserLog.objects.filter(user=user).values_list('created', flat=True),
+    )
+
+    for dt in log_datetimes:
+        if dt is None:
+            continue
+        local_dt = timezone.localtime(dt, timezone=effective_timezone)
+        day_index = local_dt.weekday()  # Monday=0 ... Sunday=6
+        hour_index = local_dt.hour
+        active_minutes_by_cell[(day_index, hour_index)].add(local_dt.minute)
+        active_dates.add(local_dt.date())
+        total_events += 1
+
+    for day_index in range(7):
+        for hour_index in range(24):
+            # Burst protection: count unique active minutes, not raw event count.
+            heatmap[day_index][hour_index] = len(active_minutes_by_cell[(day_index, hour_index)])
+
+    sorted_dates = sorted(active_dates)
+    longest_streak = 0
+    previous_date = None
+    current_chain = 0
+    for current_date in sorted_dates:
+        if previous_date is not None and (current_date - previous_date).days == 1:
+            current_chain += 1
+        else:
+            current_chain = 1
+        longest_streak = max(longest_streak, current_chain)
+        previous_date = current_date
+
+    current_streak = 0
+    day_cursor = timezone.localdate(timezone=effective_timezone)
+    while day_cursor in active_dates:
+        current_streak += 1
+        day_cursor -= timedelta(days=1)
+
+    days = [
+        {'key': 'mon', 'label': 'Пн', 'hours': heatmap[0]},
+        {'key': 'tue', 'label': 'Вт', 'hours': heatmap[1]},
+        {'key': 'wed', 'label': 'Ср', 'hours': heatmap[2]},
+        {'key': 'thu', 'label': 'Чт', 'hours': heatmap[3]},
+        {'key': 'fri', 'label': 'Пт', 'hours': heatmap[4]},
+        {'key': 'sat', 'label': 'Сб', 'hours': heatmap[5]},
+        {'key': 'sun', 'label': 'Вс', 'hours': heatmap[6]},
+    ]
+
+    return {
+        'activity': {
+            'days': days,
+            'total_events': total_events,
+            'active_days': len(active_dates),
+            'streak': {
+                'current': current_streak,
+                'longest': longest_streak,
+            },
+        }
+    }
 
 
 def serialize_logs(logs):
