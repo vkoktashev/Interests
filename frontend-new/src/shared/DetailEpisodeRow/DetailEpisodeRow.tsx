@@ -26,10 +26,22 @@ function DetailEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, use
 		if (!date) {
 			return 'TBA';
 		}
-		let newDate = new Date(date).toLocaleDateString("ru-RU");
-		if (newDate !== "Invalid Date") {
-			return newDate;
+
+		// Backend can return both "yyyy-mm-dd" and already formatted "dd.mm.yyyy".
+		if (typeof date === 'string') {
+			if (/^\d{2}\.\d{2}\.\d{4}$/.test(date)) {
+				return date;
+			}
+			if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+				return date.split('-').reverse().join('.');
+			}
 		}
+
+		const parsedDate = new Date(date);
+		if (!Number.isNaN(parsedDate.getTime())) {
+			return parsedDate.toLocaleDateString("ru-RU");
+		}
+
 		return 'TBA';
 	}
 
