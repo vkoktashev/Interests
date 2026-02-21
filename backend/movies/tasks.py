@@ -2,7 +2,7 @@ from datetime import datetime
 
 from celery.schedules import crontab
 from django.db.models import Q
-from requests import HTTPError, ConnectionError
+from requests import HTTPError, ConnectionError, Timeout
 
 from config.celery import app
 from movies.functions import get_movie_new_fields, get_tmdb_movie, get_cast_crew, get_tmdb_movie_videos, \
@@ -42,7 +42,7 @@ def update_movie_details(tmdb_id, movie_obj=None):
         tmdb_movie = get_tmdb_movie(tmdb_id)
         tmdb_cast_crew = get_cast_crew(tmdb_id)
         tmdb_movie_videos = get_tmdb_movie_videos(tmdb_id)
-    except (HTTPError, ConnectionError):
+    except (HTTPError, ConnectionError, Timeout):
         return
 
     new_fields = get_movie_new_fields(tmdb_movie, tmdb_movie_videos)
