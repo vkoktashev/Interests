@@ -46,12 +46,18 @@ def get_tmdb_movie(tmdb_id):
     key = get_tmdb_movie_key(tmdb_id)
     tmdb_movie = cache.get(key, None)
     if tmdb_movie is None:
-        tmdb_movie = tmdb.Movies(tmdb_id).info(language=LANGUAGE)
+        tmdb_movie = tmdb.Movies(tmdb_id).info(language=LANGUAGE, append_to_response='videos,credits')
         cache.set(key, tmdb_movie, CACHE_TIMEOUT)
     return tmdb_movie
 
 
 def get_tmdb_movie_videos(tmdb_id):
+    cached_movie = cache.get(get_tmdb_movie_key(tmdb_id), None)
+    if cached_movie is not None:
+        videos = (cached_movie.get('videos') or {}).get('results')
+        if videos is not None:
+            return videos
+
     key = f'movie_{tmdb_id}_videos'
     tmdb_movie_videos = cache.get(key, None)
     if tmdb_movie_videos is None:
@@ -61,6 +67,10 @@ def get_tmdb_movie_videos(tmdb_id):
 
 
 def get_cast_crew(tmdb_id):
+    cached_movie = cache.get(get_tmdb_movie_key(tmdb_id), None)
+    if cached_movie is not None and cached_movie.get('credits') is not None:
+        return cached_movie.get('credits')
+
     key = f'movie_{tmdb_id}_cast_crew'
     tmdb_cast_crew = cache.get(key, None)
     if tmdb_cast_crew is None:

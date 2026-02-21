@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.utils import timezone
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from requests import HTTPError, ConnectionError
+from requests import HTTPError, ConnectionError, Timeout
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -51,7 +51,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 if error_code == 404:
                     return Response({ERROR: MOVIE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-            except ConnectionError:
+            except (ConnectionError, Timeout):
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             new_fields = get_movie_new_fields(tmdb_movie, tmdb_movie_videos)
