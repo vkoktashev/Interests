@@ -1,5 +1,5 @@
 from json import JSONDecodeError
-from typing import List
+from typing import List, Any, Optional
 
 import rawgpy
 from adrf import mixins
@@ -282,7 +282,7 @@ async def update_game_stores(game: Game, rawg_game: dict) -> None:
     await GameStore.objects.filter(id__in=game_stores_to_delete_ids).adelete()
 
 
-def find_game_store_url(game_stores: List[rawgpy.GameStore], store_obj: Store) -> str:
+def find_game_store_url(game_stores: List[Any], store_obj: Store) -> Optional[str]:
     for game_store in game_stores:
         if store_obj.rawg_id == game_store.store_id:
             return game_store.url

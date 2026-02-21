@@ -15,9 +15,9 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from games.models import UserGame, GameLog, Game
 from games.serializers import GameStatsSerializer, GameLogSerializer, GameSerializer, TypedGameSerializer
-from movies.models import UserMovie, MovieLog, Movie
+from movies.models import UserMovie, MovieLog, Movie, MoviePerson
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer, MovieSerializer, TypedMovieSerializer
-from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, Show, Episode
+from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, Show, Episode, ShowPerson
 from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogSerializer, EpisodeLogSerializer, \
     EpisodeShowSerializer, TypedShowSerializer
 from users.serializers import UserFollowSerializer, UserLogSerializer, \
@@ -238,8 +238,6 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         if not is_available:
             return Response({'username': user.username, 'is_available': is_available})
 
-        stats = {}
-
         user_games = UserGame.objects.select_related('game') \
             .exclude(status=UserGame.STATUS_NOT_PLAYED) \
             .filter(user=user) \
@@ -247,16 +245,12 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         serializer = GameStatsSerializer(user_games, many=True)
         games = serializer.data
 
-        stats.update(calculate_games_stats(user_games, user))
-
         user_movies = UserMovie.objects.select_related('movie') \
             .exclude(status=UserMovie.STATUS_NOT_WATCHED) \
             .filter(user=user) \
             .order_by('-updated_at')
         serializer = MovieStatsSerializer(user_movies, many=True, context={'request': request})
         movies = serializer.data
-
-        stats.update(calculate_movies_stats(user))
 
         user_shows = UserShow.objects.select_related('show') \
             .exclude(status=UserShow.STATUS_NOT_WATCHED) \
@@ -273,8 +267,6 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         serializer = ShowStatsSerializer(user_shows, many=True, context={'request': request})
         shows = serializer.data
 
-        stats.update(calculate_shows_stats(user))
-
         # followed_users
         followed_users = User.objects.filter(
             id__in=UserFollow.objects.filter(user=user, is_following=True).values('followed_user')) \
@@ -282,12 +274,33 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         response_data = {'is_available': is_available, 'is_followed': user_is_followed,
                          'followed_users': followed_users,
-                         'games': games, 'movies': movies, 'shows': shows, 'stats': stats}
+                         'games': games, 'movies': movies, 'shows': shows}
 
         serializer = UserInfoSerializer(user)
         response_data.update(serializer.data)
 
         return Response(response_data)
+
+    @action(detail=True, methods=['get'])
+    def stats(self, request, **kwargs):
+        try:
+            user = get_user_by_id(kwargs.get('pk'), request.user)
+        except ValueError:
+            return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+
+        if not is_user_available(request.user, user):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        stats = {}
+        user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).filter(user=user)
+        stats.update(calculate_games_stats(user_games, user))
+        stats.update(calculate_movies_stats(user))
+        stats.update(calculate_shows_stats(user))
+        stats.update(calculate_top_personality_points(user))
+
+        return Response(stats, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['put'])
     def follow(self, request, **kwargs):
@@ -509,6 +522,47 @@ def calculate_shows_stats(user: User) -> dict:
         'years': watched_shows_by_years
     }}
     return result
+
+
+def calculate_top_personality_points(user: User) -> dict:
+    actors_points = collections.defaultdict(int)
+    directors_points = collections.defaultdict(int)
+
+    movies_persons = MoviePerson.objects \
+        .filter(movie__usermovie__user=user,
+                movie__usermovie__status__in=[UserMovie.STATUS_WATCHED, UserMovie.STATUS_STOPPED],
+                movie__usermovie__score__gt=0) \
+        .values('person__name', 'role') \
+        .annotate(points=Sum('movie__usermovie__score'))
+
+    shows_persons = ShowPerson.objects \
+        .filter(show__usershow__user=user,
+                show__usershow__score__gt=0) \
+        .exclude(show__usershow__status__in=[UserShow.STATUS_NOT_WATCHED, UserShow.STATUS_GOING]) \
+        .values('person__name', 'role') \
+        .annotate(points=Sum('show__usershow__score'))
+
+    for item in chain(movies_persons, shows_persons):
+        name = item.get('person__name')
+        role = item.get('role')
+        points = int(item.get('points') or 0)
+        if not name:
+            continue
+
+        if role == MoviePerson.ROLE_ACTOR:
+            actors_points[name] += points
+        elif role == MoviePerson.ROLE_DIRECTOR:
+            directors_points[name] += points
+
+    top_actors = [{'name': name, 'points': points} for name, points in actors_points.items()]
+    top_actors.sort(key=lambda entry: (-entry['points'], entry['name']))
+    top_actors = top_actors[:10]
+
+    top_directors = [{'name': name, 'points': points} for name, points in directors_points.items()]
+    top_directors.sort(key=lambda entry: (-entry['points'], entry['name']))
+    top_directors = top_directors[:10]
+
+    return {'top_actors': top_actors, 'top_directors': top_directors}
 
 
 def serialize_logs(logs):

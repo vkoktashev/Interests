@@ -26,6 +26,7 @@
 
     &__overview-chart {
         height: 280px;
+        margin-bottom: 10px;
     }
 
     &__sections {
@@ -89,6 +90,59 @@
         }
     }
 
+    &__top-personalities-card {
+        background-color: rgba(4, 4, 5, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 10px;
+        padding: 10px;
+    }
+
+    &__top-personalities {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    &__personalities {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    &__person-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 7px 9px;
+    }
+
+    &__person-main {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    &__person-name {
+        color: $newText3;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &__person-count {
+        color: $newText3;
+        font-size: 0.88rem;
+        font-weight: 600;
+        min-width: 24px;
+        text-align: right;
+    }
+
     &__chart-title {
         margin: 0 0 8px;
         color: $newText2;
@@ -135,6 +189,10 @@
         }
 
         &__charts {
+            grid-template-columns: 1fr;
+        }
+
+        &__top-personalities {
             grid-template-columns: 1fr;
         }
     }

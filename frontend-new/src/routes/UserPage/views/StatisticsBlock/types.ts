@@ -15,8 +15,15 @@ export interface ICategoryStats {
 	years: IYearStat[];
 }
 
+export interface IPersonalityScoreStat {
+	name: string;
+	points: number;
+}
+
 export interface IUserStats {
 	games?: ICategoryStats;
 	movies?: ICategoryStats;
 	episodes?: ICategoryStats;
+	top_actors?: IPersonalityScoreStat[];
+	top_directors?: IPersonalityScoreStat[];
 }

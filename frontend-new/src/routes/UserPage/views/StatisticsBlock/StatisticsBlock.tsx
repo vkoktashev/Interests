@@ -1,28 +1,58 @@
-import React from "react";
-import {useBem} from '@steroidsjs/core/hooks';
+import React, {useMemo} from "react";
+import {useBem, useFetch} from '@steroidsjs/core/hooks';
+import {Loader} from '@steroidsjs/core/ui/layout';
 import GenresChart from "./GenresChart/GenresChart";
 import YearsChart from "./YearsChart/YearsChart";
 import ChartBlock from "./ChartBlock/ChartBlock";
+import TopPersonalities from "./TopPersonalities/TopPersonalities";
 import "./statistics-block.scss";
 import {IUserStats} from "./types";
 
 interface IStatisticsBlockProps {
-	stats?: IUserStats;
+	userId: number;
 }
 
-function StatisticsBlock({ stats }: IStatisticsBlockProps) {
+function StatisticsBlock({ userId }: IStatisticsBlockProps) {
 	const bem = useBem('stats-block');
+	const statsFetchConfig = useMemo(() => userId && ({
+		url: `/users/user/${userId}/stats/`,
+		method: 'get',
+	}), [userId]);
+	const {data: stats, isLoading} = useFetch(statsFetchConfig as any);
+
+	if (isLoading && !stats) {
+		return <Loader />;
+	}
+
+	const safeStats = (stats || {}) as IUserStats;
+
 	const categories = [
-		{key: 'games', title: 'Игры', stats: stats?.games, countLabel: 'Сыграно'},
-		{key: 'movies', title: 'Фильмы', stats: stats?.movies, countLabel: 'Просмотрено'},
-		{key: 'episodes', title: 'Сериалы', stats: stats?.episodes, countLabel: 'Серий просмотрено'},
+		{key: 'games', title: 'Игры', stats: safeStats?.games, countLabel: 'Сыграно'},
+		{key: 'movies', title: 'Фильмы', stats: safeStats?.movies, countLabel: 'Просмотрено'},
+		{key: 'episodes', title: 'Сериалы', stats: safeStats?.episodes, countLabel: 'Серий просмотрено'},
 	];
 
 	return (
 		<div className={bem.block()}>
 			<div className={bem.element('overview')}>
 				<h3 className={bem.element('title')}>Распределение времени</h3>
-				<ChartBlock stats={stats} />
+				<ChartBlock stats={safeStats} />
+				<div className={bem.element('top-personalities')}>
+					<div className={bem.element('top-personalities-card')}>
+						<h4 className={bem.element('chart-title')}>Top актеры</h4>
+						<TopPersonalities
+							chartData={safeStats?.top_actors || []}
+							emptyLabel='Нет данных по актерам'
+						/>
+					</div>
+					<div className={bem.element('top-personalities-card')}>
+						<h4 className={bem.element('chart-title')}>Top режиссеры</h4>
+						<TopPersonalities
+							chartData={safeStats?.top_directors || []}
+							emptyLabel='Нет данных по режиссерам'
+						/>
+					</div>
+				</div>
 			</div>
 
 			<div className={bem.element('sections')}>

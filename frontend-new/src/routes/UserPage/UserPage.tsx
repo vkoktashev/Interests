@@ -7,7 +7,6 @@ import { useQueryParam, StringParam, withDefault } from "use-query-params";
 import GameBlock from './views/ItemsBlock/GameBlock';
 import FriendBlock from '../../shared/FriendBlock';
 import MovieBlock from './views/ItemsBlock/MovieBlock';
-import LogsBlock from './views/LogsBlock';
 import CategoriesTab from '../../shared/CategoriesTab';
 import ShowBlock from './views/ItemsBlock/ShowBlock';
 import StatisticsBlock from './views/StatisticsBlock';
@@ -118,7 +117,15 @@ function UserPage() {
 						)}
 						{activeCategory === "Статистика" && (
 							<div>
-								<StatisticsBlock stats={user.stats}/>
+								{!user.is_available && (
+									<h4>
+										<FaLock style={{marginRight: "1rem"}}/>
+										Профиль скрыт настройками приватности
+									</h4>
+								)}
+								<div hidden={!user.is_available}>
+									<StatisticsBlock userId={userId}/>
+								</div>
 							</div>
 						)}
 						{activeCategory === "Друзья" && (
