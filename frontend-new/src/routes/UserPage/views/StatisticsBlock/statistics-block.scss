@@ -209,6 +209,82 @@
         height: 320px;
     }
 
+    &__backlog {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    &__backlog-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    &__backlog-metric {
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    &__backlog-metric-label {
+        color: $newText2;
+        font-size: 0.74rem;
+    }
+
+    &__backlog-metric-value {
+        color: $newText3;
+        font-size: 0.92rem;
+        font-weight: 600;
+    }
+
+    &__backlog-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    &__backlog-card {
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 8px;
+    }
+
+    &__backlog-card-title {
+        margin: 0 0 8px;
+        color: $newText2;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    &__backlog-counts-chart {
+        height: 180px;
+    }
+
+    &__backlog-age-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    &__backlog-age-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        color: $newText2;
+        font-size: 0.82rem;
+
+        strong {
+            color: $newText3;
+            font-weight: 600;
+        }
+    }
+
     &__activity {
         display: flex;
         flex-direction: column;
@@ -308,6 +384,14 @@
         }
 
         &__scores-metrics {
+            grid-template-columns: 1fr;
+        }
+
+        &__backlog-metrics {
+            grid-template-columns: 1fr;
+        }
+
+        &__backlog-grid {
             grid-template-columns: 1fr;
         }
 

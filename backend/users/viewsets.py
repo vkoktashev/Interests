@@ -315,6 +315,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         stats.update(calculate_top_personality_points(user))
         stats.update(calculate_status_funnel(user))
         stats.update(calculate_scores_stats(user))
+        stats.update(calculate_backlog_metrics(user))
         stats.update(calculate_time_distribution_last_year(user))
         stats.update(calculate_activity_stats(user, user_timezone))
 
@@ -645,6 +646,63 @@ def calculate_scores_stats(user: User) -> dict:
             'shows': {
                 'average': to_average(shows_scores),
                 'distribution': to_distribution(shows_scores),
+            },
+        }
+    }
+
+
+def calculate_backlog_metrics(user: User) -> dict:
+    now = timezone.now()
+
+    planned_games = UserGame.objects.filter(user=user, status=UserGame.STATUS_GOING)
+    planned_movies = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_GOING)
+    planned_shows = UserShow.objects.filter(user=user, status=UserShow.STATUS_GOING)
+
+    def average_age_days(values):
+        datetimes = [item for item in values if item is not None]
+        if not datetimes:
+            return 0
+        age_seconds = sum((now - dt).total_seconds() for dt in datetimes)
+        return round(age_seconds / len(datetimes) / 86400, 1)
+
+    games_updated = list(planned_games.values_list('updated_at', flat=True))
+    movies_updated = list(planned_movies.values_list('updated_at', flat=True))
+    shows_updated = list(planned_shows.values_list('updated_at', flat=True))
+    all_updated = games_updated + movies_updated + shows_updated
+
+    movies_minutes = planned_movies.aggregate(total=Sum('movie__tmdb_runtime')).get('total') or 0
+
+    shows_minutes = 0
+    for show in planned_shows.values('show__tmdb_number_of_episodes', 'show__tmdb_episode_runtime'):
+        episodes_count = int(show.get('show__tmdb_number_of_episodes') or 0)
+        episode_runtime = int(show.get('show__tmdb_episode_runtime') or 0)
+        shows_minutes += max(0, episodes_count) * max(0, episode_runtime)
+
+    movies_hours = round(movies_minutes / MINUTES_IN_HOUR, 1)
+    shows_hours = round(shows_minutes / MINUTES_IN_HOUR, 1)
+
+    counts = {
+        'games': planned_games.count(),
+        'movies': planned_movies.count(),
+        'shows': planned_shows.count(),
+    }
+
+    return {
+        'backlog': {
+            'counts': {
+                **counts,
+                'total': counts['games'] + counts['movies'] + counts['shows'],
+            },
+            'average_age_days': {
+                'games': average_age_days(games_updated),
+                'movies': average_age_days(movies_updated),
+                'shows': average_age_days(shows_updated),
+                'overall': average_age_days(all_updated),
+            },
+            'estimated_hours_to_close': {
+                'movies': movies_hours,
+                'shows': shows_hours,
+                'total': round(movies_hours + shows_hours, 1),
             },
         }
     }

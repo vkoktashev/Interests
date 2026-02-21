@@ -8,6 +8,7 @@ import TopPersonalities from "./TopPersonalities/TopPersonalities";
 import StatusFunnel from "./StatusFunnel/StatusFunnel";
 import ScoreStats from "./ScoreStats/ScoreStats";
 import ActivityStats from "./ActivityStats/ActivityStats";
+import BacklogStats from "./BacklogStats/BacklogStats";
 import "./statistics-block.scss";
 import {IUserStats} from "./types";
 
@@ -51,6 +52,10 @@ function StatisticsBlock({ userId }: IStatisticsBlockProps) {
 						</h3>
 					</div>
 					<div className={bem.element('extra-sections')}>
+						<div className={bem.element('panel-card')}>
+							<h4 className={bem.element('chart-title')}>Backlog-метрики</h4>
+							<BacklogStats data={safeStats?.backlog}/>
+						</div>
 						<div className={bem.element('panel-card')}>
 							<h4 className={bem.element('chart-title')}>Активность по времени</h4>
 							<ActivityStats data={safeStats?.activity}/>

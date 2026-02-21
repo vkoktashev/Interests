@@ -72,6 +72,32 @@ export interface IActivityStats {
 	};
 }
 
+export interface IBacklogCounts {
+	games: number;
+	movies: number;
+	shows: number;
+	total: number;
+}
+
+export interface IBacklogAverageAge {
+	games: number;
+	movies: number;
+	shows: number;
+	overall: number;
+}
+
+export interface IBacklogEstimatedHours {
+	movies: number;
+	shows: number;
+	total: number;
+}
+
+export interface IBacklogStats {
+	counts: IBacklogCounts;
+	average_age_days: IBacklogAverageAge;
+	estimated_hours_to_close: IBacklogEstimatedHours;
+}
+
 export interface IUserStats {
 	games?: ICategoryStats;
 	movies?: ICategoryStats;
@@ -80,6 +106,7 @@ export interface IUserStats {
 	top_directors?: IPersonalityScoreStat[];
 	status_funnel?: IStatusFunnel;
 	scores?: IScoresStats;
+	backlog?: IBacklogStats;
 	time_distribution_last_year?: ITimeDistribution;
 	activity?: IActivityStats;
 }
