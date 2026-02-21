@@ -56,6 +56,22 @@ export interface ITimeDistribution {
 	episodes: number;
 }
 
+export interface IActivityDay {
+	key: string;
+	label: string;
+	hours: number[];
+}
+
+export interface IActivityStats {
+	days: IActivityDay[];
+	total_events: number;
+	active_days: number;
+	streak: {
+		current: number;
+		longest: number;
+	};
+}
+
 export interface IUserStats {
 	games?: ICategoryStats;
 	movies?: ICategoryStats;
@@ -65,4 +81,5 @@ export interface IUserStats {
 	status_funnel?: IStatusFunnel;
 	scores?: IScoresStats;
 	time_distribution_last_year?: ITimeDistribution;
+	activity?: IActivityStats;
 }

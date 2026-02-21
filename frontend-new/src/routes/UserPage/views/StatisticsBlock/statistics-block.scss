@@ -154,43 +154,29 @@
         text-align: right;
     }
 
-    &__funnel-grid {
+    &__status-funnel-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
     }
 
-    &__funnel-card {
+    &__funnel-pie-card {
         border: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 8px;
         background: rgba(255, 255, 255, 0.03);
         padding: 8px;
     }
 
-    &__funnel-title {
-        color: $newText3;
-        font-size: 0.86rem;
-        font-weight: 600;
-        margin-bottom: 6px;
-    }
-
-    &__funnel-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        padding: 2px 0;
-    }
-
-    &__funnel-label {
+    &__funnel-pie-title {
+        margin: 0 0 6px;
         color: $newText2;
-        font-size: 0.76rem;
+        font-size: 0.82rem;
+        font-weight: 500;
+        text-align: center;
     }
 
-    &__funnel-value {
-        color: $newText3;
-        font-size: 0.82rem;
-        font-weight: 600;
+    &__funnel-pie {
+        height: 240px;
     }
 
     &__scores {
@@ -204,69 +190,60 @@
         font-size: 0.9rem;
     }
 
-    &__scores-grid {
+    &__scores-metrics {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
     }
 
-    &__scores-category {
+    &__scores-metric {
         border: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 8px;
         background: rgba(255, 255, 255, 0.03);
         padding: 8px;
-    }
-
-    &__scores-category-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 6px;
-    }
-
-    &__scores-category-title {
         color: $newText2;
         font-size: 0.82rem;
     }
 
-    &__scores-category-average {
-        color: $newText3;
-        font-size: 0.84rem;
-        font-weight: 600;
+    &__score-distribution-chart {
+        height: 320px;
     }
 
-    &__scores-bars {
+    &__activity {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 10px;
     }
 
-    &__scores-bar-row {
+    &__activity-metrics {
         display: grid;
-        grid-template-columns: 18px 1fr 22px;
-        gap: 6px;
-        align-items: center;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
     }
 
-    &__scores-score,
-    &__scores-count {
+    &__activity-metric {
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 7px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    &__activity-metric-label {
         color: $newText2;
         font-size: 0.74rem;
     }
 
-    &__scores-track {
-        height: 8px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
-        overflow: hidden;
+    &__activity-metric-value {
+        color: $newText3;
+        font-size: 0.9rem;
+        font-weight: 600;
     }
 
-    &__scores-fill {
-        height: 100%;
-        border-radius: 999px;
-        background: $newAccent2;
-        transition: width 0.2s ease;
+    &__activity-heatmap {
+        height: 240px;
     }
 
     &__chart-title {
@@ -326,12 +303,16 @@
             grid-template-columns: 1fr;
         }
 
-        &__funnel-grid {
+        &__status-funnel-grid {
             grid-template-columns: 1fr;
         }
 
-        &__scores-grid {
+        &__scores-metrics {
             grid-template-columns: 1fr;
+        }
+
+        &__activity-metrics {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 

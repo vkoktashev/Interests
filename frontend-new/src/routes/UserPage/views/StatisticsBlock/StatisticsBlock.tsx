@@ -7,6 +7,7 @@ import ChartBlock from "./ChartBlock/ChartBlock";
 import TopPersonalities from "./TopPersonalities/TopPersonalities";
 import StatusFunnel from "./StatusFunnel/StatusFunnel";
 import ScoreStats from "./ScoreStats/ScoreStats";
+import ActivityStats from "./ActivityStats/ActivityStats";
 import "./statistics-block.scss";
 import {IUserStats} from "./types";
 
@@ -16,10 +17,11 @@ interface IStatisticsBlockProps {
 
 function StatisticsBlock({ userId }: IStatisticsBlockProps) {
 	const bem = useBem('stats-block');
+	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 	const statsFetchConfig = useMemo(() => userId && ({
-		url: `/users/user/${userId}/stats/`,
+		url: `/users/user/${userId}/stats/?tz=${encodeURIComponent(userTimezone)}`,
 		method: 'get',
-	}), [userId]);
+	}), [userId, userTimezone]);
 	const {data: stats, isLoading} = useFetch(statsFetchConfig as any);
 
 	if (isLoading && !stats) {
@@ -50,26 +52,30 @@ function StatisticsBlock({ userId }: IStatisticsBlockProps) {
 					</div>
 					<div className={bem.element('extra-sections')}>
 						<div className={bem.element('panel-card')}>
-							<h4 className={bem.element('chart-title')}>Воронка статусов</h4>
-							<StatusFunnel data={safeStats?.status_funnel} />
+							<h4 className={bem.element('chart-title')}>Активность по времени</h4>
+							<ActivityStats data={safeStats?.activity}/>
 						</div>
 						<div className={bem.element('panel-card')}>
 							<h4 className={bem.element('chart-title')}>Оценки и распределение (1-10)</h4>
-							<ScoreStats data={safeStats?.scores} />
+							<ScoreStats data={safeStats?.scores}/>
+						</div>
+						<div className={bem.element('panel-card')}>
+							<h4 className={bem.element('chart-title')}>Воронка статусов</h4>
+							<StatusFunnel data={safeStats?.status_funnel}/>
 						</div>
 						<div className={bem.element('top-personalities')}>
 							<div className={bem.element('panel-card')}>
 								<h4 className={bem.element('chart-title')}>Toп актеры</h4>
 								<TopPersonalities
 									chartData={safeStats?.top_actors || []}
-									emptyLabel='Нет данных по актерам'
+									emptyLabel="Нет данных по актерам"
 								/>
 							</div>
 							<div className={bem.element('panel-card')}>
 								<h4 className={bem.element('chart-title')}>Toп режиссеры</h4>
 								<TopPersonalities
 									chartData={safeStats?.top_directors || []}
-									emptyLabel='Нет данных по режиссерам'
+									emptyLabel="Нет данных по режиссерам"
 								/>
 							</div>
 						</div>

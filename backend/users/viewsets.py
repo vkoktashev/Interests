@@ -2,6 +2,8 @@ import collections
 import random
 from datetime import datetime, timedelta
 from itertools import chain
+from typing import Optional
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.core.paginator import Paginator
 from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, QuerySet, Case, When
@@ -30,6 +32,16 @@ from utils.functions import get_page_size
 from utils.models import Round
 from .functions import is_user_available
 from .models import User, UserFollow, UserLog
+
+
+def resolve_user_timezone(tz_name: Optional[str]):
+    if not tz_name:
+        return timezone.get_current_timezone()
+
+    try:
+        return ZoneInfo(tz_name)
+    except ZoneInfoNotFoundError:
+        return timezone.get_current_timezone()
 
 
 class MyTokenRefreshView(TokenRefreshView):
@@ -294,6 +306,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         if not is_user_available(request.user, user):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
+        user_timezone = resolve_user_timezone(request.query_params.get('tz'))
         stats = {}
         user_games = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).filter(user=user)
         stats.update(calculate_games_stats(user_games, user))
@@ -303,6 +316,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         stats.update(calculate_status_funnel(user))
         stats.update(calculate_scores_stats(user))
         stats.update(calculate_time_distribution_last_year(user))
+        stats.update(calculate_activity_stats(user, user_timezone))
 
         return Response(stats, status=status.HTTP_200_OK)
 
@@ -664,6 +678,78 @@ def calculate_time_distribution_last_year(user: User) -> dict:
             'games': float(games_time),
             'movies': round(movies_minutes / MINUTES_IN_HOUR, 1),
             'episodes': round(episodes_minutes / MINUTES_IN_HOUR, 1),
+        }
+    }
+
+
+def calculate_activity_stats(user: User, user_timezone=None) -> dict:
+    effective_timezone = user_timezone or timezone.get_current_timezone()
+    heatmap = [[0 for _ in range(24)] for _ in range(7)]
+    active_dates = set()
+    total_events = 0
+    active_minutes_by_cell = collections.defaultdict(set)
+
+    log_datetimes = chain(
+        GameLog.objects.filter(user=user).values_list('created', flat=True),
+        MovieLog.objects.filter(user=user).values_list('created', flat=True),
+        ShowLog.objects.filter(user=user).values_list('created', flat=True),
+        SeasonLog.objects.filter(user=user).values_list('created', flat=True),
+        EpisodeLog.objects.filter(user=user).values_list('created', flat=True),
+        UserLog.objects.filter(user=user).values_list('created', flat=True),
+    )
+
+    for dt in log_datetimes:
+        if dt is None:
+            continue
+        local_dt = timezone.localtime(dt, timezone=effective_timezone)
+        day_index = local_dt.weekday()  # Monday=0 ... Sunday=6
+        hour_index = local_dt.hour
+        active_minutes_by_cell[(day_index, hour_index)].add(local_dt.minute)
+        active_dates.add(local_dt.date())
+        total_events += 1
+
+    for day_index in range(7):
+        for hour_index in range(24):
+            # Burst protection: count unique active minutes, not raw event count.
+            heatmap[day_index][hour_index] = len(active_minutes_by_cell[(day_index, hour_index)])
+
+    sorted_dates = sorted(active_dates)
+    longest_streak = 0
+    previous_date = None
+    current_chain = 0
+    for current_date in sorted_dates:
+        if previous_date is not None and (current_date - previous_date).days == 1:
+            current_chain += 1
+        else:
+            current_chain = 1
+        longest_streak = max(longest_streak, current_chain)
+        previous_date = current_date
+
+    current_streak = 0
+    day_cursor = timezone.localdate(timezone=effective_timezone)
+    while day_cursor in active_dates:
+        current_streak += 1
+        day_cursor -= timedelta(days=1)
+
+    days = [
+        {'key': 'mon', 'label': 'Пн', 'hours': heatmap[0]},
+        {'key': 'tue', 'label': 'Вт', 'hours': heatmap[1]},
+        {'key': 'wed', 'label': 'Ср', 'hours': heatmap[2]},
+        {'key': 'thu', 'label': 'Чт', 'hours': heatmap[3]},
+        {'key': 'fri', 'label': 'Пт', 'hours': heatmap[4]},
+        {'key': 'sat', 'label': 'Сб', 'hours': heatmap[5]},
+        {'key': 'sun', 'label': 'Вс', 'hours': heatmap[6]},
+    ]
+
+    return {
+        'activity': {
+            'days': days,
+            'total_events': total_events,
+            'active_days': len(active_dates),
+            'streak': {
+                'current': current_streak,
+                'longest': longest_streak,
+            },
         }
     }
 
