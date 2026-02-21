@@ -299,6 +299,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         stats.update(calculate_movies_stats(user))
         stats.update(calculate_shows_stats(user))
         stats.update(calculate_top_personality_points(user))
+        stats.update(calculate_status_funnel(user))
+        stats.update(calculate_scores_stats(user))
 
         return Response(stats, status=status.HTTP_200_OK)
 
@@ -563,6 +565,73 @@ def calculate_top_personality_points(user: User) -> dict:
     top_directors = top_directors[:10]
 
     return {'top_actors': top_actors, 'top_directors': top_directors}
+
+
+def calculate_status_funnel(user: User) -> dict:
+    games = UserGame.objects.filter(user=user)
+    movies = UserMovie.objects.filter(user=user)
+    shows = UserShow.objects.filter(user=user)
+
+    return {
+        'status_funnel': {
+            'games': {
+                'planned': games.filter(status=UserGame.STATUS_GOING).count(),
+                'in_progress': games.filter(status=UserGame.STATUS_PLAYING).count(),
+                'completed': games.filter(status=UserGame.STATUS_COMPLETED).count(),
+                'dropped': games.filter(status=UserGame.STATUS_STOPPED).count(),
+            },
+            'movies': {
+                'planned': movies.filter(status=UserMovie.STATUS_GOING).count(),
+                'in_progress': 0,
+                'completed': movies.filter(status=UserMovie.STATUS_WATCHED).count(),
+                'dropped': movies.filter(status=UserMovie.STATUS_STOPPED).count(),
+            },
+            'shows': {
+                'planned': shows.filter(status=UserShow.STATUS_GOING).count(),
+                'in_progress': shows.filter(status=UserShow.STATUS_WATCHING).count(),
+                'completed': shows.filter(status=UserShow.STATUS_WATCHED).count(),
+                'dropped': shows.filter(status=UserShow.STATUS_STOPPED).count(),
+            },
+        }
+    }
+
+
+def calculate_scores_stats(user: User) -> dict:
+    games_scores = list(UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED)
+                        .filter(user=user, score__gt=0).values_list('score', flat=True))
+    movies_scores = list(UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED)
+                         .filter(user=user, score__gt=0).values_list('score', flat=True))
+    shows_scores = list(UserShow.objects.exclude(status=UserShow.STATUS_NOT_WATCHED)
+                        .filter(user=user, score__gt=0).values_list('score', flat=True))
+
+    overall_scores = games_scores + movies_scores + shows_scores
+
+    def to_average(scores):
+        if not scores:
+            return 0
+        return round(sum(scores) / len(scores), 1)
+
+    def to_distribution(scores):
+        score_counter = collections.Counter(scores)
+        return [{'score': score, 'count': score_counter.get(score, 0)} for score in range(1, 11)]
+
+    return {
+        'scores': {
+            'overall_average': to_average(overall_scores),
+            'games': {
+                'average': to_average(games_scores),
+                'distribution': to_distribution(games_scores),
+            },
+            'movies': {
+                'average': to_average(movies_scores),
+                'distribution': to_distribution(movies_scores),
+            },
+            'shows': {
+                'average': to_average(shows_scores),
+                'distribution': to_distribution(shows_scores),
+            },
+        }
+    }
 
 
 def serialize_logs(logs):

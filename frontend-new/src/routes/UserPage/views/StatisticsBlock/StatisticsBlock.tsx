@@ -5,6 +5,8 @@ import GenresChart from "./GenresChart/GenresChart";
 import YearsChart from "./YearsChart/YearsChart";
 import ChartBlock from "./ChartBlock/ChartBlock";
 import TopPersonalities from "./TopPersonalities/TopPersonalities";
+import StatusFunnel from "./StatusFunnel/StatusFunnel";
+import ScoreStats from "./ScoreStats/ScoreStats";
 import "./statistics-block.scss";
 import {IUserStats} from "./types";
 
@@ -37,25 +39,42 @@ function StatisticsBlock({ userId }: IStatisticsBlockProps) {
 			<div className={bem.element('overview')}>
 				<h3 className={bem.element('title')}>Распределение времени</h3>
 				<ChartBlock stats={safeStats} />
-				<div className={bem.element('top-personalities')}>
-					<div className={bem.element('top-personalities-card')}>
-						<h4 className={bem.element('chart-title')}>Top актеры</h4>
-						<TopPersonalities
-							chartData={safeStats?.top_actors || []}
-							emptyLabel='Нет данных по актерам'
-						/>
-					</div>
-					<div className={bem.element('top-personalities-card')}>
-						<h4 className={bem.element('chart-title')}>Top режиссеры</h4>
-						<TopPersonalities
-							chartData={safeStats?.top_directors || []}
-							emptyLabel='Нет данных по режиссерам'
-						/>
-					</div>
-				</div>
 			</div>
 
 			<div className={bem.element('sections')}>
+				<section className={bem.element('section')}>
+					<div className={bem.element('section-head')}>
+						<h3 className={bem.element('section-title')}>
+							Дополнительная статистика
+						</h3>
+					</div>
+					<div className={bem.element('extra-sections')}>
+						<div className={bem.element('panel-card')}>
+							<h4 className={bem.element('chart-title')}>Воронка статусов</h4>
+							<StatusFunnel data={safeStats?.status_funnel} />
+						</div>
+						<div className={bem.element('panel-card')}>
+							<h4 className={bem.element('chart-title')}>Оценки и распределение (1-10)</h4>
+							<ScoreStats data={safeStats?.scores} />
+						</div>
+						<div className={bem.element('top-personalities')}>
+							<div className={bem.element('panel-card')}>
+								<h4 className={bem.element('chart-title')}>Toп актеры</h4>
+								<TopPersonalities
+									chartData={safeStats?.top_actors || []}
+									emptyLabel='Нет данных по актерам'
+								/>
+							</div>
+							<div className={bem.element('panel-card')}>
+								<h4 className={bem.element('chart-title')}>Toп режиссеры</h4>
+								<TopPersonalities
+									chartData={safeStats?.top_directors || []}
+									emptyLabel='Нет данных по режиссерам'
+								/>
+							</div>
+						</div>
+					</div>
+				</section>
 				{categories
 					.filter(category => !!category.stats)
 					.map(category => (

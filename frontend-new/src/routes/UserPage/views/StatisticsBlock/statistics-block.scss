@@ -90,11 +90,17 @@
         }
     }
 
-    &__top-personalities-card {
+    &__panel-card {
         background-color: rgba(4, 4, 5, 0.45);
         border: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 10px;
         padding: 10px;
+    }
+
+    &__extra-sections {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
     }
 
     &__top-personalities {
@@ -141,6 +147,121 @@
         font-weight: 600;
         min-width: 24px;
         text-align: right;
+    }
+
+    &__funnel-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    &__funnel-card {
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 8px;
+    }
+
+    &__funnel-title {
+        color: $newText3;
+        font-size: 0.86rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    &__funnel-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 2px 0;
+    }
+
+    &__funnel-label {
+        color: $newText2;
+        font-size: 0.76rem;
+    }
+
+    &__funnel-value {
+        color: $newText3;
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+
+    &__scores {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    &__scores-overall {
+        color: $newText3;
+        font-size: 0.9rem;
+    }
+
+    &__scores-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    &__scores-category {
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 8px;
+    }
+
+    &__scores-category-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+
+    &__scores-category-title {
+        color: $newText2;
+        font-size: 0.82rem;
+    }
+
+    &__scores-category-average {
+        color: $newText3;
+        font-size: 0.84rem;
+        font-weight: 600;
+    }
+
+    &__scores-bars {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    &__scores-bar-row {
+        display: grid;
+        grid-template-columns: 18px 1fr 22px;
+        gap: 6px;
+        align-items: center;
+    }
+
+    &__scores-score,
+    &__scores-count {
+        color: $newText2;
+        font-size: 0.74rem;
+    }
+
+    &__scores-track {
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+    }
+
+    &__scores-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: $newAccent2;
+        transition: width 0.2s ease;
     }
 
     &__chart-title {
@@ -193,6 +314,14 @@
         }
 
         &__top-personalities {
+            grid-template-columns: 1fr;
+        }
+
+        &__funnel-grid {
+            grid-template-columns: 1fr;
+        }
+
+        &__scores-grid {
             grid-template-columns: 1fr;
         }
     }

@@ -20,10 +20,42 @@ export interface IPersonalityScoreStat {
 	points: number;
 }
 
+export interface IStatusFunnelCategory {
+	planned: number;
+	in_progress: number;
+	completed: number;
+	dropped: number;
+}
+
+export interface IStatusFunnel {
+	games: IStatusFunnelCategory;
+	movies: IStatusFunnelCategory;
+	shows: IStatusFunnelCategory;
+}
+
+export interface IScoreDistributionItem {
+	score: number;
+	count: number;
+}
+
+export interface IScoreCategoryStats {
+	average: number;
+	distribution: IScoreDistributionItem[];
+}
+
+export interface IScoresStats {
+	overall_average: number;
+	games: IScoreCategoryStats;
+	movies: IScoreCategoryStats;
+	shows: IScoreCategoryStats;
+}
+
 export interface IUserStats {
 	games?: ICategoryStats;
 	movies?: ICategoryStats;
 	episodes?: ICategoryStats;
 	top_actors?: IPersonalityScoreStat[];
 	top_directors?: IPersonalityScoreStat[];
+	status_funnel?: IStatusFunnel;
+	scores?: IScoresStats;
 }
