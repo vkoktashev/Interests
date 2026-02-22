@@ -14,6 +14,12 @@ class Game(models.Model):
     rawg_tba = models.BooleanField(default=False)
     rawg_backdrop_path = models.CharField(max_length=200, blank=True)
     rawg_poster_path = models.CharField(max_length=200, blank=True)
+    rawg_description = models.TextField(blank=True)
+    rawg_metacritic = models.IntegerField(null=True, blank=True)
+    rawg_developers = models.TextField(blank=True)
+    rawg_platforms = models.TextField(blank=True)
+    rawg_playtime = models.IntegerField(default=0)
+    rawg_last_update = models.DateTimeField(null=True, blank=True)
     # howlongtobeat
     hltb_name = models.CharField(max_length=200, blank=True)
     hltb_id = models.IntegerField(null=True, blank=True)
