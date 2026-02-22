@@ -25,39 +25,12 @@ export function HomePage() {
 		<div className={bem.block()}>
 			<section className={bem.element('hero')}>
 				<div className={bem.element('hero-content')}>
-					<span className={bem.element('badge')}>Interests • личная медиатека</span>
 					<h1 className={bem.element('title')}>Соберите всё, что вам интересно, в одном месте.</h1>
 					<p className={bem.element('subtitle')}>
 						Фильмы, сериалы и игры — без разрозненных заметок. Interests
 						объединяет списки, оценки, отзывы и друзей, чтобы вы видели свою
 						медиажизнь как на ладони.
 					</p>
-					<div className={bem.element('cta')}>
-						<Button
-							toRoute={ROUTE_SEARCH}
-							toRouteParams={{
-								query: 'Ведьмак',
-							}}
-							showQueryParams
-							className={bem.element('button')}
-						>
-							Начать поиск
-						</Button>
-						<Button
-							className={bem.element('button', {ghost: true})}
-							onClick={(e) => {
-								e.preventDefault();
-								if (!loggedIn) {
-									dispatch(openModal(LoginForm));
-								} else {
-									dispatch(goToRoute(ROUTE_USER, {
-										userId: user?.id,
-									}))
-								}
-							}}>
-							Открыть профиль
-						</Button>
-					</div>
 					<div className={bem.element('quick')}>
 						<div className={bem.element('quick-item')}>Персональные списки</div>
 						<div className={bem.element('quick-item')}>Умная статистика</div>
@@ -67,11 +40,6 @@ export function HomePage() {
 				<div className={bem.element('hero-art')}>
 					<NextReleaseCard loggedIn={loggedIn} />
 					<UnwatchedCard loggedIn={loggedIn} />
-					<div className={bem.element('card', {outline: true})}>
-						<p className={bem.element('card-title')}>Оценки друзей</p>
-						<p className={bem.element('card-value')}>8 отзывов</p>
-						<p className={bem.element('card-note')}>Свежие рекомендации</p>
-					</div>
 				</div>
 			</section>
 
