@@ -12,6 +12,7 @@ class Person(models.Model):
 class Developer(models.Model):
     rawg_id = models.IntegerField(unique=True)
     name = models.CharField(max_length=200)
+    is_publisher = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'people_developer'

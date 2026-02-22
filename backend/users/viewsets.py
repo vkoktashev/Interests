@@ -573,6 +573,7 @@ def calculate_top_personality_points(user: User) -> dict:
 
     games_developers = GameDeveloper.objects \
         .filter(game__usergame__user=user,
+                developer__is_publisher=False,
                 game__usergame__score__gt=0) \
         .exclude(game__usergame__status__in=[UserGame.STATUS_NOT_PLAYED, UserGame.STATUS_GOING]) \
         .values('developer__name') \
