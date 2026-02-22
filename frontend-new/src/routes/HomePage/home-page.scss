@@ -208,12 +208,174 @@
         gap: 2rem;
     }
 
+    &__trending-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1.4rem;
+        flex-wrap: wrap;
+    }
+
+    &__trending-note {
+        @include overline;
+        color: var(--hp-muted);
+        padding: 0.35rem 0.8rem;
+        border-radius: 999px;
+        border: 1px solid var(--hp-line);
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    &__trending-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+
+        & + & {
+            margin-top: 1.5rem;
+        }
+    }
+
+    &__trending-group-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+    }
+
+    &__trending-group-title {
+        @include headline6;
+        margin: 0;
+    }
+
+    &__trending-loading {
+        @include caption;
+        color: var(--hp-muted);
+    }
+
+    &__trending-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    &__trending-card {
+        display: grid;
+        grid-template-columns: 92px minmax(0, 1fr);
+        gap: 0.85rem;
+        padding: 0.85rem;
+        border-radius: 16px;
+        border: 1px solid var(--hp-line);
+        background: rgba(16, 17, 18, 0.94);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+        transition: transform 0.16s ease, border-color 0.16s ease;
+        text-decoration: none;
+
+        &:hover {
+            transform: translateY(-2px);
+            border-color: rgba(79, 93, 234, 0.42);
+        }
+    }
+
+    &__trending-card-poster {
+        width: 92px;
+        height: 128px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        flex-shrink: 0;
+    }
+
+    &__trending-card-poster-img,
+    &__trending-card-poster-fallback {
+        width: 100%;
+        height: 100%;
+    }
+
+    &__trending-card-poster-img {
+        display: block;
+        object-fit: cover;
+    }
+
+    &__trending-card-poster-fallback {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--hp-ink);
+        font-weight: 700;
+        font-size: 1.5rem;
+        background: linear-gradient(145deg, rgba(79, 93, 234, 0.22), rgba(101, 31, 255, 0.12));
+    }
+
+    &__trending-card-body {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+    }
+
+    &__trending-card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.6rem;
+    }
+
+    &__trending-card-title {
+        @include subtitle1;
+        margin: 0;
+        color: var(--hp-ink);
+        line-height: 1.25;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    &__trending-card-score {
+        @include subtitle2;
+        color: #f2c94c;
+        flex-shrink: 0;
+    }
+
+    &__trending-card-meta {
+        @include caption;
+        color: var(--hp-muted);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem 0.8rem;
+    }
+
+    &__trending-card-overview {
+        @include body2;
+        margin: 0;
+        color: var(--hp-muted);
+        line-height: 1.45;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    &__trending-empty {
+        @include body2;
+        color: var(--hp-muted);
+        padding: 1rem;
+        border-radius: 14px;
+        border: 1px dashed var(--hp-line);
+        background: rgba(255, 255, 255, 0.02);
+    }
+
     &__feature {
         background: #101112;
         border-radius: 20px;
         padding: 1.7rem;
         border: 1px solid var(--hp-line);
         box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+    }
+
+    &__feature--wide {
+        grid-column: span 2;
     }
 
     &__feature-title {
@@ -226,6 +388,14 @@
         margin: 0;
         color: var(--hp-muted);
         line-height: 1.7;
+    }
+
+    &__feature-actions {
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
     }
 
     &__steps {
@@ -347,8 +517,13 @@
         &__feature-grid,
         &__steps,
         &__status-grid,
-        &__social {
+        &__social,
+        &__trending-grid {
             grid-template-columns: 1fr;
+        }
+
+        &__feature--wide {
+            grid-column: span 1;
         }
 
         &__cta {

@@ -1,36 +1,131 @@
 @import 'style/colors';
 
 .friends-activity {
-    &__element {
-        margin: 1rem 1rem 1rem 0px;
-    }
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+		gap: 14px;
+		width: 100%;
+
+		&__element {
+				min-width: 0;
+		}
 }
 .friend-activity {
-    display: inline-flex;
-    background-color: $newBackground3;
-    color: $newText3;
-    vertical-align: top;
-    width: 400px;
-    max-width: 100%;
-    border-radius: 5px;
-    padding-bottom: 1rem;
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		background:
+			linear-gradient(180deg, rgba($newAccent2, 0.09) 0%, rgba($newAccent1, 0.03) 100%),
+			$newBackground2;
+		color: $newText3;
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		border-radius: 14px;
+		padding: 14px;
+		box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
 
-    &__user {
-        display: inline-block;
-        padding-top: 10px;
-        padding-left: 10px;
-        margin-left: 0px;
-        margin-right: 13px;
-        vertical-align: top;
-        font-weight: 400;
-    }
-    &__info {
-        display: inline-block;
-        margin-bottom: 0px;
-        margin-top: 0px;
-        padding-top: 12px;
-    }
-    &__info-text {
-        margin-bottom: 5px;
-    }
+		&__header {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				min-width: 0;
+		}
+
+		&__avatar-link {
+				display: inline-flex;
+				flex-shrink: 0;
+				text-decoration: none;
+		}
+
+		&__avatar {
+				width: 44px;
+				height: 44px;
+				border-radius: 50%;
+				object-fit: cover;
+				background-color: $newBackground3;
+				border: 1px solid rgba(255, 255, 255, 0.12);
+		}
+
+		&__header-meta {
+				min-width: 0;
+				display: flex;
+				flex-direction: column;
+				gap: 4px;
+		}
+
+		&__user {
+				margin: 0;
+				font-size: 1rem;
+				font-weight: 600;
+				line-height: 1.2;
+		}
+
+		&__user-link {
+				color: $newText3;
+				text-decoration: none;
+
+				&:hover {
+						color: lighten($newAccent2, 18%);
+				}
+		}
+
+		&__status,
+		&__meta-row {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 6px;
+				margin: 0;
+				font-size: 0.9rem;
+				line-height: 1.35;
+		}
+
+		&__label {
+				color: $newText2;
+		}
+
+		&__value {
+				color: $newText3;
+		}
+
+		&__content {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+				min-width: 0;
+		}
+
+		&__rating {
+				display: inline-flex;
+				align-items: center;
+				width: fit-content;
+				max-width: 100%;
+				padding: 6px 10px;
+				border-radius: 10px;
+				background-color: rgba(255, 255, 255, 0.04);
+				border: 1px solid rgba(255, 255, 255, 0.06);
+		}
+
+		&__review {
+				padding-top: 2px;
+		}
+
+		&__review-text {
+				margin: 0;
+				font-size: 0.92rem;
+				line-height: 1.45;
+				color: $newText3;
+				white-space: pre-wrap;
+				overflow-wrap: anywhere;
+		}
+}
+
+@media (max-width: 767px) {
+		.friends-activity {
+				grid-template-columns: 1fr;
+				gap: 10px;
+		}
+
+		.friend-activity {
+				padding: 12px;
+				border-radius: 12px;
+		}
 }
