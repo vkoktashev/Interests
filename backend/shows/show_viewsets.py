@@ -44,7 +44,14 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         tmdb_id = kwargs.get('tmdb_id')
         show = Show.objects.filter(tmdb_id=tmdb_id).first()
 
-        should_fetch_from_tmdb = show is None or show.tmdb_last_update is None
+        seasons_count_in_db = show.season_set.count() if show is not None else 0
+        expected_seasons_count = (show.tmdb_number_of_seasons or 0) if show is not None else 0
+        has_missing_seasons = (
+            show is not None and
+            expected_seasons_count > 0 and
+            seasons_count_in_db < expected_seasons_count
+        )
+        should_fetch_from_tmdb = show is None or show.tmdb_last_update is None or has_missing_seasons
 
         if should_fetch_from_tmdb:
             try:
