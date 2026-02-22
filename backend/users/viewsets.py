@@ -553,22 +553,26 @@ def calculate_shows_stats(user: User) -> dict:
 
 
 def calculate_top_personality_points(user: User) -> dict:
-    actors_points = collections.defaultdict(int)
-    directors_points = collections.defaultdict(int)
+    actors_points = {}
+    directors_points = {}
     developers_points = collections.defaultdict(int)
 
     movies_persons = MoviePerson.objects \
         .filter(movie__usermovie__user=user,
                 movie__usermovie__status__in=[UserMovie.STATUS_WATCHED, UserMovie.STATUS_STOPPED],
                 movie__usermovie__score__gt=0) \
-        .values('person__name', 'role') \
+        .values('person__tmdb_id', 'person__name', 'role') \
         .annotate(points=Sum('movie__usermovie__score'))
 
     shows_persons = ShowPerson.objects \
         .filter(show__usershow__user=user,
-                show__usershow__score__gt=0) \
-        .exclude(show__usershow__status__in=[UserShow.STATUS_NOT_WATCHED, UserShow.STATUS_GOING]) \
-        .values('person__name', 'role') \
+                show__usershow__score__gt=0,
+                show__usershow__status__in=[
+                    UserShow.STATUS_WATCHING,
+                    UserShow.STATUS_WATCHED,
+                    UserShow.STATUS_STOPPED,
+                ]) \
+        .values('person__tmdb_id', 'person__name', 'role') \
         .annotate(points=Sum('show__usershow__score'))
 
     games_developers = GameDeveloper.objects \
@@ -584,16 +588,25 @@ def calculate_top_personality_points(user: User) -> dict:
         .annotate(points=Sum('game__usergame__score'))
 
     for item in chain(movies_persons, shows_persons):
+        person_id = item.get('person__tmdb_id')
         name = item.get('person__name')
         role = item.get('role')
         points = int(item.get('points') or 0)
-        if not name:
+        if person_id is None or not name:
             continue
 
         if role == MoviePerson.ROLE_ACTOR:
-            actors_points[name] += points
+            current = actors_points.get(person_id)
+            if current is None:
+                actors_points[person_id] = {'id': person_id, 'name': name, 'points': points}
+            else:
+                current['points'] += points
         elif role == MoviePerson.ROLE_DIRECTOR:
-            directors_points[name] += points
+            current = directors_points.get(person_id)
+            if current is None:
+                directors_points[person_id] = {'id': person_id, 'name': name, 'points': points}
+            else:
+                current['points'] += points
 
     for item in games_developers:
         name = item.get('developer__name')
@@ -602,11 +615,11 @@ def calculate_top_personality_points(user: User) -> dict:
             continue
         developers_points[name] += points
 
-    top_actors = [{'name': name, 'points': points} for name, points in actors_points.items()]
+    top_actors = [{'name': item['name'], 'points': item['points']} for item in actors_points.values()]
     top_actors.sort(key=lambda entry: (-entry['points'], entry['name']))
     top_actors = top_actors[:10]
 
-    top_directors = [{'name': name, 'points': points} for name, points in directors_points.items()]
+    top_directors = [{'name': item['name'], 'points': item['points']} for item in directors_points.values()]
     top_directors.sort(key=lambda entry: (-entry['points'], entry['name']))
     top_directors = top_directors[:10]
 
@@ -705,11 +718,41 @@ def calculate_backlog_metrics(user: User) -> dict:
 
     movies_minutes = planned_movies.aggregate(total=Sum('movie__tmdb_runtime')).get('total') or 0
 
+    planned_show_rows = list(planned_shows.values('show_id', 'show__tmdb_number_of_episodes', 'show__tmdb_episode_runtime'))
+    planned_show_ids = [row['show_id'] for row in planned_show_rows]
+
+    episodes_stats_by_show = {
+        row['tmdb_season__tmdb_show_id']: row
+        for row in Episode.objects
+        .filter(tmdb_season__tmdb_show_id__in=planned_show_ids)
+        .values('tmdb_season__tmdb_show_id')
+        .annotate(
+            episodes_in_db=Count('id'),
+            minutes_in_db=Sum(
+                Case(
+                    When(tmdb_runtime=0, then='tmdb_season__tmdb_show__tmdb_episode_runtime'),
+                    default='tmdb_runtime'
+                )
+            )
+        )
+    }
+
     shows_minutes = 0
-    for show in planned_shows.values('show__tmdb_number_of_episodes', 'show__tmdb_episode_runtime'):
-        episodes_count = int(show.get('show__tmdb_number_of_episodes') or 0)
-        episode_runtime = int(show.get('show__tmdb_episode_runtime') or 0)
-        shows_minutes += max(0, episodes_count) * max(0, episode_runtime)
+    for show in planned_show_rows:
+        show_id = show.get('show_id')
+        total_episodes = int(show.get('show__tmdb_number_of_episodes') or 0)
+        fallback_episode_runtime = int(show.get('show__tmdb_episode_runtime') or 0)
+
+        episode_stats = episodes_stats_by_show.get(show_id) or {}
+        episodes_in_db = int(episode_stats.get('episodes_in_db') or 0)
+        minutes_in_db = int(episode_stats.get('minutes_in_db') or 0)
+
+        if total_episodes > 0:
+            missing_episodes = max(total_episodes - episodes_in_db, 0)
+            shows_minutes += minutes_in_db + missing_episodes * max(fallback_episode_runtime, 0)
+        else:
+            # Fallback for shows without declared episode count: use what is already synced in DB.
+            shows_minutes += minutes_in_db
 
     movies_hours = round(movies_minutes / MINUTES_IN_HOUR, 1)
     shows_hours = round(shows_minutes / MINUTES_IN_HOUR, 1)
