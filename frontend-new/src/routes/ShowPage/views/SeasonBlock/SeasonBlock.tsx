@@ -167,7 +167,11 @@ function SeasonBlock({
 						</a>
 						<div className={bem.element('meta')}>
 							<span className={bem.element('meta-chip')}>{showSeason?.episodes?.length || 0} серий</span>
-							<span className={bem.element('meta-chip')}>
+							<span
+								className={bem.element('meta-chip', {
+									completed: totalEpisodesCount > 0 && watchedEpisodesCount >= totalEpisodesCount,
+								})}
+							>
 								Просмотрено {watchedEpisodesCount}/{showSeason?.episodes?.length || 0}
 							</span>
 						</div>

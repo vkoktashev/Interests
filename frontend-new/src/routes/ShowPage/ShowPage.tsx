@@ -256,7 +256,7 @@ function ShowPage(props) {
                                 <section className={bem.element('content-card', {seasons: true})}>
                                     <h3 className={bem.element('seasons-header')}>Список серий</h3>
                                     <SeasonsBlock
-                                        showId={show?.id}
+                                        showId={showId}
                                         seasons={show?.seasons}
                                         userWatchedShow={userStatus !== "Не смотрел"}
                                     />

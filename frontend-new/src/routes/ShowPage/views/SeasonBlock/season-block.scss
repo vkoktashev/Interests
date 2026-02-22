@@ -52,6 +52,15 @@
         color: $newText2;
         border: 1px solid rgba(255, 255, 255, 0.06);
         background: rgba(255, 255, 255, 0.03);
+
+        &_completed {
+            color: #c7f9d4;
+            border-color: rgba(34, 197, 94, 0.22);
+            background:
+              linear-gradient(180deg, rgba(34, 197, 94, 0.14), rgba(34, 197, 94, 0.08)),
+              rgba(255, 255, 255, 0.02);
+            box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.08);
+        }
     }
 
     &__rate {
