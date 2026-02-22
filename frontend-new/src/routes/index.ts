@@ -14,6 +14,7 @@ import UserPage from './UserPage';
 import ShowPage from './ShowPage';
 import ShowEpisodePage from './ShowEpisodePage';
 import ShowSeasonPage from './ShowSeasonPage';
+import FAQPage from './FAQPage';
 
 export const ROUTE_ROOT = 'root';
 
@@ -31,6 +32,7 @@ export const ROUTE_RANDOMIZER = 'randomizer';
 
 export const ROUTE_SETTINGS = 'settings';
 export const ROUTE_CALENDAR = 'calendar';
+export const ROUTE_FAQ = 'faq';
 
 export const ROUTE_EMAIL_CONFIRM = 'email_confirm';
 export const ROUTE_PASSWORD_CONFIRM = 'password_confirm';
@@ -80,6 +82,13 @@ export default {
             path: '/calendar',
             component: CalendarPage,
             title: __('Календарь'),
+            roles,
+        },
+        [ROUTE_FAQ]: {
+            exact: true,
+            path: '/faq',
+            component: FAQPage,
+            title: __('FAQ'),
             roles,
         },
         [ROUTE_UNWATCHED]: {
