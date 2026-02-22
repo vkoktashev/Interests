@@ -1,4 +1,5 @@
 import React from "react";
+import classnames from 'classnames';
 import { MdAccessTime } from "react-icons/md";
 import "./time-to-beat.scss";
 
@@ -12,6 +13,7 @@ export type ITimeToBeatProps = {
 		gameplay_completionist_unit: string,
 	},
 	rawgPlayTime?: string,
+	className?: string,
 }
 
 export function TimeToBeat(props: ITimeToBeatProps) {
@@ -51,8 +53,8 @@ export function TimeToBeat(props: ITimeToBeatProps) {
 	}
 
 	return (
-		<div className='time-to-beat'>
-			<p className='time-to-beat__element'>Время прохождения: </p>
+		<div className={classnames('time-to-beat', props.className)}>
+			<p className='time-to-beat__label'>Время прохождения</p>
 			{content}
 		</div>
 	);

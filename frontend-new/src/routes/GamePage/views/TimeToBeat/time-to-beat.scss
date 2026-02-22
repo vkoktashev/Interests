@@ -1,19 +1,42 @@
+@import "style/colors";
+
 .time-to-beat {
-    &__element {
-        display: inline;
-        margin-right: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+
+    &__label {
+        margin: 0;
+        color: $newText2;
+        font-size: 0.9rem;
     }
+
+    &__element {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-right: 0;
+        padding: 5px 9px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.03);
+        color: $newText3;
+        font-size: 0.88rem;
+        line-height: 1.2;
+    }
+
     &__icon {
-        margin-right: 3px;
+        margin-right: 0;
 
         &_green {
-            color: #31da1b;
+            color: #55d79a;
         }
         &_yellow {
-            color: yellow;
+            color: #e8c75f;
         }
         &_red {
-            color: red;
+            color: #ee7b76;
         }
     }
 }
