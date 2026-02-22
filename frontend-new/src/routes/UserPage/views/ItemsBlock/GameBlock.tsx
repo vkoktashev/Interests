@@ -14,7 +14,7 @@ function GameBlock({ games }) {
 					score: game.score,
 					review: game.review,
 					spent_time: parseFloat(game.spent_time),
-					poster: game.game.rawg_backdrop_path,
+					poster: game.game.rawg_poster_path || game.game.rawg_backdrop_path,
 				};
 			})}
 			statuses={[
