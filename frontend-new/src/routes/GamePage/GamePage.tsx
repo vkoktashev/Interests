@@ -343,9 +343,15 @@ export function GamePage() {
 							</div>
 
 							<div className={bem.element('side-column')}>
-								<section className={bem.element('content-card', {friends: true})} hidden={!user || (friendsInfo?.length < 1)}>
+								<section className={bem.element('content-card', {friends: true})} hidden={!user}>
 									<h4 className={bem.element('friends-header')}>Отзывы друзей</h4>
-									<FriendsActivity info={friendsInfo} />
+									{friendsInfo?.length > 0 ? (
+										<FriendsActivity info={friendsInfo} />
+									) : (
+										<div className={bem.element('friends-empty')}>
+											Никто из друзей ещё не играл в эту игру
+										</div>
+									)}
 								</section>
 							</div>
 						</div>

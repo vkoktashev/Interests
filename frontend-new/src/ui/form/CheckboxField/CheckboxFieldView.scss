@@ -1,0 +1,193 @@
+@import "style/colors";
+
+.AppCheckboxFieldView {
+  $root: &;
+
+  --checkbox-size: 18px;
+  --checkbox-radius: 6px;
+  --checkbox-accent: #{$newAccent2};
+
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  color: $newText3;
+
+  &_size {
+    &_lg {
+      --checkbox-size: 20px;
+      --checkbox-radius: 7px;
+
+      #{$root}__label-text {
+        font-size: 1rem;
+      }
+    }
+
+    &_md {
+      --checkbox-size: 18px;
+      --checkbox-radius: 6px;
+
+      #{$root}__label-text {
+        font-size: 0.95rem;
+      }
+    }
+
+    &_sm {
+      --checkbox-size: 16px;
+      --checkbox-radius: 5px;
+
+      #{$root}__label-text {
+        font-size: 0.88rem;
+      }
+    }
+  }
+
+  &__input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    min-width: 0;
+
+    &_has-label-only {
+      #{$root}__control {
+        display: none;
+      }
+
+      #{$root}__label-text {
+        margin-left: 0;
+      }
+    }
+  }
+
+  &__control {
+    width: var(--checkbox-size);
+    height: var(--checkbox-size);
+    min-width: var(--checkbox-size);
+    border-radius: var(--checkbox-radius);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.02);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  &__mark {
+    width: 10px;
+    height: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+
+    &::before {
+      content: '';
+      width: 8px;
+      height: 5px;
+      border-left: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: rotate(-45deg) translate(1px, -1px);
+      transform-origin: center;
+      display: block;
+    }
+  }
+
+  &__label-text {
+    color: $newText3;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+
+    &_required::after {
+      content: ' *';
+      color: #fca5a5;
+    }
+  }
+
+  &:hover:not(&_disabled) {
+    #{$root}__control {
+      border-color: rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.04);
+    }
+  }
+
+  &:focus-within:not(&_disabled) {
+    #{$root}__control {
+      border-color: rgba($newAccent2, 0.4);
+      box-shadow: 0 0 0 3px rgba($newAccent2, 0.12);
+    }
+  }
+
+  &_checked {
+    #{$root}__control {
+      border-color: rgba($newAccent2, 0.38);
+      background: rgba($newAccent2, 0.2);
+    }
+
+    #{$root}__mark {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  &__input_hasCustomColor ~ #{$root}__label {
+    #{$root}__control {
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+  }
+
+  // Use CSS variable string for custom colors provided by steroids API
+  &[style*="--checkbox-custom-color"] {
+    #{$root}__input:checked + #{$root}__label #{$root}__control,
+    &#{$root}_checked #{$root}__control {
+      border-color: var(--checkbox-custom-color);
+      background: rgba($newAccent2, 0.2);
+    }
+  }
+
+  &_hasErrors {
+    #{$root}__control {
+      border-color: rgba(239, 68, 68, 0.36);
+    }
+
+    #{$root}__label-text {
+      color: #fecaca;
+    }
+  }
+
+  &_disabled {
+    opacity: 0.6;
+
+    #{$root}__label {
+      cursor: not-allowed;
+    }
+
+    #{$root}__control {
+      background: rgba(255, 255, 255, 0.02);
+      border-color: rgba(255, 255, 255, 0.08);
+      box-shadow: none;
+    }
+  }
+
+  // Sync visual state with native checkbox for external control changes
+  &__input:checked + #{$root}__label {
+    #{$root}__control {
+      border-color: rgba($newAccent2, 0.38);
+      background: rgba($newAccent2, 0.2);
+    }
+
+    #{$root}__mark {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}

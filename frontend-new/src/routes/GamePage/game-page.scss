@@ -291,6 +291,16 @@
     font-size: 1.1rem;
   }
 
+  &__friends-empty {
+    color: $newText2;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    border-radius: 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+    padding: 12px;
+  }
+
   &__overview-content {
     color: $newText3;
     line-height: 1.65;

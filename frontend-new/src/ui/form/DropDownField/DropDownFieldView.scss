@@ -1,0 +1,229 @@
+@import "style/colors";
+
+.AppDropDownFieldView {
+  $root: &;
+
+  --dd-height: 42px;
+  --dd-radius: 12px;
+  --dd-font-size: 0.95rem;
+
+  position: relative;
+  min-width: 125px;
+  outline: none;
+  cursor: pointer;
+  border-radius: var(--dd-radius);
+  min-height: var(--dd-height);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba($newAccent2, 0.07), rgba($newAccent1, 0.03)),
+    rgba($newBackground2, 0.9);
+  color: $newText3;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+
+  &_size {
+    &_sm {
+      --dd-height: 36px;
+      --dd-radius: 10px;
+      --dd-font-size: 0.88rem;
+    }
+
+    &_md {
+      --dd-height: 42px;
+      --dd-radius: 12px;
+      --dd-font-size: 0.95rem;
+    }
+
+    &_lg {
+      --dd-height: 50px;
+      --dd-radius: 14px;
+      --dd-font-size: 1rem;
+    }
+  }
+
+  &:focus-within:not(&_disabled),
+  &_opened:not(&_disabled) {
+    border-color: rgba($newAccent2, 0.35);
+    box-shadow: 0 0 0 3px rgba($newAccent2, 0.1);
+    background:
+      linear-gradient(180deg, rgba($newAccent2, 0.1), rgba($newAccent1, 0.05)),
+      rgba($newBackground2, 0.92);
+  }
+
+  &_disabled {
+    cursor: not-allowed;
+    opacity: 0.75;
+    background: rgba($newBackground2, 0.55);
+  }
+
+  &_is-invalid {
+    border-color: rgba(239, 68, 68, 0.35);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+  }
+
+  &__selected-items {
+    min-height: var(--dd-height);
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    padding: 0 42px 0 12px;
+    position: relative;
+    border-radius: inherit;
+
+    &_reset {
+      padding-right: 74px;
+    }
+  }
+
+  &__placeholder {
+    position: absolute;
+    left: 12px;
+    right: 42px;
+    color: rgba($newText2, 0.9);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+  }
+
+  &__selected-items-text {
+    color: $newText3;
+    font-size: var(--dd-font-size);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  &__input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+  }
+
+  &__icon-chevron,
+  &__icon-close {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: $newText2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__icon-chevron {
+    right: 12px;
+    transition: transform 0.15s ease, color 0.15s ease;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    svg rect {
+      fill: rgba(255, 255, 255, 0.05);
+      stroke: rgba(255, 255, 255, 0.08);
+    }
+
+    svg path {
+      stroke: $newText2;
+    }
+  }
+
+  &_opened {
+    #{$root}__icon-chevron {
+      transform: translateY(-50%) rotate(180deg);
+      color: $newText3;
+
+      svg rect {
+        fill: rgba($newAccent2, 0.12);
+        stroke: rgba($newAccent2, 0.24);
+      }
+
+      svg path {
+        stroke: $newText3;
+      }
+    }
+  }
+
+  &__icon-close {
+    right: 36px;
+    cursor: pointer;
+    opacity: 0.8;
+
+    &:hover {
+      opacity: 1;
+      color: $newText3;
+    }
+  }
+
+  &__wrapper {
+    width: auto;
+    min-width: 0;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  &__drop-down {
+    width: min(var(--width), calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+    max-height: var(--maxHeight);
+    background: rgba($newBackground2, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+  }
+
+  &__drop-down-list {
+    max-height: 240px;
+    overflow: auto;
+    padding: 4px;
+  }
+
+  &__search {
+    position: relative;
+    padding: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  &__search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: $newText2;
+    pointer-events: none;
+  }
+
+  &__search-input {
+    width: 100%;
+    min-height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    color: $newText3;
+    padding: 0 10px 0 34px;
+    outline: none;
+
+    &::placeholder {
+      color: $newText2;
+    }
+
+    &:focus {
+      border-color: rgba($newAccent2, 0.3);
+      box-shadow: 0 0 0 3px rgba($newAccent2, 0.08);
+    }
+  }
+}
