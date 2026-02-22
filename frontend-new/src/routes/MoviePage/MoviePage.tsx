@@ -7,6 +7,7 @@ import StatusButtonGroup from '../../shared/StatusButtonGroup';
 import FriendsActivity from '../../shared/FriendsActivity';
 import ScoreBlock from '../../shared/ScoreBlock';
 import Rating from '../../shared/Rating';
+import TmdbReviewsBlock from '../../shared/TmdbReviewsBlock/TmdbReviewsBlock';
 
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import "./movie-page.scss";
@@ -42,7 +43,6 @@ export function MoviePage() {
 		method: 'get',
 	}), [movieId]);
 	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
-
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 
@@ -276,6 +276,11 @@ export function MoviePage() {
 										</div>
 									)}
 								</section>
+
+								<TmdbReviewsBlock
+									className={bem.element('content-card', {tmdbReviews: true})}
+									endpoint={`/movies/movie/${movieId}/tmdb_reviews/`}
+								/>
 							</div>
 						</div>
 					</div>

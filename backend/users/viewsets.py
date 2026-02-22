@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from games.models import UserGame, GameLog, Game
+from games.models import UserGame, GameLog, Game, GameDeveloper
 from games.serializers import GameStatsSerializer, GameLogSerializer, GameSerializer, TypedGameSerializer
 from movies.models import UserMovie, MovieLog, Movie, MoviePerson
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer, MovieSerializer, TypedMovieSerializer
@@ -555,6 +555,7 @@ def calculate_shows_stats(user: User) -> dict:
 def calculate_top_personality_points(user: User) -> dict:
     actors_points = collections.defaultdict(int)
     directors_points = collections.defaultdict(int)
+    developers_points = collections.defaultdict(int)
 
     movies_persons = MoviePerson.objects \
         .filter(movie__usermovie__user=user,
@@ -570,6 +571,13 @@ def calculate_top_personality_points(user: User) -> dict:
         .values('person__name', 'role') \
         .annotate(points=Sum('show__usershow__score'))
 
+    games_developers = GameDeveloper.objects \
+        .filter(game__usergame__user=user,
+                game__usergame__score__gt=0) \
+        .exclude(game__usergame__status__in=[UserGame.STATUS_NOT_PLAYED, UserGame.STATUS_GOING]) \
+        .values('developer__name') \
+        .annotate(points=Sum('game__usergame__score'))
+
     for item in chain(movies_persons, shows_persons):
         name = item.get('person__name')
         role = item.get('role')
@@ -582,6 +590,13 @@ def calculate_top_personality_points(user: User) -> dict:
         elif role == MoviePerson.ROLE_DIRECTOR:
             directors_points[name] += points
 
+    for item in games_developers:
+        name = item.get('developer__name')
+        points = int(item.get('points') or 0)
+        if not name:
+            continue
+        developers_points[name] += points
+
     top_actors = [{'name': name, 'points': points} for name, points in actors_points.items()]
     top_actors.sort(key=lambda entry: (-entry['points'], entry['name']))
     top_actors = top_actors[:10]
@@ -590,7 +605,11 @@ def calculate_top_personality_points(user: User) -> dict:
     top_directors.sort(key=lambda entry: (-entry['points'], entry['name']))
     top_directors = top_directors[:10]
 
-    return {'top_actors': top_actors, 'top_directors': top_directors}
+    top_developers = [{'name': name, 'points': points} for name, points in developers_points.items()]
+    top_developers.sort(key=lambda entry: (-entry['points'], entry['name']))
+    top_developers = top_developers[:10]
+
+    return {'top_actors': top_actors, 'top_directors': top_directors, 'top_developers': top_developers}
 
 
 def calculate_status_funnel(user: User) -> dict:

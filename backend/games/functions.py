@@ -1,3 +1,8 @@
+from django.utils import timezone
+
+from utils.functions import objects_to_str
+
+
 def get_game_new_fields(rawg_game):
     if rawg_game.get('background_image_additional') is not None:
         backdrop_path = rawg_game.get('background_image_additional')
@@ -11,6 +16,8 @@ def get_game_new_fields(rawg_game):
     else:
         poster_path = ''
 
+    platforms = [obj.get('platform') for obj in (rawg_game.get('platforms') or []) if obj.get('platform')]
+
     result = {
         'rawg_id': rawg_game.get('id'),
         'rawg_slug': rawg_game.get('slug'),
@@ -19,6 +26,11 @@ def get_game_new_fields(rawg_game):
         'rawg_tba': rawg_game.get('tba'),
         'rawg_backdrop_path': backdrop_path,
         'rawg_poster_path': poster_path,
+        'rawg_description': rawg_game.get('description') or '',
+        'rawg_metacritic': rawg_game.get('metacritic'),
+        'rawg_platforms': objects_to_str(platforms),
+        'rawg_playtime': rawg_game.get('playtime') or 0,
+        'rawg_last_update': timezone.now(),
     }
 
     return result

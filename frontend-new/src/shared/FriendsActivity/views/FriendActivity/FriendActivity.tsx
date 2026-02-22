@@ -2,7 +2,6 @@ import React from 'react';
 import classnames from 'classnames';
 import {useBem, useDispatch} from '@steroidsjs/core/hooks';
 import {goToRoute} from '@steroidsjs/core/actions/router';
-import Rating from '../../../Rating';
 import {getDefaultAvatarUrl} from '../../../avatar';
 import {ROUTE_USER} from '../../../../routes';
 import './friend-activity.scss';
@@ -20,6 +19,7 @@ interface IFriendActivityInfo {
 	status?: string,
 	spent_time?: number,
 	review?: string,
+	last_updated?: string,
 }
 
 interface IFriendActivityProps {
@@ -34,6 +34,7 @@ export function FriendActivity({info, className}: IFriendActivityProps) {
 	const hasReview = Boolean(info?.review?.trim());
 	const hasSpentTime = typeof info?.spent_time === 'number' && info.spent_time > 0;
 	const hasScore = typeof info?.score === 'number' && info.score > 0;
+	const formattedLastUpdated = formatDate(info?.last_updated);
 	const userHref = window.location.origin + '/user/' + info.user.id;
 
 	const handleUserClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -74,16 +75,20 @@ export function FriendActivity({info, className}: IFriendActivityProps) {
 							<span className={bem.element('value')}>{info.status}</span>
 						</p>
 					)}
+					<p className={bem.element('updated')} hidden={!formattedLastUpdated}>
+						<span className={bem.element('label')}>Обновлено</span>
+						<span className={bem.element('value')}>{formattedLastUpdated}</span>
+					</p>
 				</div>
+
+				{hasScore && (
+					<div className={bem.element('score-chip')}>
+						Оценка {info.score}/10
+					</div>
+				)}
 			</div>
 
 			<div className={bem.element('content')}>
-				{hasScore && (
-					<div className={bem.element('rating')}>
-						<Rating initialRating={info.score || 0} readonly={true} />
-					</div>
-				)}
-
 				{hasSpentTime && (
 					<p className={bem.element('meta-row')}>
 						<span className={bem.element('label')}>Время прохождения</span>
@@ -108,4 +113,19 @@ function intToHours(number) {
 	else if (number % 10 === 1) return "час";
 	else if (2 <= number % 10 && number % 10 <= 4) return "часа";
 	else return "часов";
+}
+
+function formatDate(value?: string) {
+	if (!value) {
+		return '';
+	}
+	const parsed = new Date(value);
+	if (Number.isNaN(parsed.getTime())) {
+		return '';
+	}
+	return parsed.toLocaleDateString('ru-RU', {
+		day: '2-digit',
+		month: '2-digit',
+		year: 'numeric',
+	});
 }

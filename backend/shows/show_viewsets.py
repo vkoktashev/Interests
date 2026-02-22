@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.utils import timezone
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from requests import HTTPError, ConnectionError
+from requests import HTTPError, ConnectionError, Timeout
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -13,7 +13,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from proxy.functions import get_proxy_url
 from shows.functions import get_show_new_fields, get_tmdb_show, get_tmdb_show_videos, get_tmdb_show_credits, \
-    sync_show_genres, sync_show_people, upsert_season_from_tmdb
+    sync_show_genres, sync_show_people, upsert_season_from_tmdb, get_tmdb_show_reviews
 from shows.models import Show, UserShow, Episode, UserEpisode, EpisodeLog, ShowLog, ShowPerson
 from shows.serializers import ShowSerializer, UserShowReadSerializer, FollowedUserShowSerializer, UserEpisodeSerializer, \
     SeasonSerializer, EpisodeSerializer, UserShowWriteSerializer
@@ -151,7 +151,60 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response({'user_info': user_info, 'friends_info': friends_info})
 
-    from drf_yasg import openapi
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, required=False),
+        ],
+        responses={
+            200: openapi.Response('OK'),
+            404: openapi.Response('Show not found'),
+            503: openapi.Response('TMDB unavailable'),
+        }
+    )
+    @action(detail=True, methods=['get'])
+    def tmdb_reviews(self, request, *args, **kwargs):
+        tmdb_id = kwargs.get('tmdb_id')
+        try:
+            page = int(request.query_params.get('page', 1) or 1)
+        except (TypeError, ValueError):
+            page = 1
+        page = max(page, 1)
+
+        try:
+            payload = get_tmdb_show_reviews(tmdb_id, page=page)
+        except HTTPError as e:
+            error_code = int(e.args[0].split(' ', 1)[0])
+            if error_code == 404:
+                return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except (ConnectionError, Timeout, ValueError):
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        reviews = []
+        for item in (payload.get('results') or []):
+            author_details = item.get('author_details') or {}
+            avatar_path = author_details.get('avatar_path') or ''
+            if isinstance(avatar_path, str) and avatar_path.startswith('/http'):
+                avatar_path = avatar_path[1:]
+
+            reviews.append({
+                'id': item.get('id'),
+                'author': item.get('author') or author_details.get('username') or 'TMDB user',
+                'username': author_details.get('username') or '',
+                'rating': author_details.get('rating'),
+                'avatar_path': avatar_path,
+                'content': item.get('content') or '',
+                'created_at': item.get('created_at'),
+                'updated_at': item.get('updated_at'),
+                'url': item.get('url') or '',
+            })
+
+        return Response({
+            'page': payload.get('page') or page,
+            'total_pages': payload.get('total_pages') or 1,
+            'total_results': payload.get('total_results') or len(reviews),
+            'results': reviews,
+        })
 
     @swagger_auto_schema(
         manual_parameters=[

@@ -79,6 +79,23 @@ def get_cast_crew(tmdb_id):
     return tmdb_cast_crew
 
 
+def get_tmdb_movie_reviews(tmdb_id, page=1):
+    cached_movie = cache.get(get_tmdb_movie_key(tmdb_id), None)
+    if page == 1 and cached_movie is not None:
+        reviews_payload = cached_movie.get('reviews') or {}
+        results = reviews_payload.get('results')
+        if results is not None:
+            return reviews_payload
+
+    key = f'movie_{tmdb_id}_reviews_en_US_{page}'
+    tmdb_reviews = cache.get(key, None)
+    if tmdb_reviews is None:
+        tmdb_reviews = tmdb.Movies(tmdb_id).reviews(language='en-US', page=page)
+        cache.set(key, tmdb_reviews, CACHE_TIMEOUT)
+
+    return tmdb_reviews or {'page': page, 'total_pages': 1, 'total_results': 0, 'results': []}
+
+
 def update_movie_genres(movie, tmdb_movie):
     existing_movie_genres = MovieGenre.objects.filter(movie=movie)
     new_movie_genres = []

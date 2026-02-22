@@ -12,6 +12,7 @@ import StatusButtonGroup from '../../shared/StatusButtonGroup';
 import FriendsActivity from '../../shared/FriendsActivity';
 import SeasonsBlock from './views/SeasonsBlock';
 import ScoreBlock from '../../shared/ScoreBlock';
+import TmdbReviewsBlock from '../../shared/TmdbReviewsBlock/TmdbReviewsBlock';
 
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import "./show-page.scss";
@@ -309,6 +310,11 @@ function ShowPage(props) {
                                         </div>
                                     )}
                                 </section>
+
+                                <TmdbReviewsBlock
+                                    className={bem.element('content-card', {tmdbReviews: true})}
+                                    endpoint={`/shows/show/${showId}/tmdb_reviews/`}
+                                />
                             </div>
                         </div>
 					</div>

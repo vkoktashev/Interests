@@ -5,6 +5,30 @@
 @import "style/toast";
 @import "style/breakpoints";
 
+ [class*='ModalPortal'],
+ [class*='ModalView'] {
+    z-index: 10000 !important;
+ }
+
+ [class*='ModalPortal'] *,
+ [class*='ModalView__backdrop'],
+ [class*='ModalView__container'],
+ [class*='ModalView__wrapper'],
+ [class*='ModalView__content'] {
+    z-index: 10000 !important;
+ }
+
+ [class*='ModalView__backdrop'] {
+    position: fixed !important;
+    inset: 0;
+ }
+
+ [class*='ModalView__container'],
+ [class*='ModalView__wrapper'] {
+    position: fixed !important;
+    inset: 0;
+ }
+
 .Layout {
     .HeaderView__logo-image svg {
         width: 20px;

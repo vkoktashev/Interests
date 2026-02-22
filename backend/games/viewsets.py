@@ -1,5 +1,6 @@
 from json import JSONDecodeError
 from typing import List, Any, Optional
+from datetime import timedelta
 
 import rawgpy
 from adrf import mixins
@@ -10,6 +11,7 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db import IntegrityError
+from django.utils import timezone
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
@@ -20,12 +22,16 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from games.functions import get_game_new_fields, get_hltb_game_key, get_rawg_game_key
-from games.models import Game, UserGame, Genre, GameGenre, GameStore, Store
+from games.models import Game, UserGame, Genre, GameGenre, GameStore, Store, GameDeveloper
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer, GameSerializer
+from games.tasks import refresh_game_details
+from people.models import Developer
 from users.models import UserFollow
 from utils.constants import RAWG_UNAVAILABLE, ERROR, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, \
     GAME_NOT_FOUND, CACHE_TIMEOUT
 from utils.functions import int_to_hours, get_page_size, objects_to_str, float_to_hours, update_fields_if_needed_async
+
+GAME_DETAILS_REFRESH_INTERVAL = timedelta(days=1)
 
 
 class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
@@ -101,37 +107,44 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     )
     async def retrieve(self, request, *args, **kwargs):
         slug = kwargs.get('slug')
+        game = await Game.objects.filter(rawg_slug=slug).afirst()
+        should_fetch_from_rawg = game is None or game.rawg_last_update is None
 
-        try:
-            rawg_game, returned_from_cache = get_rawg_game(slug)
-        except KeyError:
-            return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-        except (ConnectionError, ValueError):
-            return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-        except JSONDecodeError:
-            return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        if should_fetch_from_rawg:
+            try:
+                rawg_game, _ = get_rawg_game(slug)
+            except KeyError:
+                return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            except (ConnectionError, ValueError, JSONDecodeError):
+                return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        new_fields = get_game_new_fields(rawg_game)
+            new_fields = get_game_new_fields(rawg_game)
 
-        try:
-            game, created = await Game.objects.filter().aget_or_create(rawg_id=rawg_game.get('id'),
-                                                                       defaults=new_fields)
-        except IntegrityError:
-            created = False
-            game = await Game.objects.filter().aget(rawg_slug=rawg_game.get('slug'))
-        if not created and not returned_from_cache:
-            await update_fields_if_needed_async(game, new_fields)
-        if created or not returned_from_cache:
+            try:
+                game, created = await Game.objects.filter().aget_or_create(
+                    rawg_id=rawg_game.get('id'),
+                    defaults=new_fields
+                )
+            except IntegrityError:
+                created = False
+                game = await Game.objects.filter().aget(rawg_slug=rawg_game.get('slug'))
+
+            if not created:
+                # Even cached RAWG payload is enough to fill missing legacy fields in DB.
+                await update_fields_if_needed_async(game, new_fields)
+
             await update_game_genres(game, rawg_game)
+            await update_game_developers(game, rawg_game)
             await update_game_stores(game, rawg_game)
-        game_stores = GameStore.objects.filter(game=game).select_related('store')
-        async for game_store in game_stores:
-            for rawg_game_store in rawg_game.get('stores'):
-                if game_store.store.rawg_id == rawg_game_store.get('store').get('id'):
-                    rawg_game_store['url'] = game_store.url
-                    break
-        parsed_game = parse_game(rawg_game, None)
-        return Response(parsed_game)
+
+        parsed_game = await parse_game_from_db(game)
+        response = Response(parsed_game)
+
+        if game.rawg_last_update and game.rawg_last_update <= timezone.now() - GAME_DETAILS_REFRESH_INTERVAL:
+            game_slug = game.rawg_slug
+            response.add_post_render_callback(lambda _: enqueue_game_refresh(game_slug))
+
+        return response
 
     @swagger_auto_schema(
         operation_description="Retrieve HLTB data for a specific game by its slug.",
@@ -284,6 +297,42 @@ async def update_game_stores(game: Game, rawg_game: dict) -> None:
     await GameStore.objects.filter(id__in=game_stores_to_delete_ids).adelete()
 
 
+async def update_game_developers(game: Game, rawg_game: dict) -> None:
+    existing_links = GameDeveloper.objects.filter(game=game).select_related('developer')
+    new_links = []
+    links_to_delete_ids = []
+
+    for index, developer in enumerate(rawg_game.get('developers') or []):
+        developer_id = developer.get('id')
+        developer_name = developer.get('name')
+        if developer_id is None or not developer_name:
+            continue
+
+        developer_obj, _ = await Developer.objects.aget_or_create(
+            rawg_id=developer_id,
+            defaults={'name': developer_name}
+        )
+        if developer_obj.name != developer_name:
+            developer_obj.name = developer_name
+            await developer_obj.asave(update_fields=('name',))
+
+        game_developer, _ = await GameDeveloper.objects.aget_or_create(
+            game=game,
+            developer=developer_obj,
+            defaults={'sort_order': index}
+        )
+        if game_developer.sort_order != index:
+            game_developer.sort_order = index
+            await game_developer.asave(update_fields=('sort_order',))
+        new_links.append(game_developer)
+
+    async for existing_link in existing_links:
+        if existing_link not in new_links:
+            links_to_delete_ids.append(existing_link.id)
+
+    await GameDeveloper.objects.filter(id__in=links_to_delete_ids).adelete()
+
+
 def find_game_store_url(game_stores: List[Any], store_obj: Store) -> Optional[str]:
     for game_store in game_stores:
         if store_obj.rawg_id == game_store.store_id:
@@ -391,3 +440,63 @@ def parse_game(rawg_game, hltb_game=None):
         new_game.update({'hltb': hltb_game})
 
     return new_game
+
+
+async def parse_game_from_db(game: Game, hltb_game=None):
+    genres = []
+    game_genres = GameGenre.objects.filter(game=game).select_related('genre')
+    async for game_genre in game_genres:
+        genres.append({
+            'id': game_genre.genre.rawg_id,
+            'name': game_genre.genre.rawg_name,
+            'slug': game_genre.genre.rawg_slug,
+        })
+
+    stores = []
+    game_stores = GameStore.objects.filter(game=game).select_related('store')
+    async for game_store in game_stores:
+        stores.append({
+            'store': {
+                'id': game_store.store.rawg_id,
+                'name': game_store.store.rawg_name,
+                'slug': game_store.store.rawg_slug,
+            },
+            'url': game_store.url,
+        })
+
+    developers = []
+    game_developers = GameDeveloper.objects.filter(game=game).select_related('developer').order_by('sort_order')
+    async for game_developer in game_developers:
+        developers.append({
+            'name': game_developer.developer.name,
+        })
+
+    new_game = {
+        'name': game.rawg_name,
+        'slug': game.rawg_slug,
+        'overview': game.rawg_description,
+        'metacritic': game.rawg_metacritic,
+        'genres': objects_to_str(genres),
+        'developers': objects_to_str(developers),
+        'platforms': game.rawg_platforms,
+        'background': game.rawg_backdrop_path,
+        'poster': game.rawg_poster_path,
+        'release_date': game.rawg_release_date.strftime('%d.%m.%Y') if game.rawg_release_date else None,
+        'playtime': f'{game.rawg_playtime} {int_to_hours(game.rawg_playtime)}',
+        'stores': stores,
+    }
+
+    if hltb_game is not None:
+        translate_hltb_time(hltb_game, 'main_story', 'gameplay_main', 'gameplay_main_unit')
+        translate_hltb_time(hltb_game, 'main_extra', 'gameplay_main_extra', 'gameplay_main_extra_unit')
+        translate_hltb_time(hltb_game, 'completionist', 'gameplay_completionist', 'gameplay_completionist_unit')
+        new_game.update({'hltb': hltb_game})
+
+    return new_game
+
+
+def enqueue_game_refresh(slug):
+    try:
+        refresh_game_details.delay(slug)
+    except Exception:
+        pass

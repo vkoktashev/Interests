@@ -210,6 +210,16 @@ def get_tmdb_show_credits(tmdb_id):
     return tmdb_show_credits
 
 
+def get_tmdb_show_reviews(tmdb_id, page=1):
+    key = f'show_{tmdb_id}_reviews_en_US_{page}'
+    tmdb_reviews = cache.get(key, None)
+    if tmdb_reviews is None:
+        tmdb_reviews = tmdb.TV(tmdb_id).reviews(language='en-US', page=page)
+        cache.set(key, tmdb_reviews, CACHE_TIMEOUT)
+
+    return tmdb_reviews or {'page': page, 'total_pages': 1, 'total_results': 0, 'results': []}
+
+
 def get_tmdb_season(show_tmdb_id, season_number):
     key = get_tmdb_season_key(show_tmdb_id, season_number)
     tmdb_season = cache.get(key, None)

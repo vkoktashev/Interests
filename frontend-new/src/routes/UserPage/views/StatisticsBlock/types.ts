@@ -104,6 +104,7 @@ export interface IUserStats {
 	episodes?: ICategoryStats;
 	top_actors?: IPersonalityScoreStat[];
 	top_directors?: IPersonalityScoreStat[];
+	top_developers?: IPersonalityScoreStat[];
 	status_funnel?: IStatusFunnel;
 	scores?: IScoresStats;
 	backlog?: IBacklogStats;
