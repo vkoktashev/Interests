@@ -1,211 +1,432 @@
 @import "style/colors";
-@import "style/project-fonts";
 @import "style/mixins";
 
 .movie-page {
-    max-width: 1300px;
+  position: relative;
+  max-width: 1300px;
+  color: $newText3;
+  border-radius: 16px;
+  overflow: visible;
+
+  &__background {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 100vw;
+    transform: translateX(-50%) scale(1.015);
+    background-position: center;
+    background-size: cover;
+    object-fit: cover;
+    opacity: 0.58;
+    filter: blur(0.5px);
+    pointer-events: none;
+    z-index: 0;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 10%, rgba($newAccent2, 0.18), transparent 62%),
+        linear-gradient(180deg, rgba(4, 4, 5, 0.26), rgba(4, 4, 5, 0.66));
+    }
+  }
+
+  &__body {
+    position: relative;
+    z-index: 1;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  &__header {
+    display: grid;
+    grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+    gap: 18px;
+    align-items: stretch;
+    padding: 16px;
+    background: rgba($newBackground1, 0.72);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  &__poster {
+    min-width: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+  }
+
+  &__poster-img {
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+    display: block;
+    object-fit: cover;
+    background: $newBackground2;
+  }
+
+  &__info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__title-block {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__info-header {
+    margin: 0;
+    font-size: clamp(1.5rem, 2vw, 2.15rem);
+    line-height: 1.1;
+    font-weight: 700;
+  }
+
+  &__info-subheader {
+    color: $newText2;
+    font-size: 0.95rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  &__info-score {
+    flex-shrink: 0;
+    margin-top: 0;
+  }
+
+  &__info-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background:
+      linear-gradient(160deg, rgba($newAccent2, 0.08), rgba($newAccent1, 0.03)),
+      rgba($newBackground2, 0.78);
+    padding: 14px;
+  }
+
+  &__info-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  &__info-row {
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+  }
+
+  &__info-row-label {
+    color: $newText2;
+    font-size: 0.9rem;
+    line-height: 1.3;
+  }
+
+  &__info-row-value {
     color: $newText3;
-    border-radius: 1rem;
+    font-size: 0.95rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
 
-    &__background {
-        height: 100%;
-        width: 100%;
-        position: absolute;
-        left: 0;
-        top: 0;
-        background-position: center;
-        background-size: cover;
-        object-fit: cover;
+  &__actions {
+    width: 100%;
+  }
+
+  &__actions-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba($newBackground2, 0.72);
+    padding: 12px 14px;
+  }
+
+  &__actions-rating {
+    display: flex;
+    align-items: center;
+    min-height: 26px;
+  }
+
+  &__actions-statuses {
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  &__rating {
+    font-size: 1.35rem;
+  }
+
+  &__info-statuses {
+    margin-top: 0;
+  }
+
+  &__trailers-card {
+    margin-top: 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+      rgba($newBackground1, 0.5);
+    padding: 14px;
+    backdrop-filter: blur(8px);
+  }
+
+  &__section-title {
+    margin: 0 0 10px;
+    font-weight: 500;
+    font-size: 1.1rem;
+    line-height: 1.2;
+  }
+
+  &__trailers {
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.5);
+
+    .carousel .slide {
+      background: transparent;
+    }
+  }
+
+  &__trailer {
+    background: #000;
+  }
+
+  &__trailer-player {
+    max-width: 100%;
+    margin: 0 auto;
+    aspect-ratio: 16 / 9;
+    height: auto !important;
+    width: 100% !important;
+
+    iframe {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &__overview {
+    margin-top: 14px;
+    background: rgba($newBackground2, 0.8);
+    padding: 16px;
+    border-radius: 16px;
+    backdrop-filter: blur(8px);
+  }
+
+  &__content-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(300px, 0.9fr);
+    gap: 16px;
+    align-items: start;
+  }
+
+  &__main-column {
+    display: grid;
+    gap: 16px;
+    align-items: start;
+  }
+
+  &__side-column {
+    display: grid;
+    gap: 16px;
+    align-items: start;
+  }
+
+  &__content-card {
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+      rgba($newBackground1, 0.46);
+    padding: 14px;
+    min-width: 0;
+  }
+
+  &__overview-header,
+  &__review-header {
+    margin: 0 0 12px;
+    font-weight: 500;
+    font-size: 1.25rem;
+    line-height: 1.2;
+  }
+
+  &__friends-header {
+    margin: 0 0 10px;
+    font-weight: 500;
+    font-size: 1.1rem;
+  }
+
+  &__friends-empty {
+    color: $newText2;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    border-radius: 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+    padding: 12px;
+  }
+
+  &__overview-content {
+    color: $newText3;
+    line-height: 1.65;
+    font-size: 0.98rem;
+    position: relative;
+
+    p:first-child {
+      margin-top: 0;
     }
 
-    &__body {
-        margin-left: auto;
-        margin-right: auto;
+    p {
+      margin: 0 0 0.75rem;
     }
+
+    ul,
+    ol {
+      padding-left: 1.1rem;
+      margin: 0.25rem 0 0.9rem;
+    }
+
+    li + li {
+      margin-top: 0.35rem;
+    }
+
+    &_collapsed {
+      max-height: 290px;
+      overflow: hidden;
+      mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+    }
+  }
+
+  &__overview-actions {
+    margin-top: 8px;
+  }
+
+  &__overview-toggle {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    color: $newText2;
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      color: $newText3;
+      border-color: rgba($newAccent2, 0.35);
+      background: rgba($newAccent2, 0.12);
+    }
+  }
+
+  &__review-body {
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    gap: 10px;
+  }
+
+  &__button {
+    width: fit-content;
+    min-width: 140px;
+    margin-top: 4px;
+  }
+
+  @media (max-width: 1024px) {
+    &__content-grid {
+      grid-template-columns: 1fr;
+    }
+
+    &__side-column {
+      grid-template-columns: 1fr;
+    }
+
+    &__trailer-player {
+      min-height: 220px;
+    }
+  }
+
+  @media (max-width: 760px) {
+    border-radius: 12px;
 
     &__header {
-        position: relative;
-        display: grid;
-        grid-template-columns: minmax(200px, 280px) minmax(0, 1fr);
-        width: 100%;
-        gap: 1.5rem;
-        background: linear-gradient(135deg, rgba($newBackground2, 0.95), rgba($newBackground1, 0.9));
-        color: $newText3;
-        padding: 1.5rem;
-        border-top-left-radius: 16px;
-        border-top-right-radius: 16px;
-        border: 1px solid rgba($newBackground3, 0.9);
-
-        @media (max-width: $mobile-width) {
-            grid-template-columns: 1fr;
-            padding: 1rem;
-        }
+      grid-template-columns: 1fr;
+      gap: 12px;
+      padding: 12px;
     }
 
     &__poster {
-        max-width: 100%;
-        border-radius: 14px;
-        overflow: hidden;
-        background-color: $newBackground1;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
-    }
-
-    &__poster-image {
-        object-fit: contain;
+      border-radius: 12px;
     }
 
     &__poster-img {
-        width: 100%;
-        max-height: 420px;
-        object-fit: cover;
-        margin-left: auto;
-        margin-right: auto;
+      min-height: 220px;
+      max-height: 340px;
     }
 
-    &__trailers {
-        overflow: hidden;
-        background-color: black;
-
-        @media (max-width: 640px) {
-            display: none;
-        }
+    &__title-row {
+      align-items: center;
+      gap: 10px;
     }
 
-    &__trailer {
-        //width: 640px;
-        background-color: black;
+    &__info-panel,
+    &__actions-group,
+    &__content-card,
+    &__trailers-card {
+      border-radius: 12px;
+      padding: 12px;
     }
 
-    &__info {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-
-        @media (max-width: $mobile-width) {
-            font-size: 12px;
-        }
-    }
-
-    &__info-header {
-        margin: 0;
-        font-size: 2rem;
-        line-height: 1.1;
-        letter-spacing: 0.01em;
-    }
-
-    &__info-subheader {
-        margin: 0;
-        color: $newText2;
-        font-weight: 400;
-    }
-
-    &__info-top {
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-        align-items: flex-start;
-
-        @media (max-width: $mobile-width) {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-    }
-
-    &__title-block {
-        display: flex;
-        flex-direction: column;
-        gap: 0.35rem;
-        max-width: 100%;
-    }
-
-    &__info-body {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.35rem 1rem;
-        padding: 0.75rem 1rem;
-        border-radius: 12px;
-        background: rgba($newBackground1, 0.6);
-        border: 1px solid rgba($newBackground3, 0.8);
-
-        p {
-            margin: 0;
-            color: $newText2;
-        }
-
-        @media (max-width: $tablet-width) {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    &__rating {
-        font-size: 1.5rem
-    }
-
-    &__info-score {
-        margin: 0;
-        align-self: flex-start;
-        background: rgba($newBackground1, 0.75);
-        padding: 0.5rem 0.75rem;
-        border-radius: 12px;
-    }
-
-    &__info-statuses {
-        margin-top: 0.5rem;
-    }
-
-    &__actions {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        align-items: flex-start;
-        width: 100%;
-    }
-
-    &__actions-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        width: 100%;
+    &__info-row {
+      grid-template-columns: 1fr;
+      gap: 2px;
     }
 
     &__overview {
-        background-color: $newBackground2;
-        padding: 1rem;
-        border-bottom-right-radius: 1rem;
-        border-bottom-left-radius: 1rem;
-    }
-
-    &__overview-header, &__review-header, &__seasons-header, &__review-header {
-        font-weight: 400;
-        font-size: 1.5rem;
-    }
-
-    &__review-header, &__seasons-header {
-        margin-top: 1rem;
-    }
-
-    &__review-body {
-        max-width: 100%;
-        display: flex;
-        flex-direction: column;
-        position: relative;
-    }
-
-    &__review-time {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        max-width: 100%;
-    }
-
-    &__time-input {
-        margin-left: 1rem;
+      padding: 12px;
+      border-radius: 12px;
     }
 
     &__button {
-        max-width: 150px;
-        margin-bottom: 20px;
-        margin-top: 20px;
+      width: 100%;
     }
+
+    &__overview-content {
+      &_collapsed {
+        max-height: 240px;
+      }
+    }
+
+    &__body {
+      border-radius: 12px;
+    }
+
+    &__trailers {
+      .carousel.carousel-slider {
+        overflow: visible;
+      }
+    }
+  }
 }

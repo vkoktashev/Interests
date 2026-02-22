@@ -1,24 +1,37 @@
 import React, { useEffect, useState } from "react";
-import {Link} from '@steroidsjs/core/ui/nav';
+import {useBem} from '@steroidsjs/core/hooks';
 
 import Rating from '../Rating';
-import {ROUTE_SHOW_EPISODE} from '../../routes';
 import "./detail-episode-row.scss";
 
-function DetailEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, userInfo, checkAll, userWatchedShow, setSaveEpisodes }) {
+function DetailEpisodeRow({
+	episode,
+	showID,
+	setEpisodeUserStatus,
+	loggedIn,
+	userInfo,
+	checkAll,
+	userWatchedShow,
+	setSaveEpisodes,
+	onCheckedChange,
+}) {
+	const bem = useBem('detail-episode-row');
 	const [userRate, setUserRate] = useState(0);
 	const [isChecked, setIsChecked] = useState(false);
 
 	useEffect(() => {
 		setUserRate(userInfo?.score);
 		setIsChecked(userInfo?.score > -1);
+		onCheckedChange?.(episode.id, userInfo?.score > -1);
 	}, [userInfo]);
 
 	useEffect(() => {
 		if (checkAll === -1) {
 			setIsChecked(false);
+			onCheckedChange?.(episode.id, false);
 		} else if (checkAll === 1) {
 			setIsChecked(true);
+			onCheckedChange?.(episode.id, true);
 		}
 	}, [checkAll]);
 
@@ -46,7 +59,7 @@ function DetailEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, use
 	}
 
 	return (
-		<div className='detail-episode-row'>
+		<div className={bem.block()}>
 			<input
 				type='checkbox'
 				id={`cbEpisode${episode.id}`}
@@ -54,11 +67,21 @@ function DetailEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, use
 				onChange={(res) => {
 					setSaveEpisodes(true);
 					setIsChecked(res.target.checked);
+					onCheckedChange?.(episode.id, res.target.checked);
 				}}
 				hidden={!loggedIn || !userWatchedShow}
+				className={bem.element('checkbox')}
 			/>
-			<p className='detail-episode-row__date'>{parseDate(episode.air_date)}</p>
-			<div hidden={!loggedIn || !userWatchedShow} className='detail-episode-row__rate'>
+			<p className={bem.element('date')}>{parseDate(episode.air_date)}</p>
+			<a
+				className={bem.element('name')}
+				href={`/show/${showID}/season/${episode.season_number}/episode/${episode.episode_number}`}
+				title={episode.name}>
+				<span className={bem.element('episode-number')}>Серия {episode.episode_number}</span>
+				<span className={bem.element('separator')}>•</span>
+				<span className={bem.element('episode-title')}>{episode.name}</span>
+			</a>
+			<div hidden={!loggedIn || !userWatchedShow} className={bem.element('rate')}>
 				<Rating
 					withEye={true}
 					readonly={!loggedIn}
@@ -66,21 +89,11 @@ function DetailEpisodeRow({ episode, showID, setEpisodeUserStatus, loggedIn, use
 					onChange={(score) => {
 						setUserRate(score);
 						setIsChecked(score > -1);
+						onCheckedChange?.(episode.id, score > -1);
 						setEpisodeUserStatus(showID, { episodes: [{ tmdb_id: episode.id, score: score }] });
 					}}
 				/>
 			</div>
-			<Link
-				className='detail-episode-row__name'
-				toRoute={ROUTE_SHOW_EPISODE}
-				toRouteParams={{
-					showId: showID,
-					showSeasonId: episode.season_number,
-					showEpisodeId: episode.episode_number,
-				}}
-				title={episode.name}>
-				Серия {episode.episode_number} - {episode.name}
-			</Link>
 		</div>
 	);
 }

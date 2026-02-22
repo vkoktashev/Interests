@@ -32,6 +32,7 @@ function ShowPage(props) {
 	const [review, setReview] = useState("");
 	const [userStatus, setUserStatus] = useState("Не смотрел");
 	const [userRate, setUserRate] = useState(0);
+	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
 
     const showFetchConfig = useMemo(() => showId && ({
         url: `/shows/show/${showId}/`,
@@ -65,6 +66,10 @@ function ShowPage(props) {
 	}, [show]);
 
 	useEffect(() => {
+		setOverviewExpanded(false);
+	}, [showId]);
+
+	useEffect(() => {
         if (userInfo?.status) {
             setReview(userInfo.review);
             setUserStatus(userInfo.status);
@@ -77,10 +82,36 @@ function ShowPage(props) {
     }, [userInfo]);
 
 	const renderVideo = (video, index) => (
-		<div className='movie-page__trailer' key={video.url}>
-			<ReactPlayer url={video.url} controls key={index} className='movie-page__trailer-player' />
+		<div className={bem.element('trailer')} key={video.url}>
+			<ReactPlayer url={video.url} controls key={index} className={bem.element('trailer-player')} />
 		</div>
 	);
+
+    const infoRows = useMemo(() => ([
+        {label: 'Жанр', value: show?.genres},
+        {label: 'Компания', value: show?.production_companies},
+        {label: 'Первая серия', value: show?.first_air_date},
+        {label: 'Последняя серия', value: show?.last_air_date},
+        {label: 'Длительность серии', value: show?.episode_run_time ? `${show.episode_run_time} мин` : ''},
+        {label: 'Количество сезонов', value: show?.seasons_count},
+        {label: 'Количество серий', value: show?.episodes_count},
+        {label: 'Статус', value: show?.status},
+    ]).filter(item => item.value !== undefined && item.value !== null && item.value !== ''), [
+        show?.genres,
+        show?.production_companies,
+        show?.first_air_date,
+        show?.last_air_date,
+        show?.episode_run_time,
+        show?.seasons_count,
+        show?.episodes_count,
+        show?.status,
+    ]);
+
+    const overviewPlainText = useMemo(
+        () => String(show?.overview || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
+        [show?.overview]
+    );
+    const canCollapseOverview = overviewPlainText.length > 420;
 
     if (!show) {
         return <Loader />;
@@ -89,7 +120,7 @@ function ShowPage(props) {
 	return (
 		<div className={bem.block()}>
 			<div
-                className='show-page__background'
+                className={bem.element('background')}
                 style={{ backgroundImage: `url(${show?.backdrop_path})` }}
             />
 			<LoadingOverlay
@@ -97,64 +128,53 @@ function ShowPage(props) {
                 spinner
                 text='Загрузка...'
             >
-				<div className='show-page__body'>
-					<div className='show-page__header'>
-						<div className='show-page__poster'>
+				<div className={bem.element('body')}>
+					<div className={bem.element('header')}>
+						<div className={bem.element('poster')}>
 							<Image
                                 src={show?.poster_path}
-                                className='show-page__poster-img'
+                                className={bem.element('poster-img')}
                                 alt=''
                             />
 						</div>
-						<div className='show-page__info'>
-							<div className='show-page__info-top'>
-								<div className='show-page__title-block'>
-									<h1 className='show-page__info-header'>
+						<div className={bem.element('info')}>
+							<div className={bem.element('title-row')}>
+								<div className={bem.element('title-block')}>
+									<h1 className={bem.element('info-header')}>
 										{show?.name}
 									</h1>
-									<h5 className='show-page__info-subheader'>
-										{show?.original_name}
-									</h5>
+                                    {!!show?.original_name && show?.original_name !== show?.name && (
+									    <div className={bem.element('info-subheader')}>
+										    {show?.original_name}
+									    </div>
+                                    )}
 								</div>
 								<ScoreBlock
 									score={show?.score}
 									text='TMDB score'
-									className='show-page__info-score'
+									className={bem.element('info-score')}
 								/>
 							</div>
-							<div className='show-page__info-body'>
-								<p hidden={!show?.genres}>
-                                    Жанр: {show?.genres}
-                                </p>
-								<p hidden={!show?.production_companies}>
-                                    Компания: {show?.production_companies}
-                                </p>
-								<p hidden={!show?.first_air_date}>
-                                    Дата выхода первой серии: {show?.first_air_date}
-                                </p>
-								<p hidden={!show?.last_air_date}>
-                                    Дата выхода последней серии: {show?.last_air_date}
-                                </p>
-								<p hidden={!!show?.episode_run_time}>
-                                    Продолжительность (мин): {show?.episode_run_time}
-                                </p>
-								<p>
-                                    Количество сезонов: {show?.seasons_count}
-                                </p>
-								<p>
-                                    Количество серий: {show?.episodes_count}
-                                </p>
-								<p hidden={!show?.status}>
-                                    Статус: {show?.status}
-                                </p>
+
+							<div className={bem.element('info-panel')}>
+								<div className={bem.element('info-list')}>
+                                    {infoRows.map(item => (
+                                        <div key={String(item.label)} className={bem.element('info-row')}>
+                                            <span className={bem.element('info-row-label')}>{item.label}</span>
+                                            <span className={bem.element('info-row-value')}>{item.value}</span>
+                                        </div>
+                                    ))}
+                                </div>
 							</div>
-							<div className='show-page__actions'>
+
+							<div className={bem.element('actions')}>
 								<LoadingOverlay
 									active={userInfoIsLoading && !isLoading}
 									spinner
 									text='Загрузка...'
 								>
-									<div className='show-page__actions-group'>
+									<div className={bem.element('actions-group')}>
+                                        <div className={bem.element('actions-rating')}>
 										<Rating
 											initialRating={userRate}
 											readonly={!user || (userStatus === "Не смотрел")}
@@ -166,11 +186,13 @@ function ShowPage(props) {
 													setShowStatus({ score: score });
 												}
 											}}
-											className='show-page__rating'
+											className={bem.element('rating')}
 										/>
+                                        </div>
+                                        <div className={bem.element('actions-statuses')}>
 										<StatusButtonGroup
 											statuses={["Не смотрел", "Буду смотреть", "Смотрю", "Дропнул", "Посмотрел"]}
-											className='show-page__info-statuses'
+											className={bem.element('info-statuses')}
 											userStatus={userStatus}
 											onChangeStatus={(status) => {
 												if (!user) {
@@ -185,81 +207,110 @@ function ShowPage(props) {
 												}
 											}}
 										/>
+                                        </div>
 									</div>
 								</LoadingOverlay>
 							</div>
 						</div>
 					</div>
-					<Carousel
-                        className='movie-page__trailers'
-                        showArrows
-                        centerMode
-                        centerSlidePercentage={50}
-                        showThumbs={false}
-                        showStatus={false}
-                        showIndicators={false}
-                    >
-						{show?.videos?.map(renderVideo)}
-					</Carousel>
-					<div className='show-page__overview'>
-						<div>
-							<h3 className='show-page__overview-header'>
-                                Описание
-                            </h3>
-							<div dangerouslySetInnerHTML={{ __html: show?.overview }} />
-						</div>
-						<div className='show-page__seasons'>
-							<h3 className='show-page__seasons-header'>
-                                Список серий
-                            </h3>
-							<SeasonsBlock
-								showId={show?.id}
-                                seasons={show?.seasons}
-                                userWatchedShow={userStatus !== "Не смотрел"}
-                            />
-						</div>
-						<div className='show-page__review' hidden={!user}>
-							<h3 className='show-page__review-header'>
-                                Отзыв
-                            </h3>
-							<LoadingOverlay
-                                active={userInfoIsLoading && !isLoading}
-                                spinner
-                                text='Загрузка...'
+
+                    {!!show?.videos?.length && (
+                        <div className={bem.element('trailers-card')}>
+                            <h3 className={bem.element('section-title')}>Трейлеры</h3>
+                            <Carousel
+                                className={bem.element('trailers')}
+                                showArrows
+                                centerMode
+                                centerSlidePercentage={50}
+                                showThumbs={false}
+                                showStatus={false}
+                                showIndicators={false}
                             >
-								<TextField
-									label={__('Ваш отзыв')}
-									value={review}
-									onChange={(value) => setReview(value)}
-								/>
-								<Button
-									label={__('Сохранить')}
-									className={bem.element('button')}
-									disabled={!user || (userStatus === "Не смотрел")}
-									onClick={() => {
-										if (!user) {
-                                            dispatch(openModal(LoginForm));
-										} else {
-											setShowStatus({ review: review })
-                                                .then(() => {
-                                                    dispatch(showNotification('Отзыв сохранен!', 'success', {
-                                                        position: 'top-right',
-                                                        timeOut: 1000,
-                                                    }));
-                                                });
-										}
-									}} />
-							</LoadingOverlay>
-						</div>
-						<div
-                            className='show-page__friends'
-                            hidden={!user || !friendsInfo?.length}
-                        >
-							<h4>Отзывы друзей</h4>
-							<FriendsActivity
-                                info={friendsInfo}
-                            />
-						</div>
+                                {show?.videos?.map(renderVideo)}
+                            </Carousel>
+                        </div>
+                    )}
+
+					<div className={bem.element('overview')}>
+                        <div className={bem.element('content-grid')}>
+                            <div className={bem.element('main-column')}>
+                                <section className={bem.element('content-card', {description: true})}>
+                                    <h3 className={bem.element('overview-header')}>Описание</h3>
+                                    <div
+                                        className={bem.element('overview-content', {
+                                            collapsed: canCollapseOverview && !isOverviewExpanded,
+                                        })}
+                                        dangerouslySetInnerHTML={{ __html: show?.overview }}
+                                    />
+                                    <div className={bem.element('overview-actions')} hidden={!canCollapseOverview}>
+                                        <button
+                                            type='button'
+                                            className={bem.element('overview-toggle')}
+                                            onClick={() => setOverviewExpanded(prev => !prev)}
+                                        >
+                                            {isOverviewExpanded ? 'Свернуть' : 'Показать полностью'}
+                                        </button>
+                                    </div>
+                                </section>
+
+                                <section className={bem.element('content-card', {seasons: true})}>
+                                    <h3 className={bem.element('seasons-header')}>Список серий</h3>
+                                    <SeasonsBlock
+                                        showId={show?.id}
+                                        seasons={show?.seasons}
+                                        userWatchedShow={userStatus !== "Не смотрел"}
+                                    />
+                                </section>
+
+                                <section className={bem.element('content-card', {review: true})} hidden={!user}>
+                                    <h3 className={bem.element('review-header')}>Отзыв</h3>
+                                    <LoadingOverlay
+                                        active={userInfoIsLoading && !isLoading}
+                                        spinner
+                                        text='Загрузка...'
+                                    >
+                                        <div className={bem.element('review-body')}>
+                                            <TextField
+                                                label={__('Ваш отзыв')}
+                                                value={review}
+                                                onChange={(value) => setReview(value)}
+                                            />
+                                            <Button
+                                                label={__('Сохранить')}
+                                                className={bem.element('button')}
+                                                disabled={!user || (userStatus === "Не смотрел")}
+                                                onClick={() => {
+                                                    if (!user) {
+                                                        dispatch(openModal(LoginForm));
+                                                    } else {
+                                                        setShowStatus({ review: review })
+                                                            .then(() => {
+                                                                dispatch(showNotification('Отзыв сохранен!', 'success', {
+                                                                    position: 'top-right',
+                                                                    timeOut: 1000,
+                                                                }));
+                                                            });
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    </LoadingOverlay>
+                                </section>
+                            </div>
+
+                            <div className={bem.element('side-column')}>
+                                <section className={bem.element('content-card', {friends: true})} hidden={!user}>
+                                    <h4 className={bem.element('friends-header')}>Отзывы друзей</h4>
+                                    {friendsInfo?.length > 0 ? (
+                                        <FriendsActivity info={friendsInfo} />
+                                    ) : (
+                                        <div className={bem.element('friends-empty')}>
+                                            Никто из друзей ещё не смотрел этот сериал
+                                        </div>
+                                    )}
+                                </section>
+                            </div>
+                        </div>
 					</div>
 				</div>
 			</LoadingOverlay>
