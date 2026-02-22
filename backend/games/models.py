@@ -16,7 +16,6 @@ class Game(models.Model):
     rawg_poster_path = models.CharField(max_length=200, blank=True)
     rawg_description = models.TextField(blank=True)
     rawg_metacritic = models.IntegerField(null=True, blank=True)
-    rawg_developers = models.TextField(blank=True)
     rawg_platforms = models.TextField(blank=True)
     rawg_playtime = models.IntegerField(default=0)
     rawg_last_update = models.DateTimeField(null=True, blank=True)
@@ -80,3 +79,12 @@ class GameStore(models.Model):
 
     class Meta:
         unique_together = (("game", "store"),)
+
+
+class GameDeveloper(models.Model):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    developer = models.ForeignKey('people.Developer', on_delete=models.CASCADE)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = (("game", "developer"),)

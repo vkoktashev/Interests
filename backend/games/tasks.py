@@ -9,7 +9,8 @@ from requests.exceptions import ConnectionError
 
 from config.celery import app
 from games.functions import get_game_new_fields, get_hltb_game_key
-from games.models import Game, Genre, GameGenre, GameStore, Store
+from games.models import Game, Genre, GameGenre, GameStore, Store, GameDeveloper
+from people.models import Developer
 from utils.constants import rawg, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE, CACHE_TIMEOUT
 from utils.functions import update_fields_if_needed
 
@@ -60,6 +61,7 @@ def update_game_details(slug, game_obj=None):
         update_fields_if_needed(game_obj, new_fields)
 
     sync_game_genres(game_obj, rawg_game)
+    sync_game_developers(game_obj, rawg_game)
     sync_game_stores(game_obj, rawg_game)
     return game_obj
 
@@ -121,6 +123,35 @@ def sync_game_stores(game, rawg_game):
         keep_ids.append(game_store_obj.id)
 
     GameStore.objects.filter(game=game).exclude(id__in=keep_ids).delete()
+
+
+def sync_game_developers(game, rawg_game):
+    keep_ids = []
+    for index, developer in enumerate(rawg_game.get('developers') or []):
+        developer_id = developer.get('id')
+        developer_name = developer.get('name')
+        if developer_id is None or not developer_name:
+            continue
+
+        developer_obj, _ = Developer.objects.get_or_create(
+            rawg_id=developer_id,
+            defaults={'name': developer_name}
+        )
+        if developer_obj.name != developer_name:
+            developer_obj.name = developer_name
+            developer_obj.save(update_fields=('name',))
+
+        game_developer, _ = GameDeveloper.objects.get_or_create(
+            game=game,
+            developer=developer_obj,
+            defaults={'sort_order': index}
+        )
+        if game_developer.sort_order != index:
+            game_developer.sort_order = index
+            game_developer.save(update_fields=('sort_order',))
+        keep_ids.append(game_developer.id)
+
+    GameDeveloper.objects.filter(game=game).exclude(id__in=keep_ids).delete()
 
 
 def find_game_store_url_sync(game_stores, store_obj):

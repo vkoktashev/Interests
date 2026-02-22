@@ -22,9 +22,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from games.functions import get_game_new_fields, get_hltb_game_key, get_rawg_game_key
-from games.models import Game, UserGame, Genre, GameGenre, GameStore, Store
+from games.models import Game, UserGame, Genre, GameGenre, GameStore, Store, GameDeveloper
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer, GameSerializer
 from games.tasks import refresh_game_details
+from people.models import Developer
 from users.models import UserFollow
 from utils.constants import RAWG_UNAVAILABLE, ERROR, rawg, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, \
     GAME_NOT_FOUND, CACHE_TIMEOUT
@@ -133,6 +134,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 await update_fields_if_needed_async(game, new_fields)
 
             await update_game_genres(game, rawg_game)
+            await update_game_developers(game, rawg_game)
             await update_game_stores(game, rawg_game)
 
         parsed_game = await parse_game_from_db(game)
@@ -295,6 +297,42 @@ async def update_game_stores(game: Game, rawg_game: dict) -> None:
     await GameStore.objects.filter(id__in=game_stores_to_delete_ids).adelete()
 
 
+async def update_game_developers(game: Game, rawg_game: dict) -> None:
+    existing_links = GameDeveloper.objects.filter(game=game).select_related('developer')
+    new_links = []
+    links_to_delete_ids = []
+
+    for index, developer in enumerate(rawg_game.get('developers') or []):
+        developer_id = developer.get('id')
+        developer_name = developer.get('name')
+        if developer_id is None or not developer_name:
+            continue
+
+        developer_obj, _ = await Developer.objects.aget_or_create(
+            rawg_id=developer_id,
+            defaults={'name': developer_name}
+        )
+        if developer_obj.name != developer_name:
+            developer_obj.name = developer_name
+            await developer_obj.asave(update_fields=('name',))
+
+        game_developer, _ = await GameDeveloper.objects.aget_or_create(
+            game=game,
+            developer=developer_obj,
+            defaults={'sort_order': index}
+        )
+        if game_developer.sort_order != index:
+            game_developer.sort_order = index
+            await game_developer.asave(update_fields=('sort_order',))
+        new_links.append(game_developer)
+
+    async for existing_link in existing_links:
+        if existing_link not in new_links:
+            links_to_delete_ids.append(existing_link.id)
+
+    await GameDeveloper.objects.filter(id__in=links_to_delete_ids).adelete()
+
+
 def find_game_store_url(game_stores: List[Any], store_obj: Store) -> Optional[str]:
     for game_store in game_stores:
         if store_obj.rawg_id == game_store.store_id:
@@ -426,13 +464,20 @@ async def parse_game_from_db(game: Game, hltb_game=None):
             'url': game_store.url,
         })
 
+    developers = []
+    game_developers = GameDeveloper.objects.filter(game=game).select_related('developer').order_by('sort_order')
+    async for game_developer in game_developers:
+        developers.append({
+            'name': game_developer.developer.name,
+        })
+
     new_game = {
         'name': game.rawg_name,
         'slug': game.rawg_slug,
         'overview': game.rawg_description,
         'metacritic': game.rawg_metacritic,
         'genres': objects_to_str(genres),
-        'developers': game.rawg_developers,
+        'developers': objects_to_str(developers),
         'platforms': game.rawg_platforms,
         'background': game.rawg_backdrop_path,
         'poster': game.rawg_poster_path,

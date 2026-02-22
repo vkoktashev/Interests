@@ -83,6 +83,13 @@ function StatisticsBlock({ userId }: IStatisticsBlockProps) {
 									emptyLabel="Нет данных по режиссерам"
 								/>
 							</div>
+							<div className={bem.element('panel-card')}>
+								<h4 className={bem.element('chart-title')}>Toп разработчики</h4>
+								<TopPersonalities
+									chartData={safeStats?.top_developers || []}
+									emptyLabel="Нет данных по разработчикам"
+								/>
+							</div>
 						</div>
 					</div>
 				</section>

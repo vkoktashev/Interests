@@ -28,7 +28,6 @@ def get_game_new_fields(rawg_game):
         'rawg_poster_path': poster_path,
         'rawg_description': rawg_game.get('description') or '',
         'rawg_metacritic': rawg_game.get('metacritic'),
-        'rawg_developers': objects_to_str(rawg_game.get('developers') or []),
         'rawg_platforms': objects_to_str(platforms),
         'rawg_playtime': rawg_game.get('playtime') or 0,
         'rawg_last_update': timezone.now(),
