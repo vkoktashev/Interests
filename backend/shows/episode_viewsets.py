@@ -58,6 +58,23 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             sync_show_people(show, tmdb_show_credits)
 
         season = Season.objects.filter(tmdb_show=show, tmdb_season_number=season_number).first()
+        if season is not None and not season.episode_set.exists():
+            try:
+                tmdb_season = get_tmdb_season(show_tmdb_id, season_number)
+                tmdb_season_credits = get_tmdb_season_credits(show_tmdb_id, season_number)
+            except HTTPError as e:
+                error_code = int(e.args[0].split(' ', 1)[0])
+                if error_code == 404:
+                    return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            except ConnectionError:
+                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+            season_fields = get_season_new_fields(tmdb_season, show.id)
+            update_fields_if_needed(season, season_fields)
+            sync_season_episodes(season, tmdb_season.get('episodes') or [])
+            sync_season_people(season, tmdb_season_credits)
+
         if season is None:
             try:
                 tmdb_season = get_tmdb_season(show_tmdb_id, season_number)

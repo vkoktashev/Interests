@@ -58,7 +58,8 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             sync_show_people(show, tmdb_show_credits)
 
         season = Season.objects.filter(tmdb_show=show, tmdb_season_number=season_number).first()
-        should_fetch_from_tmdb = season is None or season.tmdb_last_update is None
+        has_missing_episodes = season is not None and not season.episode_set.exists()
+        should_fetch_from_tmdb = season is None or season.tmdb_last_update is None or has_missing_episodes
 
         if should_fetch_from_tmdb:
             try:
