@@ -574,9 +574,13 @@ def calculate_top_personality_points(user: User) -> dict:
     games_developers = GameDeveloper.objects \
         .filter(game__usergame__user=user,
                 developer__is_publisher=False,
-                game__usergame__score__gt=0) \
-        .exclude(game__usergame__status__in=[UserGame.STATUS_NOT_PLAYED, UserGame.STATUS_GOING]) \
-        .values('developer__name') \
+                game__usergame__score__gt=0,
+                game__usergame__status__in=[
+                    UserGame.STATUS_PLAYING,
+                    UserGame.STATUS_COMPLETED,
+                    UserGame.STATUS_STOPPED,
+                ]) \
+        .values('developer__rawg_id', 'developer__name') \
         .annotate(points=Sum('game__usergame__score'))
 
     for item in chain(movies_persons, shows_persons):
