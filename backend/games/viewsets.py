@@ -106,6 +106,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             rawg_game, returned_from_cache = get_rawg_game(slug)
         except KeyError:
             return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+        except (ConnectionError, ValueError):
+            return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except JSONDecodeError:
             return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -329,7 +331,7 @@ def get_hltb_game(game_name: str, release_year: int):
         except (ValueError, TypeError):
             hltb_game = None
             cache.set(key, hltb_game, CACHE_TIMEOUT)
-        except ConnectionError:
+        except (ConnectionError, AttributeError):
             hltb_game = None
 
     translate_hltb_time(hltb_game, 'main_story', 'gameplay_main', 'gameplay_main_unit')
@@ -345,7 +347,16 @@ def get_rawg_game(slug):
     # rawg_game = cache.get(key, None)
     rawg_game = None
     if rawg_game is None:
-        rawg_game = rawg.get_game(slug).json
+        rawg_game = rawg.game_request(slug)
+        if not isinstance(rawg_game, dict):
+            raise ValueError('Unexpected RAWG response type')
+
+        if not rawg_game.get('slug'):
+            error_message = str(rawg_game.get('detail') or rawg_game.get('error') or '').lower()
+            if 'not found' in error_message:
+                raise KeyError(slug)
+            raise ValueError(f'RAWG error response: {rawg_game}')
+
         cache.set(key, rawg_game, CACHE_TIMEOUT)
         returned_from_cache = False
 

@@ -2,80 +2,100 @@
 @import "style/project-fonts";
 
 .input-number {
-    border-radius: 8px;
-    @include headline6;
-    color: $newText3;
-    position: relative;
-    max-width: 100%;
+	position: relative;
+	max-width: 100%;
+	color: $newText3;
 
-    &__input {
-        background-color: $newBackground3;
-        color: $newText3;
-        border: none;
-        outline: none;
-        min-width: 30px;
-        text-align: center;
-        width: auto;
-        padding: 5px 0 6px 0;
-        font-size: 16px;
-        font-weight: 600;
+	&__control {
+		display: grid;
+		grid-template-columns: 38px minmax(64px, 84px) 38px;
+		align-items: stretch;
+		border-radius: 12px;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		background:
+			linear-gradient(180deg, rgba($newAccent2, 0.08) 0%, rgba($newAccent1, 0.03) 100%),
+			$newBackground2;
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+		overflow: hidden;
+	}
 
-        &[type=number] {
-            appearance: textfield;
-            -moz-appearance: textfield;
-        }
-        &::-webkit-outer-spin-button,
-        &::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-        }
-        &:hover ~ .input-number__hints {
-            display: flex;
-        }
-    }
-    &__minus,
-    &__plus {
-        background-color: $newBackground3;
-        color: $newText3;
-        border: none;
-        outline: none;
-        padding: 4px 8px;
-    }
-    &__minus {
-        border-radius: 8px 0 0 8px;
-    }
-    &__plus {
-        border-radius: 0 8px 8px 0;
-    }
-    &__hints {
-        position: absolute;
-        z-index: 1;
-        left: 0;
-        width: 100%;
-        display: none;
-        flex-direction: column;
-        background-color: $newBackground3;
-        color: $newText3;
-        border-radius: 8px;
+	&__input {
+		background: transparent;
+		color: $newText3;
+		border: none;
+		outline: none;
+		text-align: center;
+		padding: 9px 6px;
+		min-width: 0;
+		font-size: 16px;
+		font-weight: 600;
+		line-height: 1.2;
 
-        &:active,
-        &:hover {
-            display: flex;
-        }
-    }
-    &__hint {
-        padding: 0.25rem;
-        border-radius: 0.5rem;
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        flex-wrap: wrap;
-        cursor: pointer;
-        font-size: 1rem;
+		&::placeholder {
+			color: rgba($newText2, 0.8);
+		}
+	}
 
-        &:hover {
-            color: $newAccent2;
-            background-color: $newBackground2;
-        }
-    }
+	&__button {
+		border: none;
+		outline: none;
+		background: rgba(255, 255, 255, 0.02);
+		color: $newText3;
+		font-size: 16px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+
+		&:hover:not(:disabled) {
+			background: rgba($newAccent2, 0.14);
+			color: lighten($newAccent2, 22%);
+		}
+
+		&:disabled {
+			opacity: 0.35;
+			cursor: default;
+		}
+	}
+
+	&__hints {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-top: 10px;
+	}
+
+	&__hint {
+		@include headline6;
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.03);
+		color: $newText2;
+		padding: 6px 10px;
+		border-radius: 999px;
+		cursor: pointer;
+		transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+		&:hover {
+			color: $newText3;
+			border-color: rgba($newAccent2, 0.35);
+			background: rgba($newAccent2, 0.12);
+		}
+	}
+}
+
+@media (max-width: 767px) {
+	.input-number {
+		&__control {
+			grid-template-columns: 34px minmax(56px, 72px) 34px;
+			border-radius: 10px;
+		}
+
+		&__input {
+			font-size: 14px;
+			padding: 8px 4px;
+		}
+
+		&__button {
+			font-size: 15px;
+		}
+	}
 }

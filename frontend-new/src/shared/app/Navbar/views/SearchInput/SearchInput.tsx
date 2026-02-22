@@ -230,6 +230,7 @@ export function SearchInput({ onSubmit, className }: ISearchInputProps) {
 
 	return (
 		<form
+			autoComplete='off'
 			onSubmit={(event) => {
 				onSubmit(event, normalizedQuery);
 				setQuery('');
@@ -241,6 +242,10 @@ export function SearchInput({ onSubmit, className }: ISearchInputProps) {
 			</span>
 			<input
 				type='text'
+				autoComplete='off'
+				autoCorrect='off'
+				autoCapitalize='none'
+				spellCheck={false}
 				placeholder='Поиск'
 				aria-label='Поиск'
 				className={bem.element('input')}
