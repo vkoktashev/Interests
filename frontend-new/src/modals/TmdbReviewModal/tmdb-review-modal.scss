@@ -1,0 +1,46 @@
+@import "style/colors";
+
+.tmdb-review-modal {
+  width: min(760px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+    color: $newText2;
+    font-size: 0.9rem;
+  }
+
+  &__author {
+    color: $newText3;
+    font-weight: 500;
+  }
+
+  &__content {
+    color: $newText3;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  &__actions {
+    margin-top: 12px;
+  }
+
+  &__link {
+    color: rgba($newAccent2, 0.95);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  @media (max-width: 640px) {
+    width: calc(100vw - 12px);
+    max-width: calc(100vw - 12px);
+  }
+}

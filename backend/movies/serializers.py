@@ -45,6 +45,7 @@ class MovieStatsSerializer(UserMovieReadSerializer):
 class FollowedUserMovieSerializer(UserMovieReadSerializer):
     user = FollowedUserSerializer()
     movie = None
+    last_updated = serializers.DateTimeField(source='updated_at', read_only=True)
 
     class Meta:
         model = UserMovie

@@ -1,0 +1,136 @@
+@import "style/colors";
+
+.tmdb-reviews-block {
+  min-width: 0;
+
+  &__title {
+    margin: 0 0 10px;
+    font-weight: 500;
+    font-size: 1.1rem;
+    line-height: 1.2;
+    color: $newText3;
+  }
+
+  &__list {
+    display: grid;
+    gap: 10px;
+  }
+
+  &__item {
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background:
+      linear-gradient(180deg, rgba($newAccent2, 0.09) 0%, rgba($newAccent1, 0.03) 100%),
+      $newBackground2;
+    padding: 12px;
+    display: grid;
+    gap: 9px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  &__author-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  &__avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: $newBackground3;
+    flex-shrink: 0;
+  }
+
+  &__author {
+    color: $newText3;
+    font-weight: 500;
+    line-height: 1.2;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  &__rating {
+    flex-shrink: 0;
+    color: $newText3;
+    font-size: 0.82rem;
+    border-radius: 999px;
+    border: 1px solid rgba($newAccent2, 0.18);
+    background: rgba($newAccent2, 0.09);
+    padding: 5px 9px;
+    line-height: 1.1;
+  }
+
+  &__meta {
+    color: $newText2;
+    font-size: 0.78rem;
+    line-height: 1.2;
+  }
+
+  &__content {
+    color: $newText2;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 8px;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  &__toggle {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    color: $newText2;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 0.82rem;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      color: $newText3;
+      border-color: rgba($newAccent2, 0.35);
+      background: rgba($newAccent2, 0.12);
+    }
+  }
+
+  &__link {
+    color: rgba($newAccent2, 0.95);
+    text-decoration: none;
+    font-size: 0.85rem;
+    line-height: 1.2;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__empty {
+    color: $newText2;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    border-radius: 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+    padding: 12px;
+  }
+}

@@ -1,5 +1,6 @@
 from adrf.fields import SerializerMethodField
 from adrf.serializers import ModelSerializer
+from rest_framework import serializers
 
 from games.models import UserGame, GameLog, Game
 from users.models import User
@@ -30,6 +31,7 @@ class GameStatsSerializer(UserGameSerializer):
 # todo: rework
 class FollowedUserGameSerializer(UserGameSerializer):
     user = SerializerMethodField()
+    last_updated = serializers.DateTimeField(source='updated_at', read_only=True)
 
     @staticmethod
     async def get_user(obj):

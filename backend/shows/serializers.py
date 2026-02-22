@@ -174,6 +174,7 @@ class EpisodeLogSerializer(serializers.ModelSerializer):
 class FollowedUserShowSerializer(UserShowReadSerializer):
     user = FollowedUserSerializer()
     show = None
+    last_updated = serializers.DateTimeField(source='updated_at', read_only=True)
 
     class Meta:
         model = UserShow
@@ -183,6 +184,7 @@ class FollowedUserShowSerializer(UserShowReadSerializer):
 
 class FollowedUserSeasonSerializer(UserSeasonSerializer):
     user = FollowedUserSerializer()
+    last_updated = serializers.DateTimeField(source='updated_at', read_only=True)
 
     class Meta:
         model = UserSeason
@@ -192,6 +194,7 @@ class FollowedUserSeasonSerializer(UserSeasonSerializer):
 
 class FollowedUserEpisodeSerializer(UserEpisodeSerializer):
     user = FollowedUserSerializer()
+    last_updated = serializers.DateTimeField(source='updated_at', read_only=True)
 
     class Meta:
         model = UserEpisode

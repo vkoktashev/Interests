@@ -172,6 +172,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                          'user_watched_show': user_watched_show(show, request.user)})
 
 
+
 def parse_season(season, request):
     episodes = [{
         'id': episode.tmdb_id,
