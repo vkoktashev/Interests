@@ -6,6 +6,7 @@ import {openModal} from '@steroidsjs/core/actions/modal';
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
 import _uniq from 'lodash/uniq';
+import {FaTwitch, FaYoutube} from 'react-icons/fa';
 import {Loader} from '@steroidsjs/core/ui/layout'
 import StatusButtonGroup from '../../shared/StatusButtonGroup';
 import FriendsActivity from '../../shared/FriendsActivity';
@@ -29,6 +30,7 @@ export function GamePage() {
 	const [spentTime, setSpentTime] = useState("");
 	const [userStatus, setUserStatus] = useState("Не играл");
 	const [userRate, setUserRate] = useState(0);
+	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
 
 	const gameFetchConfig = useMemo(() => gameId && ({
 		url: `/games/game/${gameId}/`,
@@ -40,7 +42,7 @@ export function GamePage() {
 		url: `/games/game/${gameId}/hltb/`,
 		method: 'get',
 	}), [gameId]);
-	const {data: gameTime, isLoading: isTimeLoading} = useFetch(gameTimeFetchConfig);
+	const {data: gameTime} = useFetch(gameTimeFetchConfig);
 
 	const userInfoFetchConfig = useMemo(() => gameId && user && ({
 		url: `/games/game/${gameId}/user_info/`,
@@ -68,6 +70,10 @@ export function GamePage() {
 	useEffect(() => {
 		document.title = game?.name || 'Interests';
 	}, [game]);
+
+	useEffect(() => {
+		setOverviewExpanded(false);
+	}, [gameId]);
 
 	useEffect(
 		() => {
@@ -122,6 +128,41 @@ export function GamePage() {
 		return _uniq(newData).filter(Boolean);
 	}
 
+	const mediaLinks = useMemo(() => {
+		const gameName = (game?.name || '').trim();
+		if (!gameName) {
+			return [];
+		}
+
+		return [
+			{
+				id: 'twitch',
+				title: 'Twitch',
+				href: `https://www.twitch.tv/search?term=${encodeURIComponent(gameName)}`,
+				Icon: FaTwitch,
+			},
+			{
+				id: 'youtube',
+				title: 'YouTube',
+				href: `https://www.youtube.com/results?search_query=${encodeURIComponent(gameName)}`,
+				Icon: FaYoutube,
+			},
+		];
+	}, [game?.name]);
+
+	const infoRows = useMemo(() => ([
+		{label: 'Разработчики', value: game?.developers},
+		{label: 'Дата релиза', value: game?.release_date},
+		{label: 'Жанр', value: game?.genres},
+		{label: 'Платформы', value: game?.platforms},
+	]).filter(item => Boolean(item.value)), [game?.developers, game?.release_date, game?.genres, game?.platforms]);
+
+	const overviewPlainText = useMemo(
+		() => String(game?.overview || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
+		[game?.overview]
+	);
+	const canCollapseOverview = overviewPlainText.length > 420;
+
 	if (!game) {
 		return <Loader />;
 	}
@@ -136,112 +177,183 @@ export function GamePage() {
 							<img src={game.poster} className={bem.element('poster-image')} alt='' />
 						</div>
 						<div className={bem.element('info')}>
-							<h1 className={bem.element('info-header')}>
-								{game.name}
-							</h1>
-							<div className={bem.element('info-body')}>
-								<p>Разработчики: {game.developers}</p>
-								<p>Дата релиза: {game.release_date}</p>
-								<p>Жанр: {game.genres}</p>
-								<p>Платформы: {game.platforms}</p>
-								<TimeToBeat hltbInfo={gameTime} rawgPlayTime={game.playtime} />
-								<GameStores stores={game.stores} />
+							<div className={bem.element('title-row')}>
+								<h1 className={bem.element('info-header')}>
+									{game.name}
+								</h1>
+								<ScoreBlock
+									score={game.metacritic}
+									text='Metascore'
+									className={bem.element('info-score')}
+								/>
 							</div>
+
+							<div className={bem.element('info-panel')}>
+								<div className={bem.element('info-list')}>
+									{infoRows.map(item => (
+										<div key={item.label} className={bem.element('info-row')}>
+											<span className={bem.element('info-row-label')}>{item.label}</span>
+											<span className={bem.element('info-row-value')}>{item.value}</span>
+										</div>
+									))}
+								</div>
+
+								<TimeToBeat hltbInfo={gameTime} rawgPlayTime={game.playtime} className={bem.element('time-to-beat')} />
+
+								<div className={bem.element('resources')}>
+									<div className={bem.element('resources-grid')}>
+										<div className={bem.element('resource-group')}>
+											<div className={bem.element('resource-group-label')}>Магазины</div>
+											<GameStores stores={game.stores} showLabel={false} className={bem.element('stores')} />
+										</div>
+
+										<div className={bem.element('resource-group')} hidden={!mediaLinks.length}>
+											<div className={bem.element('resource-group-label')}>Контент</div>
+											<div className={bem.element('media-links')}>
+												{mediaLinks.map(({id, title, href, Icon}) => (
+													<a
+														key={id}
+														href={href}
+														target='_blank'
+														rel='noreferrer'
+														title={title}
+														aria-label={title}
+														className={bem.element('media-link', {[id]: true})}
+													>
+														<Icon className={bem.element('media-link-icon')} />
+													</a>
+												))}
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
 							<LoadingOverlay
 								active={userInfoIsLoading && !isLoading}
 								spinner
 								text='Загрузка...'
 							>
-								<Rating
-									initialRating={userRate}
-									readonly={!user || (userStatus === "Не играл")}
-									onChange={(score) => {
-										setUserRate(score);
-										setGameStatus({ score });
-									}}
-									className='game-page__rating'
-								/>
-								<StatusButtonGroup
-									statuses={["Не играл", "Буду играть", "Играю", "Дропнул", "Прошел"]}
-									className={bem.element('info-statuses')}
-									userStatus={userStatus}
-									onChangeStatus={(status) => {
-										if (!user) {
-											dispatch(openModal(LoginForm));
-										} else {
-											setUserStatus(status);
-											setGameStatus({ status });
-											if (status === "Не играл") {
-												setReview("");
-												setUserRate(0);
-											}
-										}
-									}}
-								/>
+								<div className={bem.element('actions-panel')}>
+									<div className={bem.element('actions-rating')}>
+										<Rating
+											initialRating={userRate}
+											readonly={!user || (userStatus === "Не играл")}
+											onChange={(score) => {
+												setUserRate(score);
+												setGameStatus({ score });
+											}}
+											className='game-page__rating'
+										/>
+									</div>
+									<div className={bem.element('actions-statuses')}>
+										<StatusButtonGroup
+											statuses={["Не играл", "Буду играть", "Играю", "Дропнул", "Прошел"]}
+											className={bem.element('info-statuses')}
+											userStatus={userStatus}
+											onChangeStatus={(status) => {
+												if (!user) {
+													dispatch(openModal(LoginForm));
+												} else {
+													setUserStatus(status);
+													setGameStatus({ status });
+													if (status === "Не играл") {
+														setReview("");
+														setUserRate(0);
+													}
+												}
+											}}
+										/>
+									</div>
+								</div>
 							</LoadingOverlay>
-							<ScoreBlock
-								score={game.metacritic}
-								text='Metascore'
-								className={bem.element('info-score')}
-							/>
 						</div>
 					</div>
 					<div className={bem.element('overview')}>
-						<div>
-							{/* <video width='800' height='450' controls='controls' poster={game.rawg?.clip?.preview} src={game.rawg?.clip?.clip} type='video' /> */}
-							<h3 className='game-page__overview-header'>Описание</h3>
-							<div dangerouslySetInnerHTML={{ __html: game.overview }} />
-						</div>
-						<h3 className={bem.element('review-header')}>
-							Отзыв
-						</h3>
-						<LoadingOverlay
-							active={userInfoIsLoading && !isLoading}
-							spinner
-							text='Загрузка...'
-						>
-							<div className={bem.element('review-body')} hidden={!user}>
-								<TextField
-									label={__('Ваш отзыв')}
-									value={review}
-									onChange={(value) => setReview(value)}
+						<div className={bem.element('content-grid')}>
+							<div className={bem.element('main-column')}>
+								<section className={bem.element('content-card', {description: true})}>
+								<h3 className={bem.element('overview-header')}>Описание</h3>
+								<div
+									className={bem.element('overview-content', {
+										collapsed: canCollapseOverview && !isOverviewExpanded,
+									})}
+									dangerouslySetInnerHTML={{ __html: game.overview }}
 								/>
-
-								<div className={bem.element('review-time')}>
-									Время прохождения (часы)
-									<InputNumber
-										className='game-page__time-input'
-										value={spentTime}
-										min={0}
-										max={100000}
-										onChange={(value) => setSpentTime(value)}
-										dataList={hltbToDatalist(game.hltb)}
-									/>
+								<div className={bem.element('overview-actions')} hidden={!canCollapseOverview}>
+									<button
+										type='button'
+										className={bem.element('overview-toggle')}
+										onClick={() => setOverviewExpanded(prev => !prev)}
+									>
+										{isOverviewExpanded ? 'Свернуть' : 'Показать полностью'}
+									</button>
 								</div>
-								<Button
-									className={bem.element('button')}
-									label={__('Сохранить')}
-									disabled={!user || (userStatus === "Не играл")}
-									onClick={() => {
-										if (!user) {
-											dispatch(openModal(LoginForm));
-										} else {
-											setGameStatus({
-												review: review,
-												spent_time: spentTime,
-											}).then(() => {
-												dispatch(showNotification('Отзыв сохранен!', 'success', {
-													position: 'top-right',
-													timeOut: 1000,
-												}));
-											});
-										}
-									}} />
+								</section>
+
+								<section className={bem.element('content-card', {review: true})} hidden={!user}>
+									<h3 className={bem.element('review-header')}>
+										Отзыв
+									</h3>
+									<LoadingOverlay
+										active={userInfoIsLoading && !isLoading}
+										spinner
+										text='Загрузка...'
+									>
+										<div className={bem.element('review-body')} hidden={!user}>
+											<TextField
+												label={__('Ваш отзыв')}
+												value={review}
+												onChange={(value) => setReview(value)}
+											/>
+
+											<div className={bem.element('review-time')}>
+												<span className={bem.element('review-time-label')}>Время прохождения (часы)</span>
+												<InputNumber
+													className='game-page__time-input'
+													value={spentTime}
+													min={0}
+													max={100000}
+													onChange={(value) => setSpentTime(value as any)}
+													dataList={hltbToDatalist(gameTime || (game as any).hltb)}
+												/>
+											</div>
+											<Button
+												className={bem.element('button')}
+												label={__('Сохранить')}
+												disabled={!user || (userStatus === "Не играл")}
+												onClick={() => {
+													if (!user) {
+														dispatch(openModal(LoginForm));
+													} else {
+														setGameStatus({
+															review: review,
+															spent_time: spentTime,
+														}).then(() => {
+															dispatch(showNotification('Отзыв сохранен!', 'success', {
+																position: 'top-right',
+																timeOut: 1000,
+															}));
+														});
+													}
+													}} />
+											</div>
+										</LoadingOverlay>
+								</section>
 							</div>
-						</LoadingOverlay>
-						<div className={bem.element('friends')} hidden={!user || (friendsInfo?.length < 1)}>
-							<h4>Отзывы друзей</h4>
-							<FriendsActivity info={friendsInfo} />
+
+							<div className={bem.element('side-column')}>
+								<section className={bem.element('content-card', {friends: true})} hidden={!user}>
+									<h4 className={bem.element('friends-header')}>Отзывы друзей</h4>
+									{friendsInfo?.length > 0 ? (
+										<FriendsActivity info={friendsInfo} />
+									) : (
+										<div className={bem.element('friends-empty')}>
+											Никто из друзей ещё не играл в эту игру
+										</div>
+									)}
+								</section>
+							</div>
 						</div>
 					</div>
 				</div>

@@ -1,0 +1,185 @@
+@import "style/colors";
+
+.AppInputFieldView {
+  $root: &;
+
+  --input-height: 42px;
+  --input-radius: 12px;
+  --input-font-size: 15px;
+  --input-padding-x: 12px;
+  --side-icon-space: 38px;
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: $newText3;
+
+  &_size {
+    &_sm {
+      --input-height: 36px;
+      --input-radius: 10px;
+      --input-font-size: 14px;
+      --input-padding-x: 10px;
+    }
+
+    &_md {
+      --input-height: 42px;
+      --input-radius: 12px;
+      --input-font-size: 15px;
+      --input-padding-x: 12px;
+    }
+
+    &_lg {
+      --input-height: 50px;
+      --input-radius: 14px;
+      --input-font-size: 16px;
+      --input-padding-x: 14px;
+    }
+  }
+
+  &__text-before,
+  &__text-after {
+    flex-shrink: 0;
+    color: $newText2;
+    font-size: 0.9rem;
+    line-height: 1.2;
+  }
+
+  &__input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    min-height: var(--input-height);
+    border-radius: var(--input-radius);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background:
+      linear-gradient(180deg, rgba($newAccent2, 0.07), rgba($newAccent1, 0.03)),
+      rgba($newBackground2, 0.9);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  }
+
+  &__input {
+    width: 100%;
+    min-width: 0;
+    height: var(--input-height);
+    border: none;
+    outline: none;
+    background: transparent;
+    color: $newText3;
+    font-size: var(--input-font-size);
+    line-height: 1.2;
+    padding: 0 var(--input-padding-x);
+
+    &::placeholder {
+      color: rgba($newText2, 0.9);
+    }
+  }
+
+  &_hasLeadIcon {
+    #{$root}__input {
+      padding-left: calc(var(--input-padding-x) + var(--side-icon-space));
+    }
+  }
+
+  &_hasClearIcon {
+    #{$root}__input {
+      padding-right: calc(var(--input-padding-x) + var(--side-icon-space));
+    }
+  }
+
+  &__lead-icon,
+  &__icon-clear {
+    width: 18px;
+    height: 18px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $newText2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__lead-icon {
+    left: 12px;
+    pointer-events: none;
+    opacity: 0.9;
+  }
+
+  &__icon-clear {
+    right: 12px;
+    cursor: pointer;
+    opacity: 0.75;
+    transition: opacity 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      opacity: 1;
+      color: $newText3;
+    }
+  }
+
+  &__addon-before,
+  &__addon-after {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 0 10px;
+    color: $newText2;
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.06);
+    border-style: solid;
+    border-width: 0;
+    font-size: 0.9rem;
+  }
+
+  &__addon-before {
+    border-right-width: 1px;
+    border-top-left-radius: calc(var(--input-radius) - 1px);
+    border-bottom-left-radius: calc(var(--input-radius) - 1px);
+  }
+
+  &__addon-after {
+    border-left-width: 1px;
+    border-top-right-radius: calc(var(--input-radius) - 1px);
+    border-bottom-right-radius: calc(var(--input-radius) - 1px);
+  }
+
+  &_disabled {
+    #{$root}__input-wrapper {
+      background: rgba($newBackground2, 0.55);
+      border-color: rgba(255, 255, 255, 0.06);
+      opacity: 0.75;
+    }
+
+    #{$root}__input {
+      cursor: not-allowed;
+    }
+  }
+
+  &_hasError {
+    #{$root}__input-wrapper {
+      border-color: rgba(239, 68, 68, 0.38);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+    }
+  }
+
+  &:not(&_disabled):focus-within {
+    #{$root}__input-wrapper {
+      border-color: rgba($newAccent2, 0.38);
+      box-shadow: 0 0 0 3px rgba($newAccent2, 0.1);
+      background:
+        linear-gradient(180deg, rgba($newAccent2, 0.1), rgba($newAccent1, 0.05)),
+        rgba($newBackground2, 0.92);
+    }
+
+    #{$root}__lead-icon {
+      color: $newText3;
+    }
+  }
+}

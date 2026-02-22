@@ -21,7 +21,7 @@ import {showNotification} from '@steroidsjs/core/actions/notifications';
 import {Button, TextField} from '@steroidsjs/core/ui/form';
 
 export function MoviePage() {
-	const bem = useBem('movie-page')
+	const bem = useBem('movie-page');
 	const user = useSelector(getUser);
 	const dispatch = useDispatch();
 	const {http} = useComponents();
@@ -29,6 +29,7 @@ export function MoviePage() {
 	const [review, setReview] = useState("");
 	const [userStatus, setUserStatus] = useState("Не смотрел");
 	const [userRate, setUserRate] = useState(0);
+	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
 
 	const movieFetchConfig = useMemo(() => movieId && ({
 		url: `/movies/movie/${movieId}/`,
@@ -69,6 +70,10 @@ export function MoviePage() {
 		document.title = movie?.name || 'Interests';
 	}, [movie]);
 
+	useEffect(() => {
+		setOverviewExpanded(false);
+	}, [movieId]);
+
 	useEffect(
 		() => {
 			if (userInfo?.status) {
@@ -86,10 +91,34 @@ export function MoviePage() {
 	);
 
 	const renderVideo = (video, index) => (
-		<div className='movie-page__trailer' key={video.url}>
-			<ReactPlayer url={video.url} controls key={index} className='movie-page__trailer-player' />
+		<div className={bem.element('trailer')} key={video.url}>
+			<ReactPlayer url={video.url} controls key={index} className={bem.element('trailer-player')} />
 		</div>
 	);
+
+	const infoRows = useMemo(() => ([
+		{label: 'Дата релиза', value: movie?.release_date},
+		{label: 'Продолжительность', value: movie?.runtime ? `${movie.runtime} мин` : ''},
+		{label: 'Жанр', value: movie?.genres},
+		{label: 'Компания', value: movie?.production_companies},
+		{label: 'Слоган', value: movie?.tagline},
+		{label: 'В ролях', value: movie?.cast},
+		{label: 'Режиссер', value: movie?.directors},
+	]).filter(item => Boolean(item.value)), [
+		movie?.release_date,
+		movie?.runtime,
+		movie?.genres,
+		movie?.production_companies,
+		movie?.tagline,
+		movie?.cast,
+		movie?.directors,
+	]);
+
+	const overviewPlainText = useMemo(
+		() => String(movie?.overview || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
+		[movie?.overview]
+	);
+	const canCollapseOverview = overviewPlainText.length > 420;
 
 	if (!movie) {
 		return <Loader />;
@@ -97,36 +126,42 @@ export function MoviePage() {
 
 	return (
 		<div className={bem.block()}>
-			<Image
-				className='movie-page__background'
-				src={movie?.backdrop_path}
+			<div
+				className={bem.element('background')}
+				style={{ backgroundImage: `url(${movie?.backdrop_path})` }}
 			/>
 			<LoadingOverlay active={isLoading} spinner text='Загрузка...'>
-				<div className='movie-page__body'>
-					<div className='movie-page__header'>
-						<div className='movie-page__poster'>
-							<Image src={movie?.poster_path} className='movie-page__poster-img' alt='' />
+				<div className={bem.element('body')}>
+					<div className={bem.element('header')}>
+						<div className={bem.element('poster')}>
+							<Image src={movie?.poster_path} className={bem.element('poster-img')} alt='' />
 						</div>
-						<div className='movie-page__info'>
-							<div className='movie-page__info-top'>
-								<div className='movie-page__title-block'>
-									<h1 className='movie-page__info-header'>{movie?.name}</h1>
-									<h5 className='movie-page__info-subheader'>{movie?.original_name}</h5>
+						<div className={bem.element('info')}>
+							<div className={bem.element('title-row')}>
+								<div className={bem.element('title-block')}>
+									<h1 className={bem.element('info-header')}>{movie?.name}</h1>
+									{!!movie?.original_name && movie?.original_name !== movie?.name && (
+										<div className={bem.element('info-subheader')}>{movie?.original_name}</div>
+									)}
 								</div>
-								<ScoreBlock score={movie?.score} text='TMDB score' className='movie-page__info-score' />
+								<ScoreBlock score={movie?.score} text='TMDB score' className={bem.element('info-score')} />
 							</div>
-							<div className='movie-page__info-body'>
-								<p>Дата релиза: {movie?.release_date}</p>
-								<p>Продолжительность (мин): {movie?.runtime}</p>
-								<p>Жанр: {movie?.genres}</p>
-								<p>Компания: {movie?.production_companies}</p>
-								<p>Слоган: {movie?.tagline}</p>
-								<p>В ролях: {movie?.cast}</p>
-								<p>Режиссер: {movie?.directors}</p>
+
+							<div className={bem.element('info-panel')}>
+								<div className={bem.element('info-list')}>
+									{infoRows.map(item => (
+										<div key={item.label} className={bem.element('info-row')}>
+											<span className={bem.element('info-row-label')}>{item.label}</span>
+											<span className={bem.element('info-row-value')}>{item.value}</span>
+										</div>
+									))}
+								</div>
 							</div>
-							<div className='movie-page__actions'>
+
+							<div className={bem.element('actions')}>
 								<LoadingOverlay active={userInfoIsLoading && !isLoading} spinner text='Загрузка...'>
-									<div className='movie-page__actions-group'>
+									<div className={bem.element('actions-group')}>
+										<div className={bem.element('actions-rating')}>
 										<Rating
 											initialRating={userRate}
 											readonly={!user || (userStatus === "Не смотрел")}
@@ -134,11 +169,13 @@ export function MoviePage() {
 												setUserRate(score);
 												setMovieStatus({ score: score });
 											}}
-											className='movie-page__rating'
+											className={bem.element('rating')}
 										/>
+										</div>
+										<div className={bem.element('actions-statuses')}>
 										<StatusButtonGroup
 											statuses={["Не смотрел", "Буду смотреть", "Дропнул", "Посмотрел"]}
-											className='movie-page__info-statuses'
+											className={bem.element('info-statuses')}
 											userStatus={userStatus}
 											onChangeStatus={(status) => {
 												if (!user) {
@@ -153,47 +190,93 @@ export function MoviePage() {
 												}
 											}}
 										/>
+										</div>
 									</div>
 								</LoadingOverlay>
 							</div>
 						</div>
 					</div>
-					<Carousel className='movie-page__trailers' showArrows centerMode centerSlidePercentage={50} showThumbs={false} showStatus={false} showIndicators={false}>
-						{movie?.videos?.map(renderVideo)}
-					</Carousel>
-					<div className='movie-page__overview'>
-						<div>
-							<h3 className='game-page__overview-header'>Описание</h3>
-							<div dangerouslySetInnerHTML={{ __html: movie?.overview }} />
-						</div>
-						<h3 className='movie-page__review-header'>Отзыв</h3>
-						<LoadingOverlay active={userInfoIsLoading && !isLoading} spinner text='Загрузка...'>
-							<div className='game-page__review-body' hidden={!user}>
-								<TextField
-									label={__('Ваш отзыв')}
-									value={review}
-									onChange={(value) => setReview(value)}
-								/>
 
-								<Button
-									label={__('Сохранить')}
-									className={bem.element('button')}
-									disabled={!user || (userStatus === "Не смотрел")}
-									onClick={() => {
-										setMovieStatus({
-											review: review,
-										}).then(() => {
-											dispatch(showNotification('Отзыв сохранен!', 'success', {
-												position: 'top-right',
-												timeOut: 1000,
-											}));
-										});
-								}} />
+					{!!movie?.videos?.length && (
+						<div className={bem.element('trailers-card')}>
+							<h3 className={bem.element('section-title')}>Трейлеры</h3>
+							<Carousel
+								className={bem.element('trailers')}
+								showArrows
+								centerMode
+								centerSlidePercentage={50}
+								showThumbs={false}
+								showStatus={false}
+								showIndicators={false}
+							>
+						{movie?.videos?.map(renderVideo)}
+							</Carousel>
+						</div>
+					)}
+
+					<div className={bem.element('overview')}>
+						<div className={bem.element('content-grid')}>
+							<div className={bem.element('main-column')}>
+								<section className={bem.element('content-card', {description: true})}>
+									<h3 className={bem.element('overview-header')}>Описание</h3>
+									<div
+										className={bem.element('overview-content', {
+											collapsed: canCollapseOverview && !isOverviewExpanded,
+										})}
+										dangerouslySetInnerHTML={{ __html: movie?.overview }}
+									/>
+									<div className={bem.element('overview-actions')} hidden={!canCollapseOverview}>
+										<button
+											type='button'
+											className={bem.element('overview-toggle')}
+											onClick={() => setOverviewExpanded(prev => !prev)}
+										>
+											{isOverviewExpanded ? 'Свернуть' : 'Показать полностью'}
+										</button>
+									</div>
+								</section>
+
+								<section className={bem.element('content-card', {review: true})} hidden={!user}>
+									<h3 className={bem.element('review-header')}>Отзыв</h3>
+									<LoadingOverlay active={userInfoIsLoading && !isLoading} spinner text='Загрузка...'>
+										<div className={bem.element('review-body')} hidden={!user}>
+											<TextField
+												label={__('Ваш отзыв')}
+												value={review}
+												onChange={(value) => setReview(value)}
+											/>
+											<Button
+												label={__('Сохранить')}
+												className={bem.element('button')}
+												disabled={!user || (userStatus === "Не смотрел")}
+												onClick={() => {
+													setMovieStatus({
+														review: review,
+													}).then(() => {
+														dispatch(showNotification('Отзыв сохранен!', 'success', {
+															position: 'top-right',
+															timeOut: 1000,
+														}));
+													});
+												}}
+											/>
+										</div>
+									</LoadingOverlay>
+								</section>
 							</div>
-						</LoadingOverlay>
-						<div className='movie-page__friends' hidden={!user || friendsInfo?.length < 1}>
-							<h4>Отзывы друзей</h4>
-							<FriendsActivity info={friendsInfo} />
+
+							<div className={bem.element('side-column')}>
+								<section className={bem.element('content-card', {friends: true})} hidden={!user}>
+									<h4 className={bem.element('friends-header')}>Отзывы друзей</h4>
+									{friendsInfo?.length > 0 ? (
+										<FriendsActivity info={friendsInfo} />
+									) : (
+										<div className={bem.element('friends-empty')}>
+											Никто из друзей ещё не смотрел этот фильм
+										</div>
+									)}
+								</section>
+							</div>
 						</div>
 					</div>
 				</div>

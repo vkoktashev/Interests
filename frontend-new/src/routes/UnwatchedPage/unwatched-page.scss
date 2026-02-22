@@ -88,7 +88,7 @@
 
     &__save-episodes-block {
         position: sticky;
-        bottom: 10px;
+        bottom: calc(10px + env(safe-area-inset-bottom, 0px));
         margin-top: 10px;
         width: 100%;
         min-height: 56px;
@@ -102,7 +102,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        padding: 8px 10px;
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)) 10px;
         backdrop-filter: blur(6px);
 
         &_hidden {
@@ -121,6 +121,8 @@
     }
 
     @media (max-width: 760px) {
+        padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+
         &__hero {
             flex-direction: column;
             align-items: stretch;
@@ -133,6 +135,8 @@
         &__save-episodes-block {
             flex-direction: column;
             align-items: stretch;
+            bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+            border-radius: 14px;
         }
 
         &__save-episodes-button {

@@ -15,7 +15,6 @@ import Image from '../../shared/Image';
 import {ROUTE_SHOW} from '../index';
 import LoginForm from '../../modals/LoginForm';
 import './season-page.scss';
-import {getSaveEpisodes} from '../../reducers/modals';
 import {setSaveEpisodes} from '../../actions/modals';
 import {Loader} from '@steroidsjs/core/ui/layout';
 import {Button, TextField} from '@steroidsjs/core/ui/form';
@@ -26,12 +25,14 @@ function SeasonPage() {
 	const dispatch = useDispatch();
 	const {http} = useComponents();
 	const user = useSelector(getUser);
-	const saveEpisodesBlockIsOpen = useSelector(getSaveEpisodes);
 	const { showId, showSeasonId } = useSelector(getRouteParams);
 
 	const [review, setReview] = useState("");
 	const [userRate, setUserRate] = useState(0);
 	const [isChecked, setIsChecked] = useState(0);
+	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
+	const [hasPendingEpisodeChanges, setHasPendingEpisodeChanges] = useState(false);
+	const [episodeCheckedOverrides, setEpisodeCheckedOverrides] = useState<Record<string, boolean>>({});
 
 	const showSeasonFetchConfig = useMemo(() => showId && ({
 		url: `/shows/show/${showId}/season/${showSeasonId}/`,
@@ -63,13 +64,31 @@ function SeasonPage() {
 		setReview("");
 		setUserRate(0);
 		setIsChecked(0);
+		setHasPendingEpisodeChanges(false);
+		setEpisodeCheckedOverrides({});
 	}, [showId, showSeasonId]);
+
+	useEffect(() => {
+		dispatch(setSaveEpisodes(false));
+		setHasPendingEpisodeChanges(false);
+		setEpisodeCheckedOverrides({});
+
+		return () => {
+			dispatch(setSaveEpisodes(false));
+			setHasPendingEpisodeChanges(false);
+			setEpisodeCheckedOverrides({});
+		};
+	}, [dispatch, showId, showSeasonId]);
 
 	useEffect(() => {
 		if (showSeason?.show?.tmdb_name) {
 			document.title = showSeason?.show?.tmdb_name + " - " + showSeason?.name;
 		}
 	}, [showSeason]);
+
+	useEffect(() => {
+		setOverviewExpanded(false);
+	}, [showId, showSeasonId]);
 
 	const chartData = useMemo(() => {
 		const points = (showSeason?.episodes || [])
@@ -86,6 +105,44 @@ function SeasonPage() {
 			},
 		];
 	}, [showSeason]);
+
+	const infoRows = useMemo(() => ([
+		{label: 'Дата выхода', value: showSeason?.air_date},
+		{label: 'Количество серий', value: showSeason?.episodes?.length},
+	]).filter(item => item.value !== undefined && item.value !== null && item.value !== ''), [
+		showSeason?.air_date,
+		showSeason?.episodes?.length,
+	]);
+
+	const overviewPlainText = useMemo(
+		() => String(showSeason?.overview || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
+		[showSeason?.overview]
+	);
+	const canCollapseOverview = overviewPlainText.length > 420;
+	const hasPendingEpisodeSelectionChanges = useMemo(() => {
+		if (!showSeason?.episodes?.length || !userInfoResponse?.episodes_user_info) {
+			return false;
+		}
+
+		const persistedMap = new Map(
+			(userInfoResponse.episodes_user_info || []).map(item => [String(item.tmdb_id), item?.score > -1])
+		);
+
+		return showSeason.episodes.some((episode) => {
+			const episodeId = String(episode.id);
+			const base = persistedMap.get(episodeId) || false;
+			const current = isChecked === 1
+				? true
+				: isChecked === -1
+					? false
+					: (episodeCheckedOverrides[episodeId] ?? base);
+			return current !== base;
+		});
+	}, [showSeason, userInfoResponse, isChecked, episodeCheckedOverrides]);
+
+	useEffect(() => {
+		setHasPendingEpisodeChanges(hasPendingEpisodeSelectionChanges);
+	}, [hasPendingEpisodeSelectionChanges]);
 
 	useEffect(() => {
 		if (userInfo?.review) setReview(userInfo.review);
@@ -122,6 +179,8 @@ function SeasonPage() {
 		}
 		await setEpisodesStatus(showId, { episodes });
 		fetchUserInfo();
+		setHasPendingEpisodeChanges(false);
+		setEpisodeCheckedOverrides({});
 		dispatch(setSaveEpisodes(false));
 	}, [showSeason, userInfoResponse]);
 
@@ -131,28 +190,28 @@ function SeasonPage() {
 
 	return (
 		<div className={bem.block()}>
-			<Image
-				className='season-page__background'
-				src={showSeason?.show?.tmdb_backdrop_path}
+			<div
+				className={bem.element('background')}
+				style={{ backgroundImage: `url(${showSeason?.show?.tmdb_backdrop_path})` }}
 			/>
 			<LoadingOverlay
 				active={isLoading}
 				spinner
 				text='Загрузка...'
 			>
-				<div className='season-page__body'>
-					<div className='season-page__header'>
-						<div className='season-page__poster'>
+				<div className={bem.element('body')}>
+					<div className={bem.element('header')}>
+						<div className={bem.element('poster')}>
 							<Image
 								src={showSeason?.poster_path}
-								className='season-page__poster-img'
+								className={bem.element('poster-img')}
 								alt=''
 							/>
 						</div>
-						<div className='season-page__info'>
-							<div className='season-page__info-top'>
-								<div className='season-page__title-block'>
-									<h1 className='season-page__info-header'>
+						<div className={bem.element('info')}>
+							<div className={bem.element('title-row')}>
+								<div className={bem.element('title-block')}>
+									<h1 className={bem.element('info-header')}>
 										<Link
 											toRoute={ROUTE_SHOW}
 											toRouteParams={{
@@ -162,26 +221,31 @@ function SeasonPage() {
 										</Link>
 										{" - " + showSeason?.name}
 									</h1>
-									<h5 className='season-page__info-subheader'>
+									<div className={bem.element('info-subheader')}>
 										{showSeason?.show?.tmdb_original_name + " - Season " + showSeason?.season_number}
-									</h5>
+									</div>
 								</div>
 							</div>
-							<div className='season-page__info-body'>
-								<p hidden={!showSeason?.air_date}>
-									Дата выхода: {showSeason?.air_date}
-								</p>
-								<p hidden={!showSeason?.episodes}>
-									Количество серий: {showSeason?.episodes?.length}
-								</p>
+
+							<div className={bem.element('info-panel')}>
+								<div className={bem.element('info-list')}>
+									{infoRows.map(item => (
+										<div key={item.label} className={bem.element('info-row')}>
+											<span className={bem.element('info-row-label')}>{item.label}</span>
+											<span className={bem.element('info-row-value')}>{item.value}</span>
+										</div>
+									))}
+								</div>
 							</div>
-							<div className='season-page__actions' hidden={!user || !userWatchedShow}>
+
+							<div className={bem.element('actions')} hidden={!user || !userWatchedShow}>
 								<LoadingOverlay
 									active={userInfoIsLoading && !isLoading}
 									spinner
 									text='Загрузка...'
 								>
-									<div className='season-page__actions-group'>
+									<div className={bem.element('actions-group')}>
+										<div className={bem.element('actions-rating')}>
 										<Rating
 											initialRating={userRate}
 											onChange={(score) => {
@@ -192,133 +256,180 @@ function SeasonPage() {
 													setShowSeasonStatus({ score: score });
 												}
 											}}
-											className='season-page__rating'
+											className={bem.element('rating')}
 										/>
-										<TextField
-											label={__('Ваш отзыв')}
-											value={review}
-											onChange={(value) => setReview(value)}
-										/>
-										<Button
-											className={bem.element('review-save-button')}
-											label={__('Сохранить')}
-											hidden={!user || !userWatchedShow}
-											onClick={() => {
-												setShowSeasonStatus({ review })
-													.then(() => {
-														dispatch(showNotification('Отзыв сохранен!', 'success', {
-															position: 'top-right',
-															timeOut: 1000,
-														}));
-													});
-											}} />
+										</div>
 									</div>
 								</LoadingOverlay>
 							</div>
 						</div>
 					</div>
-					<div className='season-page__overview'>
-						<div>
-							<h3 className='season-page__overview-header'>Описание</h3>
-							<div dangerouslySetInnerHTML={{ __html: showSeason?.overview }} />
-						</div>
-						<div className='season-page__episodes'>
-							<h3 className='season-page__episodes-header'>Список серий</h3>
-							<details open={false} className='season-page__episodes-body'>
-								<summary>
-									Развернуть
-								</summary>
-								<div hidden={!user || !userWatchedShow}>
-									Выбрать все&nbsp;
-									<input
-										type='checkbox'
-										checked={isChecked > 0}
-										onChange={(res) => {
-											dispatch(setSaveEpisodes(true));
-											setIsChecked(res.target.checked ? 1 : -1);
-										}}
+
+					<div className={bem.element('overview')}>
+						<div className={bem.element('content-grid')}>
+							<div className={bem.element('main-column')}>
+								<section className={bem.element('content-card', {description: true})}>
+									<h3 className={bem.element('overview-header')}>Описание</h3>
+									<div
+										className={bem.element('overview-content', {
+											collapsed: canCollapseOverview && !isOverviewExpanded,
+										})}
+										dangerouslySetInnerHTML={{ __html: showSeason?.overview }}
 									/>
-								</div>
-								<ul className='season-page__episodes-ul'>
-									{showSeason?.episodes
-										? showSeason?.episodes.map((episode, counter) => (
-												<li className='season-page__episode' key={episode.id}>
-													<DetailEpisodeRow
-														episode={episode}
-														showID={showId}
-														loggedIn={!!user}
-														userInfo={getEpisodeByID(userInfoResponse?.episodes_user_info, episode.id)}
-														setEpisodeUserStatus={setEpisodesStatus}
-														checkAll={isChecked}
-														userWatchedShow={userWatchedShow}
-														setSaveEpisodes={value => dispatch(setSaveEpisodes(value))}
-													/>
-												</li>
-										  ))
-										: ""}
-								</ul>
-							</details>
-							<div hidden={chartData[0].data.length < 1} className='season-page__rating-chart'>
-								<ResponsiveLine
-									data={chartData}
-									theme={nivoTheme}
-									margin={{top: 14, right: 18, bottom: 44, left: 46}}
-									colors={['#4f5dea']}
-									enableArea
-									areaOpacity={0.2}
-									curve='monotoneX'
-									lineWidth={3}
-									pointSize={8}
-									pointColor='#4f5dea'
-									pointBorderWidth={2}
-									pointBorderColor='#191a1b'
-									enableGridX={false}
-									enableGridY
-									yScale={{
-										type: 'linear',
-										min: 0,
-										max: 10,
-									}}
-									axisTop={null}
-									axisRight={null}
-									axisBottom={{
-										tickSize: 0,
-										tickPadding: 10,
-										legend: 'Серии',
-										legendOffset: 32,
-										legendPosition: 'middle',
-									}}
-									axisLeft={{
-										tickSize: 0,
-										tickPadding: 8,
-										legend: 'Оценка',
-										legendOffset: -34,
-										legendPosition: 'middle',
-									}}
-									useMesh
-									tooltip={({point}) => (
-										<div className='season-page__chart-tooltip'>
-											<div>{point.data.xFormatted}</div>
-											<strong>{point.data.yFormatted}</strong>
+									<div className={bem.element('overview-actions')} hidden={!canCollapseOverview}>
+										<button
+											type='button'
+											className={bem.element('overview-toggle')}
+											onClick={() => setOverviewExpanded(prev => !prev)}
+										>
+											{isOverviewExpanded ? 'Свернуть' : 'Показать полностью'}
+										</button>
+									</div>
+								</section>
+
+								<section className={bem.element('content-card', {episodes: true})}>
+									<div className={bem.element('episodes-head')}>
+										<h3 className={bem.element('episodes-header')}>Список серий</h3>
+										<div className={bem.element('save-panel', {
+											inline: true,
+											placeholder: !hasPendingEpisodeChanges,
+										})}>
+											{hasPendingEpisodeChanges ? (
+												<>
+												<div className={bem.element('save-panel-text')}>Есть несохранённые изменения</div>
+												<Button
+													className={bem.element('save-panel-button')}
+													onClick={sendEpisodes}>
+													Сохранить
+												</Button>
+												</>
+											) : (
+												<>
+													<div className={bem.element('save-panel-text')}>Есть несохранённые изменения</div>
+													<Button className={bem.element('save-panel-button')} disabled>Сохранить</Button>
+												</>
+											)}
+										</div>
+									</div>
+									<div className={bem.element('episodes-body')}>
+										<div className={bem.element('check-all')} hidden={!user || !userWatchedShow}>
+											Выбрать все&nbsp;
+											<input
+												className={bem.element('check-all-input')}
+												type='checkbox'
+												checked={isChecked > 0}
+												onChange={(res) => {
+													dispatch(setSaveEpisodes(true));
+													setIsChecked(res.target.checked ? 1 : -1);
+												}}
+											/>
+										</div>
+										<ul className={bem.element('episodes-ul')}>
+											{showSeason?.episodes
+												? showSeason.episodes.map((episode) => (
+													<li className={bem.element('episode')} key={episode.id}>
+														<DetailEpisodeRow
+															episode={episode}
+															showID={showId}
+															loggedIn={!!user}
+															userInfo={getEpisodeByID(userInfoResponse?.episodes_user_info, episode.id)}
+															setEpisodeUserStatus={setEpisodesStatus}
+															checkAll={isChecked}
+															userWatchedShow={userWatchedShow}
+															setSaveEpisodes={value => {
+																dispatch(setSaveEpisodes(value));
+															}}
+															onCheckedChange={(episodeId, checked) => {
+																setEpisodeCheckedOverrides(prev => ({
+																	...prev,
+																	[String(episodeId)]: checked,
+																}));
+															}}
+														/>
+													</li>
+												))
+												: ""}
+										</ul>
+									</div>
+									<div hidden={chartData[0].data.length < 1} className={bem.element('rating-chart')}>
+										<ResponsiveLine
+											data={chartData}
+											theme={nivoTheme}
+											margin={{top: 14, right: 18, bottom: 44, left: 46}}
+											colors={['#4f5dea']}
+											enableArea
+											areaOpacity={0.2}
+											curve='monotoneX'
+											lineWidth={3}
+											pointSize={8}
+											pointColor='#4f5dea'
+											pointBorderWidth={2}
+											pointBorderColor='#191a1b'
+											enableGridX={false}
+											enableGridY
+											yScale={{type: 'linear', min: 0, max: 10}}
+											axisTop={null}
+											axisRight={null}
+											axisBottom={{
+												tickSize: 0, tickPadding: 10, legend: 'Серии', legendOffset: 32, legendPosition: 'middle',
+											}}
+											axisLeft={{
+												tickSize: 0, tickPadding: 8, legend: 'Оценка', legendOffset: -34, legendPosition: 'middle',
+											}}
+											useMesh
+											tooltip={({point}) => (
+												<div className={bem.element('chart-tooltip')}>
+													<div>{point.data.xFormatted}</div>
+													<strong>{point.data.yFormatted}</strong>
+												</div>
+											)}
+										/>
+									</div>
+								</section>
+
+								<section className={bem.element('content-card', {review: true})} hidden={!user || !userWatchedShow}>
+									<h3 className={bem.element('review-header')}>Отзыв</h3>
+									<LoadingOverlay active={userInfoIsLoading && !isLoading} spinner text='Загрузка...'>
+										<div className={bem.element('review-body')}>
+											<TextField
+												label={__('Ваш отзыв')}
+												value={review}
+												onChange={(value) => setReview(value)}
+											/>
+											<Button
+												className={bem.element('button')}
+												label={__('Сохранить')}
+												onClick={() => {
+													setShowSeasonStatus({ review })
+														.then(() => {
+															dispatch(showNotification('Отзыв сохранен!', 'success', {
+																position: 'top-right',
+																timeOut: 1000,
+															}));
+														});
+												}}
+											/>
+										</div>
+									</LoadingOverlay>
+								</section>
+							</div>
+
+							<div className={bem.element('side-column')}>
+								<section className={bem.element('content-card', {friends: true})} hidden={!user}>
+									<h4 className={bem.element('friends-header')}>Отзывы друзей</h4>
+									{friendsInfo?.length > 0 ? (
+										<FriendsActivity info={friendsInfo} />
+									) : (
+										<div className={bem.element('friends-empty')}>
+											Никто из друзей ещё не смотрел этот сезон
 										</div>
 									)}
-								/>
+								</section>
 							</div>
-						</div>
-						<div className='season-page__friends' hidden={!friendsInfo?.length}>
-							<h4>Отзывы друзей</h4>
-							<FriendsActivity info={friendsInfo} />
 						</div>
 					</div>
 				</div>
 			</LoadingOverlay>
-			<div className='season-page__save-episodes-block' hidden={!saveEpisodesBlockIsOpen}>
-				<Button
-					className='season-page__save-episodes-button'
-					onClick={sendEpisodes}>
-					Сохранить
-				</Button>
-			</div>
 		</div>
 	);
 }
