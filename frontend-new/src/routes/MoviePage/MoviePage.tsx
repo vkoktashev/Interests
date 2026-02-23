@@ -8,6 +8,7 @@ import FriendsActivity from '../../shared/FriendsActivity';
 import ScoreBlock from '../../shared/ScoreBlock';
 import Rating from '../../shared/Rating';
 import TmdbReviewsBlock from '../../shared/TmdbReviewsBlock/TmdbReviewsBlock';
+import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
 
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import "./movie-page.scss";
@@ -263,6 +264,13 @@ export function MoviePage() {
 										</div>
 									</LoadingOverlay>
 								</section>
+
+								<TmdbRecommendationsBlock
+									className={bem.element('content-card', {tmdbRecommendations: true})}
+									itemType='movie'
+									title='Рекомендации TMDB'
+									endpoint={`/movies/movie/${movieId}/tmdb_recommendations/`}
+								/>
 							</div>
 
 							<div className={bem.element('side-column')}>

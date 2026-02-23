@@ -1,0 +1,40 @@
+@import "style/colors";
+
+.tmdb-recommendations-block {
+  min-width: 0;
+
+  &__title {
+    margin: 0 0 10px;
+    font-weight: 500;
+    font-size: 1.1rem;
+    line-height: 1.2;
+    color: $newText3;
+  }
+
+  &__grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  &__card {
+    min-width: 0;
+  }
+
+  &__empty {
+    grid-column: 1 / -1;
+    color: $newText2;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    border-radius: 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+    padding: 12px;
+  }
+
+  @media (max-width: 900px) {
+    &__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}

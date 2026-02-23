@@ -13,13 +13,14 @@ from rest_framework.viewsets import GenericViewSet
 
 from proxy.functions import get_proxy_url
 from shows.functions import get_show_new_fields, get_tmdb_show, get_tmdb_show_videos, get_tmdb_show_credits, \
-    sync_show_genres, sync_show_people, upsert_season_from_tmdb, get_tmdb_show_reviews
+    sync_show_genres, sync_show_people, upsert_season_from_tmdb, get_tmdb_show_reviews, get_tmdb_show_recommendations
 from shows.models import Show, UserShow, Episode, UserEpisode, EpisodeLog, ShowLog, ShowPerson
 from shows.serializers import ShowSerializer, UserShowReadSerializer, FollowedUserShowSerializer, UserEpisodeSerializer, \
     SeasonSerializer, EpisodeSerializer, UserShowWriteSerializer
 from shows.tasks import update_shows, update_all_shows_task, refresh_show_details
 from users.models import UserFollow
-from utils.constants import ERROR, SHOW_NOT_FOUND, TMDB_UNAVAILABLE, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE
+from utils.constants import ERROR, SHOW_NOT_FOUND, TMDB_UNAVAILABLE, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE, \
+    TMDB_POSTER_PATH_PREFIX, TMDB_BACKDROP_PATH_PREFIX
 from utils.functions import update_fields_if_needed
 
 SHOW_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
@@ -204,6 +205,56 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'total_pages': payload.get('total_pages') or 1,
             'total_results': payload.get('total_results') or len(reviews),
             'results': reviews,
+        })
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, required=False),
+        ],
+        responses={
+            200: openapi.Response('OK'),
+            404: openapi.Response('Show not found'),
+            503: openapi.Response('TMDB unavailable'),
+        }
+    )
+    @action(detail=True, methods=['get'])
+    def tmdb_recommendations(self, request, *args, **kwargs):
+        tmdb_id = kwargs.get('tmdb_id')
+        try:
+            page = int(request.query_params.get('page', 1) or 1)
+        except (TypeError, ValueError):
+            page = 1
+        page = max(page, 1)
+
+        try:
+            payload = get_tmdb_show_recommendations(tmdb_id, page=page)
+        except HTTPError as e:
+            error_code = int(e.args[0].split(' ', 1)[0])
+            if error_code == 404:
+                return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except (ConnectionError, Timeout, ValueError):
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        recommendations = []
+        for item in (payload.get('results') or []):
+            recommendations.append({
+                'id': item.get('id'),
+                'name': item.get('name') or '',
+                'original_name': item.get('original_name') or '',
+                'overview': item.get('overview') or '',
+                'release_date': item.get('first_air_date') or '',
+                'vote_average': item.get('vote_average'),
+                'vote_count': item.get('vote_count') or 0,
+                'poster_path': get_proxy_url(request.scheme, TMDB_POSTER_PATH_PREFIX, item.get('poster_path')),
+                'backdrop_path': get_proxy_url(request.scheme, TMDB_BACKDROP_PATH_PREFIX, item.get('backdrop_path')),
+            })
+
+        return Response({
+            'page': payload.get('page') or page,
+            'total_pages': payload.get('total_pages') or 1,
+            'total_results': payload.get('total_results') or len(recommendations),
+            'results': recommendations,
         })
 
     @swagger_auto_schema(

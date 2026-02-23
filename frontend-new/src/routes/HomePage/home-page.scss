@@ -276,6 +276,48 @@
             transform: translateY(-2px);
             border-color: rgba(79, 93, 234, 0.42);
         }
+
+        .tmdb-media-card__poster {
+            width: 92px;
+            height: 128px;
+            border-radius: 12px;
+        }
+
+        .tmdb-media-card__body {
+            gap: 0.45rem;
+        }
+
+        .tmdb-media-card__top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.6rem;
+        }
+
+        .tmdb-media-card__name {
+            @include subtitle1;
+            color: var(--hp-ink);
+            line-height: 1.25;
+        }
+
+        .tmdb-media-card__score {
+            @include subtitle2;
+            color: #f2c94c;
+        }
+
+        .tmdb-media-card__meta {
+            @include caption;
+            color: var(--hp-muted);
+            gap: 0.4rem 0.8rem;
+        }
+
+        .tmdb-media-card__overview {
+            @include body2;
+            color: var(--hp-muted);
+            line-height: 1.45;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+        }
     }
 
     &__trending-card-poster {

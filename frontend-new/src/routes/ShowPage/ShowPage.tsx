@@ -13,6 +13,7 @@ import FriendsActivity from '../../shared/FriendsActivity';
 import SeasonsBlock from './views/SeasonsBlock';
 import ScoreBlock from '../../shared/ScoreBlock';
 import TmdbReviewsBlock from '../../shared/TmdbReviewsBlock/TmdbReviewsBlock';
+import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
 
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import "./show-page.scss";
@@ -297,6 +298,13 @@ function ShowPage(props) {
                                         </div>
                                     </LoadingOverlay>
                                 </section>
+
+                                <TmdbRecommendationsBlock
+                                    className={bem.element('content-card', {tmdbRecommendations: true})}
+                                    itemType='show'
+                                    title='Рекомендации TMDB'
+                                    endpoint={`/shows/show/${showId}/tmdb_recommendations/`}
+                                />
                             </div>
 
                             <div className={bem.element('side-column')}>
