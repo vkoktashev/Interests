@@ -102,9 +102,10 @@ function RandomPage() {
             }
             const params = {
                 categories: Object.entries(values)
-                    .filter(([key, value]) => key !== 'endedOnly' && value)
+                    .filter(([key, value]) => key !== 'endedOnly' && key !== 'allFromDb' && value)
                     .map(([key]) => key),
                 endedOnly: values.endedOnly,
+                allFromDb: values.allFromDb,
             };
             if (!params.categories.length) {
                 dispatch(showNotification('Выберите хотя бы одну категорию', 'warning'));
@@ -332,6 +333,11 @@ function RandomPage() {
                     <CheckboxField
                         attribute='endedOnly'
                         label={__('Только завершенные сериалы')}
+                        className={bem.element('checkbox')}
+                    />
+                    <CheckboxField
+                        attribute='allFromDb'
+                        label={__('Искать по всей базе (неигранные/непросмотренные)')}
                         className={bem.element('checkbox')}
                     />
                     <Button
