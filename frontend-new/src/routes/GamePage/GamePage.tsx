@@ -31,6 +31,7 @@ export function GamePage() {
 	const [userStatus, setUserStatus] = useState("Не играл");
 	const [userRate, setUserRate] = useState(0);
 	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
+	const [shouldLoadHltb, setShouldLoadHltb] = useState(false);
 
 	const gameFetchConfig = useMemo(() => gameId && ({
 		url: `/games/game/${gameId}/`,
@@ -38,10 +39,10 @@ export function GamePage() {
 	}), [gameId]);
 	const {data: game, isLoading} = useFetch(gameFetchConfig);
 
-	const gameTimeFetchConfig = useMemo(() => gameId && ({
+	const gameTimeFetchConfig = useMemo(() => gameId && shouldLoadHltb && ({
 		url: `/games/game/${gameId}/hltb/`,
 		method: 'get',
-	}), [gameId]);
+	}), [gameId, shouldLoadHltb]);
 	const {data: gameTime} = useFetch(gameTimeFetchConfig);
 
 	const userInfoFetchConfig = useMemo(() => gameId && user && ({
@@ -74,6 +75,22 @@ export function GamePage() {
 	useEffect(() => {
 		setOverviewExpanded(false);
 	}, [gameId]);
+
+	useEffect(() => {
+		setShouldLoadHltb(false);
+	}, [gameId]);
+
+	useEffect(() => {
+		if (!gameId || !game) {
+			return;
+		}
+
+		const timeoutId = window.setTimeout(() => {
+			setShouldLoadHltb(true);
+		}, 400);
+
+		return () => window.clearTimeout(timeoutId);
+	}, [gameId, game]);
 
 	useEffect(
 		() => {
