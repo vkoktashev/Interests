@@ -14,5 +14,4 @@ public/server.js
 public/frontend/*
 .env
 .vscode
-public/.index-lang.json
 bundle-Navbar-Navbar.tsx-lang.json
