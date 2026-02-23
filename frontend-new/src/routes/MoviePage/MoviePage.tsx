@@ -32,6 +32,7 @@ export function MoviePage() {
 	const [userStatus, setUserStatus] = useState("Не смотрел");
 	const [userRate, setUserRate] = useState(0);
 	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
+	const [isMobileViewport, setIsMobileViewport] = useState(false);
 
 	const movieFetchConfig = useMemo(() => movieId && ({
 		url: `/movies/movie/${movieId}/`,
@@ -74,6 +75,19 @@ export function MoviePage() {
 	useEffect(() => {
 		setOverviewExpanded(false);
 	}, [movieId]);
+
+	useEffect(() => {
+		const updateViewport = () => {
+			if (typeof window === 'undefined') {
+				return;
+			}
+			setIsMobileViewport(window.innerWidth <= 760);
+		};
+
+		updateViewport();
+		window.addEventListener('resize', updateViewport);
+		return () => window.removeEventListener('resize', updateViewport);
+	}, []);
 
 	useEffect(
 		() => {
@@ -198,7 +212,7 @@ export function MoviePage() {
 						</div>
 					</div>
 
-					{!!movie?.videos?.length && (
+					{!!movie?.videos?.length && !isMobileViewport && (
 						<div className={bem.element('trailers-card')}>
 							<h3 className={bem.element('section-title')}>Трейлеры</h3>
 							<Carousel
