@@ -389,6 +389,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         ended_only = request.GET.get('endedOnly', '')
         ended_only = ended_only == 'true'
+        all_from_db = request.GET.get('allFromDb', '')
+        all_from_db = all_from_db == 'true'
         categories = []
 
         games = None
@@ -400,26 +402,63 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         today_date = datetime.today().date()
 
         if 'games' in categories_query:
-            games = UserGame.objects.filter(user=request.user, status=UserGame.STATUS_GOING,
-                                            game__rawg_release_date__lte=today_date)
+            if all_from_db:
+                games = Game.objects.filter(rawg_release_date__lte=today_date) \
+                    .exclude(
+                        usergame__user=request.user,
+                        usergame__status__in=[
+                            UserGame.STATUS_PLAYING,
+                            UserGame.STATUS_COMPLETED,
+                            UserGame.STATUS_STOPPED,
+                        ]
+                    ).distinct()
+            else:
+                games = UserGame.objects.filter(user=request.user, status=UserGame.STATUS_GOING,
+                                                game__rawg_release_date__lte=today_date)
             games_len = len(games)
             if games_len > 0:
                 categories.append('games')
         if 'movies' in categories_query:
-            movies = UserMovie.objects.filter(user=request.user, status=UserMovie.STATUS_GOING,
-                                              movie__tmdb_release_date__lte=today_date)
+            if all_from_db:
+                movies = Movie.objects.filter(tmdb_release_date__lte=today_date) \
+                    .exclude(
+                        usermovie__user=request.user,
+                        usermovie__status__in=[
+                            UserMovie.STATUS_WATCHED,
+                            UserMovie.STATUS_STOPPED,
+                        ]
+                    ).distinct()
+            else:
+                movies = UserMovie.objects.filter(user=request.user, status=UserMovie.STATUS_GOING,
+                                                  movie__tmdb_release_date__lte=today_date)
             movies_len = len(movies)
             if movies_len > 0:
                 categories.append('movies')
         if 'shows' in categories_query:
-            if ended_only:
-                shows = UserShow.objects.filter(user=request.user, status=UserShow.STATUS_GOING,
-                                                show__tmdb_release_date__lte=today_date,
-                                                show__tmdb_status__in=[Show.TMDB_STATUS_ENDED,
-                                                                       Show.TMDB_STATUS_CANCELED])
+            if all_from_db:
+                show_filters = {
+                    'tmdb_release_date__lte': today_date,
+                }
+                if ended_only:
+                    show_filters['tmdb_status__in'] = [Show.TMDB_STATUS_ENDED, Show.TMDB_STATUS_CANCELED]
+                shows = Show.objects.filter(**show_filters) \
+                    .exclude(
+                        usershow__user=request.user,
+                        usershow__status__in=[
+                            UserShow.STATUS_WATCHED,
+                            UserShow.STATUS_STOPPED,
+                            UserShow.STATUS_WATCHING,
+                        ]
+                    ).distinct()
             else:
-                shows = UserShow.objects.filter(user=request.user, status=UserShow.STATUS_GOING,
-                                                show__tmdb_release_date__lte=today_date)
+                if ended_only:
+                    shows = UserShow.objects.filter(user=request.user, status=UserShow.STATUS_GOING,
+                                                    show__tmdb_release_date__lte=today_date,
+                                                    show__tmdb_status__in=[Show.TMDB_STATUS_ENDED,
+                                                                           Show.TMDB_STATUS_CANCELED])
+                else:
+                    shows = UserShow.objects.filter(user=request.user, status=UserShow.STATUS_GOING,
+                                                    show__tmdb_release_date__lte=today_date)
             shows_len = len(shows)
             if shows_len > 0:
                 categories.append('shows')
@@ -438,13 +477,22 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         selected_entries = []
         if 'games' in categories:
-            selected_games = [item.game for item in games.order_by('?')[:games_count].select_related('game')]
+            if all_from_db:
+                selected_games = list(games.order_by('?')[:games_count])
+            else:
+                selected_games = [item.game for item in games.order_by('?')[:games_count].select_related('game')]
             selected_entries += TypedGameSerializer(selected_games, many=True).data
         if 'movies' in categories:
-            selected_movies = [item.movie for item in movies.order_by('?')[:movies_count].select_related('movie')]
+            if all_from_db:
+                selected_movies = list(movies.order_by('?')[:movies_count])
+            else:
+                selected_movies = [item.movie for item in movies.order_by('?')[:movies_count].select_related('movie')]
             selected_entries += TypedMovieSerializer(selected_movies, many=True, context={'request': request}).data
         if 'shows' in categories:
-            selected_shows = [item.show for item in shows.order_by('?')[:shows_count].select_related('show')]
+            if all_from_db:
+                selected_shows = list(shows.order_by('?')[:shows_count])
+            else:
+                selected_shows = [item.show for item in shows.order_by('?')[:shows_count].select_related('show')]
             selected_entries += TypedShowSerializer(selected_shows, many=True, context={'request': request}).data
 
         random.shuffle(selected_entries)

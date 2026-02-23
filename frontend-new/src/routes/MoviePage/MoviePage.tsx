@@ -8,6 +8,7 @@ import FriendsActivity from '../../shared/FriendsActivity';
 import ScoreBlock from '../../shared/ScoreBlock';
 import Rating from '../../shared/Rating';
 import TmdbReviewsBlock from '../../shared/TmdbReviewsBlock/TmdbReviewsBlock';
+import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
 
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import "./movie-page.scss";
@@ -31,6 +32,7 @@ export function MoviePage() {
 	const [userStatus, setUserStatus] = useState("Не смотрел");
 	const [userRate, setUserRate] = useState(0);
 	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
+	const [isMobileViewport, setIsMobileViewport] = useState(false);
 
 	const movieFetchConfig = useMemo(() => movieId && ({
 		url: `/movies/movie/${movieId}/`,
@@ -73,6 +75,19 @@ export function MoviePage() {
 	useEffect(() => {
 		setOverviewExpanded(false);
 	}, [movieId]);
+
+	useEffect(() => {
+		const updateViewport = () => {
+			if (typeof window === 'undefined') {
+				return;
+			}
+			setIsMobileViewport(window.innerWidth <= 760);
+		};
+
+		updateViewport();
+		window.addEventListener('resize', updateViewport);
+		return () => window.removeEventListener('resize', updateViewport);
+	}, []);
 
 	useEffect(
 		() => {
@@ -197,7 +212,7 @@ export function MoviePage() {
 						</div>
 					</div>
 
-					{!!movie?.videos?.length && (
+					{!!movie?.videos?.length && !isMobileViewport && (
 						<div className={bem.element('trailers-card')}>
 							<h3 className={bem.element('section-title')}>Трейлеры</h3>
 							<Carousel
@@ -263,6 +278,13 @@ export function MoviePage() {
 										</div>
 									</LoadingOverlay>
 								</section>
+
+								<TmdbRecommendationsBlock
+									className={bem.element('content-card', {tmdbRecommendations: true})}
+									itemType='movie'
+									title='Рекомендации TMDB'
+									endpoint={`/movies/movie/${movieId}/tmdb_recommendations/`}
+								/>
 							</div>
 
 							<div className={bem.element('side-column')}>

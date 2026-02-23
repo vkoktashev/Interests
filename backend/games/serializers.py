@@ -3,7 +3,6 @@ from adrf.serializers import ModelSerializer
 from rest_framework import serializers
 
 from games.models import UserGame, GameLog, Game
-from users.models import User
 from users.serializers import FollowedUserSerializer
 from utils.constants import TYPE_GAME
 from utils.serializers import ChoicesField
@@ -30,13 +29,8 @@ class GameStatsSerializer(UserGameSerializer):
 
 # todo: rework
 class FollowedUserGameSerializer(UserGameSerializer):
-    user = SerializerMethodField()
+    user = FollowedUserSerializer()
     last_updated = serializers.DateTimeField(source='updated_at', read_only=True)
-
-    @staticmethod
-    async def get_user(obj):
-        user = await User.objects.aget(id=obj.user_id)
-        return await FollowedUserSerializer(user).adata
 
     class Meta:
         model = UserGame

@@ -96,6 +96,16 @@ def get_tmdb_movie_reviews(tmdb_id, page=1):
     return tmdb_reviews or {'page': page, 'total_pages': 1, 'total_results': 0, 'results': []}
 
 
+def get_tmdb_movie_recommendations(tmdb_id, page=1):
+    key = f'movie_{tmdb_id}_recommendations_{LANGUAGE.replace("-", "_")}_{page}'
+    tmdb_recommendations = cache.get(key, None)
+    if tmdb_recommendations is None:
+        tmdb_recommendations = tmdb.Movies(tmdb_id).recommendations(language=LANGUAGE, page=page)
+        cache.set(key, tmdb_recommendations, CACHE_TIMEOUT)
+
+    return tmdb_recommendations or {'page': page, 'total_pages': 1, 'total_results': 0, 'results': []}
+
+
 def update_movie_genres(movie, tmdb_movie):
     existing_movie_genres = MovieGenre.objects.filter(movie=movie)
     new_movie_genres = []

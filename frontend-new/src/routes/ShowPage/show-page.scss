@@ -4,9 +4,11 @@
 .show-page {
   position: relative;
   max-width: 1300px;
+  width: 100%;
   color: $newText3;
   border-radius: 16px;
   overflow: visible;
+  overflow-x: clip;
 
   &__background {
     position: absolute;
@@ -155,6 +157,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    min-width: 0;
     border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba($newBackground2, 0.72);
@@ -165,11 +168,14 @@
     display: flex;
     align-items: center;
     min-height: 26px;
+    min-width: 0;
+    overflow-x: auto;
   }
 
   &__actions-statuses {
     padding-top: 10px;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
+    min-width: 0;
   }
 
   &__rating {
@@ -202,9 +208,21 @@
     border-radius: 12px;
     overflow: hidden;
     background: rgba(0, 0, 0, 0.5);
+    max-width: 100%;
 
     .carousel .slide {
       background: transparent;
+    }
+
+    .carousel,
+    .carousel-root,
+    .slider-wrapper,
+    .slider,
+    .carousel-slider {
+      max-width: 100%;
+      width: 100%;
+      overflow: hidden;
+      box-sizing: border-box;
     }
   }
 
@@ -386,8 +404,13 @@
     }
 
     &__title-row {
-      align-items: center;
-      gap: 10px;
+      align-items: stretch;
+      gap: 8px;
+      flex-direction: column;
+    }
+
+    &__info-score {
+      align-self: flex-end;
     }
 
     &__info-panel,

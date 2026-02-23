@@ -11,13 +11,13 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from movies.functions import get_movie_new_fields, update_movie_genres, get_tmdb_movie, get_tmdb_movie_videos, \
-    get_cast_crew, update_movie_people, get_tmdb_movie_reviews
+    get_cast_crew, update_movie_people, get_tmdb_movie_reviews, get_tmdb_movie_recommendations
 from movies.models import UserMovie, Movie, MoviePerson
 from movies.serializers import UserMovieReadSerializer, FollowedUserMovieSerializer, UserMovieWriteSerializer
 from movies.tasks import refresh_movie_details
 from proxy.functions import get_proxy_url
 from users.models import UserFollow
-from utils.constants import ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE
+from utils.constants import ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, TMDB_POSTER_PATH_PREFIX, TMDB_BACKDROP_PATH_PREFIX
 from utils.functions import update_fields_if_needed
 
 MOVIE_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
@@ -86,7 +86,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 user_info = None
 
             user_follow_query = UserFollow.objects.filter(user=request.user, is_following=True).values('followed_user')
-            followed_user_movies = UserMovie.objects.filter(user__in=user_follow_query, movie=movie) \
+            followed_user_movies = UserMovie.objects.select_related('user').filter(user__in=user_follow_query, movie=movie) \
                 .exclude(status=UserMovie.STATUS_NOT_WATCHED)
             serializer = FollowedUserMovieSerializer(followed_user_movies, many=True)
             friends_info = serializer.data
@@ -150,6 +150,56 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             'total_pages': payload.get('total_pages') or 1,
             'total_results': payload.get('total_results') or len(reviews),
             'results': reviews,
+        })
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, required=False),
+        ],
+        responses={
+            200: openapi.Response('OK'),
+            404: openapi.Response('Movie not found'),
+            503: openapi.Response('TMDB unavailable'),
+        }
+    )
+    @action(detail=True, methods=['get'])
+    def tmdb_recommendations(self, request, *args, **kwargs):
+        tmdb_id = kwargs.get('tmdb_id')
+        try:
+            page = int(request.query_params.get('page', 1) or 1)
+        except (TypeError, ValueError):
+            page = 1
+        page = max(page, 1)
+
+        try:
+            payload = get_tmdb_movie_recommendations(tmdb_id, page=page)
+        except HTTPError as e:
+            error_code = int(e.args[0].split(' ', 1)[0])
+            if error_code == 404:
+                return Response({ERROR: MOVIE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except (ConnectionError, Timeout, ValueError):
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        recommendations = []
+        for item in (payload.get('results') or []):
+            recommendations.append({
+                'id': item.get('id'),
+                'name': item.get('title') or '',
+                'original_name': item.get('original_title') or '',
+                'overview': item.get('overview') or '',
+                'release_date': item.get('release_date') or '',
+                'vote_average': item.get('vote_average'),
+                'vote_count': item.get('vote_count') or 0,
+                'poster_path': get_proxy_url(request.scheme, TMDB_POSTER_PATH_PREFIX, item.get('poster_path')),
+                'backdrop_path': get_proxy_url(request.scheme, TMDB_BACKDROP_PATH_PREFIX, item.get('backdrop_path')),
+            })
+
+        return Response({
+            'page': payload.get('page') or page,
+            'total_pages': payload.get('total_pages') or 1,
+            'total_results': payload.get('total_results') or len(recommendations),
+            'results': recommendations,
         })
 
     @swagger_auto_schema(

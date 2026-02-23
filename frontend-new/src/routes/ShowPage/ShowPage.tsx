@@ -13,6 +13,7 @@ import FriendsActivity from '../../shared/FriendsActivity';
 import SeasonsBlock from './views/SeasonsBlock';
 import ScoreBlock from '../../shared/ScoreBlock';
 import TmdbReviewsBlock from '../../shared/TmdbReviewsBlock/TmdbReviewsBlock';
+import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
 
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import "./show-page.scss";
@@ -34,6 +35,7 @@ function ShowPage(props) {
 	const [userStatus, setUserStatus] = useState("Не смотрел");
 	const [userRate, setUserRate] = useState(0);
 	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
+	const [isMobileViewport, setIsMobileViewport] = useState(false);
 
     const showFetchConfig = useMemo(() => showId && ({
         url: `/shows/show/${showId}/`,
@@ -69,6 +71,19 @@ function ShowPage(props) {
 	useEffect(() => {
 		setOverviewExpanded(false);
 	}, [showId]);
+
+	useEffect(() => {
+		const updateViewport = () => {
+			if (typeof window === 'undefined') {
+				return;
+			}
+			setIsMobileViewport(window.innerWidth <= 760);
+		};
+
+		updateViewport();
+		window.addEventListener('resize', updateViewport);
+		return () => window.removeEventListener('resize', updateViewport);
+	}, []);
 
 	useEffect(() => {
         if (userInfo?.status) {
@@ -215,14 +230,15 @@ function ShowPage(props) {
 						</div>
 					</div>
 
-                    {!!show?.videos?.length && (
+                    {!!show?.videos?.length && !isMobileViewport && (
                         <div className={bem.element('trailers-card')}>
                             <h3 className={bem.element('section-title')}>Трейлеры</h3>
                             <Carousel
+                                key={isMobileViewport ? 'mobile' : 'desktop'}
                                 className={bem.element('trailers')}
                                 showArrows
-                                centerMode
-                                centerSlidePercentage={50}
+                                centerMode={!isMobileViewport}
+                                centerSlidePercentage={isMobileViewport ? 100 : 50}
                                 showThumbs={false}
                                 showStatus={false}
                                 showIndicators={false}
@@ -297,6 +313,13 @@ function ShowPage(props) {
                                         </div>
                                     </LoadingOverlay>
                                 </section>
+
+                                <TmdbRecommendationsBlock
+                                    className={bem.element('content-card', {tmdbRecommendations: true})}
+                                    itemType='show'
+                                    title='Рекомендации TMDB'
+                                    endpoint={`/shows/show/${showId}/tmdb_recommendations/`}
+                                />
                             </div>
 
                             <div className={bem.element('side-column')}>

@@ -7,7 +7,7 @@
 
     position: relative;
     display: inline-grid;
-    grid-template-columns: repeat(var(--status-count), 1fr);
+    grid-template-columns: repeat(var(--status-count), minmax(0, 1fr));
     align-items: stretch;
     width: fit-content;
     max-width: 100%;
@@ -16,6 +16,19 @@
     background: linear-gradient(135deg, rgba($newBackground2, 0.9), rgba($newBackground3, 0.6));
     border: 1px solid rgba($newBackground3, 0.9);
     overflow: hidden;
+
+    @media (max-width: $mobile-width) {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+        min-width: 0;
+        gap: 2px;
+        padding: 2px;
+
+        &__highlight {
+            display: none;
+        }
+    }
 
     &__highlight {
         position: absolute;
@@ -61,6 +74,25 @@
         @media (max-width: $mobile-width) {
             font-size: 12px;
             padding: 8px 10px;
+            white-space: normal;
+            line-height: 1.15;
+            min-width: 0;
+            overflow-wrap: anywhere;
+            flex: 1 1 calc(33.333% - 2px);
+            border-radius: 8px;
+
+            &_active {
+                background: linear-gradient(135deg, rgba($newAccent2, 0.8), rgba($newAccent1, 0.7));
+                color: $newText3;
+                box-shadow: 0 8px 18px rgba($newAccent3, 0.22);
+            }
+        }
+
+        @media (max-width: 390px) {
+            font-size: 11px;
+            padding: 7px 6px;
+            letter-spacing: 0;
+            flex-basis: calc(33.333% - 2px);
         }
     }
 }

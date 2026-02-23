@@ -1,0 +1,101 @@
+@import "style/colors";
+
+.tmdb-media-card {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba($newAccent2, 0.06) 0%, rgba($newAccent1, 0.03) 100%),
+    rgba($newBackground2, 0.9);
+  text-decoration: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    border-color: rgba($newAccent2, 0.28);
+    background:
+      linear-gradient(180deg, rgba($newAccent2, 0.1) 0%, rgba($newAccent1, 0.04) 100%),
+      rgba($newBackground2, 0.95);
+    transform: translateY(-1px);
+  }
+
+  &__poster {
+    width: 74px;
+    height: 104px;
+    border-radius: 9px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+  }
+
+  &__poster-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__poster-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $newText2;
+    font-weight: 600;
+    background: linear-gradient(180deg, rgba($newAccent2, 0.12), rgba($newAccent1, 0.06));
+  }
+
+  &__body {
+    min-width: 0;
+    display: grid;
+    gap: 6px;
+    align-content: start;
+  }
+
+  &__top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: start;
+  }
+
+  &__name {
+    color: $newText3;
+    font-weight: 500;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  &__score {
+    color: rgba($newAccent2, 0.95);
+    font-weight: 600;
+    font-size: 0.92rem;
+    line-height: 1.2;
+    flex-shrink: 0;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    color: $newText2;
+    font-size: 0.77rem;
+    line-height: 1.2;
+  }
+
+  &__overview {
+    color: $newText2;
+    font-size: 0.86rem;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+}
