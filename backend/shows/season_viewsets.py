@@ -137,8 +137,11 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         season_number = kwargs.get('number')
 
         try:
-            show = Show.objects.get(tmdb_id=show_id)
-            season = Season.objects.get(tmdb_show=show, tmdb_season_number=season_number)
+            season = Season.objects.select_related('tmdb_show').get(
+                tmdb_show__tmdb_id=show_id,
+                tmdb_season_number=season_number
+            )
+            show = season.tmdb_show
             # user_info
             try:
                 user_season = UserSeason.objects.get(user=request.user, season=season)
@@ -156,9 +159,8 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 .exclude(score=UserSeason._meta.get_field('score').get_default())
             serializer = FollowedUserSeasonSerializer(followed_user_seasons, many=True)
             friends_info = serializer.data
-            episodes = Episode.objects.filter(tmdb_season=season)
             user_episodes = UserEpisode.objects.select_related('episode').filter(user=request.user,
-                                                                                 episode__in=episodes)
+                                                                                 episode__tmdb_season=season)
             episodes_user_info = UserEpisodeInSeasonSerializer(user_episodes, many=True).data
         except (Show.DoesNotExist, Season.DoesNotExist, ValueError):
             show = None

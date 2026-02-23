@@ -135,11 +135,13 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def user_info(self, request, **kwargs):
         try:
-            show = Show.objects.get(tmdb_id=kwargs.get('show_tmdb_id'))
-            season = Season.objects.get(tmdb_show=show,
-                                        tmdb_season_number=kwargs.get('season_number'))
-            episode = Episode.objects.get(tmdb_season=season,
-                                          tmdb_episode_number=kwargs.get('number'))
+            episode = Episode.objects.select_related('tmdb_season__tmdb_show').get(
+                tmdb_season__tmdb_show__tmdb_id=kwargs.get('show_tmdb_id'),
+                tmdb_season__tmdb_season_number=kwargs.get('season_number'),
+                tmdb_episode_number=kwargs.get('number')
+            )
+            season = episode.tmdb_season
+            show = season.tmdb_show
 
             # user_info
             try:
