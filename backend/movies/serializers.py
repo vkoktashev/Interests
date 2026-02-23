@@ -121,3 +121,6 @@ class TypedMovieSerializer(MovieSerializer):
     @staticmethod
     def get_type(movie):
         return TYPE_MOVIE
+
+    class Meta(MovieSerializer.Meta):
+        fields = MovieSerializer.Meta.fields + ('type',)

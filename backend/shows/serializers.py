@@ -241,6 +241,9 @@ class TypedShowSerializer(ShowSerializer):
     def get_type(show):
         return TYPE_SHOW
 
+    class Meta(ShowSerializer.Meta):
+        fields = ShowSerializer.Meta.fields + ('type',)
+
 
 class SeasonSerializer(serializers.ModelSerializer):
     class Meta:
