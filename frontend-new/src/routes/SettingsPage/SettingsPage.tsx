@@ -7,6 +7,7 @@ import "./settings-page.scss";
 import {Loader} from '@steroidsjs/core/ui/layout';
 import {Button, CheckboxField, DropDownField, Form} from '@steroidsjs/core/ui/form';
 import {getFormValues} from '@steroidsjs/core/reducers/form';
+import GoogleSignInButton from '../../shared/auth/GoogleSignInButton/GoogleSignInButton';
 
 const privacyItems = [
 	{
@@ -37,6 +38,16 @@ function SettingsPage() {
 		method: 'get',
 	}), []);
 	const {data: settings, isLoading} = useFetch(settingsFetchConfig);
+	const googleLinkStatusFetchConfig = useMemo(() => ({
+		url: '/users/auth/google_link_status/',
+		method: 'get',
+	}), []);
+	const {
+		data: googleLinkStatus,
+		fetch: fetchGoogleLinkStatus,
+		isLoading: isGoogleLinkStatusLoading,
+	} = useFetch(googleLinkStatusFetchConfig);
+	const [isGoogleActionLoading, setGoogleActionLoading] = useState(false);
 
 	const patchSettings = useCallback(async (values) => {
 		http.send('PATCH', '/users/user/user_settings/', values)
@@ -47,6 +58,34 @@ function SettingsPage() {
 				dispatch(showNotification('Ошибка сохранения!', 'danger'));
 			});
 	}, []);
+
+	const onGoogleLink = useCallback(async (credential: string) => {
+		setGoogleActionLoading(true);
+		try {
+			await http.post('/users/auth/google_link/', {credential});
+			await fetchGoogleLinkStatus();
+			dispatch(showNotification('Google аккаунт привязан!'));
+		} catch (e) {
+			const errorMessage = e?.response?.data?.error || 'Не удалось привязать Google аккаунт';
+			dispatch(showNotification(errorMessage, 'danger'));
+		} finally {
+			setGoogleActionLoading(false);
+		}
+	}, [dispatch, fetchGoogleLinkStatus, http]);
+
+	const onGoogleUnlink = useCallback(async () => {
+		setGoogleActionLoading(true);
+		try {
+			await http.send('DELETE', '/users/auth/google_unlink/');
+			await fetchGoogleLinkStatus();
+			dispatch(showNotification('Google аккаунт отвязан.'));
+		} catch (e) {
+			const errorMessage = e?.response?.data?.error || 'Не удалось отвязать Google аккаунт';
+			dispatch(showNotification(errorMessage, 'danger'));
+		} finally {
+			setGoogleActionLoading(false);
+		}
+	}, [dispatch, fetchGoogleLinkStatus, http]);
 
 	if (isLoading || !settings) {
 		return <Loader />;
@@ -114,6 +153,49 @@ function SettingsPage() {
 										</div>
 									)
 								}
+							</section>
+							<section className={bem.element('card')}>
+								<h3 className={bem.element('subheader')}>
+									Связанные аккаунты
+								</h3>
+								<div className={bem.element('integration-card', {linked: !!googleLinkStatus?.is_linked})}>
+									<div className={bem.element('integration-header')}>
+										<div>
+											<div className={bem.element('integration-title')}>Google</div>
+											<div className={bem.element('integration-subtitle')}>
+												{googleLinkStatus?.is_linked
+													? `Привязан: ${googleLinkStatus?.google_email || 'Google аккаунт'}`
+													: 'Подключите Google, чтобы входить в аккаунт без пароля'}
+											</div>
+										</div>
+										<div className={bem.element('integration-badge', {linked: !!googleLinkStatus?.is_linked})}>
+											{googleLinkStatus?.is_linked ? 'Подключен' : 'Не подключен'}
+										</div>
+									</div>
+
+									{!googleLinkStatus?.is_linked && (
+										<GoogleSignInButton
+											className={bem.element('google-link')}
+											disabled={isGoogleActionLoading || isGoogleLinkStatusLoading}
+											onCredential={onGoogleLink}
+											onError={(message) => dispatch(showNotification(message, 'danger'))}
+										/>
+									)}
+
+									{googleLinkStatus?.is_linked && (
+										<div className={bem.element('integration-actions')}>
+											<Button
+												type='button'
+												outline
+												color='danger'
+												className={bem.element('unlink-button')}
+												disabled={isGoogleActionLoading}
+												label={isGoogleActionLoading ? 'Отвязка...' : 'Отвязать Google'}
+												onClick={onGoogleUnlink}
+											/>
+										</div>
+									)}
+								</div>
 							</section>
 						</div>
 						<div className={bem.element('actions')}>

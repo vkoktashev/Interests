@@ -9,6 +9,7 @@ import ResetPasswordForm from '../ResetPasswordForm';
 import {login} from '@steroidsjs/core/actions/auth';
 import {Button, Form, InputField, PasswordField} from '@steroidsjs/core/ui/form';
 import {Link} from '@steroidsjs/core/ui/nav';
+import GoogleSignInButton from '../../shared/auth/GoogleSignInButton/GoogleSignInButton';
 
 export function LoginForm(props: IModalProps) {
 	const bem = useBem('login-form');
@@ -45,6 +46,24 @@ export function LoginForm(props: IModalProps) {
 		props.onClose();
 	}, [dispatch, props]);
 
+	const onGoogleCredential = useCallback(async (credential: string) => {
+		setError('');
+		setLoading(true);
+
+		try {
+			const response = await http.post('/users/auth/google_login/', {credential});
+			dispatch(login(response.access, false, {
+				refreshToken: response.refresh,
+			}));
+			props.onClose();
+		} catch (e) {
+			const errorMessage = e.response?.data?.error || __('Не удалось войти через Google');
+			setError(errorMessage);
+		} finally {
+			setLoading(false);
+		}
+	}, [dispatch, http, props]);
+
 	return (
 		<Modal
 			{...props}
@@ -54,45 +73,65 @@ export function LoginForm(props: IModalProps) {
 			onClose={props.onClose}
 		>
 			<Form onSubmit={onSubmit} className={bem.element('form')}>
-				<p
-					className={bem.element('fail')}
-					hidden={!error}
-				>
-					{error}
-				</p>
+				<div className={bem.element('intro')}>
+					<div className={bem.element('intro-title')}>{__('С возвращением')}</div>
+					<div className={bem.element('intro-text')}>
+						{__('Войдите в аккаунт, чтобы продолжить отмечать просмотренное, ставить оценки и смотреть статистику.')}
+					</div>
+				</div>
+
+				{!!error && (
+					<p className={bem.element('fail')}>
+						{error}
+					</p>
+				)}
 
 				<div className={bem.element('fields')}>
 					<InputField
 						attribute='username'
 						label={__('Логин')}
 						className={bem.element('input')}
+						placeholder={__('Ваш никнейм или email')}
+						inputProps={{autoComplete: 'username'}}
 					/>
 
 					<PasswordField
 						attribute='password'
 						label={__('Пароль')}
 						className={bem.element('input')}
+						inputProps={{autoComplete: 'current-password'}}
 					/>
 				</div>
-
-				<div className={bem.element('actions')}>
-					<Button
-						type='submit'
-						className={bem.element('auth-button')}
-						label={isLoading ? __('Загрузка...') : __('Войти')}
-					/>
-				</div>
-				<Link onClick={onPasswordRecovery} className={bem.element('link-muted')}>
-					{__('Забыли пароль?')}
-				</Link>
 
 				<div className={bem.element('footer')}>
-					<p className={bem.element('signup-text')}>
-						{__('Нет аккаунта?')}
-					</p>
-					<Link onClick={onRegistration} className={bem.element('link-primary')}>
-						{__('Создать аккаунт')}
+					<div className={bem.element('actions')}>
+						<Button
+							type='submit'
+							className={bem.element('auth-button')}
+							label={isLoading ? __('Входим...') : __('Войти')}
+							disabled={isLoading}
+						/>
+					</div>
+
+					<GoogleSignInButton
+						className={bem.element('google')}
+						disabled={isLoading}
+						onCredential={onGoogleCredential}
+						onError={setError}
+					/>
+
+					<Link onClick={onPasswordRecovery} className={bem.element('link-muted')}>
+						{__('Забыли пароль?')}
 					</Link>
+
+					<div className={bem.element('signup')}>
+						<p className={bem.element('signup-text')}>
+							{__('Нет аккаунта?')}
+						</p>
+						<Link onClick={onRegistration} className={bem.element('link-primary')}>
+							{__('Создать аккаунт')}
+						</Link>
+					</div>
 				</div>
 			</Form>
 		</Modal>

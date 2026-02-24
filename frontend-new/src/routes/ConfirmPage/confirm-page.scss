@@ -2,7 +2,140 @@
 @import "style/mixins";
 
 .confirm-page {
-    @include default-page;
+  @include default-page;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 32px;
+  padding-bottom: 32px;
+
+  &__container {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  &__card {
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background:
+      radial-gradient(120% 120% at 0% 0%, rgba($newAccent2, 0.16), transparent 48%),
+      radial-gradient(110% 120% at 100% 0%, rgba($newAccent1, 0.14), transparent 44%),
+      linear-gradient(180deg, rgba(#1c1f25, 0.98), rgba(#15171b, 0.98));
+    box-shadow: 0 24px 48px rgba(3, 4, 8, 0.34);
+    padding: 24px;
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+  }
+
+  &__icon-wrap {
+    margin-bottom: 2px;
+  }
+
+  &__icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: $newText3;
+    background: rgba(255, 255, 255, 0.04);
+
+    &_pending {
+      color: #d7dcff;
+      background:
+        linear-gradient(180deg, rgba($newAccent2, 0.18), rgba($newAccent1, 0.08)),
+        rgba(255, 255, 255, 0.02);
+    }
+
+    &_done {
+      color: #b7f8dc;
+      background:
+        linear-gradient(180deg, rgba(34, 197, 94, 0.18), rgba(34, 197, 94, 0.07)),
+        rgba(255, 255, 255, 0.02);
+      border-color: rgba(34, 197, 94, 0.25);
+    }
+
+    &_error {
+      color: #ffd0d7;
+      background:
+        linear-gradient(180deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.07)),
+        rgba(255, 255, 255, 0.02);
+      border-color: rgba(239, 68, 68, 0.25);
+    }
+  }
+
+  &__title {
+    margin: 0;
+    color: $newText3;
+    font-size: 1.45rem;
+    line-height: 1.15;
+    font-weight: 700;
+  }
+
+  &__text {
+    margin: 0;
+    color: $newText2;
+    font-size: 0.96rem;
+    line-height: 1.5;
+    max-width: 460px;
+  }
+
+  &__actions {
+    margin-top: 4px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  &__button {
+    min-width: 160px;
+    min-height: 42px;
+    border-radius: 12px;
+
+    &_secondary {
+      min-width: 130px;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .confirm-page {
+    align-items: flex-start;
+    padding-top: 16px;
+    padding-bottom: 20px;
+
+    &__card {
+      border-radius: 16px;
+      padding: 18px 14px;
+      gap: 10px;
+    }
+
+    &__title {
+      font-size: 1.2rem;
+    }
+
+    &__text {
+      font-size: 0.9rem;
+    }
+
+    &__actions {
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    &__button {
+      width: 100%;
+      min-width: 0;
+    }
+  }
 }

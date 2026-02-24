@@ -8,6 +8,7 @@ import {useBem, useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {goToRoute} from '@steroidsjs/core/actions/router';
 import {openModal} from '@steroidsjs/core/actions/modal';
+import {Button} from '@steroidsjs/core/ui/form';
 import LoginForm from '../../../modals/LoginForm';
 import {ROUTE_ROOT, ROUTE_SEARCH, ROUTE_USER} from '../../../routes';
 import {toggleSidebar} from '../../../actions/modals';
@@ -91,9 +92,13 @@ export function Navbar(props: any) {
 				)}
 
 				{!user && (
-					<button type='button' onClick={openLogin} className={bem.element('login-button')}>
+					<Button
+						type='button'
+						onClick={openLogin}
+						className={bem.element('login-button')}
+					>
 						<FaSignInAlt /> {__('Войти')}
-					</button>
+					</Button>
 				)}
 			</div>
 		</div>

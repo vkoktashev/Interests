@@ -27,6 +27,7 @@ type TButtonViewProps = {
 	size?: 'sm' | 'md' | 'lg' | string,
 	tag?: 'a' | string,
 	url?: string,
+	href?: string,
 	target?: string,
 	type?: 'button' | 'submit' | 'reset',
 	className?: string,
@@ -108,7 +109,7 @@ function ButtonView(props: TButtonViewProps) {
 		return (
 			<a
 				className={className}
-				href={props.url}
+				href={props.href || props.url}
 				onClick={props.onClick}
 				style={props.style}
 				target={props.target}

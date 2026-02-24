@@ -52,7 +52,7 @@ export default {
     'form.ImageFieldModalView': {lazy: () => require('@steroidsjs/bootstrap/form/ImageField/ImageFieldModalView').default},
     'form.InputFieldView': {lazy: () => require('./form/InputField/InputFieldView').default},
     'form.NumberFieldView': {lazy: () => require('@steroidsjs/bootstrap/form/NumberField/NumberFieldView').default},
-    'form.PasswordFieldView': {lazy: () => require('@steroidsjs/bootstrap/form/PasswordField/PasswordFieldView').default},
+    'form.PasswordFieldView': {lazy: () => require('./form/PasswordField/PasswordFieldView').default},
     'form.RadioFieldView': {lazy: () => require('@steroidsjs/bootstrap/form/RadioField/RadioFieldView').default},
     'form.RadioListFieldView': {lazy: () => require('@steroidsjs/bootstrap/form/RadioListField/RadioListFieldView').default},
     'form.RateFieldView': {lazy: () => require('@steroidsjs/bootstrap/form/RateField/RateFieldView').default},

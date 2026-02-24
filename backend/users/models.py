@@ -44,6 +44,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     receive_episodes_releases = models.BooleanField(default=False)
     backdrop_path = models.CharField(max_length=200, null=True)
     privacy = models.CharField(max_length=50, choices=PRIVACY_CHOICES, default=PRIVACY_ALL)
+    google_sub = models.CharField(max_length=255, null=True, blank=True, unique=True)
+    google_email = models.EmailField(null=True, blank=True)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
