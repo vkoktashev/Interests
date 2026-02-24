@@ -38,7 +38,6 @@ class AuthViewSet(GenericViewSet):
         if settings.DEBUG:
             print(activation_link)
             try:
-                email.to = ["kononkov98@mail.ru"]
                 email.send()
             except SMTPAuthenticationError as e:
                 print(e.smtp_error)
@@ -53,13 +52,16 @@ class AuthViewSet(GenericViewSet):
 
     @action(detail=False, methods=['patch'], permission_classes=[AllowAny])
     def confirm_email(self, request):
+        uid64 = request.query_params.get('uid64') or request.data.get('uid64')
+        token = request.query_params.get('token') or request.data.get('token')
+
         try:
-            uid = force_str(urlsafe_base64_decode(request.query_params.get('uid64')))
+            uid = force_str(urlsafe_base64_decode(uid64))
             user = User.objects.get(pk=uid)
         except(TypeError, ValueError, OverflowError, AttributeError, User.DoesNotExist):
             user = None
 
-        if user is not None and account_activation_token.check_token(user, request.query_params.get('token')):
+        if user is not None and account_activation_token.check_token(user, token):
             user.is_active = True
             user.save()
             serializer = UserSerializer(instance=user)
@@ -94,6 +96,11 @@ class AuthViewSet(GenericViewSet):
         email = EmailMessage(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
         if settings.DEBUG:
             print(activation_link)
+            try:
+                email.send()
+            except SMTPAuthenticationError as e:
+                print(e.smtp_error)
+                return Response({ERROR: EMAIL_ERROR}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         else:
             try:
                 email.send()

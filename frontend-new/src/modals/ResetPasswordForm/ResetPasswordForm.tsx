@@ -34,36 +34,51 @@ export function ResetPasswordForm(props: IModalProps) {
             className={bem.block()}
             onClose={props.onClose}
 			title={__('Сбросить пароль')}
-        >
+		>
 			<Form onSubmit={onSubmit} className={bem.element('form')}>
-				<p
-					className={bem.element('fail')}
-					hidden={!error}
-				>
-					{error}
-				</p>
-				<p
-					className={bem.element('success')}
-					hidden={!emailSent}
-				>
-					{__('На вашу почту отправлено письмо')}
-				</p>
-
-				<div className={bem.element('fields')}>
-					<EmailField
-						attribute='email'
-						label={__('Почта')}
-						className={bem.element('input')}
-					/>
+				<div className={bem.element('intro')}>
+					<div className={bem.element('intro-title')}>{__('Восстановление доступа')}</div>
+					<div className={bem.element('intro-text')}>
+						{__('Введите email, указанный при регистрации. Мы отправим письмо со ссылкой для сброса пароля.')}
+					</div>
 				</div>
 
-				<div className={bem.element('actions')}>
-					<Button
-						type='submit'
-						className={bem.element('button')}
-						label={isLoading ? __('Загрузка...') : __('Сбросить')}
-					/>
-				</div>
+				{!!error && (
+					<p className={bem.element('fail')}>
+						{error}
+					</p>
+				)}
+
+				{emailSent && (
+					<p className={bem.element('success')}>
+						{__('На вашу почту отправлено письмо')}
+					</p>
+				)}
+
+				{!emailSent && (
+					<>
+						<div className={bem.element('fields')}>
+							<EmailField
+								attribute='email'
+								label={__('Почта')}
+								placeholder='name@example.com'
+								className={bem.element('input')}
+								inputProps={{autoComplete: 'email'}}
+							/>
+						</div>
+
+						<div className={bem.element('footer')}>
+							<div className={bem.element('actions')}>
+								<Button
+									type='submit'
+									className={bem.element('button')}
+									label={isLoading ? __('Отправляем...') : __('Сбросить пароль')}
+									disabled={isLoading}
+								/>
+							</div>
+						</div>
+					</>
+				)}
 			</Form>
 		</Modal>
 	);
