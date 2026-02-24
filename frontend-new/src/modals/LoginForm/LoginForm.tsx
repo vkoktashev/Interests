@@ -9,6 +9,7 @@ import ResetPasswordForm from '../ResetPasswordForm';
 import {login} from '@steroidsjs/core/actions/auth';
 import {Button, Form, InputField, PasswordField} from '@steroidsjs/core/ui/form';
 import {Link} from '@steroidsjs/core/ui/nav';
+import GoogleSignInButton from '../../shared/auth/GoogleSignInButton/GoogleSignInButton';
 
 export function LoginForm(props: IModalProps) {
 	const bem = useBem('login-form');
@@ -44,6 +45,24 @@ export function LoginForm(props: IModalProps) {
 		dispatch(openModal(RegisterForm));
 		props.onClose();
 	}, [dispatch, props]);
+
+	const onGoogleCredential = useCallback(async (credential: string) => {
+		setError('');
+		setLoading(true);
+
+		try {
+			const response = await http.post('/users/auth/google_login/', {credential});
+			dispatch(login(response.access, false, {
+				refreshToken: response.refresh,
+			}));
+			props.onClose();
+		} catch (e) {
+			const errorMessage = e.response?.data?.error || __('Не удалось войти через Google');
+			setError(errorMessage);
+		} finally {
+			setLoading(false);
+		}
+	}, [dispatch, http, props]);
 
 	return (
 		<Modal
@@ -93,6 +112,13 @@ export function LoginForm(props: IModalProps) {
 							disabled={isLoading}
 						/>
 					</div>
+
+					<GoogleSignInButton
+						className={bem.element('google')}
+						disabled={isLoading}
+						onCredential={onGoogleCredential}
+						onError={setError}
+					/>
 
 					<Link onClick={onPasswordRecovery} className={bem.element('link-muted')}>
 						{__('Забыли пароль?')}

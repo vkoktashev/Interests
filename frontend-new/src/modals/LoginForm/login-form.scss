@@ -72,7 +72,11 @@
   &__footer {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 14px;
+  }
+
+  &__google {
+    width: 100%;
   }
 
   &__actions {
@@ -101,6 +105,7 @@
     align-self: center;
     font-size: 0.88rem;
     color: rgba(241, 241, 251, 0.72);
+    margin-top: 2px;
 
     &:hover {
       color: $newText3;
@@ -112,7 +117,8 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding-top: 10px;
+    margin-top: 2px;
+    padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     flex-wrap: wrap;
   }

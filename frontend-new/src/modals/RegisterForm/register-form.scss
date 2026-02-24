@@ -97,6 +97,31 @@
     padding-top: 2px;
   }
 
+  &__google {
+    width: 100%;
+  }
+
+  &__google-selected {
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 10px 12px;
+  }
+
+  &__google-selected-label {
+    font-size: 0.78rem;
+    color: rgba($newText2, 0.9);
+    margin-bottom: 4px;
+  }
+
+  &__google-selected-email {
+    color: $newText3;
+    font-weight: 600;
+    font-size: 0.9rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
   &__terms {
     color: rgba($newText2, 0.9);
     font-size: 0.8rem;
