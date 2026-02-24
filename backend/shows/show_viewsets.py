@@ -78,7 +78,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             for tmdb_season in tmdb_show.get('seasons') or []:
                 upsert_season_from_tmdb(show, tmdb_season)
 
-        response = Response(parse_show(show, request.scheme))
+        response = Response(parse_show(show, request))
 
         if show.tmdb_last_update and show.tmdb_last_update <= timezone.now() - SHOW_DETAILS_REFRESH_INTERVAL:
             show_id = show.tmdb_id
@@ -246,8 +246,8 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 'release_date': item.get('first_air_date') or '',
                 'vote_average': item.get('vote_average'),
                 'vote_count': item.get('vote_count') or 0,
-                'poster_path': get_proxy_url(request.scheme, TMDB_POSTER_PATH_PREFIX, item.get('poster_path')),
-                'backdrop_path': get_proxy_url(request.scheme, TMDB_BACKDROP_PATH_PREFIX, item.get('backdrop_path')),
+                'poster_path': get_proxy_url(request, TMDB_POSTER_PATH_PREFIX, item.get('poster_path')),
+                'backdrop_path': get_proxy_url(request, TMDB_BACKDROP_PATH_PREFIX, item.get('backdrop_path')),
             })
 
         return Response({
@@ -575,7 +575,7 @@ def get_show_info(show_id, request):
     return {'show': show_data}
 
 
-def parse_show(show, schema):
+def parse_show(show, request):
     genres = [show_genre.genre.tmdb_name for show_genre in show.showgenre_set.select_related('genre').all()]
     cast_names = [show_person.person.name for show_person in show.showperson_set.select_related('person')
                   .filter(role=ShowPerson.ROLE_ACTOR).order_by('sort_order')]
@@ -585,7 +585,7 @@ def parse_show(show, schema):
         'id': season.tmdb_id,
         'name': season.tmdb_name,
         'overview': season.tmdb_overview,
-        'poster_path': get_proxy_url(schema, season.tmdb_poster_path),
+        'poster_path': get_proxy_url(request, season.tmdb_poster_path),
         'air_date': season.tmdb_air_date.strftime('%d.%m.%Y') if season.tmdb_air_date else None,
         'season_number': season.tmdb_season_number,
     } for season in show.season_set.order_by('tmdb_season_number').all()]
@@ -599,8 +599,8 @@ def parse_show(show, schema):
         'seasons_count': show.tmdb_number_of_seasons,
         'episodes_count': show.tmdb_number_of_episodes,
         'score': show.tmdb_score,
-        'backdrop_path': get_proxy_url(schema, show.tmdb_backdrop_path),
-        'poster_path': get_proxy_url(schema, show.tmdb_poster_path),
+        'backdrop_path': get_proxy_url(request, show.tmdb_backdrop_path),
+        'poster_path': get_proxy_url(request, show.tmdb_poster_path),
         'genres': ', '.join(genres),
         'production_companies': show.tmdb_production_companies,
         'status': translate_tmdb_status(show.tmdb_status),

@@ -1,6 +1,5 @@
 import React, {useMemo} from "react";
 import {useBem, useFetch} from "@steroidsjs/core/hooks";
-import Image from "../../../../shared/Image";
 
 interface IPickItem {
 	id: string | number;
@@ -47,7 +46,7 @@ function CommunityPicksBlock() {
 			<a key={`${type}-${item.id}`} className={bem.element('trending-card')} href={href}>
 				<div className={bem.element('trending-card-poster')}>
 					{imageSrc ? (
-						<Image src={imageSrc} alt={item.name} className={bem.element('trending-card-poster-img')} />
+						<img src={imageSrc} alt={item.name} className={bem.element('trending-card-poster-img')} />
 					) : (
 						<div className={bem.element('trending-card-poster-fallback')}>
 							{(item.name || '?').charAt(0).toUpperCase()}

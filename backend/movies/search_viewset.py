@@ -16,7 +16,7 @@ from movies.models import Movie
 from movies.serializers import MovieSerializer
 from proxy.functions import get_proxy_url
 from utils.constants import LANGUAGE, CACHE_TIMEOUT, \
-    TMDB_BACKDROP_PATH_PREFIX, DEFAULT_PAGE_SIZE
+    TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, DEFAULT_PAGE_SIZE
 from utils.functions import get_page_size
 from utils.openapi_params import DEFAULT_PAGE_NUMBER
 
@@ -44,11 +44,11 @@ class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
             results = None
 
         for result in results['results']:
-            result['backdrop_path'] = get_proxy_url(request.scheme,
+            result['backdrop_path'] = get_proxy_url(request,
                                                     TMDB_BACKDROP_PATH_PREFIX,
                                                     result.get('backdrop_path'))
-            result['poster_path'] = get_proxy_url(request.scheme,
-                                                  TMDB_BACKDROP_PATH_PREFIX,
+            result['poster_path'] = get_proxy_url(request,
+                                                  TMDB_POSTER_PATH_PREFIX,
                                                   result.get('poster_path'))
 
         return Response(results, status=status.HTTP_200_OK)

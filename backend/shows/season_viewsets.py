@@ -184,7 +184,7 @@ def parse_season(season, request):
         'episode_number': episode.tmdb_episode_number,
         'runtime': episode.tmdb_runtime,
         'score': episode.tmdb_score,
-        'still_path': get_proxy_url(request.scheme, episode.tmdb_still_path),
+        'still_path': get_proxy_url(request, episode.tmdb_still_path),
         'season_number': season.tmdb_season_number,
     } for episode in season.episode_set.order_by('tmdb_episode_number').all()]
 
@@ -197,7 +197,7 @@ def parse_season(season, request):
         'id': season.tmdb_id,
         'name': season.tmdb_name,
         'overview': season.tmdb_overview,
-        'poster_path': get_proxy_url(request.scheme, season.tmdb_poster_path),
+        'poster_path': get_proxy_url(request, season.tmdb_poster_path),
         'air_date': format_date(season.tmdb_air_date),
         'season_number': season.tmdb_season_number,
         'show': ShowSerializer(season.tmdb_show, context={'request': request}).data,

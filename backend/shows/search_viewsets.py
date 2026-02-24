@@ -15,7 +15,8 @@ from rest_framework.viewsets import GenericViewSet
 from proxy.functions import get_proxy_url
 from shows.models import Show
 from shows.serializers import ShowSerializer
-from utils.constants import DEFAULT_PAGE_NUMBER, TMDB_BACKDROP_PATH_PREFIX, DEFAULT_PAGE_SIZE, LANGUAGE, CACHE_TIMEOUT
+from utils.constants import DEFAULT_PAGE_NUMBER, TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, \
+    DEFAULT_PAGE_SIZE, LANGUAGE, CACHE_TIMEOUT
 from utils.functions import get_page_size
 
 
@@ -42,11 +43,11 @@ class SearchShowsViewSet(GenericViewSet, mixins.ListModelMixin):
             results = None
 
         for result in results['results']:
-            result['backdrop_path'] = get_proxy_url(request.scheme,
+            result['backdrop_path'] = get_proxy_url(request,
                                                     TMDB_BACKDROP_PATH_PREFIX,
                                                     result.get('backdrop_path'))
-            result['poster_path'] = get_proxy_url(request.scheme,
-                                                  TMDB_BACKDROP_PATH_PREFIX,
+            result['poster_path'] = get_proxy_url(request,
+                                                  TMDB_POSTER_PATH_PREFIX,
                                                   result.get('poster_path'))
 
         return Response(results, status=status.HTTP_200_OK)

@@ -91,13 +91,13 @@ class MovieSerializer(serializers.ModelSerializer):
 
     def get_backdrop_path(self, show):
         if self.context.get('request'):
-            return get_proxy_url(self.context.get('request').scheme, show.tmdb_backdrop_path)
+            return get_proxy_url(self.context.get('request'), show.tmdb_backdrop_path)
         else:
             return show.tmdb_backdrop_path
 
     def get_poster_path(self, show):
         if self.context.get('request'):
-            return get_proxy_url(self.context.get('request').scheme, show.tmdb_poster_path)
+            return get_proxy_url(self.context.get('request'), show.tmdb_poster_path)
         else:
             return show.tmdb_poster_path
 

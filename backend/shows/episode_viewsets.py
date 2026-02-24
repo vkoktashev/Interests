@@ -181,7 +181,7 @@ def parse_episode(episode, request):
         'overview': episode.tmdb_overview,
         'score': episode.tmdb_score,
         'runtime': episode.tmdb_runtime,
-        'still_path': get_proxy_url(request.scheme, episode.tmdb_still_path),
+        'still_path': get_proxy_url(request, episode.tmdb_still_path),
         'air_date': format_date(episode.tmdb_release_date),
         'season_number': episode.tmdb_season.tmdb_season_number,
         'episode_number': episode.tmdb_episode_number,
