@@ -28,8 +28,7 @@
     &__sidebar-button,
     &__collapse-button,
     &__title,
-    &__user-button,
-    &__login-button {
+    &__user-button {
         border: none;
         outline: none;
         background: transparent;
@@ -135,17 +134,16 @@
     &__login-button {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 8px 14px;
-        border-radius: 10px;
-        color: $newText3;
-        background: linear-gradient(135deg, $newAccent2, #5f6dff);
-        font-weight: 600;
+        justify-content: center;
         font-size: 0.93rem;
         white-space: nowrap;
 
-        &:hover {
-            background: linear-gradient(135deg, #5f6dff, $newAccent1);
+        .AppButtonView__label,
+        .AppButtonView__text {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
         }
     }
 

@@ -103,8 +103,8 @@ function SeasonBlock({
 	}, []);
 
 	useEffect(() => {
-		if (showUserInfo?.score) {
-			setUserRate(showUserInfo.score);
+		if (showUserInfo?.user_info?.score) {
+			setUserRate(showUserInfo.user_info.score);
 		} else {
 			setUserRate(0);
 		}
