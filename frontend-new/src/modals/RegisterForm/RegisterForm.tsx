@@ -7,7 +7,7 @@ import {login} from '@steroidsjs/core/actions/auth';
 import {formChange} from '@steroidsjs/core/actions/form';
 import {Button, EmailField, Form, InputField, PasswordField} from '@steroidsjs/core/ui/form';
 import {getFormValues} from '@steroidsjs/core/reducers/form';
-import GoogleSignInButton from '../../shared/auth/GoogleSignInButton/GoogleSignInButton';
+import GoogleSignInButton from '../../shared/auth/GoogleSignInButton';
 
 const REGISTRATION_FORM = 'registration_form';
 

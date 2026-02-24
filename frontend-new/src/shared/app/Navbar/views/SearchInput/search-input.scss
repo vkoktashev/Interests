@@ -3,6 +3,7 @@
 .search-input {
     position: relative;
     width: 100%;
+    min-width: 0;
 
     &:focus-within &__icon {
         color: $newText3;
@@ -21,6 +22,7 @@
     }
 
     &__input {
+        box-sizing: border-box;
         background:
             linear-gradient(120deg, rgba(79, 93, 234, 0.14), rgba(79, 93, 234, 0.02) 45%),
             $newBackground3;
@@ -28,6 +30,8 @@
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 12px;
         width: 100%;
+        min-width: 0;
+        max-width: 100%;
         outline: none;
         padding: 11px 38px 11px 34px;
         font-size: 1rem;
@@ -180,6 +184,31 @@
         font-size: 0.78rem;
         color: $newText2;
         padding-left: 8px;
+    }
+
+    &__show-all {
+        margin-top: 6px;
+        width: 100%;
+        border: 1px solid rgba(79, 93, 234, 0.28);
+        border-radius: 10px;
+        background:
+            linear-gradient(120deg, rgba(79, 93, 234, 0.16), rgba(79, 93, 234, 0.06)),
+            rgba(255, 255, 255, 0.02);
+        color: $newText3;
+        text-align: left;
+        padding: 10px 12px;
+        cursor: pointer;
+        transition: border-color 0.16s ease, background-color 0.16s ease, transform 0.16s ease;
+
+        &:hover,
+        &:focus-visible {
+            outline: none;
+            border-color: rgba(79, 93, 234, 0.48);
+            background:
+                linear-gradient(120deg, rgba(79, 93, 234, 0.22), rgba(79, 93, 234, 0.1)),
+                rgba(255, 255, 255, 0.03);
+            transform: translateY(-1px);
+        }
     }
 
     &__loading,

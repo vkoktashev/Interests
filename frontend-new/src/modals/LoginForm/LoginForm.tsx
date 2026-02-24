@@ -9,7 +9,7 @@ import ResetPasswordForm from '../ResetPasswordForm';
 import {login} from '@steroidsjs/core/actions/auth';
 import {Button, Form, InputField, PasswordField} from '@steroidsjs/core/ui/form';
 import {Link} from '@steroidsjs/core/ui/nav';
-import GoogleSignInButton from '../../shared/auth/GoogleSignInButton/GoogleSignInButton';
+import GoogleSignInButton from '../../shared/auth/GoogleSignInButton';
 
 export function LoginForm(props: IModalProps) {
 	const bem = useBem('login-form');

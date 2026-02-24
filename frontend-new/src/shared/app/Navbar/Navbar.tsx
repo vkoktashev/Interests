@@ -1,5 +1,5 @@
 import React, {FormEvent, useCallback, useMemo, useState} from 'react';
-import { FaBars, FaAngleUp, FaAngleDown, FaUserCircle, FaSignInAlt } from 'react-icons/fa';
+import { FaBars, FaUserCircle, FaSignInAlt, FaSearch, FaTimes } from 'react-icons/fa';
 
 import useWindowDimensions from '../../../hooks/useWindowDimensions';
 import SearchInput from './views/SearchInput';
@@ -22,7 +22,7 @@ export function Navbar(props: any) {
 	const bem = useBem('navbar');
 	const { width } = useWindowDimensions();
 	const user = useSelector(getUser);
-	const [isCollapsed, setCollapsed] = useState(true);
+	const [isMobileSearchOpen, setMobileSearchOpen] = useState(false);
 	const isMobile = useMemo(() => width <= MOBILE_BREAKPOINT, [width]);
 
 	const toggleSidebarAction = useCallback(() => {
@@ -33,14 +33,17 @@ export function Navbar(props: any) {
 		dispatch(openModal(LoginForm, {}));
 	}, [dispatch]);
 
-	const toggleCollapse = useCallback(() => {
-		setCollapsed(prev => !prev);
-	}, []);
-
 	const closeOnMobile = useCallback(() => {
 		if (isMobile) {
-			setCollapsed(true);
+			setMobileSearchOpen(false);
 		}
+	}, [isMobile]);
+
+	const toggleMobileSearch = useCallback(() => {
+		if (!isMobile) {
+			return;
+		}
+		setMobileSearchOpen(prev => !prev);
 	}, [isMobile]);
 
 	const onSearchSubmit = useCallback((event: FormEvent, value: string) => {
@@ -69,29 +72,33 @@ export function Navbar(props: any) {
 				<button type='button' onClick={toggleSidebarAction} className={bem.element('sidebar-button')}>
 					<FaBars />
 				</button>
-				<button type='button' onClick={onTitleClick} className={bem.element('title')}>
+				<button type='button' onClick={onTitleClick} className={bem.element('title', {mobileHidden: isMobile})}>
 					Interests
-				</button>
-				<button type='button' onClick={toggleCollapse} className={bem.element('collapse-button')}>
-					{isCollapsed ? <FaAngleDown /> : <FaAngleUp />}
 				</button>
 			</div>
 
-			<div className={bem.element('center', {collapsed: isMobile && isCollapsed})}>
+			<div className={bem.element('center', {mobileHidden: isMobile && !isMobileSearchOpen})}>
 				<SearchInput
 					onSubmit={onSearchSubmit}
+					autoFocus={isMobile && isMobileSearchOpen}
 					className={bem.element('search-input')}
 				/>
 			</div>
 
-			<div className={bem.element('right', {collapsed: isMobile && isCollapsed})}>
-				{user && (
+			<div className={bem.element('right')}>
+				{isMobile && (
+					<button type='button' onClick={toggleMobileSearch} className={bem.element('search-toggle')}>
+						{isMobileSearchOpen ? <FaTimes /> : <FaSearch />}
+					</button>
+				)}
+
+				{user && !isMobile && (
 					<button type='button' onClick={onUserClick} className={bem.element('user-button')}>
 						<FaUserCircle /> {user?.username}
 					</button>
 				)}
 
-				{!user && (
+				{!user && !isMobile && (
 					<Button
 						type='button'
 						onClick={openLogin}
