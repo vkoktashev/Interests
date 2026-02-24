@@ -40,7 +40,9 @@ function UserPage() {
 	const isCurrentUser = user?.id === currentUser.id;
 
 	const setUserStatus = useCallback(async (payload: any) => {
-		http.send('PUT', `/users/user/${userId}/follow/`, payload).catch(e => {
+		http.send('PUT', `/users/user/${userId}/follow/`, payload).then(() => {
+			fetch();
+		}).catch(e => {
 			fetch();
 		});
 	}, [fetch, userId]);

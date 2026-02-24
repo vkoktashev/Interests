@@ -5,6 +5,7 @@
     top: 0;
     left: 0;
     width: 100%;
+    box-sizing: border-box;
     min-height: 64px;
     display: grid;
     grid-template-columns: auto minmax(260px, 560px) auto;
@@ -26,7 +27,7 @@
     }
 
     &__sidebar-button,
-    &__collapse-button,
+    &__search-toggle,
     &__title,
     &__user-button {
         border: none;
@@ -51,22 +52,24 @@
         }
     }
 
-    &__collapse-button {
+    &__search-toggle {
         width: 36px;
         height: 36px;
         border-radius: 8px;
         font-size: 1.1rem;
-        margin-left: auto;
-        display: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
 
         &:hover {
             background: rgba(255, 255, 255, 0.08);
         }
 
-        @media (max-width: 600px) {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+        svg {
+            width: 16px;
+            height: 16px;
+            display: block;
+            flex-shrink: 0;
         }
     }
 
@@ -83,6 +86,10 @@
             color: #ffffff;
             background: rgba(255, 255, 255, 0.06);
         }
+
+        &_mobileHidden {
+            display: none;
+        }
     }
 
     &__center {
@@ -90,7 +97,7 @@
         align-items: center;
         justify-content: center;
 
-        &_collapsed {
+        &_mobileHidden {
             display: none;
         }
     }
@@ -106,12 +113,9 @@
         gap: 10px;
         min-width: 128px;
 
-        &_collapsed {
-            display: none;
-        }
-
         @media (max-width: 600px) {
             justify-content: center;
+            min-width: 0;
         }
     }
 
@@ -145,38 +149,78 @@
             gap: 8px;
             white-space: nowrap;
         }
+
+        &_iconOnly {
+            min-width: auto;
+
+            .AppButtonView__label,
+            .AppButtonView__text {
+                gap: 0;
+            }
+        }
+    }
+
+    &__mobile-search,
+    &__mobile-search-inline {
+        display: none;
     }
 
     @media (max-width: 600px) {
-        grid-template-columns: 1fr;
-        align-items: flex-start;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
         gap: 10px;
         padding: 10px 12px;
-
-        &__left,
-        &__center,
-        &__right {
-            width: 100%;
-        }
+        min-height: 64px;
 
         &__left {
             gap: 8px;
+            min-width: 0;
+            flex-shrink: 0;
         }
 
         &__center {
-            order: 3;
+            min-width: 0;
+            width: 100%;
         }
 
         &__right {
-            order: 4;
-            justify-content: center;
-            padding-top: 4px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            justify-content: flex-end;
+            gap: 6px;
+            min-width: auto;
+            flex-shrink: 0;
         }
 
+        &__user-button,
         &__login-button {
-            min-width: 180px;
+            width: 36px;
+            min-width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 10px;
+
+            .AppButtonView__label,
+            .AppButtonView__text {
+                justify-content: center;
+                width: 100%;
+            }
+        }
+
+        &__user-button {
             justify-content: center;
+            gap: 0;
+            padding: 0;
+            font-size: 1.15rem;
+        }
+
+        &__center_mobileHidden {
+            display: none;
+        }
+
+        &__center .search-input,
+        &__center &__search-input {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
         }
     }
 }

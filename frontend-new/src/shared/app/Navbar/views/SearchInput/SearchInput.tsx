@@ -4,6 +4,7 @@ import { MdVideogameAsset, MdLocalMovies, MdLiveTv } from 'react-icons/md';
 import {useBem, useComponents, useDispatch} from '@steroidsjs/core/hooks';
 import {goToRoute} from '@steroidsjs/core/actions/router';
 import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW} from '../../../../../routes';
+import useWindowDimensions from '../../../../../hooks/useWindowDimensions';
 import './search-input.scss';
 
 interface IGameHint {
@@ -52,18 +53,21 @@ interface IHintSection {
 interface ISearchInputProps {
 	onSubmit: (event: React.FormEvent, value: string) => void;
 	className?: string;
+	autoFocus?: boolean;
 }
 
 const DEBOUNCE_MS = 260;
+const MOBILE_BREAKPOINT = 600;
 
 function getReleaseYear(date?: string) {
 	return date?.slice(0, 4) || '';
 }
 
-export function SearchInput({ onSubmit, className }: ISearchInputProps) {
+export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchInputProps) {
 	const bem = useBem('search-input');
 	const dispatch = useDispatch();
 	const {http} = useComponents();
+	const {width} = useWindowDimensions();
 	const [query, setQuery] = useState('');
 	const [isFocused, setIsFocused] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
@@ -74,7 +78,10 @@ export function SearchInput({ onSubmit, className }: ISearchInputProps) {
 		shows: [],
 	});
 	const blurTimeoutRef = useRef<number | null>(null);
+	const inputRef = useRef<HTMLInputElement | null>(null);
 	const normalizedQuery = query.trim();
+	const isMobile = width <= MOBILE_BREAKPOINT;
+	const maxItemsPerSection = isMobile ? 3 : 5;
 
 	const fetchHints = useCallback(async (value: string) => {
 		try {
@@ -130,6 +137,16 @@ export function SearchInput({ onSubmit, className }: ISearchInputProps) {
 	}, []);
 
 	useEffect(() => {
+		if (!autoFocus) {
+			return;
+		}
+		const timeoutId = window.setTimeout(() => {
+			inputRef.current?.focus();
+		}, 0);
+		return () => window.clearTimeout(timeoutId);
+	}, [autoFocus]);
+
+	useEffect(() => {
 		setActiveHintIndex(-1);
 	}, [normalizedQuery, hints.games, hints.movies, hints.shows]);
 
@@ -143,6 +160,7 @@ export function SearchInput({ onSubmit, className }: ISearchInputProps) {
 			...item,
 			flatIndex: currentIndex++,
 		}));
+		const limitItems = <T,>(items: T[]) => items.slice(0, maxItemsPerSection);
 
 		return [
 		{
@@ -150,7 +168,7 @@ export function SearchInput({ onSubmit, className }: ISearchInputProps) {
 			title: 'Игры',
 			icon: <MdVideogameAsset />,
 			emptyText: '🎮 В играх ничего не найдено',
-			items: withIndexes(hints.games.map(hint => ({
+			items: withIndexes(limitItems(hints.games).map(hint => ({
 				id: String(hint.rawg_slug),
 				title: hint.rawg_name,
 				year: getReleaseYear(hint.rawg_release_date),
@@ -162,7 +180,7 @@ export function SearchInput({ onSubmit, className }: ISearchInputProps) {
 			title: 'Фильмы',
 			icon: <MdLocalMovies />,
 			emptyText: '🎬 В фильмах ничего не найдено',
-			items: withIndexes(hints.movies.map(hint => ({
+			items: withIndexes(limitItems(hints.movies).map(hint => ({
 				id: String(hint.tmdb_id),
 				title: hint.tmdb_name,
 				year: getReleaseYear(hint.tmdb_release_date),
@@ -174,7 +192,7 @@ export function SearchInput({ onSubmit, className }: ISearchInputProps) {
 			title: 'Сериалы',
 			icon: <MdLiveTv />,
 			emptyText: '📺 В сериалах ничего не найдено',
-			items: withIndexes(hints.shows.map(hint => ({
+			items: withIndexes(limitItems(hints.shows).map(hint => ({
 				id: String(hint.tmdb_id),
 				title: hint.tmdb_name,
 				year: getReleaseYear(hint.tmdb_release_date),
@@ -182,7 +200,7 @@ export function SearchInput({ onSubmit, className }: ISearchInputProps) {
 			}))),
 		},
 	];
-	}, [dispatch, hints.games, hints.movies, hints.shows]);
+	}, [dispatch, hints.games, hints.movies, hints.shows, maxItemsPerSection]);
 	const selectableHints = useMemo(() => sections.flatMap(section => section.items), [sections]);
 
 	const handleInputKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -250,6 +268,7 @@ export function SearchInput({ onSubmit, className }: ISearchInputProps) {
 				aria-label='Поиск'
 				className={bem.element('input')}
 				id='searchInput'
+				ref={inputRef}
 				value={query}
 				onFocus={() => {
 					if (blurTimeoutRef.current) {
@@ -326,6 +345,16 @@ export function SearchInput({ onSubmit, className }: ISearchInputProps) {
 						)}
 					</div>
 				))}
+
+				{isMobile && normalizedQuery && (
+					<button
+						type='submit'
+						className={bem.element('show-all')}
+						onMouseDown={(event) => event.preventDefault()}
+					>
+						Открыть подробный поиск по запросу «{normalizedQuery}»
+					</button>
+				)}
 			</div>
 		</form>
 	);

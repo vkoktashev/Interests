@@ -7,7 +7,7 @@ import "./settings-page.scss";
 import {Loader} from '@steroidsjs/core/ui/layout';
 import {Button, CheckboxField, DropDownField, Form} from '@steroidsjs/core/ui/form';
 import {getFormValues} from '@steroidsjs/core/reducers/form';
-import GoogleSignInButton from '../../shared/auth/GoogleSignInButton/GoogleSignInButton';
+import GoogleSignInButton from '../../shared/auth/GoogleSignInButton';
 
 const privacyItems = [
 	{
