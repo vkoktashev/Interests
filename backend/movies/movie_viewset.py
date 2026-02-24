@@ -64,7 +64,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             update_movie_genres(movie, tmdb_movie)
             update_movie_people(movie, tmdb_cast_crew)
 
-        response = Response(parse_movie(movie, request.scheme))
+        response = Response(parse_movie(movie, request))
 
         if movie.tmdb_last_update and movie.tmdb_last_update <= timezone.now() - MOVIE_DETAILS_REFRESH_INTERVAL:
             movie_id = movie.tmdb_id
@@ -191,8 +191,8 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 'release_date': item.get('release_date') or '',
                 'vote_average': item.get('vote_average'),
                 'vote_count': item.get('vote_count') or 0,
-                'poster_path': get_proxy_url(request.scheme, TMDB_POSTER_PATH_PREFIX, item.get('poster_path')),
-                'backdrop_path': get_proxy_url(request.scheme, TMDB_BACKDROP_PATH_PREFIX, item.get('backdrop_path')),
+                'poster_path': get_proxy_url(request, TMDB_POSTER_PATH_PREFIX, item.get('poster_path')),
+                'backdrop_path': get_proxy_url(request, TMDB_BACKDROP_PATH_PREFIX, item.get('backdrop_path')),
             })
 
         return Response({
@@ -239,7 +239,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-def parse_movie(movie, scheme):
+def parse_movie(movie, request):
     genres = [movie_genre.genre.tmdb_name for movie_genre in movie.moviegenre_set.select_related('genre').all()]
     cast_names = [movie_person.person.name for movie_person in movie.movieperson_set.select_related('person')
                   .filter(role=MoviePerson.ROLE_ACTOR).order_by('sort_order')]
@@ -254,8 +254,8 @@ def parse_movie(movie, scheme):
         'release_date': format_date(movie.tmdb_release_date),
         'score': movie.tmdb_score,
         'tagline': movie.tmdb_tagline,
-        'backdrop_path': get_proxy_url(scheme, movie.tmdb_backdrop_path),
-        'poster_path': get_proxy_url(scheme, movie.tmdb_poster_path),
+        'backdrop_path': get_proxy_url(request, movie.tmdb_backdrop_path),
+        'poster_path': get_proxy_url(request, movie.tmdb_poster_path),
         'genres': ', '.join(genres),
         'production_companies': movie.tmdb_production_companies,
         'cast': ', '.join(cast_names),

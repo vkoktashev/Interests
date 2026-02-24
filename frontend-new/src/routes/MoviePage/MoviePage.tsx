@@ -12,7 +12,6 @@ import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/Tmdb
 
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import "./movie-page.scss";
-import Image from "../../shared/Image";
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getRouteParam} from '@steroidsjs/core/reducers/router';
@@ -149,7 +148,7 @@ export function MoviePage() {
 				<div className={bem.element('body')}>
 					<div className={bem.element('header')}>
 						<div className={bem.element('poster')}>
-							<Image src={movie?.poster_path} className={bem.element('poster-img')} alt='' />
+							<img src={movie?.poster_path} className={bem.element('poster-img')} alt='' />
 						</div>
 						<div className={bem.element('info')}>
 							<div className={bem.element('title-row')}>

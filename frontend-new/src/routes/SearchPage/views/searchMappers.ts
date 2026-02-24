@@ -46,7 +46,7 @@ export function mapMovieToCard(movie: ITmdbMediaItem): ISearchCardData {
 	return {
 		id: movie.id,
 		name: movie.title || 'Без названия',
-		poster: movie.backdrop_path,
+		poster: movie.poster_path || movie.backdrop_path,
 		releaseDate: formatDate(movie.release_date),
 		overview: movie.overview || '',
 		route: ROUTE_MOVIE,
@@ -60,7 +60,7 @@ export function mapShowToCard(show: ITmdbMediaItem): ISearchCardData {
 	return {
 		id: show.id,
 		name: show.name || 'Без названия',
-		poster: show.backdrop_path,
+		poster: show.poster_path || show.backdrop_path,
 		releaseDate: formatDate(show.first_air_date),
 		overview: show.overview || '',
 		route: ROUTE_SHOW,

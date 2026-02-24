@@ -1,6 +1,5 @@
 import React, {useState, useEffect, useCallback, useRef, useMemo} from 'react';
 import RandomCard from './views/RandomCard';
-import Image from '../../shared/Image';
 import {useBem, useComponents, useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import { getUser } from '@steroidsjs/core/reducers/auth';
 import {Button, CheckboxField, Form} from '@steroidsjs/core/ui/form';
@@ -354,7 +353,7 @@ function RandomPage() {
             </Form>
             <div className={bem.element('preload')}>
                 {winner?.tmdb_poster_path && (
-                    <Image src={winner?.tmdb_poster_path}
+                    <img src={winner?.tmdb_poster_path}
                            onLoad={() => setImageLoaded(true)}
                            style={{width: 0, height: 0}} />
                 )}

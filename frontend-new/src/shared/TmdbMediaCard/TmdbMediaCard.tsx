@@ -1,6 +1,5 @@
 import React from 'react';
 import {useBem} from '@steroidsjs/core/hooks';
-import Image from '../Image';
 
 import './tmdb-media-card.scss';
 
@@ -58,7 +57,7 @@ export default function TmdbMediaCard(props: ITmdbMediaCardProps) {
 		<a className={[bem.block(), className].filter(Boolean).join(' ')} href={href}>
 			<div className={bem.element('poster')}>
 				{imageSrc ? (
-					<Image src={imageSrc} alt={titleText} className={bem.element('poster-img')} />
+					<img src={imageSrc} alt={titleText} className={bem.element('poster-img')} />
 				) : (
 					<div className={bem.element('poster-fallback')}>
 						{titleText.charAt(0).toUpperCase()}

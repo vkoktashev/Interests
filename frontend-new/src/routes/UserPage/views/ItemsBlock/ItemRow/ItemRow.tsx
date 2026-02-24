@@ -1,6 +1,5 @@
 import React from 'react';
 import {FaClock, FaStar} from 'react-icons/fa';
-import Image from '../../../../../shared/Image';
 import './item-row.scss';
 
 interface IItemField {
@@ -61,7 +60,7 @@ function ItemRow({data, fields}: IItemRowProps) {
 			<div className='item-row__main'>
 				<div className='item-row__media'>
 					{hasPoster ? (
-						<Image className='item-row__poster' src={data.poster} alt={itemName} />
+						<img className='item-row__poster' src={data.poster} alt={itemName} />
 					) : (
 						<div className='item-row__poster-placeholder'>
 							{itemName.charAt(0).toUpperCase()}

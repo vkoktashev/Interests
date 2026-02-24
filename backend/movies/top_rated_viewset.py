@@ -43,8 +43,8 @@ class TopRatedMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
         results = [{
             'id': row.get('movie__tmdb_id'),
             'name': row.get('movie__tmdb_name'),
-            'poster_path': get_proxy_url(request.scheme, row.get('movie__tmdb_poster_path') or ''),
-            'backdrop_path': get_proxy_url(request.scheme, row.get('movie__tmdb_backdrop_path') or ''),
+            'poster_path': get_proxy_url(request, row.get('movie__tmdb_poster_path') or ''),
+            'backdrop_path': get_proxy_url(request, row.get('movie__tmdb_backdrop_path') or ''),
             'release_date': row.get('movie__tmdb_release_date'),
             'overview': row.get('movie__tmdb_overview') or '',
             'ratings_count': int(row.get('ratings_count') or 0),

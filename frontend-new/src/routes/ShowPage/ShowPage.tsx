@@ -17,7 +17,6 @@ import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/Tmdb
 
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import "./show-page.scss";
-import Image from "../../shared/Image";
 import LoginForm from '../../modals/LoginForm';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
 import {Button, TextField} from '@steroidsjs/core/ui/form';
@@ -147,7 +146,7 @@ function ShowPage(props) {
 				<div className={bem.element('body')}>
 					<div className={bem.element('header')}>
 						<div className={bem.element('poster')}>
-							<Image
+							<img
                                 src={show?.poster_path}
                                 className={bem.element('poster-img')}
                                 alt=''

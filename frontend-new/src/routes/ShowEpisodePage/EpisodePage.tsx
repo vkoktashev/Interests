@@ -10,7 +10,6 @@ import {openModal} from '@steroidsjs/core/actions/modal';
 import Rating from '../../shared/Rating';
 import FriendsActivity from '../../shared/FriendsActivity';
 import ScoreBlock from '../../shared/ScoreBlock';
-import Image from "../../shared/Image";
 import {ROUTE_SHOW, ROUTE_SHOW_SEASON} from '../index';
 import LoginForm from '../../modals/LoginForm';
 import "./episode-page.scss";
@@ -129,7 +128,7 @@ function EpisodePage() {
 				<div className={bem.element('body')}>
 					<div className={bem.element('header')}>
 						<div className={bem.element('poster')}>
-							<Image
+							<img
 								src={showEpisode?.still_path}
 								className={bem.element('poster-img')}
 								alt=''

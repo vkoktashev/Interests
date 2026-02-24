@@ -1,21 +1,21 @@
-from django.db.models.expressions import NoneType
-from multipledispatch import dispatch
+from urllib.parse import quote
 
 
-@dispatch(str, str, str)
-def get_proxy_url(scheme, path_prefix, path):
-    url = path_prefix + path
-    return get_proxy_url(scheme, url)
+def _get_absolute_proxy_prefix(request_or_scheme):
+    if hasattr(request_or_scheme, 'get_host'):
+        return f"{request_or_scheme.scheme}://{request_or_scheme.get_host()}"
+    return ''
 
 
-@dispatch(str, str, NoneType)
-def get_proxy_url(scheme, path_prefix, path):
-    return get_proxy_url(scheme, '')
+def get_proxy_url(request_or_scheme, path_prefix_or_url, path=None):
+    if path is None:
+        url = path_prefix_or_url or ''
+    else:
+        url = '' if path is None else f"{path_prefix_or_url}{path or ''}"
 
+    if not url:
+        return ''
 
-@dispatch(str, str)
-def get_proxy_url(scheme, url):
-    if len(url) > 0:
-        url = f"https://try.readme.io/{url}"
-
-    return url
+    encoded_url = quote(url, safe='')
+    absolute_prefix = _get_absolute_proxy_prefix(request_or_scheme)
+    return f"{absolute_prefix}/proxy/image/?url={encoded_url}"

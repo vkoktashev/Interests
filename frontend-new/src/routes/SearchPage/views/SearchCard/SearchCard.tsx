@@ -1,7 +1,6 @@
 import React from 'react';
 import {Link} from '@steroidsjs/core/ui/nav';
 import {useBem} from '@steroidsjs/core/hooks';
-import Image from '../../../../shared/Image';
 import {ISearchCardData} from '../searchTypes';
 import './search-card.scss';
 
@@ -15,9 +14,10 @@ function SearchCard({info, className}: ISearchCardProps) {
 	const hasPosterUrl = Boolean(info.poster?.includes('url('));
 	const hasPosterImage = Boolean(info.poster) && !hasPosterUrl;
 	const hasDetails = Boolean(info.genres || info.tags || info.platforms || info.overview);
+	const isMovieOrShowCard = Boolean(info.overview) && !info.genres && !info.tags && !info.platforms;
 
 	return (
-		<div className={bem(bem.block(), className)}>
+		<div className={bem(bem.block({media: isMovieOrShowCard}), className)}>
 			<Link
 				toRoute={info.route}
 				toRouteParams={info.routeParams}
@@ -27,13 +27,40 @@ function SearchCard({info, className}: ISearchCardProps) {
 				{hasPosterUrl ? (
 					<div className={bem.element('poster')} style={{backgroundImage: info.poster}} />
 				) : hasPosterImage ? (
-					<Image className={bem.element('poster')} src={info.poster} alt={info.name} />
+					<img className={bem.element('poster')} src={info.poster} alt={info.name} />
 				) : (
 					<div className={bem.element('poster-placeholder')} />
 				)}
 
 				<div className={bem.element('body')}>
-					<h4 className={bem.element('name')}>{info.name}</h4>
+					<div className={bem.element('body-main')}>
+						<h4 className={bem.element('name')}>{info.name}</h4>
+						{hasDetails && (
+							<div className={bem.element('details')}>
+								{info.genres && (
+									<p className={bem.element('detail-row')}>
+										<span className={bem.element('detail-title')}>Жанры:</span> {info.genres}
+									</p>
+								)}
+								{info.tags && (
+									<p className={bem.element('detail-row')}>
+										<span className={bem.element('detail-title')}>Теги:</span> {info.tags}
+									</p>
+								)}
+								{info.platforms && (
+									<p className={bem.element('detail-row')}>
+										<span className={bem.element('detail-title')}>Платформы:</span> {info.platforms}
+									</p>
+								)}
+								{info.overview && (
+									<p className={bem.element('detail-row', {overview: true})}>
+										{info.overview}
+									</p>
+								)}
+							</div>
+						)}
+					</div>
+
 					{info.releaseDate && (
 						<p className={bem.element('date')}>
 							{info.releaseDate}
@@ -41,31 +68,6 @@ function SearchCard({info, className}: ISearchCardProps) {
 					)}
 				</div>
 			</Link>
-
-			{hasDetails && (
-				<div className={bem.element('details')}>
-					{info.genres && (
-						<p className={bem.element('detail-row')}>
-							<span className={bem.element('detail-title')}>Жанры:</span> {info.genres}
-						</p>
-					)}
-					{info.tags && (
-						<p className={bem.element('detail-row')}>
-							<span className={bem.element('detail-title')}>Теги:</span> {info.tags}
-						</p>
-					)}
-					{info.platforms && (
-						<p className={bem.element('detail-row')}>
-							<span className={bem.element('detail-title')}>Платформы:</span> {info.platforms}
-						</p>
-					)}
-					{info.overview && (
-						<p className={bem.element('detail-row')}>
-							{info.overview}
-						</p>
-					)}
-				</div>
-			)}
 		</div>
 	);
 }

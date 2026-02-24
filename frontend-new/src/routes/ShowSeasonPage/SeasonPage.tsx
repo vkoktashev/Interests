@@ -11,7 +11,6 @@ import {Link} from '@steroidsjs/core/ui/nav';
 import Rating from '../../shared/Rating';
 import FriendsActivity from '../../shared/FriendsActivity';
 import DetailEpisodeRow from '../../shared/DetailEpisodeRow';
-import Image from '../../shared/Image';
 import {ROUTE_SHOW} from '../index';
 import LoginForm from '../../modals/LoginForm';
 import './season-page.scss';
@@ -202,7 +201,7 @@ function SeasonPage() {
 				<div className={bem.element('body')}>
 					<div className={bem.element('header')}>
 						<div className={bem.element('poster')}>
-							<Image
+							<img
 								src={showSeason?.poster_path}
 								className={bem.element('poster-img')}
 								alt=''
