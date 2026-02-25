@@ -13,6 +13,7 @@ export interface ISearchCardData {
 	tags?: string;
 	platforms?: string;
 	overview?: string;
+	layoutVariant?: 'default' | 'media';
 	route: typeof ROUTE_GAME | typeof ROUTE_MOVIE | typeof ROUTE_SHOW;
 	routeParams: Record<string, unknown>;
 }

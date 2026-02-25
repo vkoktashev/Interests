@@ -79,6 +79,10 @@ if DEBUG:
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
+# Behind nginx/proxy, use forwarded protocol/host to build absolute URLs correctly.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
