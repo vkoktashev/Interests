@@ -15,7 +15,15 @@
 
     @media (max-width: 760px) {
         &__grid {
-            justify-content: center;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(150px, 1fr));
+            gap: 10px;
+            justify-content: initial;
+        }
+
+        &__card {
+            width: 100%;
+            min-width: 0;
         }
     }
 

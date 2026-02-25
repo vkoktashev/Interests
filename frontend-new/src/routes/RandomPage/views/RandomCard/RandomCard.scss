@@ -7,6 +7,10 @@
   grid-template-columns: 160px minmax(0, 1fr);
   gap: 1.5rem;
   align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 
   &__poster {
     width: 160px;
@@ -19,10 +23,29 @@
       width: 140px;
       height: 210px;
     }
+
+    @media(max-width: 480px) {
+      width: 110px;
+      height: 165px;
+      border-radius: 12px;
+    }
   }
 
   @media(max-width: $tablet-width) {
     grid-template-columns: 140px minmax(0, 1fr);
+  }
+
+  @media(max-width: 560px) {
+    grid-template-columns: 110px minmax(0, 1fr);
+    gap: 0.9rem;
+    align-items: start;
+  }
+
+  @media(max-width: 420px) {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    gap: 0.75rem;
   }
 
   &__link {
@@ -30,5 +53,28 @@
     color: $newText3;
     display: inline-flex;
     line-height: 1.2;
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+
+    @media(max-width: 480px) {
+      font-size: 1.1rem;
+    }
+  }
+
+  .AppButtonView,
+  .AppButtonView__link,
+  .AppButtonView__text {
+    min-width: 0;
+    max-width: 100%;
+    width: auto;
+  }
+
+  .AppButtonView__text {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 }
