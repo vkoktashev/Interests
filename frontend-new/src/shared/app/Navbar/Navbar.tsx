@@ -72,7 +72,11 @@ export function Navbar(props: any) {
 				<button type='button' onClick={toggleSidebarAction} className={bem.element('sidebar-button')}>
 					<FaBars />
 				</button>
-				<button type='button' onClick={onTitleClick} className={bem.element('title', {mobileHidden: isMobile})}>
+				<button
+					type='button'
+					onClick={onTitleClick}
+					className={bem.element('title', {mobileHidden: isMobile && isMobileSearchOpen})}
+				>
 					Interests
 				</button>
 			</div>

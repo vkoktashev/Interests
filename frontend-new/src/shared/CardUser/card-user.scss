@@ -1,6 +1,7 @@
 @import "style/colors";
 
 .card-user {
+    box-sizing: border-box;
     max-width: 100%;
     width: 230px;
     min-height: 68px;
@@ -68,23 +69,57 @@
 
     &__body {
         width: 66%;
+        min-width: 0;
         padding: 10px 12px;
         background-color: $newBackground3;
         display: flex;
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
         border-top-right-radius: 12px;
         border-bottom-right-radius: 12px;
     }
 
     &__text {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
         width: 100%;
         color: $newText3;
         font-weight: 500;
         font-size: 1.15rem;
         line-height: 1.2;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    @media (max-width: 760px) {
+        width: 100%;
+
+        &.AppButtonView_link {
+            width: 100%;
+        }
+
+        .AppButtonView__link,
+        .AppButtonView__text,
+        .ButtonView__text {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        &__image {
+            width: 26%;
+            min-width: 56px;
+            min-height: 56px;
+        }
+
+        &__body {
+            width: 74%;
+            padding: 10px;
+            align-items: flex-start;
+        }
+
+        &__text {
+            font-size: 1rem;
+            line-height: 1.15;
+        }
     }
 }

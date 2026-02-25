@@ -280,6 +280,7 @@ function SearchPage() {
 				</Form>
 
 				<CategoriesTab
+					className='search-page__tabs'
 					categories={[...SEARCH_CATEGORIES]}
 					activeCategory={activeCategory}
 					onChangeCategory={(category: string) => {

@@ -14,10 +14,10 @@ function SearchCard({info, className}: ISearchCardProps) {
 	const hasPosterUrl = Boolean(info.poster?.includes('url('));
 	const hasPosterImage = Boolean(info.poster) && !hasPosterUrl;
 	const hasDetails = Boolean(info.genres || info.tags || info.platforms || info.overview);
-	const isMovieOrShowCard = Boolean(info.overview) && !info.genres && !info.tags && !info.platforms;
+	const isMediaCard = info.layoutVariant === 'media';
 
 	return (
-		<div className={bem(bem.block({media: isMovieOrShowCard}), className)}>
+		<div className={bem(bem.block({media: isMediaCard}), className)}>
 			<Link
 				toRoute={info.route}
 				toRouteParams={info.routeParams}

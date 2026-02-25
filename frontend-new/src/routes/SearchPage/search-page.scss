@@ -4,12 +4,28 @@
 .search-page {
     @include default-page;
     background-color: $newBackground1;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: clip;
 
     &__body {
         width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    &__tabs {
+        width: 100%;
+        max-width: 98vw;
+        min-width: 0;
     }
 
     &__form {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
         position: relative;
         padding: 1rem;
         margin-bottom: 1.5rem;
@@ -60,10 +76,30 @@
 
     &__input-wrap {
         width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        display: block;
     }
 
-    &__input-wrap .InputFieldView {
+    &__input-wrap .InputFieldView,
+    &__input-wrap .AppInputFieldView {
         margin: 0;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    &__input-wrap .FieldLayoutView,
+    &__input-wrap .FieldLayoutView__field,
+    &__input-wrap .InputFieldView__input-wrap,
+    &__input-wrap .InputFieldView__main,
+    &__input-wrap .AppInputFieldView__input-wrapper {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
     }
 
     &__input-wrap .FieldLayoutView__label,
@@ -73,8 +109,12 @@
         font-weight: 500;
     }
 
-    &__input-wrap .InputFieldView__input {
+    &__input-wrap .InputFieldView__input,
+    &__input-wrap .AppInputFieldView__input {
+        box-sizing: border-box;
         width: 100%;
+        max-width: 100%;
+        min-width: 0;
         height: 46px;
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.14);
@@ -99,7 +139,42 @@
         }
     }
 
+    // Fallback for any internal steroids wrappers/styles that set fixed width inline/class-based.
+    &__input-wrap input {
+        display: block;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
     @media (max-width: 760px) {
+        &__tabs {
+            max-width: 100%;
+        }
+
+        // Search categories are long on mobile. Wrap them instead of horizontal scrolling
+        // to avoid page overflow from the tab strip.
+        &__tabs .categories-tabs__body {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            overflow-x: hidden;
+            overflow-y: visible;
+        }
+
+        &__tabs .categories-tabs__tab {
+            font-size: 0.9rem;
+            line-height: 1.15;
+            padding: 8px 10px;
+            border-radius: 10px;
+            white-space: normal;
+        }
+
+        &__tabs .categories-tabs__content {
+            border-radius: 10px;
+        }
+
         &__form {
             padding: 0.9rem;
         }
@@ -115,6 +190,23 @@
         flex-direction: column;
         gap: 14px;
         min-height: 260px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: clip;
+    }
+
+    &__results > * {
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    // react-loading-overlay wrappers can inherit intrinsic width from children.
+    &__results [class*='loading_overlay'] {
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
     }
 
     &__empty-state {

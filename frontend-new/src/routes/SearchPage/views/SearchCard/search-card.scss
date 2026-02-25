@@ -1,7 +1,10 @@
 @import "style/colors";
 
 .search-card {
+    box-sizing: border-box;
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     border-radius: 12px;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -19,21 +22,30 @@
         display: block;
         color: $newText3;
         text-decoration: none;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
 
         .ButtonView,
         .AppButtonView,
         .ButtonView__link {
             width: 100%;
+            max-width: 100%;
+            min-width: 0;
             display: block;
         }
 
         .AppButtonView__link {
             width: 100%;
+            max-width: 100%;
+            min-width: 0;
             display: block;
         }
 
         .ButtonView__text {
             width: 100%;
+            max-width: 100%;
+            min-width: 0;
             min-height: 220px;
             display: grid;
             grid-template-columns: minmax(118px, 34%) minmax(0, 1fr);
@@ -42,6 +54,8 @@
 
         .AppButtonView__text {
             width: 100%;
+            max-width: 100%;
+            min-width: 0;
             min-height: 220px;
             display: grid;
             grid-template-columns: minmax(118px, 34%) minmax(0, 1fr);
@@ -101,6 +115,8 @@
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 
     &__date {
@@ -126,6 +142,8 @@
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 
     &_media &__detail-row_overview {
@@ -138,6 +156,15 @@
     }
 
     @media (max-width: 760px) {
+        &,
+        &__link,
+        &__body,
+        &__body-main,
+        &__details {
+            max-width: 100%;
+            min-width: 0;
+        }
+
         &__link .ButtonView__text,
         &__link .AppButtonView__text {
             grid-template-columns: 1fr;
@@ -154,6 +181,42 @@
         &__link .ButtonView__text,
         &__link .AppButtonView__text {
             min-height: auto;
+        }
+
+        // Movies/shows look better as compact horizontal cards on mobile.
+        &_media &__link .ButtonView__text,
+        &_media &__link .AppButtonView__text {
+            grid-template-columns: 96px minmax(0, 1fr);
+            min-height: 144px;
+        }
+
+        &_media &__poster,
+        &_media &__poster-placeholder {
+            min-height: 144px;
+            height: 144px;
+        }
+
+        &_media &__body {
+            padding: 10px;
+            gap: 6px;
+        }
+
+        &_media &__name {
+            font-size: 0.98rem;
+            -webkit-line-clamp: 2;
+        }
+
+        &_media &__detail-row {
+            font-size: 0.84rem;
+            line-height: 1.3;
+        }
+
+        &_media &__detail-row_overview {
+            -webkit-line-clamp: 4;
+        }
+
+        &_media &__date {
+            font-size: 0.8rem;
         }
     }
 }
