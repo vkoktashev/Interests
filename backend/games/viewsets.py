@@ -1,6 +1,6 @@
 from json import JSONDecodeError
 from typing import List, Any, Optional
-from datetime import timedelta
+from datetime import timedelta, date
 
 import rawgpy
 from adrf import mixins
@@ -34,6 +34,32 @@ from utils.functions import int_to_hours, get_page_size, objects_to_str, float_t
 GAME_DETAILS_REFRESH_INTERVAL = timedelta(days=1)
 GAME_DETAILS_REFRESH_ENQUEUE_DEBOUNCE_SECS = 60 * 30
 GAME_DETAILS_REFRESH_BROKER_BACKOFF_SECS = 60
+
+
+def format_game_release_date(value):
+    if not value:
+        return None
+    if isinstance(value, date):
+        return value.strftime('%d.%m.%Y')
+    if isinstance(value, str):
+        try:
+            return date.fromisoformat(value).strftime('%d.%m.%Y')
+        except ValueError:
+            return None
+    return None
+
+
+def get_game_release_year(value):
+    if not value:
+        return None
+    if isinstance(value, date):
+        return value.year
+    if isinstance(value, str):
+        try:
+            return date.fromisoformat(value).year
+        except ValueError:
+            return None
+    return None
 
 
 class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
@@ -166,7 +192,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except ObjectDoesNotExist:
             return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
-        release_year = game.rawg_release_date.year
+        release_year = get_game_release_year(game.rawg_release_date)
         hltb_game = get_hltb_game(game.rawg_name, release_year)
         if hltb_game is not None:
             hltb_name = hltb_game.get('game_name')
@@ -483,7 +509,7 @@ async def parse_game_from_db(game: Game, hltb_game=None):
         'platforms': game.rawg_platforms,
         'background': game.rawg_backdrop_path,
         'poster': game.rawg_poster_path,
-        'release_date': game.rawg_release_date.strftime('%d.%m.%Y') if game.rawg_release_date else None,
+        'release_date': format_game_release_date(game.rawg_release_date),
         'playtime': f'{game.rawg_playtime} {int_to_hours(game.rawg_playtime)}',
         'stores': stores,
     }

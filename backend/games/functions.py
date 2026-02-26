@@ -1,6 +1,21 @@
+from datetime import date
+
 from django.utils import timezone
 
 from utils.functions import objects_to_str
+
+
+def parse_rawg_released_date(value):
+    if not value:
+        return None
+    if isinstance(value, date):
+        return value
+    if isinstance(value, str):
+        try:
+            return date.fromisoformat(value)
+        except ValueError:
+            return None
+    return None
 
 
 def get_game_new_fields(rawg_game):
@@ -22,7 +37,7 @@ def get_game_new_fields(rawg_game):
         'rawg_id': rawg_game.get('id'),
         'rawg_slug': rawg_game.get('slug'),
         'rawg_name': rawg_game.get('name'),
-        'rawg_release_date': rawg_game.get('released'),
+        'rawg_release_date': parse_rawg_released_date(rawg_game.get('released')),
         'rawg_tba': rawg_game.get('tba'),
         'rawg_backdrop_path': backdrop_path,
         'rawg_poster_path': poster_path,
