@@ -136,6 +136,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     async def retrieve(self, request, *args, **kwargs):
         slug = kwargs.get('slug')
         game = await Game.objects.filter(rawg_slug=slug).afirst()
+        game_by_requested_slug = game
         should_fetch_from_rawg = game is None or game.rawg_last_update is None
 
         if should_fetch_from_rawg:
@@ -157,9 +158,29 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 created = False
                 game = await Game.objects.filter().aget(rawg_slug=rawg_game.get('slug'))
 
+            # If DB already contains duplicate legacy rows for the same RAWG game,
+            # prefer the row addressed by requested slug for this response/update path.
+            if game_by_requested_slug is not None and game.pk != game_by_requested_slug.pk:
+                game = game_by_requested_slug
+                created = False
+
             if not created:
                 # Even cached RAWG payload is enough to fill missing legacy fields in DB.
-                await update_fields_if_needed_async(game, new_fields)
+                fields_to_update = dict(new_fields)
+
+                new_slug = fields_to_update.get('rawg_slug')
+                if new_slug:
+                    slug_conflict = await Game.objects.filter(rawg_slug=new_slug).exclude(pk=game.pk).afirst()
+                    if slug_conflict is not None:
+                        fields_to_update.pop('rawg_slug', None)
+
+                new_rawg_id = fields_to_update.get('rawg_id')
+                if new_rawg_id is not None:
+                    rawg_id_conflict = await Game.objects.filter(rawg_id=new_rawg_id).exclude(pk=game.pk).afirst()
+                    if rawg_id_conflict is not None:
+                        fields_to_update.pop('rawg_id', None)
+
+                await update_fields_if_needed_async(game, fields_to_update)
 
             await update_game_genres(game, rawg_game)
             await update_game_developers(game, rawg_game)
