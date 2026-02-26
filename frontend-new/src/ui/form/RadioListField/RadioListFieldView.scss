@@ -1,0 +1,71 @@
+@import "style/colors";
+
+.AppRadioListFieldView {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+
+  &_horizontal {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.6rem;
+  }
+
+  &_vertical {
+    grid-template-columns: 1fr;
+  }
+
+  &__item {
+    min-width: 0;
+  }
+
+  .AppRadioFieldView {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba($newBackground2, 0.88);
+    border-radius: 12px;
+    padding: 0.6rem 0.75rem;
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+      border-color: rgba($newAccent2, 0.2);
+      background: rgba($newBackground2, 0.95);
+    }
+  }
+
+  .AppRadioFieldView__label {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    gap: 0.6rem;
+    align-items: center;
+    cursor: pointer;
+    color: $newText3;
+    min-width: 0;
+  }
+
+  .AppRadioFieldView:focus-within {
+    border-color: rgba($newAccent2, 0.32);
+    box-shadow: 0 0 0 3px rgba($newAccent2, 0.1);
+  }
+
+  .AppRadioFieldView_hasError {
+    border-color: rgba(239, 68, 68, 0.32);
+  }
+
+  @media (max-width: 560px) {
+    &_horizontal {
+      grid-template-columns: 1fr;
+    }
+
+    .AppRadioFieldView {
+      padding: 0.55rem 0.65rem;
+      border-radius: 10px;
+    }
+
+    .AppRadioFieldView__label {
+      gap: 0.55rem;
+      font-size: 0.9rem;
+    }
+  }
+}

@@ -4,7 +4,7 @@ import {useBem} from '@steroidsjs/core/hooks';
 import './tmdb-media-card.scss';
 
 export type ITmdbMediaCardItem = {
-	id?: number;
+	id?: number | string;
 	name?: string;
 	original_name?: string;
 	poster_path?: string;
@@ -13,12 +13,20 @@ export type ITmdbMediaCardItem = {
 	vote_average?: number;
 	vote_count?: number;
 	overview?: string;
+	genres?: string;
+	platforms?: string;
+	tags?: string;
+	user_status?: string;
 };
 
 type ITmdbMediaCardProps = {
 	item: ITmdbMediaCardItem;
-	itemType: 'movie' | 'show';
+	itemType: 'movie' | 'show' | 'game';
 	className?: string;
+	statusBadge?: {
+		label: string;
+		tone: 'planned' | 'done' | 'progress' | 'stopped';
+	};
 };
 
 function formatDate(value?: string) {
@@ -47,11 +55,16 @@ function formatScore(value?: number) {
 
 export default function TmdbMediaCard(props: ITmdbMediaCardProps) {
 	const bem = useBem('tmdb-media-card');
-	const {item, itemType, className} = props;
+	const {item, itemType, className, statusBadge} = props;
 
-	const href = item.id ? `/${itemType}/${item.id}` : '#';
+	const href = !item.id
+		? '#'
+		: itemType === 'game'
+			? `/game/${item.id}`
+			: `/${itemType}/${item.id}`;
 	const titleText = item.name || item.original_name || 'Без названия';
 	const imageSrc = item.poster_path || item.backdrop_path || '';
+	const hasDetails = Boolean(item.genres || item.platforms || item.tags || item.overview);
 
 	return (
 		<a className={[bem.block(), className].filter(Boolean).join(' ')} href={href}>
@@ -76,9 +89,34 @@ export default function TmdbMediaCard(props: ITmdbMediaCardProps) {
 					{!!item.vote_count && <span>{item.vote_count} оценок</span>}
 				</div>
 
-				{!!item.overview && (
-					<div className={bem.element('overview')}>
-						{item.overview}
+				{statusBadge && (
+					<div className={bem.element('badge', {[statusBadge.tone]: true})}>
+						{statusBadge.label}
+					</div>
+				)}
+
+				{hasDetails && (
+					<div className={bem.element('details')}>
+						{!!item.genres && (
+							<div className={bem.element('detail-row')}>
+								<span className={bem.element('detail-label')}>Жанры:</span> {item.genres}
+							</div>
+						)}
+						{!!item.platforms && (
+							<div className={bem.element('detail-row')}>
+								<span className={bem.element('detail-label')}>Платформы:</span> {item.platforms}
+							</div>
+						)}
+						{!!item.tags && (
+							<div className={bem.element('detail-row')}>
+								<span className={bem.element('detail-label')}>Теги:</span> {item.tags}
+							</div>
+						)}
+						{!!item.overview && (
+							<div className={bem.element('overview')}>
+								{item.overview}
+							</div>
+						)}
 					</div>
 				)}
 			</div>

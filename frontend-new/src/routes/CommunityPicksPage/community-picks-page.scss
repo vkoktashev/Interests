@@ -1,0 +1,332 @@
+@import "style/colors";
+@import "style/mixins";
+
+.community-picks-page {
+  @include default-page;
+  color: $newText3;
+  background: radial-gradient(circle at top left, #070a2a 0%, #121315 42%, #030304 100%);
+  padding: 2rem 1.25rem 3rem;
+  max-width: 1240px;
+  margin: 0 auto;
+  box-sizing: border-box;
+
+  &__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    align-items: start;
+    margin-bottom: 1.25rem;
+  }
+
+  &__title {
+    @include headline4;
+    margin: 0 0 0.45rem;
+  }
+
+  &__subtitle {
+    @include body2;
+    color: $newText2;
+    margin: 0;
+    max-width: 52rem;
+  }
+
+  &__tabs {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  &__sorter {
+    display: grid;
+    gap: 0.45rem;
+    justify-items: end;
+    min-width: 0;
+  }
+
+  &__sorter-label {
+    @include caption;
+    color: $newText2;
+  }
+
+  &__sorter-switch {
+    width: 100%;
+    min-width: 0;
+  }
+
+  &__panel {
+    display: grid;
+    gap: 1rem;
+  }
+
+  &__list {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: start;
+  }
+
+  &__row_top1 .tmdb-media-card {
+    border-color: rgba(245, 191, 66, 0.35);
+    box-shadow: 0 0 0 1px rgba(245, 191, 66, 0.12) inset;
+  }
+
+  &__row_top2 .tmdb-media-card {
+    border-color: rgba(186, 194, 214, 0.28);
+  }
+
+  &__row_top3 .tmdb-media-card {
+    border-color: rgba(188, 125, 86, 0.28);
+  }
+
+  .tmdb-media-card:has(.tmdb-media-card__badge_planned) {
+    box-shadow: 0 0 0 1px rgba($newAccent2, 0.12) inset;
+  }
+
+  .tmdb-media-card:has(.tmdb-media-card__badge_done) {
+    box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.12) inset;
+  }
+
+  &__rank {
+    @include headline6;
+    height: 52px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, rgba($newAccent2, 0.1), rgba($newAccent1, 0.05));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $newAccent2;
+    position: sticky;
+    top: 0.5rem;
+  }
+
+  &__rank_top1 {
+    background: linear-gradient(180deg, rgba(245, 191, 66, 0.22), rgba(245, 191, 66, 0.08));
+    border-color: rgba(245, 191, 66, 0.35);
+    color: #f5bf42;
+    box-shadow: 0 0 18px rgba(245, 191, 66, 0.18);
+  }
+
+  &__rank_top2 {
+    background: linear-gradient(180deg, rgba(196, 202, 214, 0.16), rgba(196, 202, 214, 0.05));
+    border-color: rgba(196, 202, 214, 0.28);
+    color: #c4cad6;
+  }
+
+  &__rank_top3 {
+    background: linear-gradient(180deg, rgba(196, 131, 93, 0.18), rgba(196, 131, 93, 0.06));
+    border-color: rgba(196, 131, 93, 0.28);
+    color: #c4835d;
+  }
+
+  &__row-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 110px;
+    gap: 0.75rem;
+    align-items: stretch;
+    min-width: 0;
+  }
+
+  &__card {
+    min-width: 0;
+  }
+
+  &__points {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba($newBackground2, 0.88);
+    border-radius: 12px;
+    padding: 0.65rem 0.75rem;
+    display: grid;
+    align-content: start;
+    gap: 0.15rem;
+    text-align: center;
+  }
+
+  &__points_top1 {
+    border-color: rgba(245, 191, 66, 0.28);
+    background: linear-gradient(180deg, rgba(245, 191, 66, 0.08), rgba($newBackground2, 0.9));
+  }
+
+  &__points_top2 {
+    border-color: rgba(196, 202, 214, 0.22);
+  }
+
+  &__points_top3 {
+    border-color: rgba(196, 131, 93, 0.22);
+  }
+
+  &__points-main {
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: $newAccent2;
+  }
+
+  &__points-label {
+    @include caption;
+    color: $newText2;
+  }
+
+  &__points-status {
+    justify-self: center;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.18rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    line-height: 1.1;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: $newText3;
+    background: rgba(255, 255, 255, 0.03);
+    margin-top: 0.15rem;
+
+    &_planned {
+      border-color: rgba(79, 93, 234, 0.28);
+      background: rgba(79, 93, 234, 0.12);
+      color: #cbd5ff;
+    }
+
+    &_done {
+      border-color: rgba(52, 211, 153, 0.25);
+      background: rgba(52, 211, 153, 0.1);
+      color: #bbf7d0;
+    }
+
+    &_progress {
+      border-color: rgba(250, 204, 21, 0.24);
+      background: rgba(250, 204, 21, 0.08);
+      color: #fde68a;
+    }
+
+    &_stopped {
+      border-color: rgba(248, 113, 113, 0.22);
+      background: rgba(248, 113, 113, 0.08);
+      color: #fecaca;
+    }
+  }
+
+  &__points-meta {
+    @include caption;
+    color: $newText2;
+    margin-top: 0.25rem;
+    line-height: 1.25;
+  }
+
+  &__empty {
+    border: 1px dashed rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 1rem;
+    color: $newText2;
+    text-align: center;
+    background: rgba($newBackground2, 0.6);
+  }
+
+  @media (max-width: $tablet-width) {
+    padding: 1.25rem 0.8rem 2rem;
+
+    &__header {
+      grid-template-columns: 1fr;
+    }
+
+    &__sorter {
+      justify-items: start;
+    }
+
+    &__row-main {
+      grid-template-columns: 1fr;
+    }
+
+    &__points {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: flex-start;
+      text-align: left;
+      gap: 0.35rem 0.5rem;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    &__points-main {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      order: 1;
+    }
+
+    &__points-label {
+      margin-top: 0;
+      flex-shrink: 0;
+      white-space: nowrap;
+      order: 2;
+    }
+
+    &__points-meta {
+      margin-top: 0;
+      margin-left: auto;
+      white-space: nowrap;
+      flex-shrink: 0;
+      order: 4;
+    }
+
+    &__points-status {
+      justify-self: start;
+      margin-top: 0;
+      white-space: nowrap;
+      flex-shrink: 0;
+      order: 3;
+    }
+  }
+
+  @media (max-width: 560px) {
+    &__row {
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 0.55rem;
+    }
+
+    &__rank {
+      height: 42px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+    }
+
+    &__subtitle {
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .categories-tabs__body {
+      flex-wrap: wrap;
+      overflow-x: hidden;
+      gap: 0.4rem;
+    }
+
+    &__sorter-switch {
+      width: 100%;
+    }
+
+    &__points {
+      padding: 0.5rem 0.6rem;
+      gap: 0.25rem 0.4rem;
+    }
+
+    &__points-main {
+      font-size: 1rem;
+    }
+
+    &__points-label,
+    &__points-meta {
+      font-size: 0.7rem;
+      line-height: 1.15;
+    }
+
+    &__points-status {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.4rem;
+    }
+  }
+}

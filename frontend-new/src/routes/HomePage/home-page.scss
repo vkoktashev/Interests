@@ -224,6 +224,21 @@
         border-radius: 999px;
         border: 1px solid var(--hp-line);
         background: rgba(255, 255, 255, 0.03);
+
+        &_cta {
+            color: #fff;
+            border-color: rgba(101, 31, 255, 0.38);
+            background: linear-gradient(135deg, rgba(79, 93, 234, 0.2), rgba(101, 31, 255, 0.22));
+            box-shadow: 0 8px 18px rgba(101, 31, 255, 0.2);
+            text-decoration: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+
+        &_cta:hover {
+            transform: translateY(-1px);
+            border-color: rgba(101, 31, 255, 0.5);
+            box-shadow: 0 10px 22px rgba(101, 31, 255, 0.28);
+        }
     }
 
     &__trending-group {

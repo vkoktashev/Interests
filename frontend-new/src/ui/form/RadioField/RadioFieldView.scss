@@ -1,0 +1,131 @@
+@import "style/colors";
+
+.AppRadioFieldView {
+  $root: &;
+
+  --radio-size: 16px;
+
+  position: relative;
+  display: block;
+  color: $newText3;
+
+  &_size_lg {
+    --radio-size: 18px;
+
+    #{$root}__label-text {
+      font-size: 1rem;
+    }
+  }
+
+  &_size_sm {
+    --radio-size: 14px;
+
+    #{$root}__label-text {
+      font-size: 0.88rem;
+    }
+  }
+
+  &__input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &__label {
+    display: grid;
+    grid-template-columns: var(--radio-size) minmax(0, 1fr);
+    gap: 0.6rem;
+    align-items: center;
+    cursor: pointer;
+    min-width: 0;
+    user-select: none;
+  }
+
+  &__control {
+    width: var(--radio-size);
+    height: var(--radio-size);
+    min-width: var(--radio-size);
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.02);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  }
+
+  &__dot {
+    width: calc(var(--radio-size) - 8px);
+    height: calc(var(--radio-size) - 8px);
+    min-width: 6px;
+    min-height: 6px;
+    border-radius: 50%;
+    background: rgba($newAccent2, 0.95);
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+  }
+
+  &__label-text {
+    color: $newText3;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+
+    &_required::after {
+      content: ' *';
+      color: #fca5a5;
+    }
+  }
+
+  &:hover:not(&_disabled) {
+    #{$root}__control {
+      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.04);
+    }
+  }
+
+  &:focus-within:not(&_disabled) {
+    #{$root}__control {
+      border-color: rgba($newAccent2, 0.4);
+      box-shadow: 0 0 0 3px rgba($newAccent2, 0.12);
+    }
+  }
+
+  &_checked {
+    #{$root}__control {
+      border-color: rgba($newAccent2, 0.45);
+      background: rgba($newAccent2, 0.12);
+    }
+
+    #{$root}__dot {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  &_hasError {
+    #{$root}__control {
+      border-color: rgba(239, 68, 68, 0.32);
+    }
+  }
+
+  &_disabled {
+    opacity: 0.6;
+
+    #{$root}__label {
+      cursor: not-allowed;
+    }
+  }
+
+  &__input:checked + #{$root}__label {
+    #{$root}__control {
+      border-color: rgba($newAccent2, 0.45);
+      background: rgba($newAccent2, 0.12);
+    }
+
+    #{$root}__dot {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
