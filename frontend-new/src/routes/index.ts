@@ -15,6 +15,7 @@ import ShowPage from './ShowPage';
 import ShowEpisodePage from './ShowEpisodePage';
 import ShowSeasonPage from './ShowSeasonPage';
 import FAQPage from './FAQPage';
+import CommunityPicksPage from './CommunityPicksPage';
 
 export const ROUTE_ROOT = 'root';
 
@@ -33,6 +34,7 @@ export const ROUTE_RANDOMIZER = 'randomizer';
 export const ROUTE_SETTINGS = 'settings';
 export const ROUTE_CALENDAR = 'calendar';
 export const ROUTE_FAQ = 'faq';
+export const ROUTE_COMMUNITY_PICKS = 'community_picks';
 
 export const ROUTE_EMAIL_CONFIRM = 'email_confirm';
 export const ROUTE_PASSWORD_CONFIRM = 'password_confirm';
@@ -89,6 +91,13 @@ export default {
             path: '/faq',
             component: FAQPage,
             title: __('FAQ'),
+            roles,
+        },
+        [ROUTE_COMMUNITY_PICKS]: {
+            exact: true,
+            path: '/community-picks',
+            component: CommunityPicksPage,
+            title: __('Выбор пользователей Interests'),
             roles,
         },
         [ROUTE_UNWATCHED]: {

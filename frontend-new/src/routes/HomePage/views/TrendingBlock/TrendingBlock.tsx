@@ -30,7 +30,7 @@ function TrendingBlock() {
 			<div className={bem.element('trending-group')}>
 				<div className={bem.element('trending-group-head')}>
 					<h3 className={bem.element('trending-group-title')}>Фильмы</h3>
-					{moviesLoading && <span className={bem.element('trending-loading')}>Загрузка...</span>}
+					{moviesLoading && movieItems.length === 0 && <span className={bem.element('trending-loading')}>Загрузка...</span>}
 				</div>
 				<div className={bem.element('trending-grid')}>
 					{movieItems.slice(0, 6).map((item, index) => (
@@ -50,7 +50,7 @@ function TrendingBlock() {
 			<div className={bem.element('trending-group')}>
 				<div className={bem.element('trending-group-head')}>
 					<h3 className={bem.element('trending-group-title')}>Сериалы</h3>
-					{showsLoading && <span className={bem.element('trending-loading')}>Загрузка...</span>}
+					{showsLoading && showItems.length === 0 && <span className={bem.element('trending-loading')}>Загрузка...</span>}
 				</div>
 				<div className={bem.element('trending-grid')}>
 					{showItems.slice(0, 6).map((item, index) => (
