@@ -77,6 +77,22 @@ $layout-top-offset: 52px;
         }
     }
 
+    a.sidebar__item {
+        display: flex;
+        width: 100%;
+        min-height: 42px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: $newText3;
+
+        &:visited,
+        &:active {
+            color: $newText3;
+            text-decoration: none;
+        }
+    }
+
     &__item_accent {
         color: #ffaeae;
 
