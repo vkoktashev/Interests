@@ -125,9 +125,15 @@ class SettingsSerializer(ModelSerializer):
 
 
 class UserInfoSerializer(ModelSerializer):
+    permissions = SerializerMethodField('get_permissions')
+
+    @staticmethod
+    def get_permissions(user):
+        return sorted(user.get_all_permissions())
+
     class Meta:
         model = User
-        fields = ('id', 'username', 'last_activity', 'backdrop_path')
+        fields = ('id', 'username', 'last_activity', 'backdrop_path', 'permissions')
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):

@@ -277,6 +277,10 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         data = request.data.copy()
+
+        if 'playtime' in data and 'spent_time' not in data:
+            data['spent_time'] = data.pop('playtime')
+
         data.update({'user': request.user.pk,
                      'game': game.pk})
 
@@ -292,7 +296,6 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         data = await serializer.adata
 
         return Response(data, status=status.HTTP_200_OK)
-
 
 async def update_game_genres(game: Game, rawg_game: dict) -> None:
     existing_game_genres = GameGenre.objects.filter(game=game)
@@ -521,6 +524,7 @@ async def parse_game_from_db(game: Game, hltb_game=None):
         })
 
     new_game = {
+        'id': game.id,
         'name': game.rawg_name,
         'slug': game.rawg_slug,
         'overview': game.rawg_description,
@@ -533,6 +537,7 @@ async def parse_game_from_db(game: Game, hltb_game=None):
         'release_date': format_game_release_date(game.rawg_release_date),
         'playtime': f'{game.rawg_playtime} {int_to_hours(game.rawg_playtime)}',
         'stores': stores,
+        'red_tigerino_playlist_url': game.red_tigerino_playlist_url,
     }
 
     if hltb_game is not None:

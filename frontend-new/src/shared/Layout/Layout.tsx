@@ -11,7 +11,6 @@ import './Layout.scss';
 import Footer from '../app/Footer';
 import Navbar from '../app/Navbar';
 import Sidebar from '../app/Sidebar';
-import {jwtDecode} from 'jwt-decode';
 import {QueryParamProvider} from 'use-query-params';
 import {ReactRouter5Adapter} from 'use-query-params/adapters/react-router-5';
 
@@ -24,22 +23,7 @@ export default function Layout(props: React.PropsWithChildren<any>) {
 
     const components = useComponents();
 
-    const {status} = useLayout(
-         async () => {
-        const accessToken = localStorage.getItem('accessToken');
-
-        if (accessToken) {
-            const userData: any = jwtDecode(accessToken);
-            const user = {
-                username: userData.username,
-                id: userData.user_id,
-                email: userData.email
-            };
-            return {user};
-        }
-        return {};
-    }
-    );
+    const {status, data} = useLayout(() => components.http.post('/init'));
 
     if (status !== STATUS_OK) {
         return status !== STATUS_LOADING ? status : null;

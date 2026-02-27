@@ -18,6 +18,7 @@ class Game(models.Model):
     rawg_metacritic = models.IntegerField(null=True, blank=True)
     rawg_platforms = models.TextField(blank=True)
     rawg_playtime = models.IntegerField(default=0)
+    red_tigerino_playlist_url = models.URLField(blank=True)
     rawg_last_update = models.DateTimeField(null=True, blank=True)
     # howlongtobeat
     hltb_name = models.CharField(max_length=200, blank=True)
