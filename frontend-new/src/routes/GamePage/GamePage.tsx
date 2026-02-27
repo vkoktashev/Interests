@@ -6,7 +6,8 @@ import {openModal} from '@steroidsjs/core/actions/modal';
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
 import _uniq from 'lodash/uniq';
-import {FaTwitch, FaYoutube} from 'react-icons/fa';
+import {FaTwitch, FaYoutube, FaPencilAlt} from 'react-icons/fa';
+import {GiTigerHead} from 'react-icons/gi';
 import {Loader} from '@steroidsjs/core/ui/layout'
 import StatusButtonGroup from '../../shared/StatusButtonGroup';
 import FriendsActivity from '../../shared/FriendsActivity';
@@ -58,7 +59,7 @@ export function GamePage() {
 		http.send('PUT', `/games/game/${gameId}/`, payload).catch(e => {
 			fetchUserInfo();
 		});
-	}, [gameId]);
+	}, [fetchUserInfo, gameId, http]);
 
 	useEffect(
 		() => {
@@ -151,7 +152,7 @@ export function GamePage() {
 			return [];
 		}
 
-		return [
+		const links = [
 			{
 				id: 'twitch',
 				title: 'Twitch',
@@ -165,7 +166,30 @@ export function GamePage() {
 				Icon: FaYoutube,
 			},
 		];
-	}, [game?.name]);
+
+		if (game?.red_tigerino_playlist_url) {
+			links.push({
+				id: 'redTigerino',
+				title: 'Прохождение ReD_TiGeRiNo',
+				href: game.red_tigerino_playlist_url,
+				Icon: GiTigerHead,
+			});
+		}
+
+		return links;
+	}, [game?.name, game?.red_tigerino_playlist_url]);
+
+	const canEditRedTigerinoPlaylist = useMemo(
+		() => Boolean(user?.permissions?.includes('games.change_game')),
+		[user?.permissions],
+	);
+	const adminEditUrl = useMemo(() => {
+		if (!game?.id) {
+			return '';
+		}
+		const backendUrl = (process.env.APP_BACKEND_URL || '').replace(/\/+$/, '');
+		return `${backendUrl}/admin/games/game/${game.id}/change/`;
+	}, [game?.id]);
 
 	const infoRows = useMemo(() => ([
 		{label: 'Разработчики', value: game?.developers},
@@ -198,11 +222,24 @@ export function GamePage() {
 								<h1 className={bem.element('info-header')}>
 									{game.name}
 								</h1>
-								<ScoreBlock
-									score={game.metacritic}
-									text='Metascore'
-									className={bem.element('info-score')}
-								/>
+								<div className={bem.element('title-actions')}>
+									<a
+										hidden={!canEditRedTigerinoPlaylist}
+										className={bem.element('edit-button')}
+										href={adminEditUrl}
+										target='_blank'
+										rel='noreferrer'
+										aria-label='Редактировать игру'
+										title='Редактировать игру'
+									>
+										<FaPencilAlt />
+									</a>
+									<ScoreBlock
+										score={game.metacritic}
+										text='Metascore'
+										className={bem.element('info-score')}
+									/>
+								</div>
 							</div>
 
 							<div className={bem.element('info-panel')}>
