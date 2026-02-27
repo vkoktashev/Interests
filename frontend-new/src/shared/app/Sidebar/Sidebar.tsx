@@ -37,7 +37,8 @@ interface ISidebarAction {
 	key: string;
 	title: string;
 	icon: React.ReactNode;
-	onClick: () => void;
+	onClick?: () => void;
+	href?: string;
 	accent?: boolean;
 }
 
@@ -100,12 +101,18 @@ export function Sidebar(props: {className?: string}) {
 	}, [dispatch, isMobile]);
 
 	const authenticatedActions: ISidebarAction[] = [
-		{key: 'profile', title: 'Профиль', icon: <FaUserCircle />, onClick: openProfile},
-		{key: 'friends', title: 'Друзья', icon: <FaUserFriends />, onClick: openFriends},
-		{key: 'unwatched', title: 'Непросмотренное', icon: <MdLiveTv />, onClick: () => openRoute(ROUTE_UNWATCHED)},
-		{key: 'calendar', title: 'Календарь', icon: <FaCalendar />, onClick: () => openRoute(ROUTE_CALENDAR)},
-		{key: 'randomizer', title: 'Рандомайзер', icon: <FaRandom />, onClick: () => openRoute(ROUTE_RANDOMIZER)},
-		{key: 'settings', title: 'Настройки', icon: <MdSettings />, onClick: () => openRoute(ROUTE_SETTINGS)},
+		{key: 'profile', title: 'Профиль', icon: <FaUserCircle />, onClick: openProfile, href: `/user/${user?.id || ''}`},
+		{
+			key: 'friends',
+			title: 'Друзья',
+			icon: <FaUserFriends />,
+			onClick: openFriends,
+			href: `/user/${user?.id || ''}?${new URLSearchParams({сategory: 'Друзья'} as any).toString()}`,
+		},
+		{key: 'unwatched', title: 'Непросмотренное', icon: <MdLiveTv />, onClick: () => openRoute(ROUTE_UNWATCHED), href: '/unwatched'},
+		{key: 'calendar', title: 'Календарь', icon: <FaCalendar />, onClick: () => openRoute(ROUTE_CALENDAR), href: '/calendar'},
+		{key: 'randomizer', title: 'Рандомайзер', icon: <FaRandom />, onClick: () => openRoute(ROUTE_RANDOMIZER), href: '/random'},
+		{key: 'settings', title: 'Настройки', icon: <MdSettings />, onClick: () => openRoute(ROUTE_SETTINGS), href: '/settings'},
 		{key: 'logout', title: 'Выход', icon: <FaSignOutAlt />, onClick: logoutAction, accent: true},
 	];
 
@@ -138,18 +145,41 @@ export function Sidebar(props: {className?: string}) {
 			>
 				<div className={bem.element('panel')}>
 					<nav className={bem.element('menu')} aria-label='Основная навигация'>
-						{(user ? authenticatedActions : guestActions).map(action => (
-							<button
-								type='button'
-								key={action.key}
-								className={bem.element('item', {accent: action.accent})}
-								onClick={action.onClick}
-								title={sidebarIsCollapsed ? action.title : undefined}
-							>
-								<span className={bem.element('item-icon')}>{action.icon}</span>
-								<span className={bem.element('item-title')}>{action.title}</span>
-							</button>
-						))}
+						{(user ? authenticatedActions : guestActions).map(action => {
+							if (action.href) {
+								return (
+									<a
+										key={action.key}
+										href={action.href}
+										className={bem.element('item', {accent: action.accent})}
+										onClick={(e) => {
+											if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+												return;
+											}
+											e.preventDefault();
+											action.onClick?.();
+										}}
+										title={sidebarIsCollapsed ? action.title : undefined}
+									>
+										<span className={bem.element('item-icon')}>{action.icon}</span>
+										<span className={bem.element('item-title')}>{action.title}</span>
+									</a>
+								);
+							}
+
+							return (
+								<button
+									type='button'
+									key={action.key}
+									className={bem.element('item', {accent: action.accent})}
+									onClick={action.onClick}
+									title={sidebarIsCollapsed ? action.title : undefined}
+								>
+									<span className={bem.element('item-icon')}>{action.icon}</span>
+									<span className={bem.element('item-title')}>{action.title}</span>
+								</button>
+							);
+						})}
 					</nav>
 
 					<div className={bem.element('footer')}>
