@@ -62,20 +62,22 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 error_code = int(e.args[0].split(' ', 1)[0])
                 if error_code == 404:
                     return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-            except ConnectionError:
-                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                if show is None:
+                    return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            except (ConnectionError, Timeout):
+                if show is None:
+                    return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            else:
+                new_fields = get_show_new_fields(tmdb_show, tmdb_show_videos)
+                show, created = Show.objects.filter().get_or_create(tmdb_id=tmdb_show.get('id'), defaults=new_fields)
+                if not created:
+                    update_fields_if_needed(show, new_fields)
 
-            new_fields = get_show_new_fields(tmdb_show, tmdb_show_videos)
-            show, created = Show.objects.filter().get_or_create(tmdb_id=tmdb_show.get('id'), defaults=new_fields)
-            if not created:
-                update_fields_if_needed(show, new_fields)
+                sync_show_genres(show, tmdb_show)
+                sync_show_people(show, tmdb_show_credits)
 
-            sync_show_genres(show, tmdb_show)
-            sync_show_people(show, tmdb_show_credits)
-
-            for tmdb_season in tmdb_show.get('seasons') or []:
-                upsert_season_from_tmdb(show, tmdb_season)
+                for tmdb_season in tmdb_show.get('seasons') or []:
+                    upsert_season_from_tmdb(show, tmdb_season)
 
         response = Response(parse_show(show, request))
 

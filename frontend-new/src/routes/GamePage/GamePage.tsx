@@ -17,6 +17,7 @@ import Rating from '../../shared/Rating';
 import InputNumber from '../../shared/InputNumber';
 import GameStores from "../../shared/GameStores";
 import LoginForm from '../../modals/LoginForm';
+import MediaGalleryBlock from '../../shared/MediaGalleryBlock';
 import "./game-page.scss";
 import {Button, TextField} from '@steroidsjs/core/ui/form';
 
@@ -33,6 +34,7 @@ export function GamePage() {
 	const [userRate, setUserRate] = useState(0);
 	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
 	const [shouldLoadHltb, setShouldLoadHltb] = useState(false);
+	const [isMobileViewport, setIsMobileViewport] = useState(false);
 
 	const gameFetchConfig = useMemo(() => gameId && ({
 		url: `/games/game/${gameId}/`,
@@ -92,6 +94,19 @@ export function GamePage() {
 
 		return () => window.clearTimeout(timeoutId);
 	}, [gameId, game]);
+
+	useEffect(() => {
+		const updateViewport = () => {
+			if (typeof window === 'undefined') {
+				return;
+			}
+			setIsMobileViewport(window.innerWidth <= 760);
+		};
+
+		updateViewport();
+		window.addEventListener('resize', updateViewport);
+		return () => window.removeEventListener('resize', updateViewport);
+	}, []);
 
 	useEffect(
 		() => {
@@ -203,6 +218,11 @@ export function GamePage() {
 		[game?.overview]
 	);
 	const canCollapseOverview = overviewPlainText.length > 420;
+
+	const hasMedia = useMemo(
+		() => Boolean(game?.trailers?.length || game?.screenshots?.length),
+		[game?.trailers?.length, game?.screenshots?.length],
+	);
 
 	if (!game) {
 		return <Loader />;
@@ -323,7 +343,14 @@ export function GamePage() {
 							</LoadingOverlay>
 						</div>
 					</div>
-					<div className={bem.element('overview')}>
+					<MediaGalleryBlock
+						className={bem.element('media-card')}
+						trailers={game?.trailers}
+						screenshots={game?.screenshots}
+						isMobileViewport={isMobileViewport}
+					/>
+
+					<div className={bem.element('overview', {withMedia: hasMedia && !isMobileViewport})}>
 						<div className={bem.element('content-grid')}>
 							<div className={bem.element('main-column')}>
 								<section className={bem.element('content-card', {description: true})}>
