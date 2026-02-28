@@ -36,7 +36,8 @@
     "react-rating": "^2.0.5",
     "react-responsive-carousel": "^3.2.21",
     "react-reveal": "^1.2.2",
-    "use-query-params": "^2.2.1"
+    "use-query-params": "^2.2.1",
+    "yet-another-react-lightbox": "^3.29.1"
   },
   "devDependencies": {
     "@steroidsjs/eslint-config": "^2.1.6",

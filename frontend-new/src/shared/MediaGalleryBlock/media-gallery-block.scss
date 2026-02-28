@@ -10,8 +10,16 @@
   padding: 14px;
   backdrop-filter: blur(8px);
 
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
   &__title {
-    margin: 0 0 10px;
+    margin: 0;
     font-weight: 500;
     font-size: 1.1rem;
     line-height: 1.2;
@@ -34,23 +42,38 @@
     position: relative;
   }
 
-  &__media-type {
-    position: absolute;
-    top: 10px;
-    left: 16px;
-    z-index: 2;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba($newBackground2, 0.72);
-    color: $newText2;
-    font-size: 0.78rem;
-    line-height: 1;
-    padding: 5px 9px;
+  &__open-gallery-button {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba($newBackground2, 0.68);
+    color: $newText3;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      border-color: rgba($newAccent2, 0.44);
+      background: rgba($newAccent2, 0.22);
+      color: $newText3;
+    }
   }
 
   &__trailer,
   &__screenshot {
     background: #000;
+  }
+
+  &__trailer {
+    cursor: default;
+  }
+
+  &__screenshot {
+    cursor: zoom-in;
   }
 
   &__trailer-player {
@@ -77,8 +100,28 @@
     background: #000;
   }
 
+  &__lightbox-youtube {
+    width: min(92vw, 1200px);
+    margin: 0 auto;
+  }
+
+  &__lightbox-player {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 16 / 9;
+  }
+
   @media (max-width: 760px) {
     border-radius: 12px;
     padding: 12px;
   }
+}
+
+.yarl__container {
+  background: rgba(4, 7, 14, 0.94);
+}
+
+.yarl__thumbnails_container {
+  background: rgba(10, 12, 20, 0.82);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }

@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.db.models import F
 from django.utils import timezone
 from utils.swagger import swagger_auto_schema
-from requests import HTTPError, ConnectionError
+from requests import HTTPError, ConnectionError, Timeout
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -47,7 +47,7 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 if error_code == 404:
                     return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-            except ConnectionError:
+            except (ConnectionError, Timeout):
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             show_fields = get_show_new_fields(tmdb_show, tmdb_show_videos)
@@ -67,7 +67,7 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 if error_code == 404:
                     return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-            except ConnectionError:
+            except (ConnectionError, Timeout):
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             season_fields = get_season_new_fields(tmdb_season, show.id)
@@ -84,7 +84,7 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 if error_code == 404:
                     return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-            except ConnectionError:
+            except (ConnectionError, Timeout):
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             season_fields = get_season_new_fields(tmdb_season, show.id)
@@ -110,7 +110,7 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 if error_code == 404:
                     return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-            except ConnectionError:
+            except (ConnectionError, Timeout):
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             defaults = get_episode_new_fields(tmdb_episode, season.id)
