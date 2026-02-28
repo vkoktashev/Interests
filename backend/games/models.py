@@ -22,6 +22,11 @@ class Game(models.Model):
     rawg_screenshots_count = models.IntegerField(null=True, blank=True)
     red_tigerino_playlist_url = models.URLField(blank=True)
     rawg_last_update = models.DateTimeField(null=True, blank=True)
+    # igdb.com
+    igdb_id = models.IntegerField(null=True, blank=True)
+    igdb_name = models.CharField(max_length=200, blank=True)
+    igdb_slug = models.CharField(max_length=200, blank=True)
+    igdb_year = models.IntegerField(null=True, blank=True)
     # howlongtobeat
     hltb_name = models.CharField(max_length=200, blank=True)
     hltb_id = models.IntegerField(null=True, blank=True)
