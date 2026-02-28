@@ -2,8 +2,7 @@ from datetime import datetime, timedelta
 
 from django.db.models import Q
 from django.utils import timezone
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
+from utils.swagger import openapi, swagger_auto_schema
 from requests import HTTPError, ConnectionError, Timeout
 from rest_framework import mixins, status
 from rest_framework.decorators import action

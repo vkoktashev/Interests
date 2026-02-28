@@ -4,8 +4,7 @@ from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.db.models.functions import Greatest
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
+from utils.swagger import openapi, swagger_auto_schema
 from requests import HTTPError
 from rest_framework import mixins, status
 from rest_framework.decorators import action

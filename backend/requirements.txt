@@ -1,13 +1,13 @@
 git+https://gitlab.com/Kononkov1998/rawg-python-wrapper.git@master
 git+https://github.com/Kononkov1998/tmdbsimple.git@master
 celery==5.4.0
-Django==4.2.7
-django-cors-headers==3.13.0
-django-debug-toolbar==3.7.0
-djangorestframework==3.15.2
-djangorestframework_simplejwt==5.4.0
-drf-nested-routers==0.93.4
-drf-yasg==1.21.8
+Django>=6.0,<6.1
+django-cors-headers>=4.9,<5
+django-debug-toolbar>=6.0,<7
+djangorestframework>=3.16,<3.17
+djangorestframework_simplejwt>=5.5,<5.6
+drf-nested-routers>=0.94,<0.95
+drf-yasg>=1.21.8,<1.22
 Fabric3==1.14.post1
 gunicorn==22.0.0
 howlongtobeatpy==1.0.17
@@ -20,4 +20,4 @@ wheel
 python-dotenv
 asyncio==3.4.3
 uvicorn==0.33.0
-adrf==0.1.9
+adrf>=0.1.9

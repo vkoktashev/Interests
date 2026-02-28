@@ -1,7 +1,6 @@
 import tmdbsimple as tmdb
 from django.core.cache import cache
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
+from utils.swagger import openapi, swagger_auto_schema
 from requests import HTTPError, ConnectionError, Timeout
 from rest_framework import mixins, status
 from rest_framework.response import Response

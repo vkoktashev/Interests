@@ -12,8 +12,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db import IntegrityError
 from django.utils import timezone
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
+from utils.swagger import openapi, swagger_auto_schema
 from howlongtobeatpy import HowLongToBeat
 from requests.exceptions import ConnectionError
 from rest_framework import status
