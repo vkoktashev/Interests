@@ -2,7 +2,6 @@
 
 import datetime
 from django.db import migrations, models
-from django.utils.timezone import utc
 
 
 class Migration(migrations.Migration):
@@ -15,6 +14,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='usermovie',
             name='updated_at',
-            field=models.DateTimeField(default=datetime.datetime(2020, 12, 1, 10, 30, 4, 803230, tzinfo=utc)),
+            field=models.DateTimeField(
+                default=datetime.datetime(2020, 12, 1, 10, 30, 4, 803230, tzinfo=datetime.timezone.utc)
+            ),
         ),
     ]

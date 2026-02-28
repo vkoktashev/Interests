@@ -1,8 +1,7 @@
 from django.core.paginator import Paginator
 from django.db.models import Count, Avg, Sum, Value, IntegerField
 from django.db.models.functions import Coalesce
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
+from utils.swagger import openapi, swagger_auto_schema
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet

@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.db.models import F
 from django.utils import timezone
-from drf_yasg.utils import swagger_auto_schema
+from utils.swagger import swagger_auto_schema
 from requests import HTTPError, ConnectionError
 from rest_framework import mixins, status
 from rest_framework.decorators import action

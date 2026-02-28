@@ -1,8 +1,10 @@
+import os
+
 import rawgpy
 import tmdbsimple as tmdb
 
-rawg = rawgpy.RAWG("b63e6d97a13e480890142f340650aefb")
-tmdb.API_KEY = 'ebf9e8e8a2be6bba6aacfa5c4c76f698'
+rawg = rawgpy.RAWG(os.environ['RAWG_API_KEY'])
+tmdb.API_KEY = os.environ['TMDB_API_KEY']
 tmdb.REQUESTS_TIMEOUT = 8
 LANGUAGE = 'ru'
 

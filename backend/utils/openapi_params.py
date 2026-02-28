@@ -1,4 +1,4 @@
-from drf_yasg import openapi
+from utils.swagger import openapi
 
 from utils.constants import DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE
 

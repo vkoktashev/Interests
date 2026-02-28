@@ -24,7 +24,6 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'rest_framework',
     'corsheaders',
-    'drf_yasg',
 
     # our apps
     'config',
@@ -34,6 +33,13 @@ INSTALLED_APPS = [
     'movies',
     'shows'
 ]
+
+try:
+    import drf_yasg  # noqa: F401
+
+    INSTALLED_APPS.append('drf_yasg')
+except Exception:
+    pass
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -76,7 +82,7 @@ if DEBUG:
         os.environ['INTERNAL_IP'],
     ]
 
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # Behind nginx/proxy, use forwarded protocol/host to build absolute URLs correctly.
@@ -198,8 +204,6 @@ LANGUAGE_CODE = 'ru-ru'
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
-
-USE_L10N = True
 
 USE_TZ = True
 
