@@ -8,11 +8,20 @@ from howlongtobeatpy import HowLongToBeat
 from requests.exceptions import ConnectionError
 
 from config.celery import app
-from games.functions import get_game_new_fields, get_hltb_game_key, get_rawg_game_trailers
-from games.models import Game, Genre, GameGenre, GameStore, Store, GameDeveloper, GameTrailer
+from games.functions import get_game_new_fields, get_hltb_game_key, get_rawg_game_trailers, get_rawg_game_screenshots
+from games.models import Game, Genre, GameGenre, GameStore, Store, GameDeveloper, GameTrailer, GameScreenshot
 from people.models import Developer
 from utils.constants import rawg, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE, CACHE_TIMEOUT
 from utils.functions import update_fields_if_needed
+
+
+def get_rawg_count(value):
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
 
 
 @app.on_after_finalize.connect
@@ -51,13 +60,6 @@ def update_game_details(slug, game_obj=None):
     if game_obj is None:
         game_obj = Game.objects.filter(rawg_slug=slug).first()
 
-    trailers_loaded = False
-    try:
-        rawg_trailers = get_rawg_game_trailers(rawg_game.get('slug') or slug)
-        trailers_loaded = True
-    except (ConnectionError, JSONDecodeError, ValueError, TypeError):
-        rawg_trailers = []
-
     new_fields = get_game_new_fields(rawg_game)
     if game_obj is None:
         game_obj, created = Game.objects.get_or_create(rawg_id=rawg_game.get('id'), defaults=new_fields)
@@ -69,8 +71,30 @@ def update_game_details(slug, game_obj=None):
     sync_game_genres(game_obj, rawg_game)
     sync_game_developers(game_obj, rawg_game)
     sync_game_stores(game_obj, rawg_game)
-    if trailers_loaded:
-        sync_game_trailers(game_obj, rawg_trailers)
+
+    expected_movies_count = get_rawg_count(rawg_game.get('movies_count'))
+    expected_screenshots_count = get_rawg_count(rawg_game.get('screenshots_count'))
+    rawg_slug = rawg_game.get('slug') or slug
+
+    if expected_movies_count is not None:
+        trailers_db_count = GameTrailer.objects.filter(game=game_obj).count()
+        if trailers_db_count != expected_movies_count:
+            try:
+                rawg_trailers = get_rawg_game_trailers(rawg_slug)
+            except (ConnectionError, JSONDecodeError, ValueError, TypeError):
+                rawg_trailers = None
+            if rawg_trailers is not None:
+                sync_game_trailers(game_obj, rawg_trailers)
+
+    if expected_screenshots_count is not None:
+        screenshots_db_count = GameScreenshot.objects.filter(game=game_obj).count()
+        if screenshots_db_count != expected_screenshots_count:
+            try:
+                rawg_screenshots = get_rawg_game_screenshots(rawg_slug)
+            except (ConnectionError, JSONDecodeError, ValueError, TypeError):
+                rawg_screenshots = None
+            if rawg_screenshots is not None:
+                sync_game_screenshots(game_obj, rawg_screenshots)
     return game_obj
 
 
@@ -195,6 +219,38 @@ def sync_game_trailers(game, rawg_trailers):
     if game.rawg_movies_count != new_movies_count:
         game.rawg_movies_count = new_movies_count
         game.save(update_fields=('rawg_movies_count',))
+
+
+def sync_game_screenshots(game, rawg_screenshots):
+    keep_ids = []
+    for index, screenshot in enumerate(rawg_screenshots or []):
+        screenshot_id = screenshot.get('id')
+        if screenshot_id is not None:
+            game_screenshot, _ = GameScreenshot.objects.get_or_create(
+                game=game,
+                rawg_id=screenshot_id,
+                defaults={'sort_order': index}
+            )
+        else:
+            image_url = screenshot.get('image') or ''
+            if not image_url:
+                continue
+            game_screenshot = GameScreenshot.objects.filter(game=game, image=image_url).first()
+            if game_screenshot is None:
+                game_screenshot = GameScreenshot.objects.create(game=game, image=image_url, sort_order=index)
+
+        game_screenshot.image = screenshot.get('image') or ''
+        game_screenshot.width = screenshot.get('width')
+        game_screenshot.height = screenshot.get('height')
+        game_screenshot.sort_order = index
+        game_screenshot.save(update_fields=('image', 'width', 'height', 'sort_order'))
+        keep_ids.append(game_screenshot.id)
+
+    GameScreenshot.objects.filter(game=game).exclude(id__in=keep_ids).delete()
+    new_screenshots_count = len(rawg_screenshots or [])
+    if game.rawg_screenshots_count != new_screenshots_count:
+        game.rawg_screenshots_count = new_screenshots_count
+        game.save(update_fields=('rawg_screenshots_count',))
 
 
 def find_game_store_url_sync(game_stores, store_obj):

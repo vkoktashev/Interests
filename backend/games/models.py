@@ -19,6 +19,7 @@ class Game(models.Model):
     rawg_platforms = models.TextField(blank=True)
     rawg_playtime = models.IntegerField(default=0)
     rawg_movies_count = models.IntegerField(null=True, blank=True)
+    rawg_screenshots_count = models.IntegerField(null=True, blank=True)
     red_tigerino_playlist_url = models.URLField(blank=True)
     rawg_last_update = models.DateTimeField(null=True, blank=True)
     # howlongtobeat
@@ -101,6 +102,18 @@ class GameTrailer(models.Model):
     video_max = models.URLField(max_length=500, blank=True)
     video_480 = models.URLField(max_length=500, blank=True)
     video_320 = models.URLField(max_length=500, blank=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ('sort_order', 'id')
+
+
+class GameScreenshot(models.Model):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    rawg_id = models.IntegerField(null=True, blank=True)
+    image = models.URLField(max_length=500, blank=True)
+    width = models.IntegerField(null=True, blank=True)
+    height = models.IntegerField(null=True, blank=True)
     sort_order = models.PositiveIntegerField(default=0)
 
     class Meta:

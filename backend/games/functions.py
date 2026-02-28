@@ -47,6 +47,8 @@ def get_game_new_fields(rawg_game):
         'rawg_metacritic': rawg_game.get('metacritic'),
         'rawg_platforms': objects_to_str(platforms),
         'rawg_playtime': rawg_game.get('playtime') or 0,
+        'rawg_movies_count': rawg_game.get('movies_count'),
+        'rawg_screenshots_count': rawg_game.get('screenshots_count'),
         'rawg_last_update': timezone.now(),
     }
 
@@ -64,6 +66,10 @@ def get_hltb_game_key(game_name):
 
 def get_rawg_game_trailers_key(slug):
     return f'game_{slug}_trailers'
+
+
+def get_rawg_game_screenshots_key(slug):
+    return f'game_{slug}_screenshots'
 
 
 def parse_rawg_game_trailers(rawg_movies_payload):
@@ -91,6 +97,23 @@ def parse_rawg_game_trailers(rawg_movies_payload):
     return parsed_trailers
 
 
+def parse_rawg_game_screenshots(rawg_screenshots_payload):
+    parsed_screenshots = []
+    for screenshot in (rawg_screenshots_payload or {}).get('results') or []:
+        image_url = screenshot.get('image')
+        if not image_url:
+            continue
+
+        parsed_screenshots.append({
+            'id': screenshot.get('id'),
+            'image': image_url,
+            'width': screenshot.get('width'),
+            'height': screenshot.get('height'),
+        })
+
+    return parsed_screenshots
+
+
 def get_rawg_game_trailers(slug):
     key = get_rawg_game_trailers_key(slug)
     trailers = cache.get(key, None)
@@ -101,3 +124,15 @@ def get_rawg_game_trailers(slug):
         cache.set(key, trailers, CACHE_TIMEOUT)
 
     return trailers
+
+
+def get_rawg_game_screenshots(slug):
+    key = get_rawg_game_screenshots_key(slug)
+    screenshots = cache.get(key, None)
+
+    if screenshots is None:
+        rawg_screenshots_payload = rawg.get_request(f'https://rawg.io/api/games/{slug}/screenshots?key={rawg.key}')
+        screenshots = parse_rawg_game_screenshots(rawg_screenshots_payload)
+        cache.set(key, screenshots, CACHE_TIMEOUT)
+
+    return screenshots

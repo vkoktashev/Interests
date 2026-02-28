@@ -20,8 +20,9 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from games.functions import get_game_new_fields, get_hltb_game_key, get_rawg_game_key, get_rawg_game_trailers
-from games.models import Game, UserGame, Genre, GameGenre, GameStore, Store, GameDeveloper, GameTrailer
+from games.functions import get_game_new_fields, get_hltb_game_key, get_rawg_game_key, get_rawg_game_trailers, \
+    get_rawg_game_screenshots
+from games.models import Game, UserGame, Genre, GameGenre, GameStore, Store, GameDeveloper, GameTrailer, GameScreenshot
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer, GameSerializer
 from games.tasks import refresh_game_details
 from people.models import Developer
@@ -59,6 +60,15 @@ def get_game_release_year(value):
         except ValueError:
             return None
     return None
+
+
+def get_rawg_count(value):
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
 
 
 class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
@@ -136,7 +146,12 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         slug = kwargs.get('slug')
         game = await Game.objects.filter(rawg_slug=slug).afirst()
         game_by_requested_slug = game
-        should_fetch_from_rawg = game is None or game.rawg_last_update is None or game.rawg_movies_count is None
+        should_fetch_from_rawg = (
+            game is None
+            or game.rawg_last_update is None
+            or game.rawg_movies_count is None
+            or game.rawg_screenshots_count is None
+        )
 
         if should_fetch_from_rawg:
             try:
@@ -145,13 +160,6 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
             except (ConnectionError, ValueError, JSONDecodeError):
                 return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-            trailers_loaded = False
-            try:
-                rawg_trailers = get_rawg_game_trailers(rawg_game.get('slug') or slug)
-                trailers_loaded = True
-            except (ConnectionError, ValueError, JSONDecodeError, TypeError):
-                rawg_trailers = []
 
             new_fields = get_game_new_fields(rawg_game)
 
@@ -191,8 +199,30 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             await update_game_genres(game, rawg_game)
             await update_game_developers(game, rawg_game)
             await update_game_stores(game, rawg_game)
-            if trailers_loaded:
-                await update_game_trailers(game, rawg_trailers)
+
+            expected_movies_count = get_rawg_count(rawg_game.get('movies_count'))
+            expected_screenshots_count = get_rawg_count(rawg_game.get('screenshots_count'))
+            rawg_slug = rawg_game.get('slug') or slug
+
+            if expected_movies_count is not None:
+                trailers_db_count = await GameTrailer.objects.filter(game=game).acount()
+                if trailers_db_count != expected_movies_count:
+                    try:
+                        rawg_trailers = get_rawg_game_trailers(rawg_slug)
+                    except (ConnectionError, ValueError, JSONDecodeError, TypeError):
+                        rawg_trailers = None
+                    if rawg_trailers is not None:
+                        await update_game_trailers(game, rawg_trailers)
+
+            if expected_screenshots_count is not None:
+                screenshots_db_count = await GameScreenshot.objects.filter(game=game).acount()
+                if screenshots_db_count != expected_screenshots_count:
+                    try:
+                        rawg_screenshots = get_rawg_game_screenshots(rawg_slug)
+                    except (ConnectionError, ValueError, JSONDecodeError, TypeError):
+                        rawg_screenshots = None
+                    if rawg_screenshots is not None:
+                        await update_game_screenshots(game, rawg_screenshots)
 
         parsed_game = await parse_game_from_db(game)
         response = Response(parsed_game)
@@ -436,6 +466,44 @@ async def update_game_trailers(game: Game, rawg_trailers: List[dict]) -> None:
     await update_fields_if_needed_async(game, {'rawg_movies_count': len(rawg_trailers or [])})
 
 
+async def update_game_screenshots(game: Game, rawg_screenshots: List[dict]) -> None:
+    existing_screenshots = GameScreenshot.objects.filter(game=game)
+    new_screenshots = []
+    screenshots_to_delete_ids = []
+
+    for index, screenshot in enumerate(rawg_screenshots or []):
+        screenshot_id = screenshot.get('id')
+        if screenshot_id is not None:
+            game_screenshot, _ = await GameScreenshot.objects.aget_or_create(
+                game=game,
+                rawg_id=screenshot_id,
+                defaults={'sort_order': index}
+            )
+        else:
+            image_url = screenshot.get('image') or ''
+            if not image_url:
+                continue
+            game_screenshot = await GameScreenshot.objects.filter(game=game, image=image_url).afirst()
+            if game_screenshot is None:
+                game_screenshot = await GameScreenshot.objects.acreate(game=game, image=image_url, sort_order=index)
+
+        new_fields = {
+            'image': screenshot.get('image') or '',
+            'width': screenshot.get('width'),
+            'height': screenshot.get('height'),
+            'sort_order': index,
+        }
+        await update_fields_if_needed_async(game_screenshot, new_fields)
+        new_screenshots.append(game_screenshot)
+
+    async for existing_screenshot in existing_screenshots:
+        if existing_screenshot not in new_screenshots:
+            screenshots_to_delete_ids.append(existing_screenshot.id)
+
+    await GameScreenshot.objects.filter(id__in=screenshots_to_delete_ids).adelete()
+    await update_fields_if_needed_async(game, {'rawg_screenshots_count': len(rawg_screenshots or [])})
+
+
 def find_game_store_url(game_stores: List[Any], store_obj: Store) -> Optional[str]:
     for game_store in game_stores:
         if store_obj.rawg_id == game_store.store_id:
@@ -589,6 +657,16 @@ async def parse_game_from_db(game: Game, hltb_game=None):
             },
         })
 
+    screenshots = []
+    game_screenshots = GameScreenshot.objects.filter(game=game).order_by('sort_order', 'id')
+    async for game_screenshot in game_screenshots:
+        screenshots.append({
+            'id': game_screenshot.rawg_id,
+            'image': game_screenshot.image,
+            'width': game_screenshot.width,
+            'height': game_screenshot.height,
+        })
+
     new_game = {
         'id': game.id,
         'name': game.rawg_name,
@@ -603,8 +681,10 @@ async def parse_game_from_db(game: Game, hltb_game=None):
         'release_date': format_game_release_date(game.rawg_release_date),
         'playtime': f'{game.rawg_playtime} {int_to_hours(game.rawg_playtime)}',
         'movies_count': game.rawg_movies_count if game.rawg_movies_count is not None else 0,
+        'screenshots_count': game.rawg_screenshots_count if game.rawg_screenshots_count is not None else 0,
         'stores': stores,
         'trailers': trailers,
+        'screenshots': screenshots,
         'red_tigerino_playlist_url': game.red_tigerino_playlist_url,
     }
 
