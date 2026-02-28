@@ -1,6 +1,4 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import ReactPlayer from "react-player/youtube";
-import { Carousel } from "react-responsive-carousel";
 import LoadingOverlay from "react-loading-overlay";
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
@@ -14,8 +12,8 @@ import SeasonsBlock from './views/SeasonsBlock';
 import ScoreBlock from '../../shared/ScoreBlock';
 import TmdbReviewsBlock from '../../shared/TmdbReviewsBlock/TmdbReviewsBlock';
 import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
+import MediaGalleryBlock from '../../shared/MediaGalleryBlock';
 
-import "react-responsive-carousel/lib/styles/carousel.min.css";
 import "./show-page.scss";
 import LoginForm from '../../modals/LoginForm';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
@@ -95,12 +93,6 @@ function ShowPage(props) {
             setUserStatus("Не смотрел");
         }
     }, [userInfo]);
-
-	const renderVideo = (video, index) => (
-		<div className={bem.element('trailer')} key={video.url}>
-			<ReactPlayer url={video.url} controls key={index} className={bem.element('trailer-player')} />
-		</div>
-	);
 
     const infoRows = useMemo(() => ([
         {label: 'Жанр', value: show?.genres},
@@ -229,23 +221,11 @@ function ShowPage(props) {
 						</div>
 					</div>
 
-                    {!!show?.videos?.length && !isMobileViewport && (
-                        <div className={bem.element('trailers-card')}>
-                            <h3 className={bem.element('section-title')}>Трейлеры</h3>
-                            <Carousel
-                                key={isMobileViewport ? 'mobile' : 'desktop'}
-                                className={bem.element('trailers')}
-                                showArrows
-                                centerMode={!isMobileViewport}
-                                centerSlidePercentage={isMobileViewport ? 100 : 50}
-                                showThumbs={false}
-                                showStatus={false}
-                                showIndicators={false}
-                            >
-                                {show?.videos?.map(renderVideo)}
-                            </Carousel>
-                        </div>
-                    )}
+                    <MediaGalleryBlock
+                        className={bem.element('media-card')}
+                        trailers={show?.videos}
+                        isMobileViewport={isMobileViewport}
+                    />
 
 					<div className={bem.element('overview')}>
                         <div className={bem.element('content-grid')}>

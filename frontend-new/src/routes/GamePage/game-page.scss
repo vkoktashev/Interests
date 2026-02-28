@@ -47,6 +47,7 @@
     gap: 18px;
     align-items: stretch;
     padding: 16px;
+    border-radius: 16px;
     background: rgba($newBackground1, 0.72);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
@@ -281,11 +282,18 @@
     margin-top: 0;
   }
 
+  &__media-card {
+    margin-top: 14px;
+  }
+
   &__overview {
     background: rgba($newBackground2, 0.8);
     padding: 16px;
-    border-bottom-right-radius: 16px;
-    border-bottom-left-radius: 16px;
+    border-radius: 16px;
+
+    &_withMedia {
+      margin-top: 14px;
+    }
   }
 
   &__content-grid {
@@ -442,6 +450,7 @@
       grid-template-columns: 1fr;
       gap: 12px;
       padding: 12px;
+      border-radius: 12px;
     }
 
     &__poster {
@@ -459,7 +468,8 @@
 
     &__info-panel,
     &__actions-panel,
-    &__content-card {
+    &__content-card,
+    &__media-card {
       border-radius: 12px;
       padding: 12px;
     }
@@ -476,8 +486,7 @@
 
     &__overview {
       padding: 12px;
-      border-bottom-right-radius: 12px;
-      border-bottom-left-radius: 12px;
+      border-radius: 12px;
     }
 
     &__button {
