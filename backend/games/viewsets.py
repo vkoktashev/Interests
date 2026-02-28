@@ -20,8 +20,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from games.functions import get_game_new_fields, get_hltb_game_key, get_rawg_game_key
-from games.models import Game, UserGame, Genre, GameGenre, GameStore, Store, GameDeveloper
+from games.functions import get_game_new_fields, get_hltb_game_key, get_rawg_game_key, get_rawg_game_trailers
+from games.models import Game, UserGame, Genre, GameGenre, GameStore, Store, GameDeveloper, GameTrailer
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer, GameSerializer
 from games.tasks import refresh_game_details
 from people.models import Developer
@@ -136,7 +136,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         slug = kwargs.get('slug')
         game = await Game.objects.filter(rawg_slug=slug).afirst()
         game_by_requested_slug = game
-        should_fetch_from_rawg = game is None or game.rawg_last_update is None
+        should_fetch_from_rawg = game is None or game.rawg_last_update is None or game.rawg_movies_count is None
 
         if should_fetch_from_rawg:
             try:
@@ -145,6 +145,13 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
             except (ConnectionError, ValueError, JSONDecodeError):
                 return Response({ERROR: RAWG_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+            trailers_loaded = False
+            try:
+                rawg_trailers = get_rawg_game_trailers(rawg_game.get('slug') or slug)
+                trailers_loaded = True
+            except (ConnectionError, ValueError, JSONDecodeError, TypeError):
+                rawg_trailers = []
 
             new_fields = get_game_new_fields(rawg_game)
 
@@ -184,6 +191,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             await update_game_genres(game, rawg_game)
             await update_game_developers(game, rawg_game)
             await update_game_stores(game, rawg_game)
+            if trailers_loaded:
+                await update_game_trailers(game, rawg_trailers)
 
         parsed_game = await parse_game_from_db(game)
         response = Response(parsed_game)
@@ -384,6 +393,49 @@ async def update_game_developers(game: Game, rawg_game: dict) -> None:
     await GameDeveloper.objects.filter(id__in=links_to_delete_ids).adelete()
 
 
+async def update_game_trailers(game: Game, rawg_trailers: List[dict]) -> None:
+    existing_trailers = GameTrailer.objects.filter(game=game)
+    new_trailers = []
+    trailers_to_delete_ids = []
+
+    for index, trailer in enumerate(rawg_trailers or []):
+        trailer_id = trailer.get('id')
+        if trailer_id is not None:
+            game_trailer, _ = await GameTrailer.objects.aget_or_create(
+                game=game,
+                rawg_id=trailer_id,
+                defaults={
+                    'sort_order': index,
+                }
+            )
+        else:
+            trailer_url = trailer.get('url') or ''
+            if not trailer_url:
+                continue
+            game_trailer = await GameTrailer.objects.filter(game=game, url=trailer_url).afirst()
+            if game_trailer is None:
+                game_trailer = await GameTrailer.objects.acreate(game=game, url=trailer_url, sort_order=index)
+
+        new_fields = {
+            'name': trailer.get('name') or '',
+            'preview': trailer.get('preview') or '',
+            'url': trailer.get('url') or '',
+            'video_max': (trailer.get('data') or {}).get('max') or '',
+            'video_480': (trailer.get('data') or {}).get('480') or '',
+            'video_320': (trailer.get('data') or {}).get('320') or '',
+            'sort_order': index,
+        }
+        await update_fields_if_needed_async(game_trailer, new_fields)
+        new_trailers.append(game_trailer)
+
+    async for existing_trailer in existing_trailers:
+        if existing_trailer not in new_trailers:
+            trailers_to_delete_ids.append(existing_trailer.id)
+
+    await GameTrailer.objects.filter(id__in=trailers_to_delete_ids).adelete()
+    await update_fields_if_needed_async(game, {'rawg_movies_count': len(rawg_trailers or [])})
+
+
 def find_game_store_url(game_stores: List[Any], store_obj: Store) -> Optional[str]:
     for game_store in game_stores:
         if store_obj.rawg_id == game_store.store_id:
@@ -522,6 +574,21 @@ async def parse_game_from_db(game: Game, hltb_game=None):
             'name': game_developer.developer.name,
         })
 
+    trailers = []
+    game_trailers = GameTrailer.objects.filter(game=game).order_by('sort_order', 'id')
+    async for game_trailer in game_trailers:
+        trailers.append({
+            'id': game_trailer.rawg_id,
+            'name': game_trailer.name,
+            'preview': game_trailer.preview,
+            'url': game_trailer.url,
+            'data': {
+                'max': game_trailer.video_max,
+                '480': game_trailer.video_480,
+                '320': game_trailer.video_320,
+            },
+        })
+
     new_game = {
         'id': game.id,
         'name': game.rawg_name,
@@ -535,7 +602,9 @@ async def parse_game_from_db(game: Game, hltb_game=None):
         'poster': game.rawg_poster_path,
         'release_date': format_game_release_date(game.rawg_release_date),
         'playtime': f'{game.rawg_playtime} {int_to_hours(game.rawg_playtime)}',
+        'movies_count': game.rawg_movies_count if game.rawg_movies_count is not None else 0,
         'stores': stores,
+        'trailers': trailers,
         'red_tigerino_playlist_url': game.red_tigerino_playlist_url,
     }
 

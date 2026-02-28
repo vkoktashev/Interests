@@ -8,8 +8,8 @@ from howlongtobeatpy import HowLongToBeat
 from requests.exceptions import ConnectionError
 
 from config.celery import app
-from games.functions import get_game_new_fields, get_hltb_game_key
-from games.models import Game, Genre, GameGenre, GameStore, Store, GameDeveloper
+from games.functions import get_game_new_fields, get_hltb_game_key, get_rawg_game_trailers
+from games.models import Game, Genre, GameGenre, GameStore, Store, GameDeveloper, GameTrailer
 from people.models import Developer
 from utils.constants import rawg, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE, CACHE_TIMEOUT
 from utils.functions import update_fields_if_needed
@@ -33,7 +33,6 @@ def update_upcoming_games():
     for game in games:
         update_game_details(game.rawg_slug, game)
         refresh_hltb_cache(game)
-        print(game.rawg_name)
 
 
 @app.task
@@ -52,6 +51,13 @@ def update_game_details(slug, game_obj=None):
     if game_obj is None:
         game_obj = Game.objects.filter(rawg_slug=slug).first()
 
+    trailers_loaded = False
+    try:
+        rawg_trailers = get_rawg_game_trailers(rawg_game.get('slug') or slug)
+        trailers_loaded = True
+    except (ConnectionError, JSONDecodeError, ValueError, TypeError):
+        rawg_trailers = []
+
     new_fields = get_game_new_fields(rawg_game)
     if game_obj is None:
         game_obj, created = Game.objects.get_or_create(rawg_id=rawg_game.get('id'), defaults=new_fields)
@@ -63,6 +69,8 @@ def update_game_details(slug, game_obj=None):
     sync_game_genres(game_obj, rawg_game)
     sync_game_developers(game_obj, rawg_game)
     sync_game_stores(game_obj, rawg_game)
+    if trailers_loaded:
+        sync_game_trailers(game_obj, rawg_trailers)
     return game_obj
 
 
@@ -152,6 +160,41 @@ def sync_game_developers(game, rawg_game):
         keep_ids.append(game_developer.id)
 
     GameDeveloper.objects.filter(game=game).exclude(id__in=keep_ids).delete()
+
+
+def sync_game_trailers(game, rawg_trailers):
+    keep_ids = []
+    for index, trailer in enumerate(rawg_trailers or []):
+        trailer_id = trailer.get('id')
+        if trailer_id is not None:
+            game_trailer, _ = GameTrailer.objects.get_or_create(
+                game=game,
+                rawg_id=trailer_id,
+                defaults={'sort_order': index}
+            )
+        else:
+            trailer_url = trailer.get('url') or ''
+            if not trailer_url:
+                continue
+            game_trailer = GameTrailer.objects.filter(game=game, url=trailer_url).first()
+            if game_trailer is None:
+                game_trailer = GameTrailer.objects.create(game=game, url=trailer_url, sort_order=index)
+
+        game_trailer.name = trailer.get('name') or ''
+        game_trailer.preview = trailer.get('preview') or ''
+        game_trailer.url = trailer.get('url') or ''
+        game_trailer.video_max = (trailer.get('data') or {}).get('max') or ''
+        game_trailer.video_480 = (trailer.get('data') or {}).get('480') or ''
+        game_trailer.video_320 = (trailer.get('data') or {}).get('320') or ''
+        game_trailer.sort_order = index
+        game_trailer.save(update_fields=('name', 'preview', 'url', 'video_max', 'video_480', 'video_320', 'sort_order'))
+        keep_ids.append(game_trailer.id)
+
+    GameTrailer.objects.filter(game=game).exclude(id__in=keep_ids).delete()
+    new_movies_count = len(rawg_trailers or [])
+    if game.rawg_movies_count != new_movies_count:
+        game.rawg_movies_count = new_movies_count
+        game.save(update_fields=('rawg_movies_count',))
 
 
 def find_game_store_url_sync(game_stores, store_obj):

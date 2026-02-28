@@ -1,7 +1,9 @@
 from datetime import date
 
+from django.core.cache import cache
 from django.utils import timezone
 
+from utils.constants import rawg, CACHE_TIMEOUT
 from utils.functions import objects_to_str
 
 
@@ -58,3 +60,44 @@ def get_rawg_game_key(slug):
 
 def get_hltb_game_key(game_name):
     return f'hltb_search_{game_name.replace(" ", "_")}'
+
+
+def get_rawg_game_trailers_key(slug):
+    return f'game_{slug}_trailers'
+
+
+def parse_rawg_game_trailers(rawg_movies_payload):
+    parsed_trailers = []
+    for trailer in (rawg_movies_payload or {}).get('results') or []:
+        trailer_data = trailer.get('data') or {}
+        trailer_url = trailer_data.get('max') or trailer_data.get('480') or trailer_data.get('320')
+        preview_url = trailer.get('preview')
+
+        if not trailer_url and not preview_url:
+            continue
+
+        parsed_trailers.append({
+            'id': trailer.get('id'),
+            'name': trailer.get('name') or '',
+            'preview': preview_url or '',
+            'url': trailer_url or '',
+            'data': {
+                'max': trailer_data.get('max') or '',
+                '480': trailer_data.get('480') or '',
+                '320': trailer_data.get('320') or '',
+            },
+        })
+
+    return parsed_trailers
+
+
+def get_rawg_game_trailers(slug):
+    key = get_rawg_game_trailers_key(slug)
+    trailers = cache.get(key, None)
+
+    if trailers is None:
+        rawg_movies_payload = rawg.get_request(f'https://rawg.io/api/games/{slug}/movies?key={rawg.key}')
+        trailers = parse_rawg_game_trailers(rawg_movies_payload)
+        cache.set(key, trailers, CACHE_TIMEOUT)
+
+    return trailers
