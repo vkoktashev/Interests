@@ -20,3 +20,4 @@ wheel
 python-dotenv>=1.1,<2
 uvicorn>=0.40,<0.41
 adrf>=0.1.12,<0.2
+igdb-api-v4==0.3.3
