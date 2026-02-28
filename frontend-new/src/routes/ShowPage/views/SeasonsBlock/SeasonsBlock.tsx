@@ -135,10 +135,16 @@ function SeasonsBlock({ showId, seasons, userWatchedShow }) {
 					onSeasonUserInfoLoad={addSeasonUserInfo}
 					dataVersion={dataVersion}
 					onEpisodesDirtyChange={(hasChanges: boolean) => {
-						setSeasonDirtyMap(prev => ({
-							...prev,
-							[String(season.season_number)]: hasChanges,
-						}));
+						setSeasonDirtyMap(prev => {
+							const key = String(season.season_number);
+							if (prev[key] === hasChanges) {
+								return prev;
+							}
+							return {
+								...prev,
+								[key]: hasChanges,
+							};
+						});
 					}}
 				/>)
 				.reverse()}
