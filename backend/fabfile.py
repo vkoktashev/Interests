@@ -1,51 +1,65 @@
-from fabric.api import local
+from invoke import task
 
 
-def run(port=8000):
-    local(f"python manage.py runserver 0.0.0.0:{port}")
+@task
+def run(c, port=8000):
+    c.run(f"python manage.py runserver 0.0.0.0:{port}", pty=True)
 
 
-def start():
-    local("cd ../frontend && npm start")
+@task
+def start(c):
+    with c.cd("../frontend"):
+        c.run("npm start", pty=True)
 
 
-def install():
-    local("cd ../frontend && npm install")
+@task
+def install(c):
+    with c.cd("../frontend"):
+        c.run("npm install", pty=True)
 
 
-def upgrade():
-    local("python -m pip install -U pip")
-    local("pip install --upgrade -r requirements.txt")
+@task
+def upgrade(c):
+    c.run("python -m pip install -U pip", pty=True)
+    c.run("pip install --upgrade -r requirements.txt", pty=True)
 
 
-def migrate():
-    local("python manage.py makemigrations")
-    local("python manage.py migrate")
+@task
+def migrate(c):
+    c.run("python manage.py makemigrations", pty=True)
+    c.run("python manage.py migrate", pty=True)
 
 
-def makemigrations():
-    local("python manage.py makemigrations")
+@task
+def makemigrations(c):
+    c.run("python manage.py makemigrations", pty=True)
 
 
-def createsuperuser():
-    local("python manage.py createsuperuser")
+@task
+def createsuperuser(c):
+    c.run("python manage.py createsuperuser", pty=True)
 
 
-def createapp(name):
-    local(f"python manage.py startapp {name}")
+@task
+def createapp(c, name):
+    c.run(f"python manage.py startapp {name}", pty=True)
 
 
-def test():
-    local("python manage.py test")
+@task
+def test(c):
+    c.run("python manage.py test", pty=True)
 
 
-def ngrok(port=8000):
-    local(f"ngrok.exe http {port} -region eu")
+@task
+def ngrok(c, port=8000):
+    c.run(f"ngrok.exe http {port} -region eu", pty=True)
 
 
-def worker():
-    local("celery -A config worker -l info -P threads")
+@task
+def worker(c):
+    c.run("celery -A config worker -l info -P threads", pty=True)
 
 
-def beat():
-    local("celery -A config beat -l info")
+@task
+def beat(c):
+    c.run("celery -A config beat -l info", pty=True)
