@@ -2,7 +2,7 @@ import time
 
 from django.core.management.base import BaseCommand
 
-from games.igdb import query_igdb_games, rank_igdb_matches
+from games.integrations.igdb import query_igdb_games, rank_igdb_matches
 from games.models import Game
 
 
