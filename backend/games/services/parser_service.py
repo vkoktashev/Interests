@@ -109,7 +109,7 @@ async def parse_game_from_db(game: Game, hltb_game=None):
     new_game = {
         'id': game.id,
         'name': game.igdb_name or game.rawg_name,
-        'slug': game.rawg_slug,
+        'slug': game.igdb_slug or '',
         'overview': game.igdb_summary or game.rawg_description,
         'metacritic': score_value,
         'genres': objects_to_str(genres),

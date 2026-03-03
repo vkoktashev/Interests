@@ -35,7 +35,7 @@ class GameSerializer(ModelSerializer):
 
     @staticmethod
     def get_slug(game):
-        return game.rawg_slug
+        return game.igdb_slug or ''
 
     @staticmethod
     def get_release_date(game):
@@ -106,7 +106,7 @@ class GameLogSerializer(ModelSerializer):
 
     @staticmethod
     def get_target_id(game_log):
-        return game_log.game.rawg_slug
+        return game_log.game.igdb_slug or ''
 
     class Meta:
         model = GameLog
@@ -129,7 +129,7 @@ class TypedGameSerializer(ModelSerializer):
 
     @staticmethod
     def get_slug(game):
-        return game.rawg_slug
+        return game.igdb_slug or ''
 
     @staticmethod
     def get_release_date(game):
