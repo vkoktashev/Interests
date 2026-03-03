@@ -47,6 +47,6 @@ class Genre(models.Model):
 
 
 class Store(models.Model):
-    rawg_id = models.IntegerField(primary_key=True)
-    rawg_name = models.CharField(max_length=100)
-    rawg_slug = models.CharField(max_length=100, unique=True)
+    igdb_id = models.IntegerField(primary_key=True)
+    igdb_name = models.CharField(max_length=100)
+    igdb_slug = models.CharField(max_length=100, unique=True)

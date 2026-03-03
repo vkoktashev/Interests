@@ -4,12 +4,13 @@ import time
 from datetime import datetime
 from difflib import SequenceMatcher
 from typing import Any, Optional
+from urllib.parse import urlparse
 
 import requests
 from igdb.wrapper import IGDBWrapper
 from django.utils import timezone
 
-from games.models import Game, GameDeveloper, GameGenre, GameScreenshot, GameTrailer, Genre
+from games.models import Game, GameDeveloper, GameGenre, GameScreenshot, GameStore, GameTrailer, Genre, Store
 from people.models import Developer
 from utils.functions import objects_to_str, update_fields_if_needed_async
 
@@ -20,6 +21,30 @@ _token_cache: dict[str, Any] = {
     'access_token': None,
     'expires_at': 0.0,
 }
+
+# Slugs are aligned with frontend GameStoresEnum.
+IGDB_STORE_BY_CATEGORY = {
+    10: {'id': 10, 'slug': 'apple-appstore', 'name': 'App Store'},
+    11: {'id': 11, 'slug': 'apple-appstore', 'name': 'App Store'},
+    12: {'id': 12, 'slug': 'google-play', 'name': 'Google Play'},
+    13: {'id': 13, 'slug': 'steam', 'name': 'Steam'},
+    15: {'id': 15, 'slug': 'itch', 'name': 'itch.io'},
+    16: {'id': 16, 'slug': 'epic-games', 'name': 'Epic Games'},
+    17: {'id': 17, 'slug': 'gog', 'name': 'GOG'},
+}
+
+IGDB_STORE_BY_HOST = (
+    ('store.steampowered.com', {'id': 13, 'slug': 'steam', 'name': 'Steam'}),
+    ('epicgames.com', {'id': 16, 'slug': 'epic-games', 'name': 'Epic Games'}),
+    ('gog.com', {'id': 17, 'slug': 'gog', 'name': 'GOG'}),
+    ('store.playstation.com', {'id': 101, 'slug': 'playstation-store', 'name': 'PlayStation Store'}),
+    ('playstation.com', {'id': 101, 'slug': 'playstation-store', 'name': 'PlayStation Store'}),
+    ('xbox.com', {'id': 102, 'slug': 'xbox-store', 'name': 'Xbox Store'}),
+    ('nintendo.com', {'id': 103, 'slug': 'nintendo', 'name': 'Nintendo eShop'}),
+    ('apps.apple.com', {'id': 10, 'slug': 'apple-appstore', 'name': 'App Store'}),
+    ('play.google.com', {'id': 12, 'slug': 'google-play', 'name': 'Google Play'}),
+    ('itch.io', {'id': 15, 'slug': 'itch', 'name': 'itch.io'}),
+)
 
 
 def _normalize(value: str | None) -> str:
@@ -131,6 +156,29 @@ def _parse_igdb_release_date(value: Any):
         return None
 
 
+def _resolve_store_info(url: str, category: int | None) -> dict[str, Any] | None:
+    if not url:
+        return None
+
+    store_info = IGDB_STORE_BY_CATEGORY.get(category)
+
+    host = (urlparse(url).netloc or '').lower()
+    for host_part, host_store_info in IGDB_STORE_BY_HOST:
+        if host_part in host:
+            store_info = host_store_info
+            break
+
+    if not store_info:
+        return None
+
+    return {
+        'id': store_info['id'],
+        'slug': store_info['slug'],
+        'name': store_info['name'],
+        'url': url,
+    }
+
+
 def get_game_search_results(query: str, page: int, page_size: int) -> list[dict[str, Any]]:
     safe_page = max(int(page or 1), 1)
     safe_page_size = max(int(page_size or 12), 1)
@@ -175,7 +223,8 @@ def query_igdb_game_by_id(igdb_id: int) -> Optional[dict[str, Any]]:
         f'fields id,name,slug,first_release_date,summary,rating,rating_count,aggregated_rating,'
         f'aggregated_rating_count,cover.url,url,platforms.name,genres.id,genres.name,genres.slug,'
         f'involved_companies.developer,involved_companies.company.id,involved_companies.company.name,'
-        f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height; '
+        f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height,'
+        f'websites.id,websites.url,websites.category; '
         f'where id = {int(igdb_id)}; '
         f'limit 1;'
     )
@@ -193,7 +242,8 @@ def query_igdb_game_by_slug(slug: str) -> Optional[dict[str, Any]]:
         f'fields id,name,slug,first_release_date,summary,rating,rating_count,aggregated_rating,'
         f'aggregated_rating_count,cover.url,url,platforms.name,genres.id,genres.name,genres.slug,'
         f'involved_companies.developer,involved_companies.company.id,involved_companies.company.name,'
-        f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height; '
+        f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height,'
+        f'websites.id,websites.url,websites.category; '
         f'where slug = "{safe_slug}"; '
         f'limit 1;'
     )
@@ -432,6 +482,60 @@ async def update_game_media_from_igdb(game: Game, igdb_game: dict[str, Any]) -> 
             screenshots_to_delete.append(existing_screenshot.id)
     if screenshots_to_delete:
         await GameScreenshot.objects.filter(id__in=screenshots_to_delete).adelete()
+
+
+async def update_game_stores_from_igdb(game: Game, igdb_game: dict[str, Any]) -> None:
+    websites = igdb_game.get('websites') or []
+
+    resolved_stores = []
+    seen_store_slugs = set()
+    for website in websites:
+        website_url = (website.get('url') or '').strip()
+        website_category = website.get('category')
+        resolved = _resolve_store_info(website_url, website_category)
+        if not resolved:
+            continue
+        if resolved['slug'] in seen_store_slugs:
+            continue
+        seen_store_slugs.add(resolved['slug'])
+        resolved_stores.append(resolved)
+
+    existing_links = GameStore.objects.filter(game=game).select_related('store')
+    new_links = []
+    to_delete_ids = []
+
+    for store_info in resolved_stores:
+        store = await Store.objects.filter(igdb_slug=store_info['slug']).afirst()
+        if store is None:
+            store = await Store.objects.filter(igdb_id=store_info['id']).afirst()
+        if store is None:
+            store = await Store.objects.acreate(
+                igdb_id=store_info['id'],
+                igdb_name=store_info['name'],
+                igdb_slug=store_info['slug'],
+            )
+        else:
+            await update_fields_if_needed_async(store, {
+                'igdb_name': store_info['name'],
+                'igdb_slug': store_info['slug'],
+            })
+
+        game_store = await GameStore.objects.filter(game=game, store=store).afirst()
+        if game_store is None:
+            game_store = await GameStore.objects.acreate(
+                game=game,
+                store=store,
+                url=store_info['url'],
+            )
+        else:
+            await update_fields_if_needed_async(game_store, {'url': store_info['url']})
+        new_links.append(game_store)
+
+    async for existing_link in existing_links:
+        if existing_link not in new_links:
+            to_delete_ids.append(existing_link.id)
+    if to_delete_ids:
+        await GameStore.objects.filter(id__in=to_delete_ids).adelete()
 
 
 def rank_igdb_matches(

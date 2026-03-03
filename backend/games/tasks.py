@@ -16,6 +16,7 @@ from games.integrations.igdb import (
     update_game_developers_from_igdb,
     update_game_genres_from_igdb,
     update_game_media_from_igdb,
+    update_game_stores_from_igdb,
 )
 from games.models import Game
 from utils.constants import UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE, CACHE_TIMEOUT
@@ -60,6 +61,7 @@ def refresh_game_details(slug):
     async_to_sync(update_game_genres_from_igdb)(game_obj, igdb_game)
     async_to_sync(update_game_developers_from_igdb)(game_obj, igdb_game)
     async_to_sync(update_game_media_from_igdb)(game_obj, igdb_game)
+    async_to_sync(update_game_stores_from_igdb)(game_obj, igdb_game)
     return game_obj
 
 

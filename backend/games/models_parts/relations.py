@@ -14,7 +14,7 @@ class GameGenre(models.Model):
 class GameStore(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
-    url = models.CharField(max_length=200, blank=True)
+    url = models.URLField(max_length=500, blank=True)
 
     class Meta:
         unique_together = (("game", "store"),)
