@@ -93,6 +93,13 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     serializer_class = UserGameSerializer
     lookup_field = 'slug'
 
+    @staticmethod
+    async def _get_game_by_public_slug(slug):
+        game = await Game.objects.filter(igdb_slug=slug).afirst()
+        if game is not None:
+            return game
+        return await Game.objects.filter(rawg_slug=slug).afirst()
+
     @swagger_auto_schema(
         operation_description="Retrieve details for a specific game by its slug.",
         manual_parameters=[
@@ -106,7 +113,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     )
     async def retrieve(self, request, *args, **kwargs):
         slug = kwargs.get('slug')
-        game = await Game.objects.filter(rawg_slug=slug).afirst()
+        game = await self._get_game_by_public_slug(slug)
         if game is None:
             try:
                 igdb_game = query_igdb_game_by_slug(slug)
@@ -119,8 +126,10 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             defaults = {}
             defaults.update(get_game_legacy_fields_from_igdb(igdb_game, slug))
             defaults.update(get_igdb_game_new_fields(igdb_game))
-            game, created = await Game.objects.filter().aget_or_create(rawg_slug=slug, defaults=defaults)
-            if not created:
+            game = await self._get_game_by_public_slug(slug)
+            if game is None:
+                game = await Game.objects.acreate(**defaults)
+            else:
                 await update_fields_if_needed_async(game, defaults)
             await update_game_genres_from_igdb(game, igdb_game)
             await update_game_developers_from_igdb(game, igdb_game)
@@ -174,7 +183,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=True, methods=['get'])
     async def hltb(self, request, *args, **kwargs):
         slug = kwargs.get('slug')
-        game = await Game.objects.filter(rawg_slug=slug).afirst()
+        game = await self._get_game_by_public_slug(slug)
         if game is None:
             try:
                 igdb_game = query_igdb_game_by_slug(slug)
@@ -187,8 +196,10 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             defaults = {}
             defaults.update(get_game_legacy_fields_from_igdb(igdb_game, slug))
             defaults.update(get_igdb_game_new_fields(igdb_game))
-            game, created = await Game.objects.filter().aget_or_create(rawg_slug=slug, defaults=defaults)
-            if not created:
+            game = await self._get_game_by_public_slug(slug)
+            if game is None:
+                game = await Game.objects.acreate(**defaults)
+            else:
                 await update_fields_if_needed_async(game, defaults)
             await update_game_genres_from_igdb(game, igdb_game)
             await update_game_developers_from_igdb(game, igdb_game)
@@ -208,7 +219,9 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     async def user_info(self, request, **kwargs):
         try:
-            game = await Game.objects.aget(rawg_slug=kwargs.get('slug'))
+            game = await self._get_game_by_public_slug(kwargs.get('slug'))
+            if game is None:
+                raise Game.DoesNotExist
 
             try:
                 user_game = await UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED).aget(user=request.user,
@@ -253,7 +266,9 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     )
     async def update(self, request, **kwargs):
         try:
-            game = await Game.objects.aget(rawg_slug=kwargs.get('slug'))
+            game = await self._get_game_by_public_slug(kwargs.get('slug'))
+            if game is None:
+                raise Game.DoesNotExist
         except Game.DoesNotExist:
             return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
