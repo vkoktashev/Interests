@@ -63,9 +63,9 @@ async def parse_game_from_db(game: Game, hltb_game=None):
     async for game_store in game_stores:
         stores.append({
             'store': {
-                'id': game_store.store.rawg_id,
-                'name': game_store.store.rawg_name,
-                'slug': game_store.store.rawg_slug,
+                'id': game_store.store.igdb_id,
+                'name': game_store.store.igdb_name,
+                'slug': game_store.store.igdb_slug,
             },
             'url': game_store.url,
         })

@@ -21,6 +21,7 @@ from games.integrations.igdb import (
     update_game_developers_from_igdb,
     update_game_genres_from_igdb,
     update_game_media_from_igdb,
+    update_game_stores_from_igdb,
 )
 from games.models import Game, UserGame
 from games.services.parser_service import parse_game_from_db
@@ -124,6 +125,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             await update_game_genres_from_igdb(game, igdb_game)
             await update_game_developers_from_igdb(game, igdb_game)
             await update_game_media_from_igdb(game, igdb_game)
+            await update_game_stores_from_igdb(game, igdb_game)
 
         should_fetch_from_igdb = (
             game.igdb_last_update is None
@@ -146,6 +148,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 await update_game_genres_from_igdb(game, igdb_game)
                 await update_game_developers_from_igdb(game, igdb_game)
                 await update_game_media_from_igdb(game, igdb_game)
+                await update_game_stores_from_igdb(game, igdb_game)
             elif game.igdb_last_update is None:
                 return Response({ERROR: IGDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -189,6 +192,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 await update_fields_if_needed_async(game, defaults)
             await update_game_genres_from_igdb(game, igdb_game)
             await update_game_developers_from_igdb(game, igdb_game)
+            await update_game_stores_from_igdb(game, igdb_game)
 
         release_year = get_game_release_year(game.igdb_release_date or game.rawg_release_date)
         hltb_game = get_hltb_game(game.igdb_name or game.rawg_name, release_year)
