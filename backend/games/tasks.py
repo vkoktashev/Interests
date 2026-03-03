@@ -12,6 +12,7 @@ from games.functions import get_hltb_game_key
 from games.integrations.igdb import (
     get_game_legacy_fields_from_igdb,
     get_igdb_game_new_fields,
+    query_igdb_game_by_id,
     resolve_igdb_game_details,
     update_game_developers_from_igdb,
     update_game_genres_from_igdb,
@@ -57,6 +58,35 @@ def refresh_game_details(slug):
     fields_to_update = {}
     fields_to_update.update(get_igdb_game_new_fields(igdb_game))
     fields_to_update.update(get_game_legacy_fields_from_igdb(igdb_game, slug))
+    update_fields_if_needed(game_obj, fields_to_update)
+    async_to_sync(update_game_genres_from_igdb)(game_obj, igdb_game)
+    async_to_sync(update_game_developers_from_igdb)(game_obj, igdb_game)
+    async_to_sync(update_game_media_from_igdb)(game_obj, igdb_game)
+    async_to_sync(update_game_stores_from_igdb)(game_obj, igdb_game)
+    return game_obj
+
+
+@app.task
+def refresh_game_details_by_igdb_id(igdb_id):
+    if igdb_id is None:
+        return None
+
+    game_obj = Game.objects.filter(igdb_id=igdb_id).first()
+    if game_obj is None:
+        return None
+
+    try:
+        igdb_game = query_igdb_game_by_id(int(igdb_id))
+    except Exception:
+        return None
+
+    if not igdb_game:
+        return game_obj
+
+    slug_for_legacy = game_obj.rawg_slug or igdb_game.get('slug') or ''
+    fields_to_update = {}
+    fields_to_update.update(get_igdb_game_new_fields(igdb_game))
+    fields_to_update.update(get_game_legacy_fields_from_igdb(igdb_game, slug_for_legacy))
     update_fields_if_needed(game_obj, fields_to_update)
     async_to_sync(update_game_genres_from_igdb)(game_obj, igdb_game)
     async_to_sync(update_game_developers_from_igdb)(game_obj, igdb_game)

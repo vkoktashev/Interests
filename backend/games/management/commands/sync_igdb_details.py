@@ -2,11 +2,11 @@ import time
 
 from django.core.management.base import BaseCommand
 from games.models import Game
-from games.tasks import refresh_game_details
+from games.tasks import refresh_game_details_by_igdb_id
 
 
 class Command(BaseCommand):
-    help = 'Update IGDB detailed fields for games where details are missing'
+    help = 'Update IGDB detailed fields for games where details are missing (by igdb_id)'
 
     MIN_REQUEST_INTERVAL_SECONDS = 0.30  # <= 4 requests per second
 
@@ -33,7 +33,7 @@ class Command(BaseCommand):
         include_not_found = bool(options['include_not_found'])
         dry_run = bool(options['dry_run'])
 
-        games_qs = Game.objects.filter(igdb_last_update__isnull=True).order_by('id')
+        games_qs = Game.objects.filter(igdb_last_update__isnull=True, igdb_id__isnull=False).order_by('id')
         if not include_not_found:
             games_qs = games_qs.exclude(igdb_name='Not Found')
         if limit:
@@ -57,12 +57,12 @@ class Command(BaseCommand):
         error_count = 0
 
         for index, game in enumerate(games, start=1):
-            slug = (game.rawg_slug or '').strip()
-            prefix = f'[{index}/{total}] game_id={game.id} slug={slug or "-"}'
+            igdb_id = game.igdb_id
+            prefix = f'[{index}/{total}] game_id={game.id} igdb_id={igdb_id or "-"}'
 
-            if not slug:
+            if not igdb_id:
                 skipped_count += 1
-                self.stdout.write(self.style.WARNING(f'{prefix} SKIP empty slug'))
+                self.stdout.write(self.style.WARNING(f'{prefix} SKIP empty igdb_id'))
                 continue
 
             if dry_run:
@@ -75,7 +75,7 @@ class Command(BaseCommand):
                 time.sleep(wait_for)
 
             try:
-                refresh_game_details(slug)
+                refresh_game_details_by_igdb_id(igdb_id)
                 last_request_at = time.time()
                 updated_count += 1
                 self.stdout.write(self.style.SUCCESS(f'{prefix} UPDATED'))
