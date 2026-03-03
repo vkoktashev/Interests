@@ -53,9 +53,9 @@ function NextReleaseCard({loggedIn}: INextReleaseCardProps) {
 				return {
 					date,
 					kind: 'game',
-					title: game.rawg_name,
+					title: game.name,
 					route: ROUTE_GAME,
-					params: {gameId: game.rawg_slug},
+					params: {gameId: game.slug},
 				};
 			}
 			if (day?.movies?.length) {

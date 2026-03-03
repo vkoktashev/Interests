@@ -28,7 +28,7 @@ function RandomCard(props: IRandomCardProps) {
         switch (item.type) {
             case 'game':
                 return {
-                    gameId: item.rawg_slug,
+                    gameId: item.slug,
                 };
             case 'movie':
                 return {
@@ -44,7 +44,7 @@ function RandomCard(props: IRandomCardProps) {
     return (
         <div className={bem(bem.block(), props.className)}>
             <img
-                src={winner?.tmdb_poster_path || winner?.rawg_poster_path}
+                src={winner?.tmdb_poster_path || winner?.poster_path}
                 className={bem.element('poster')}
                 alt='poster'
             />
@@ -54,7 +54,7 @@ function RandomCard(props: IRandomCardProps) {
                     toRouteParams={getRouteParams(props.winner)}
                     className={bem.element('link')}
                 >
-                    {winner.tmdb_name || winner.rawg_name}
+                    {winner.tmdb_name || winner.name}
                 </Link>
             </div>
         </div>

@@ -23,17 +23,15 @@ const fallbackReelItems = [
 
 function getCandidateTitle(item: any) {
     if (!item) return '';
-    return item.tmdb_name || item.rawg_name || item.name || item.title || 'Тайтл';
+    return item.tmdb_name || item.name || item.title || 'Тайтл';
 }
 
 function getCandidateId(item: any) {
     return item?.tmdb_id
-        ?? item?.rawg_id
         ?? item?.id
-        ?? item?.rawg_slug
         ?? item?.slug
         ?? item?.tmdb_name
-        ?? item?.rawg_name;
+        ?? item?.name;
 }
 
 function parseTranslateY(transform: string) {
@@ -140,7 +138,7 @@ function RandomPage() {
 
     useEffect(() => {
         if (!winner) return;
-        if (!winner?.tmdb_poster_path && !winner?.rawg_poster_path) {
+        if (!winner?.tmdb_poster_path && !winner?.poster_path) {
             setImageLoaded(true);
         }
     }, [winner]);
@@ -357,9 +355,9 @@ function RandomPage() {
                            onLoad={() => setImageLoaded(true)}
                            style={{width: 0, height: 0}} />
                 )}
-                {winner?.rawg_poster_path && !winner?.tmdb_poster_path && (
+                {winner?.poster_path && !winner?.tmdb_poster_path && (
                     <img
-                        src={winner?.rawg_poster_path}
+                        src={winner?.poster_path}
                         onLoad={() => setImageLoaded(true)}
                         style={{width: 0, height: 0}}
                         alt=''

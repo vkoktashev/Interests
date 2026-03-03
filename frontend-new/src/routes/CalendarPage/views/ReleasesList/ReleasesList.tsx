@@ -101,10 +101,10 @@ function ReleasesList({entries}: IReleasesListProps) {
 
 						<div className='releases-list__content'>
 							{day.games.map(game => (
-								<div key={`game-${game.rawg_id}`} className='releases-list__item'>
+								<div key={`game-${game.id}`} className='releases-list__item'>
 									<span className='releases-list__badge releases-list__badge_game'>Игра</span>
-									<Link toRoute={ROUTE_GAME} toRouteParams={{gameId: game.rawg_slug}}>
-										{game.rawg_name}
+									<Link toRoute={ROUTE_GAME} toRouteParams={{gameId: game.slug}}>
+										{game.name}
 									</Link>
 								</div>
 							))}

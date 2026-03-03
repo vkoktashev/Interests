@@ -8,9 +8,9 @@ import useWindowDimensions from '../../../../../hooks/useWindowDimensions';
 import './search-input.scss';
 
 interface IGameHint {
-	rawg_slug: string;
-	rawg_name: string;
-	rawg_release_date?: string;
+	slug: string;
+	name: string;
+	release_date?: string;
 }
 
 interface IMovieHint {
@@ -169,10 +169,10 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 			icon: <MdVideogameAsset />,
 			emptyText: '🎮 В играх ничего не найдено',
 			items: withIndexes(limitItems(hints.games).map(hint => ({
-				id: String(hint.rawg_slug),
-				title: hint.rawg_name,
-				year: getReleaseYear(hint.rawg_release_date),
-				onClick: () => dispatch(goToRoute(ROUTE_GAME, {gameId: hint.rawg_slug})),
+				id: String(hint.slug),
+				title: hint.name,
+				year: getReleaseYear(hint.release_date),
+				onClick: () => dispatch(goToRoute(ROUTE_GAME, {gameId: hint.slug})),
 			}))),
 		},
 		{

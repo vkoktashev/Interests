@@ -130,7 +130,7 @@ function SearchPage() {
 	);
 
 	const searchGames = useCallback(async (query: string, page: number, requestId: number) => {
-		const response = await http.get('/games/search/rawg/', {
+		const response = await http.get('/games/search/igdb/', {
 			query,
 			page,
 			page_size: PAGE_SIZE,
