@@ -2,6 +2,7 @@ from adrf.fields import SerializerMethodField
 from adrf.serializers import ModelSerializer
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
@@ -112,7 +113,9 @@ class SettingsSerializer(ModelSerializer):
 
     @staticmethod
     def validate_backdrop_path(value):
-        if not (Game.objects.filter(rawg_backdrop_path=value).exists() or
+        if not (Game.objects.filter(
+            Q(igdb_cover_url=value) | Q(rawg_backdrop_path=value) | Q(rawg_poster_path=value)
+        ).exists() or
                 Movie.objects.filter(tmdb_backdrop_path=value).exists() or
                 Show.objects.filter(tmdb_backdrop_path=value).exists()):
             raise serializers.ValidationError(WRONG_BACKDROP_PATH)

@@ -20,11 +20,55 @@ class UserGameSerializer(ModelSerializer):
         }
 
 
-class GameStatsSerializer(UserGameSerializer):
+class GameSerializer(ModelSerializer):
+    name = SerializerMethodField('get_name')
+    slug = SerializerMethodField('get_slug')
+    release_date = SerializerMethodField('get_release_date')
+    poster_path = SerializerMethodField('get_poster_path')
+    backdrop_path = SerializerMethodField('get_backdrop_path')
+    platform_score = SerializerMethodField('get_platform_score')
+    platforms = SerializerMethodField('get_platforms')
+
+    @staticmethod
+    def get_name(game):
+        return game.igdb_name or game.rawg_name
+
+    @staticmethod
+    def get_slug(game):
+        return game.rawg_slug
+
+    @staticmethod
+    def get_release_date(game):
+        return game.igdb_release_date or game.rawg_release_date
+
+    @staticmethod
+    def get_poster_path(game):
+        return game.igdb_cover_url or game.rawg_poster_path or game.rawg_backdrop_path
+
+    @staticmethod
+    def get_backdrop_path(game):
+        return game.rawg_backdrop_path or game.igdb_cover_url
+
+    @staticmethod
+    def get_platform_score(game):
+        return game.igdb_rating or game.igdb_aggregated_rating or game.rawg_metacritic
+
+    @staticmethod
+    def get_platforms(game):
+        return game.igdb_platforms or game.rawg_platforms
+
+    class Meta:
+        model = Game
+        fields = ('id', 'name', 'slug', 'release_date', 'poster_path', 'backdrop_path', 'platform_score', 'platforms')
+
+
+class GameStatsSerializer(ModelSerializer):
+    game = GameSerializer(read_only=True)
+    status = ChoicesField(choices=UserGame.STATUS_CHOICES, required=False)
+
     class Meta:
         model = UserGame
         exclude = ('id', 'user', 'updated_at')
-        depth = 1
 
 
 # todo: rework
@@ -58,7 +102,7 @@ class GameLogSerializer(ModelSerializer):
 
     @staticmethod
     def get_target(game_log):
-        return game_log.game.rawg_name
+        return game_log.game.igdb_name or game_log.game.rawg_name
 
     @staticmethod
     def get_target_id(game_log):
@@ -69,14 +113,43 @@ class GameLogSerializer(ModelSerializer):
         exclude = ('game',)
 
 
-class GameSerializer(ModelSerializer):
-    class Meta:
-        model = Game
-        exclude = ('id',)
-
-
 class TypedGameSerializer(ModelSerializer):
+    name = SerializerMethodField('get_name')
+    slug = SerializerMethodField('get_slug')
+    release_date = SerializerMethodField('get_release_date')
+    poster_path = SerializerMethodField('get_poster_path')
+    backdrop_path = SerializerMethodField('get_backdrop_path')
+    platform_score = SerializerMethodField('get_platform_score')
+    platforms = SerializerMethodField('get_platforms')
     type = SerializerMethodField('get_type')
+
+    @staticmethod
+    def get_name(game):
+        return game.igdb_name or game.rawg_name
+
+    @staticmethod
+    def get_slug(game):
+        return game.rawg_slug
+
+    @staticmethod
+    def get_release_date(game):
+        return game.igdb_release_date or game.rawg_release_date
+
+    @staticmethod
+    def get_poster_path(game):
+        return game.igdb_cover_url or game.rawg_poster_path or game.rawg_backdrop_path
+
+    @staticmethod
+    def get_backdrop_path(game):
+        return game.rawg_backdrop_path or game.igdb_cover_url
+
+    @staticmethod
+    def get_platform_score(game):
+        return game.igdb_rating or game.igdb_aggregated_rating or game.rawg_metacritic
+
+    @staticmethod
+    def get_platforms(game):
+        return game.igdb_platforms or game.rawg_platforms
 
     @staticmethod
     def get_type(game):
@@ -84,4 +157,4 @@ class TypedGameSerializer(ModelSerializer):
 
     class Meta:
         model = Game
-        exclude = ('id',)
+        fields = ('id', 'name', 'slug', 'release_date', 'poster_path', 'backdrop_path', 'platform_score', 'platforms', 'type')

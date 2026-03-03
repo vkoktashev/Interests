@@ -15,11 +15,6 @@ type TTrailer = {
 	id?: number | string;
 	url?: string;
 	name?: string;
-	data?: {
-		max?: string;
-		'480'?: string;
-		'320'?: string;
-	};
 };
 
 type TScreenshot = {
@@ -78,7 +73,7 @@ export default function MediaGalleryBlock(props: IMediaGalleryBlockProps) {
 	const mediaItems = useMemo(() => {
 		const trailerItems = trailers
 			.map((video, index) => {
-				const videoUrl = video?.url || video?.data?.max || video?.data?.['480'] || video?.data?.['320'];
+				const videoUrl = video?.url;
 				if (!videoUrl) {
 					return null;
 				}

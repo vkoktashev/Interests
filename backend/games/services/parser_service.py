@@ -53,9 +53,9 @@ async def parse_game_from_db(game: Game, hltb_game=None):
     game_genres = GameGenre.objects.filter(game=game).select_related('genre')
     async for game_genre in game_genres:
         genres.append({
-            'id': game_genre.genre.rawg_id,
-            'name': game_genre.genre.rawg_name,
-            'slug': game_genre.genre.rawg_slug,
+            'id': game_genre.genre.igdb_id,
+            'name': game_genre.genre.igdb_name,
+            'slug': game_genre.genre.igdb_slug,
         })
 
     stores = []
@@ -81,42 +81,50 @@ async def parse_game_from_db(game: Game, hltb_game=None):
     game_trailers = GameTrailer.objects.filter(game=game).order_by('sort_order', 'id')
     async for game_trailer in game_trailers:
         trailers.append({
-            'id': game_trailer.rawg_id,
+            'id': game_trailer.igdb_id,
             'name': game_trailer.name,
-            'preview': game_trailer.preview,
             'url': game_trailer.url,
-            'data': {
-                'max': game_trailer.video_max,
-                '480': game_trailer.video_480,
-                '320': game_trailer.video_320,
-            },
         })
 
     screenshots = []
     game_screenshots = GameScreenshot.objects.filter(game=game).order_by('sort_order', 'id')
     async for game_screenshot in game_screenshots:
         screenshots.append({
-            'id': game_screenshot.rawg_id,
+            'id': game_screenshot.igdb_id,
             'image': game_screenshot.image,
             'width': game_screenshot.width,
             'height': game_screenshot.height,
         })
 
+    score_value = game.igdb_rating or game.igdb_aggregated_rating or game.rawg_metacritic
+    if score_value is not None:
+        try:
+            score_value = int(round(float(score_value)))
+        except (TypeError, ValueError):
+            score_value = game.rawg_metacritic
+
+    release_date_value = game.igdb_release_date or game.rawg_release_date
+    playtime_value = game.rawg_playtime if game.rawg_playtime is not None else 0
+
     new_game = {
         'id': game.id,
-        'name': game.rawg_name,
+        'name': game.igdb_name or game.rawg_name,
         'slug': game.rawg_slug,
-        'overview': game.rawg_description,
-        'metacritic': game.rawg_metacritic,
+        'overview': game.igdb_summary or game.rawg_description,
+        'metacritic': score_value,
         'genres': objects_to_str(genres),
         'developers': objects_to_str(developers),
-        'platforms': game.rawg_platforms,
-        'background': game.rawg_backdrop_path,
-        'poster': game.rawg_poster_path,
-        'release_date': format_game_release_date(game.rawg_release_date),
-        'playtime': f'{game.rawg_playtime} {int_to_hours(game.rawg_playtime)}',
-        'movies_count': game.rawg_movies_count if game.rawg_movies_count is not None else 0,
-        'screenshots_count': game.rawg_screenshots_count if game.rawg_screenshots_count is not None else 0,
+        'platforms': game.igdb_platforms or game.rawg_platforms,
+        'background': game.rawg_backdrop_path or game.igdb_cover_url,
+        'poster': game.igdb_cover_url or game.rawg_poster_path,
+        'release_date': format_game_release_date(release_date_value),
+        'playtime': f'{playtime_value} {int_to_hours(playtime_value)}',
+        'movies_count': game.igdb_videos_count if game.igdb_videos_count is not None else (
+            game.rawg_movies_count if game.rawg_movies_count is not None else 0
+        ),
+        'screenshots_count': game.igdb_screenshots_count if game.igdb_screenshots_count is not None else (
+            game.rawg_screenshots_count if game.rawg_screenshots_count is not None else 0
+        ),
         'stores': stores,
         'trailers': trailers,
         'screenshots': screenshots,

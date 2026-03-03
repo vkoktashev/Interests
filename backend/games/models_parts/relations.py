@@ -31,13 +31,10 @@ class GameDeveloper(models.Model):
 
 class GameTrailer(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    rawg_id = models.IntegerField(null=True, blank=True)
+    igdb_id = models.IntegerField(null=True, blank=True)
+    igdb_video_id = models.CharField(max_length=100, blank=True)
     name = models.CharField(max_length=255, blank=True)
-    preview = models.URLField(max_length=500, blank=True)
     url = models.URLField(max_length=500, blank=True)
-    video_max = models.URLField(max_length=500, blank=True)
-    video_480 = models.URLField(max_length=500, blank=True)
-    video_320 = models.URLField(max_length=500, blank=True)
     sort_order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -46,7 +43,7 @@ class GameTrailer(models.Model):
 
 class GameScreenshot(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    rawg_id = models.IntegerField(null=True, blank=True)
+    igdb_id = models.IntegerField(null=True, blank=True)
     image = models.URLField(max_length=500, blank=True)
     width = models.IntegerField(null=True, blank=True)
     height = models.IntegerField(null=True, blank=True)

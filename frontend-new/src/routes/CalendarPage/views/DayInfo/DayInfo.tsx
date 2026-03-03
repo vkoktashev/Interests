@@ -28,14 +28,14 @@ function DayInfo({day, date, compact}: IDayInfoProps) {
 				key: 'games',
 				title: 'Игры',
 				items: day.games.map(game => ({
-					id: game.rawg_id,
+					id: game.id,
 					render: (
 						<Link
 							className='day-info__link'
 							toRoute={ROUTE_GAME}
-							toRouteParams={{gameId: game.rawg_slug}}
+							toRouteParams={{gameId: game.slug}}
 						>
-							{game.rawg_name}
+							{game.name}
 						</Link>
 					),
 				})),

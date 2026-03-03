@@ -1,7 +1,7 @@
 export interface ICalendarGame {
-	rawg_id: number;
-	rawg_name: string;
-	rawg_slug: string;
+	id: number;
+	name: string;
+	slug: string;
 }
 
 export interface ICalendarMovie {

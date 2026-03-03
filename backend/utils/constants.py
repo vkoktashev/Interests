@@ -1,9 +1,7 @@
 import os
 
-import rawgpy
 import tmdbsimple as tmdb
 
-rawg = rawgpy.RAWG(os.environ['RAWG_API_KEY'])
 tmdb.API_KEY = os.environ['TMDB_API_KEY']
 tmdb.REQUESTS_TIMEOUT = 8
 LANGUAGE = 'ru'
@@ -36,6 +34,7 @@ UPDATE_DATES_MINUTE = 58
 # errors
 ERROR = 'error'
 RAWG_UNAVAILABLE = 'RAWG недоступен.'
+IGDB_UNAVAILABLE = 'IGDB недоступен.'
 HLTB_UNAVAILABLE = 'HLTB недоступен.'
 GAME_NOT_FOUND = "Игра не найдена."
 MOVIE_NOT_FOUND = "Фильм не найден."
