@@ -36,7 +36,10 @@ class TopRatedGamesViewSet(GenericViewSet, mixins.ListModelMixin):
                 'game_id',
             ) \
             .annotate(
-                game_slug=Coalesce('game__rawg_slug', Value('', output_field=CharField())),
+                game_slug=Coalesce(
+                    NullIf('game__igdb_slug', Value('')),
+                    Value('', output_field=CharField()),
+                ),
                 game_name=Coalesce(
                     NullIf('game__igdb_name', Value('')),
                     NullIf('game__rawg_name', Value('')),
