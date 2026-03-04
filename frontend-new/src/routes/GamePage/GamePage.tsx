@@ -7,6 +7,7 @@ import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroi
 import {showNotification} from '@steroidsjs/core/actions/notifications';
 import _uniq from 'lodash/uniq';
 import {FaTwitch, FaYoutube, FaPencilAlt} from 'react-icons/fa';
+import {SiIgdb} from 'react-icons/si';
 import {GiTigerHead} from 'react-icons/gi';
 import {Loader} from '@steroidsjs/core/ui/layout'
 import StatusButtonGroup from '../../shared/StatusButtonGroup';
@@ -163,6 +164,7 @@ export function GamePage() {
 
 	const mediaLinks = useMemo(() => {
 		const gameName = (game?.name || '').trim();
+		const gameSlug = (game?.slug || '').trim();
 		if (!gameName) {
 			return [];
 		}
@@ -171,7 +173,7 @@ export function GamePage() {
 			{
 				id: 'twitch',
 				title: 'Twitch',
-				href: `https://www.twitch.tv/search?term=${encodeURIComponent(gameName)}`,
+				href: gameSlug ? `https://www.twitch.tv/directory/category/${encodeURIComponent(gameSlug)}` : '',
 				Icon: FaTwitch,
 			},
 			{
@@ -179,6 +181,12 @@ export function GamePage() {
 				title: 'YouTube',
 				href: `https://www.youtube.com/results?search_query=${encodeURIComponent(gameName)}`,
 				Icon: FaYoutube,
+			},
+			{
+				id: 'igdb',
+				title: 'IGDB',
+				href: gameSlug ? `https://www.igdb.com/games/${encodeURIComponent(gameSlug)}` : '',
+				Icon: SiIgdb,
 			},
 		];
 
@@ -191,8 +199,8 @@ export function GamePage() {
 			});
 		}
 
-		return links;
-	}, [game?.name, game?.red_tigerino_playlist_url]);
+			return links.filter(item => Boolean(item.href));
+		}, [game?.name, game?.slug, game?.red_tigerino_playlist_url]);
 
 	const canEditRedTigerinoPlaylist = useMemo(
 		() => Boolean(user?.permissions?.includes('games.change_game')),
@@ -284,19 +292,22 @@ export function GamePage() {
 										<div className={bem.element('resource-group')} hidden={!mediaLinks.length}>
 											<div className={bem.element('resource-group-label')}>Контент</div>
 											<div className={bem.element('media-links')}>
-												{mediaLinks.map(({id, title, href, Icon}) => (
-													<a
+													{mediaLinks.map(({id, title, href, Icon}) => (
+														<a
 														key={id}
 														href={href}
 														target='_blank'
 														rel='noreferrer'
 														title={title}
 														aria-label={title}
-														className={bem.element('media-link', {[id]: true})}
-													>
-														<Icon className={bem.element('media-link-icon')} />
-													</a>
-												))}
+															className={bem.element('media-link', {[id]: true})}
+														>
+															<Icon className={bem(
+																bem.element('media-link-icon'),
+																bem.element('media-link-icon', {[id]: true}),
+															)} />
+														</a>
+													))}
 											</div>
 										</div>
 									</div>
