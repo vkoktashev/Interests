@@ -18,7 +18,7 @@ export interface ISearchCardData {
 	routeParams: Record<string, unknown>;
 }
 
-export interface IRawgGame {
+export interface IGameSearchItem {
 	id: number;
 	name: string;
 	slug: string;

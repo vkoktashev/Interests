@@ -10,7 +10,6 @@ from requests.exceptions import ConnectionError
 from config.celery import app
 from games.functions import get_hltb_game_key
 from games.integrations.igdb import (
-    get_game_legacy_fields_from_igdb,
     get_igdb_game_new_fields,
     query_igdb_game_by_id,
     resolve_igdb_game_details,
@@ -37,13 +36,16 @@ def update_upcoming_games():
     today_date = datetime.today().date()
     games = Game.objects.filter(Q(igdb_release_date__gte=today_date) | Q(igdb_release_date=None))
     for game in games:
-        refresh_game_details(game.rawg_slug)
+        if game.igdb_id:
+            refresh_game_details_by_igdb_id(game.igdb_id)
+        elif game.igdb_slug:
+            refresh_game_details(game.igdb_slug)
         refresh_hltb_cache(game)
 
 
 @app.task
 def refresh_game_details(slug):
-    game_obj = Game.objects.filter(rawg_slug=slug).first()
+    game_obj = Game.objects.filter(igdb_slug=slug).first()
     if game_obj is None:
         return None
 
@@ -57,7 +59,6 @@ def refresh_game_details(slug):
 
     fields_to_update = {}
     fields_to_update.update(get_igdb_game_new_fields(igdb_game))
-    fields_to_update.update(get_game_legacy_fields_from_igdb(igdb_game, slug))
     update_fields_if_needed(game_obj, fields_to_update)
     async_to_sync(update_game_genres_from_igdb)(game_obj, igdb_game)
     async_to_sync(update_game_developers_from_igdb)(game_obj, igdb_game)
@@ -83,10 +84,8 @@ def refresh_game_details_by_igdb_id(igdb_id):
     if not igdb_game:
         return game_obj
 
-    slug_for_legacy = game_obj.rawg_slug or igdb_game.get('slug') or ''
     fields_to_update = {}
     fields_to_update.update(get_igdb_game_new_fields(igdb_game))
-    fields_to_update.update(get_game_legacy_fields_from_igdb(igdb_game, slug_for_legacy))
     update_fields_if_needed(game_obj, fields_to_update)
     async_to_sync(update_game_genres_from_igdb)(game_obj, igdb_game)
     async_to_sync(update_game_developers_from_igdb)(game_obj, igdb_game)
@@ -96,7 +95,7 @@ def refresh_game_details_by_igdb_id(igdb_id):
 
 
 def refresh_hltb_cache(game):
-    game_name = game.igdb_name or game.rawg_name
+    game_name = game.igdb_name
     if not game_name:
         return
 

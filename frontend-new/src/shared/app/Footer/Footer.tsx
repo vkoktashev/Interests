@@ -81,8 +81,8 @@ function Footer({ className }: any) {
 						Часть данных о тайтлах и постерах предоставляется внешними сервисами.
 					</p>
 					<div className={bem.element('partners')}>
-						<a href='https://rawg.io/' className={bem.element('rawg-logo')} target='_blank' rel='noreferrer'>
-							RAWG
+						<a href='https://www.igdb.com/' className={bem.element('igdb-logo')} target='_blank' rel='noreferrer'>
+							IGDB
 						</a>
 						<a href='https://www.themoviedb.org/' className={bem.element('tmdb-link')} target='_blank' rel='noreferrer'>
 							<Icon

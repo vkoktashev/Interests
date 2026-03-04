@@ -1,5 +1,5 @@
 from django.core.paginator import Paginator
-from django.db.models import Count, Avg, Sum, Value, IntegerField, CharField
+from django.db.models import Count, Avg, Sum, Value, IntegerField, CharField, F
 from django.db.models.functions import Coalesce, NullIf
 from utils.swagger import openapi, swagger_auto_schema
 from rest_framework import mixins, status
@@ -42,23 +42,21 @@ class TopRatedGamesViewSet(GenericViewSet, mixins.ListModelMixin):
                 ),
                 game_name=Coalesce(
                     NullIf('game__igdb_name', Value('')),
-                    NullIf('game__rawg_name', Value('')),
                     Value('Без названия'),
                     output_field=CharField(),
                 ),
-                game_backdrop=Coalesce('game__rawg_backdrop_path', 'game__igdb_cover_url', output_field=CharField()),
+                game_backdrop=Coalesce('game__igdb_cover_url', Value('', output_field=CharField()), output_field=CharField()),
                 game_poster=Coalesce(
                     'game__igdb_cover_url',
-                    'game__rawg_poster_path',
-                    'game__rawg_backdrop_path',
+                    Value('', output_field=CharField()),
                     output_field=CharField(),
                 ),
-                game_release_date=Coalesce('game__igdb_release_date', 'game__rawg_release_date'),
-                game_platforms=Coalesce('game__igdb_platforms', 'game__rawg_platforms'),
+                game_release_date=F('game__igdb_release_date'),
+                game_platforms=Coalesce('game__igdb_platforms', Value('', output_field=CharField())),
                 ratings_count=Count('id'),
                 average_user_score=Avg('score'),
                 total_points=Sum('score'),
-                platform_score=Coalesce('game__igdb_rating', 'game__igdb_aggregated_rating', 'game__rawg_metacritic',
+                platform_score=Coalesce('game__igdb_rating', 'game__igdb_aggregated_rating',
                                         Value(-1), output_field=IntegerField()),
             )
 

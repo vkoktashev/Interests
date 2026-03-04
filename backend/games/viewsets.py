@@ -2,6 +2,7 @@ from adrf import mixins
 from adrf.viewsets import GenericViewSet
 from asgiref.sync import sync_to_async
 from django.contrib.postgres.search import TrigramSimilarity
+from django.db.models import F
 from django.db.models.functions import Coalesce
 from django.core.paginator import Paginator
 from django.utils import timezone
@@ -13,7 +14,6 @@ from rest_framework.response import Response
 
 from games.integrations.hltb import get_game_release_year, get_hltb_game
 from games.integrations.igdb import (
-    get_game_legacy_fields_from_igdb,
     get_game_search_results,
     get_igdb_game_new_fields,
     query_igdb_game_by_slug,
@@ -77,7 +77,7 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
         page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
 
-        games = Game.objects.annotate(search_name=Coalesce('igdb_name', 'rawg_name')) \
+        games = Game.objects.annotate(search_name=F('igdb_name')) \
             .annotate(similarity=TrigramSimilarity('search_name', query)) \
             .filter(similarity__gt=0.1) \
             .order_by('-similarity')
@@ -95,10 +95,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
     @staticmethod
     async def _get_game_by_public_slug(slug):
-        game = await Game.objects.filter(igdb_slug=slug).afirst()
-        if game is not None:
-            return game
-        return await Game.objects.filter(rawg_slug=slug).afirst()
+        return await Game.objects.filter(igdb_slug=slug).afirst()
 
     @swagger_auto_schema(
         operation_description="Retrieve details for a specific game by its slug.",
@@ -124,7 +121,6 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
             defaults = {}
-            defaults.update(get_game_legacy_fields_from_igdb(igdb_game, slug))
             defaults.update(get_igdb_game_new_fields(igdb_game))
             game = await self._get_game_by_public_slug(slug)
             if game is None:
@@ -152,7 +148,6 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             if igdb_game is not None:
                 fields_to_update = {}
                 fields_to_update.update(get_igdb_game_new_fields(igdb_game))
-                fields_to_update.update(get_game_legacy_fields_from_igdb(igdb_game, slug))
                 await update_fields_if_needed_async(game, fields_to_update)
                 await update_game_genres_from_igdb(game, igdb_game)
                 await update_game_developers_from_igdb(game, igdb_game)
@@ -165,7 +160,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         response = Response(parsed_game)
 
         if game.igdb_last_update and game.igdb_last_update <= timezone.now() - GAME_DETAILS_REFRESH_INTERVAL:
-            game_slug = game.rawg_slug
+            game_slug = game.igdb_slug
             response.add_post_render_callback(lambda _: enqueue_game_refresh(game_slug))
 
         return response
@@ -194,7 +189,6 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
             defaults = {}
-            defaults.update(get_game_legacy_fields_from_igdb(igdb_game, slug))
             defaults.update(get_igdb_game_new_fields(igdb_game))
             game = await self._get_game_by_public_slug(slug)
             if game is None:
@@ -205,8 +199,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             await update_game_developers_from_igdb(game, igdb_game)
             await update_game_stores_from_igdb(game, igdb_game)
 
-        release_year = get_game_release_year(game.igdb_release_date or game.rawg_release_date)
-        hltb_game = get_hltb_game(game.igdb_name or game.rawg_name, release_year)
+        release_year = get_game_release_year(game.igdb_release_date)
+        hltb_game = get_hltb_game(game.igdb_name, release_year)
         if hltb_game is not None:
             hltb_name = hltb_game.get('game_name')
             hltb_id = hltb_game.get('game_id')

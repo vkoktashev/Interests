@@ -51,3 +51,30 @@ class GameScreenshot(models.Model):
 
     class Meta:
         ordering = ('sort_order', 'id')
+
+
+class GameBeatTime(models.Model):
+    TYPE_MAIN = 'main'
+    TYPE_EXTRA = 'extra'
+    TYPE_COMPLETE = 'complete'
+    TYPE_CHOICES = (
+        (TYPE_MAIN, 'Main'),
+        (TYPE_EXTRA, 'Extra'),
+        (TYPE_COMPLETE, 'Complete'),
+    )
+
+    SOURCE_IGDB = 'igdb'
+    SOURCE_HLTB = 'hltb'
+    SOURCE_CHOICES = (
+        (SOURCE_IGDB, 'IGDB'),
+        (SOURCE_HLTB, 'HLTB'),
+    )
+
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    type = models.CharField(max_length=16, choices=TYPE_CHOICES)
+    source = models.CharField(max_length=16, choices=SOURCE_CHOICES)
+    hours = models.DecimalField(max_digits=6, decimal_places=2)
+
+    class Meta:
+        unique_together = (("game", "type", "source"),)
+        ordering = ('game_id', 'source', 'type', 'id')

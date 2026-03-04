@@ -269,14 +269,12 @@ def resolve_igdb_game_details(game: Optional[Game], requested_slug: str) -> Opti
     if item:
         return item
 
-    fallback_name = (game.igdb_name if game else '') or (game.rawg_name if game else '')
+    fallback_name = (game.igdb_name if game else '')
     if fallback_name:
         candidates = query_igdb_games(fallback_name, limit=20)
         release_year = None
         if game and game.igdb_release_date:
             release_year = game.igdb_release_date.year
-        elif game and game.rawg_release_date:
-            release_year = game.rawg_release_date.year
         ranked = rank_igdb_matches(fallback_name, requested_slug, release_year, candidates)
         if ranked and ranked[0].get('score', 0) >= 70:
             return ranked[0].get('candidate')
@@ -308,36 +306,6 @@ def get_igdb_game_new_fields(igdb_game: dict[str, Any]) -> dict[str, Any]:
         'igdb_screenshots_count': screenshots_count,
         'igdb_url': igdb_game.get('url') or '',
         'igdb_last_update': timezone.now(),
-    }
-
-
-def get_game_legacy_fields_from_igdb(igdb_game: dict[str, Any], slug: str) -> dict[str, Any]:
-    release_date = _parse_igdb_release_date(igdb_game.get('first_release_date'))
-    cover_url = _format_igdb_cover_url((igdb_game.get('cover') or {}).get('url'))
-    score_value = igdb_game.get('rating') or igdb_game.get('aggregated_rating')
-    try:
-        score_int = int(round(float(score_value))) if score_value is not None else None
-    except (TypeError, ValueError):
-        score_int = None
-
-    platforms = objects_to_str(igdb_game.get('platforms') or [])
-    igdb_id = igdb_game.get('id')
-    fallback_rawg_id = -int(igdb_id) if igdb_id is not None else None
-    return {
-        'rawg_id': fallback_rawg_id,
-        'rawg_slug': slug or igdb_game.get('slug') or '',
-        'rawg_name': igdb_game.get('name') or '',
-        'rawg_release_date': release_date,
-        'rawg_tba': release_date is None,
-        'rawg_backdrop_path': cover_url,
-        'rawg_poster_path': cover_url,
-        'rawg_description': igdb_game.get('summary') or '',
-        'rawg_metacritic': score_int,
-        'rawg_platforms': platforms,
-        'rawg_playtime': 0,
-        'rawg_movies_count': len(igdb_game.get('videos') or []),
-        'rawg_screenshots_count': len(igdb_game.get('screenshots') or []),
-        'rawg_last_update': timezone.now(),
     }
 
 

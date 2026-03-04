@@ -132,7 +132,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         # games
         games = Game.objects.annotate(
-            release_date=Coalesce('igdb_release_date', 'rawg_release_date')
+            release_date=F('igdb_release_date')
         ).filter(
             Q(usergame__user=request.user, release_date__gte=today_date) &
             ~Q(
@@ -196,7 +196,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         # games
         games = Game.objects.annotate(
-            release_date=Coalesce('igdb_release_date', 'rawg_release_date')
+            release_date=F('igdb_release_date')
         ).filter(release_date__gte=today_date)
         for game in games:
             release_date_str = str(game.release_date)
@@ -411,7 +411,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         if 'games' in categories_query:
             if all_from_db:
                 games = Game.objects.annotate(
-                    release_date=Coalesce('igdb_release_date', 'rawg_release_date')
+                    release_date=F('igdb_release_date')
                 ).filter(release_date__lte=today_date) \
                     .exclude(
                         usergame__user=request.user,
@@ -423,7 +423,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                     ).distinct()
             else:
                 games = UserGame.objects.annotate(
-                    game_release_date=Coalesce('game__igdb_release_date', 'game__rawg_release_date')
+                    game_release_date=F('game__igdb_release_date')
                 ).filter(
                     user=request.user,
                     status=UserGame.STATUS_GOING,
@@ -527,7 +527,7 @@ def calculate_games_stats(user_games: QuerySet, user: User) -> dict:
                 genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 / games_total_spent_time, 1)
 
         completed_games_by_years = user_games.exclude(status=UserGame.STATUS_GOING) \
-            .annotate(year=ExtractYear(Coalesce('game__igdb_release_date', 'game__rawg_release_date'))).values('year') \
+            .annotate(year=ExtractYear(F('game__igdb_release_date'))).values('year') \
             .annotate(count=Count('id')).exclude(year=None).order_by()
     else:
         games_total_spent_time = 0
@@ -979,7 +979,7 @@ def get_logs(user_query, page_size, page_number, search_query, filters):
         if user_filter == TYPE_GAME:
             game_logs = GameLog.objects.select_related('user', 'game') \
                 .filter(user__in=user_query) \
-                .filter(Q(game__igdb_name__icontains=search_query) | Q(game__rawg_name__icontains=search_query))
+                .filter(Q(game__igdb_name__icontains=search_query))
         elif user_filter == TYPE_MOVIE:
             movie_logs = MovieLog.objects.select_related('user', 'movie').filter(user__in=user_query) \
                 .filter(Q(movie__tmdb_name__icontains=search_query) |

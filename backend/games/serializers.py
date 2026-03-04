@@ -31,7 +31,7 @@ class GameSerializer(ModelSerializer):
 
     @staticmethod
     def get_name(game):
-        return game.igdb_name or game.rawg_name
+        return game.igdb_name
 
     @staticmethod
     def get_slug(game):
@@ -39,23 +39,23 @@ class GameSerializer(ModelSerializer):
 
     @staticmethod
     def get_release_date(game):
-        return game.igdb_release_date or game.rawg_release_date
+        return game.igdb_release_date
 
     @staticmethod
     def get_poster_path(game):
-        return game.igdb_cover_url or game.rawg_poster_path or game.rawg_backdrop_path
+        return game.igdb_cover_url
 
     @staticmethod
     def get_backdrop_path(game):
-        return game.rawg_backdrop_path or game.igdb_cover_url
+        return game.igdb_cover_url
 
     @staticmethod
     def get_platform_score(game):
-        return game.igdb_rating or game.igdb_aggregated_rating or game.rawg_metacritic
+        return game.igdb_rating or game.igdb_aggregated_rating
 
     @staticmethod
     def get_platforms(game):
-        return game.igdb_platforms or game.rawg_platforms
+        return game.igdb_platforms
 
     class Meta:
         model = Game
@@ -102,7 +102,7 @@ class GameLogSerializer(ModelSerializer):
 
     @staticmethod
     def get_target(game_log):
-        return game_log.game.igdb_name or game_log.game.rawg_name
+        return game_log.game.igdb_name
 
     @staticmethod
     def get_target_id(game_log):
@@ -125,7 +125,7 @@ class TypedGameSerializer(ModelSerializer):
 
     @staticmethod
     def get_name(game):
-        return game.igdb_name or game.rawg_name
+        return game.igdb_name
 
     @staticmethod
     def get_slug(game):
@@ -133,23 +133,23 @@ class TypedGameSerializer(ModelSerializer):
 
     @staticmethod
     def get_release_date(game):
-        return game.igdb_release_date or game.rawg_release_date
+        return game.igdb_release_date
 
     @staticmethod
     def get_poster_path(game):
-        return game.igdb_cover_url or game.rawg_poster_path or game.rawg_backdrop_path
+        return game.igdb_cover_url
 
     @staticmethod
     def get_backdrop_path(game):
-        return game.rawg_backdrop_path or game.igdb_cover_url
+        return game.igdb_cover_url
 
     @staticmethod
     def get_platform_score(game):
-        return game.igdb_rating or game.igdb_aggregated_rating or game.rawg_metacritic
+        return game.igdb_rating or game.igdb_aggregated_rating
 
     @staticmethod
     def get_platforms(game):
-        return game.igdb_platforms or game.rawg_platforms
+        return game.igdb_platforms
 
     @staticmethod
     def get_type(game):

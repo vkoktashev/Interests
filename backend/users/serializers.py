@@ -113,9 +113,7 @@ class SettingsSerializer(ModelSerializer):
 
     @staticmethod
     def validate_backdrop_path(value):
-        if not (Game.objects.filter(
-            Q(igdb_cover_url=value) | Q(rawg_backdrop_path=value) | Q(rawg_poster_path=value)
-        ).exists() or
+        if not (Game.objects.filter(Q(igdb_cover_url=value)).exists() or
                 Movie.objects.filter(tmdb_backdrop_path=value).exists() or
                 Show.objects.filter(tmdb_backdrop_path=value).exists()):
             raise serializers.ValidationError(WRONG_BACKDROP_PATH)
