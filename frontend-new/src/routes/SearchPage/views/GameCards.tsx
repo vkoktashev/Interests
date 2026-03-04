@@ -1,10 +1,10 @@
 import React, {useMemo} from 'react';
 import SearchCardsBlock from './SearchCardsBlock';
 import {mapGameToCard} from './searchMappers';
-import {IRawgGame} from './searchTypes';
+import {IGameSearchItem} from './searchTypes';
 
 interface IGameCardsProps {
-	games: IRawgGame[];
+	games: IGameSearchItem[];
 	hidden?: boolean;
 }
 

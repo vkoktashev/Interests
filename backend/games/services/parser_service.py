@@ -18,25 +18,25 @@ def format_game_release_date(value):
     return None
 
 
-def parse_game(rawg_game, hltb_game=None):
-    platforms = [obj['platform'] for obj in rawg_game['platforms']]
+def parse_game(source_game, hltb_game=None):
+    platforms = [obj['platform'] for obj in source_game['platforms']]
 
     new_game = {
-        'name': rawg_game.get('name'),
-        'slug': rawg_game.get('slug'),
-        'overview': rawg_game.get('description'),
-        'metacritic': rawg_game.get('metacritic'),
-        'genres': objects_to_str(rawg_game['genres']),
-        'developers': objects_to_str(rawg_game['developers']),
+        'name': source_game.get('name'),
+        'slug': source_game.get('slug'),
+        'overview': source_game.get('description'),
+        'metacritic': source_game.get('metacritic'),
+        'genres': objects_to_str(source_game['genres']),
+        'developers': objects_to_str(source_game['developers']),
         'platforms': objects_to_str(platforms),
-        'background': rawg_game.get('background_image_additional')
-        if rawg_game.get('background_image_additional') is not None
-        else rawg_game.get('background_image'),
-        'poster': rawg_game.get('background_image'),
-        'release_date': '.'.join(reversed(rawg_game['released'].split('-')))
-        if rawg_game.get('released') is not None else None,
-        'playtime': f'{rawg_game.get("playtime")} {int_to_hours(rawg_game.get("playtime"))}',
-        'stores': rawg_game.get('stores'),
+        'background': source_game.get('background_image_additional')
+        if source_game.get('background_image_additional') is not None
+        else source_game.get('background_image'),
+        'poster': source_game.get('background_image'),
+        'release_date': '.'.join(reversed(source_game['released'].split('-')))
+        if source_game.get('released') is not None else None,
+        'playtime': f'{source_game.get("playtime")} {int_to_hours(source_game.get("playtime"))}',
+        'stores': source_game.get('stores'),
     }
 
     if hltb_game is not None:
@@ -96,35 +96,31 @@ async def parse_game_from_db(game: Game, hltb_game=None):
             'height': game_screenshot.height,
         })
 
-    score_value = game.igdb_rating or game.igdb_aggregated_rating or game.rawg_metacritic
+    score_value = game.igdb_rating or game.igdb_aggregated_rating
     if score_value is not None:
         try:
             score_value = int(round(float(score_value)))
         except (TypeError, ValueError):
-            score_value = game.rawg_metacritic
+            score_value = None
 
-    release_date_value = game.igdb_release_date or game.rawg_release_date
-    playtime_value = game.rawg_playtime if game.rawg_playtime is not None else 0
+    release_date_value = game.igdb_release_date
+    playtime_value = 0
 
     new_game = {
         'id': game.id,
-        'name': game.igdb_name or game.rawg_name,
+        'name': game.igdb_name,
         'slug': game.igdb_slug or '',
-        'overview': game.igdb_summary or game.rawg_description,
+        'overview': game.igdb_summary,
         'metacritic': score_value,
         'genres': objects_to_str(genres),
         'developers': objects_to_str(developers),
-        'platforms': game.igdb_platforms or game.rawg_platforms,
-        'background': game.rawg_backdrop_path or game.igdb_cover_url,
-        'poster': game.igdb_cover_url or game.rawg_poster_path,
+        'platforms': game.igdb_platforms,
+        'background': game.igdb_cover_url,
+        'poster': game.igdb_cover_url,
         'release_date': format_game_release_date(release_date_value),
         'playtime': f'{playtime_value} {int_to_hours(playtime_value)}',
-        'movies_count': game.igdb_videos_count if game.igdb_videos_count is not None else (
-            game.rawg_movies_count if game.rawg_movies_count is not None else 0
-        ),
-        'screenshots_count': game.igdb_screenshots_count if game.igdb_screenshots_count is not None else (
-            game.rawg_screenshots_count if game.rawg_screenshots_count is not None else 0
-        ),
+        'movies_count': game.igdb_videos_count if game.igdb_videos_count is not None else 0,
+        'screenshots_count': game.igdb_screenshots_count if game.igdb_screenshots_count is not None else 0,
         'stores': stores,
         'trailers': trailers,
         'screenshots': screenshots,

@@ -33,7 +33,6 @@ UPDATE_DATES_MINUTE = 58
 
 # errors
 ERROR = 'error'
-RAWG_UNAVAILABLE = 'RAWG недоступен.'
 IGDB_UNAVAILABLE = 'IGDB недоступен.'
 HLTB_UNAVAILABLE = 'HLTB недоступен.'
 GAME_NOT_FOUND = "Игра не найдена."

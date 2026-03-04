@@ -1,5 +1,5 @@
 import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW} from '../../index';
-import {IRawgGame, ISearchCardData, ITmdbMediaItem} from './searchTypes';
+import {IGameSearchItem, ISearchCardData, ITmdbMediaItem} from './searchTypes';
 
 const DETAILS_LIMIT = 6;
 
@@ -26,7 +26,7 @@ export function joinNames<T>(items: T[] | undefined, getName: (item: T) => strin
 		.join(', ');
 }
 
-export function mapGameToCard(game: IRawgGame): ISearchCardData {
+export function mapGameToCard(game: IGameSearchItem): ISearchCardData {
 	return {
 		id: game.id,
 		name: game.name,

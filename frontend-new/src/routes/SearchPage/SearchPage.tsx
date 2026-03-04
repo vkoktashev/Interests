@@ -12,7 +12,7 @@ import MovieCards from './views/MovieCards';
 import ShowCards from './views/ShowCards';
 import UserCards from './views/UserCards';
 import {
-	IRawgGame,
+	IGameSearchItem,
 	ITmdbMediaItem,
 	ITmdbSearchResponse,
 	IUserSearchItem,
@@ -31,7 +31,7 @@ interface ISearchFormValues {
 }
 
 interface ISearchResultsState {
-	Игры: IRawgGame[];
+	Игры: IGameSearchItem[];
 	Фильмы: ITmdbMediaItem[];
 	Сериалы: ITmdbMediaItem[];
 	Пользователи: IUserSearchItem[];
@@ -135,7 +135,7 @@ function SearchPage() {
 			page,
 			page_size: PAGE_SIZE,
 		});
-		const items = (Array.isArray(response) ? response : []) as IRawgGame[];
+		const items = (Array.isArray(response) ? response : []) as IGameSearchItem[];
 		updateCategoryResults('Игры', items, resolveTotalWithoutMeta(items.length, page), requestId);
 	}, [http, updateCategoryResults]);
 

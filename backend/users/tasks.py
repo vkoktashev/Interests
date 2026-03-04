@@ -3,7 +3,7 @@ from datetime import datetime
 from celery.schedules import crontab
 from django.core.mail import EmailMultiAlternatives
 from django.db.models import Q
-from django.db.models.functions import Coalesce
+from django.db.models import F
 
 from config.celery import app
 from config.settings import EMAIL_HOST_USER
@@ -27,7 +27,7 @@ def send_release_emails():
     today_date = datetime.today().date()
 
     today_games = Game.objects.annotate(
-        release_date=Coalesce('igdb_release_date', 'rawg_release_date')
+        release_date=F('igdb_release_date')
     ).filter(release_date=today_date)
     today_movies = Movie.objects.filter(tmdb_release_date=today_date)
     today_episodes = Episode.objects.filter(tmdb_release_date=today_date)
@@ -48,8 +48,8 @@ def send_release_emails():
             if games.exists():
                 games_message += f'Новые игры:<br>'
                 for game in games:
-                    games_message += f'<a href="http://{SITE_URL}/game/{game.rawg_slug}/">' \
-                                     f'{game.igdb_name or game.rawg_name}</a><br>'
+                    games_message += f'<a href="http://{SITE_URL}/game/{game.igdb_slug}/">' \
+                                     f'{game.igdb_name}</a><br>'
                 games_message += '<br>'
                 message_empty = False
 

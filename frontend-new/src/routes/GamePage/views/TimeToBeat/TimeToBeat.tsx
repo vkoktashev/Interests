@@ -12,12 +12,12 @@ export type ITimeToBeatProps = {
 		gameplay_completionist: number,
 		gameplay_completionist_unit: string,
 	},
-	rawgPlayTime?: string,
+	playTime?: string,
 	className?: string,
 }
 
 export function TimeToBeat(props: ITimeToBeatProps) {
-	if (!props.hltbInfo && !props.rawgPlayTime) {
+	if (!props.hltbInfo && !props.playTime) {
 		return null;
 	}
 
@@ -45,12 +45,12 @@ export function TimeToBeat(props: ITimeToBeatProps) {
 	}
 	if (!content) {
 		content = (
-			<div hidden={hltbInfo?.gameplay_main === -1} className='time-to-beat__element'>
-				<MdAccessTime className='time-to-beat__icon time-to-beat__icon_green' title={"Время "}/>
-				{props.rawgPlayTime}
-			</div>
-		)
-	}
+				<div hidden={hltbInfo?.gameplay_main === -1} className='time-to-beat__element'>
+					<MdAccessTime className='time-to-beat__icon time-to-beat__icon_green' title={"Время "}/>
+					{props.playTime}
+				</div>
+			)
+		}
 
 	return (
 		<div className={classnames('time-to-beat', props.className)}>

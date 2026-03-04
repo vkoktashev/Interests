@@ -272,7 +272,7 @@ export function GamePage() {
 									))}
 								</div>
 
-								<TimeToBeat hltbInfo={gameTime} rawgPlayTime={game.playtime} className={bem.element('time-to-beat')} />
+									<TimeToBeat hltbInfo={gameTime} playTime={game.playtime} className={bem.element('time-to-beat')} />
 
 								<div className={bem.element('resources')}>
 									<div className={bem.element('resources-grid')}>
