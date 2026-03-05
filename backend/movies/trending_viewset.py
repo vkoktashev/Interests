@@ -7,8 +7,10 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from proxy.functions import get_proxy_url
-from utils.constants import CACHE_TIMEOUT, LANGUAGE, TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, \
+from utils.constants import LANGUAGE, TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, \
     TMDB_UNAVAILABLE
+
+TRENDING_CACHE_TTL_SECONDS = 60 * 60 * 12
 
 
 def get_trending_movies_results(time_window='day'):
@@ -16,7 +18,7 @@ def get_trending_movies_results(time_window='day'):
     results = cache.get(key, None)
     if results is None:
         results = tmdb.Trending(media_type='movie', time_window=time_window).info(language=LANGUAGE)
-        cache.set(key, results, min(CACHE_TIMEOUT, 60 * 30))
+        cache.set(key, results, TRENDING_CACHE_TTL_SECONDS)
     return results
 
 

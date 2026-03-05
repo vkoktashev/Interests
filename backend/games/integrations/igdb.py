@@ -109,7 +109,7 @@ def query_igdb_games(query: str, limit: int = 20) -> list[dict[str, Any]]:
     safe_query = (query or '').replace('"', '\\"')
     body = (
         f'search "{safe_query}"; '
-        f'fields id,name,slug,first_release_date,aggregated_rating,total_rating,'
+        f'fields id,name,slug,category,game_type,first_release_date,aggregated_rating,total_rating,'
         f'rating_count,cover.url,url; '
         f'limit {max(1, min(limit, 50))};'
     )
@@ -190,7 +190,7 @@ def get_game_search_results(query: str, page: int, page_size: int) -> list[dict[
     safe_query = (query or '').replace('\\', '\\\\').replace('"', '\\"')
     body = (
         f'search "{safe_query}"; '
-        f'fields id,name,slug,first_release_date,cover.url,genres.name,platforms.name,keywords.name; '
+        f'fields id,name,slug,category,game_type,first_release_date,cover.url,genres.name,platforms.name,keywords.name; '
         f'limit {safe_page_size}; '
         f'offset {offset};'
     )
@@ -198,9 +198,36 @@ def get_game_search_results(query: str, page: int, page_size: int) -> list[dict[
     if not raw:
         return []
 
-    games = json.loads(raw.decode('utf-8'))
+    games = json.loads(raw.decode('utf-8')) or []
+    if not games:
+        # Fallback 1: simpler IGDB search payload can return matches when rich payload returns empty.
+        try:
+            games = query_igdb_games(query, limit=max(safe_page_size, 20))
+        except Exception:
+            games = []
+
+    if not games:
+        # Fallback 2: exact slug lookup (e.g. "Until Then" -> "until-then").
+        slug_candidate = '-'.join((query or '').strip().lower().split())
+        if slug_candidate:
+            try:
+                slug_game = query_igdb_game_by_slug(slug_candidate)
+            except Exception:
+                slug_game = None
+            if slug_game:
+                games = [slug_game]
+
+    if safe_page > 1:
+        offset = (safe_page - 1) * safe_page_size
+        games = games[offset: offset + safe_page_size]
+    else:
+        games = games[:safe_page_size]
+
     result = []
     for game in games or []:
+        game_category = game.get('category')
+        if game_category is None:
+            game_category = game.get('game_type')
         platforms = [{'platform': {'name': (item or {}).get('name', '')}} for item in (game.get('platforms') or [])]
         genres = [{'name': (item or {}).get('name', '')} for item in (game.get('genres') or [])]
         tags = [{'name': (item or {}).get('name', '')} for item in (game.get('keywords') or [])]
@@ -208,6 +235,7 @@ def get_game_search_results(query: str, page: int, page_size: int) -> list[dict[
             'id': game.get('id'),
             'name': game.get('name') or '',
             'slug': game.get('slug') or '',
+            'category': game_category,
             'background_image': _format_igdb_cover_url((game.get('cover') or {}).get('url')),
             'released': _format_igdb_release_date(game.get('first_release_date')),
             'genres': genres,
@@ -220,7 +248,7 @@ def get_game_search_results(query: str, page: int, page_size: int) -> list[dict[
 def query_igdb_game_by_id(igdb_id: int) -> Optional[dict[str, Any]]:
     wrapper = get_igdb_wrapper()
     body = (
-        f'fields id,name,slug,first_release_date,summary,rating,rating_count,aggregated_rating,'
+        f'fields id,name,slug,category,first_release_date,summary,rating,rating_count,aggregated_rating,'
         f'aggregated_rating_count,cover.url,url,platforms.name,genres.id,genres.name,genres.slug,'
         f'involved_companies.developer,involved_companies.company.id,involved_companies.company.name,'
         f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height,'
@@ -239,7 +267,7 @@ def query_igdb_game_by_slug(slug: str) -> Optional[dict[str, Any]]:
     wrapper = get_igdb_wrapper()
     safe_slug = (slug or '').replace('\\', '\\\\').replace('"', '\\"')
     body = (
-        f'fields id,name,slug,first_release_date,summary,rating,rating_count,aggregated_rating,'
+        f'fields id,name,slug,category,first_release_date,summary,rating,rating_count,aggregated_rating,'
         f'aggregated_rating_count,cover.url,url,platforms.name,genres.id,genres.name,genres.slug,'
         f'involved_companies.developer,involved_companies.company.id,involved_companies.company.name,'
         f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height,'

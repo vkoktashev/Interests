@@ -13,7 +13,7 @@ function SearchCard({info, className}: ISearchCardProps) {
 	const bem = useBem('search-card');
 	const hasPosterUrl = Boolean(info.poster?.includes('url('));
 	const hasPosterImage = Boolean(info.poster) && !hasPosterUrl;
-	const hasDetails = Boolean(info.genres || info.tags || info.platforms || info.overview);
+	const hasDetails = Boolean(info.genres || info.platforms || info.overview);
 	const isMediaCard = info.layoutVariant === 'media';
 
 	return (
@@ -42,13 +42,8 @@ function SearchCard({info, className}: ISearchCardProps) {
 										<span className={bem.element('detail-title')}>Жанры:</span> {info.genres}
 									</p>
 								)}
-								{info.tags && (
-									<p className={bem.element('detail-row')}>
-										<span className={bem.element('detail-title')}>Теги:</span> {info.tags}
-									</p>
-								)}
 								{info.platforms && (
-									<p className={bem.element('detail-row')}>
+									<p className={bem.element('detail-row', {platforms: true})}>
 										<span className={bem.element('detail-title')}>Платформы:</span> {info.platforms}
 									</p>
 								)}
@@ -61,10 +56,21 @@ function SearchCard({info, className}: ISearchCardProps) {
 						)}
 					</div>
 
-					{info.releaseDate && (
-						<p className={bem.element('date')}>
-							{info.releaseDate}
-						</p>
+					{(info.releaseDate || info.kindLabel) && (
+						<div className={bem.element('meta')}>
+							{info.releaseDate ? (
+								<p className={bem.element('date')}>
+									{info.releaseDate}
+								</p>
+							) : (
+								<span />
+							)}
+							{info.kindLabel && (
+								<span className={bem.element('kind')}>
+									{info.kindLabel}
+								</span>
+							)}
+						</div>
 					)}
 				</div>
 			</Link>
