@@ -2,8 +2,8 @@ from adrf import mixins
 from adrf.viewsets import GenericViewSet
 from asgiref.sync import sync_to_async
 from django.contrib.postgres.search import TrigramSimilarity
-from django.db.models import F
-from django.db.models.functions import Coalesce
+from django.db.models import F, Q, Value
+from django.db.models.functions import Coalesce, Greatest, NullIf
 from django.core.paginator import Paginator
 from django.utils import timezone
 from utils.swagger import openapi, swagger_auto_schema
@@ -73,14 +73,39 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
         }
     )
     def list(self, request, *args, **kwargs):
-        query = request.GET.get('query', '')
+        query = (request.GET.get('query', '') or '').strip()
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
         page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
 
-        games = Game.objects.annotate(search_name=F('igdb_name')) \
-            .annotate(similarity=TrigramSimilarity('search_name', query)) \
-            .filter(similarity__gt=0.1) \
+        if not query:
+            return Response([])
+
+        games = (
+            Game.objects
+            .annotate(
+                search_name=Coalesce(
+                    NullIf('igdb_name', Value('')),
+                    NullIf('rawg_slug', Value('')),
+                    Value(''),
+                ),
+                search_slug=Coalesce(
+                    NullIf('igdb_slug', Value('')),
+                    NullIf('rawg_slug', Value('')),
+                    Value(''),
+                ),
+            )
+            .annotate(
+                similarity_name=TrigramSimilarity('search_name', query),
+                similarity_slug=TrigramSimilarity('search_slug', query),
+            )
+            .annotate(similarity=Greatest('similarity_name', 'similarity_slug'))
+            .filter(
+                Q(search_name__icontains=query)
+                | Q(search_slug__icontains=query)
+                | Q(similarity__gt=0.1)
+            )
             .order_by('-similarity')
+        )
         paginator = Paginator(games, page_size)
         paginator_page = paginator.get_page(page)
         serializer = GameSerializer(paginator_page.object_list, many=True)

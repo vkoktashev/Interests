@@ -198,7 +198,31 @@ def get_game_search_results(query: str, page: int, page_size: int) -> list[dict[
     if not raw:
         return []
 
-    games = json.loads(raw.decode('utf-8'))
+    games = json.loads(raw.decode('utf-8')) or []
+    if not games:
+        # Fallback 1: simpler IGDB search payload can return matches when rich payload returns empty.
+        try:
+            games = query_igdb_games(query, limit=max(safe_page_size, 20))
+        except Exception:
+            games = []
+
+    if not games:
+        # Fallback 2: exact slug lookup (e.g. "Until Then" -> "until-then").
+        slug_candidate = '-'.join((query or '').strip().lower().split())
+        if slug_candidate:
+            try:
+                slug_game = query_igdb_game_by_slug(slug_candidate)
+            except Exception:
+                slug_game = None
+            if slug_game:
+                games = [slug_game]
+
+    if safe_page > 1:
+        offset = (safe_page - 1) * safe_page_size
+        games = games[offset: offset + safe_page_size]
+    else:
+        games = games[:safe_page_size]
+
     result = []
     for game in games or []:
         platforms = [{'platform': {'name': (item or {}).get('name', '')}} for item in (game.get('platforms') or [])]
