@@ -7,6 +7,7 @@ export type TSearchCategory = (typeof SEARCH_CATEGORIES)[number];
 export interface ISearchCardData {
 	id: string | number;
 	name: string;
+	kindLabel?: string;
 	poster?: string;
 	releaseDate?: string;
 	genres?: string;
@@ -22,6 +23,7 @@ export interface IGameSearchItem {
 	id: number;
 	name: string;
 	slug: string;
+	category?: number;
 	background_image?: string;
 	released?: string;
 	genres?: Array<{name: string}>;

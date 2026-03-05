@@ -2,6 +2,22 @@ import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW} from '../../index';
 import {IGameSearchItem, ISearchCardData, ITmdbMediaItem} from './searchTypes';
 
 const DETAILS_LIMIT = 6;
+const GAME_CATEGORY_LABELS: Record<number, string> = {
+	0: 'Игра',
+	1: 'DLC',
+	2: 'Дополнение',
+	3: 'Сборник',
+	4: 'Standalone',
+	5: 'Мод',
+	6: 'Эпизод',
+	7: 'Сезон',
+	8: 'Ремейк',
+	9: 'Ремастер',
+	10: 'Expanded',
+	11: 'Порт',
+	12: 'Fork',
+	13: 'Пак',
+};
 
 export function formatDate(value?: string): string {
 	if (!value || !value.includes('-')) {
@@ -30,6 +46,7 @@ export function mapGameToCard(game: IGameSearchItem): ISearchCardData {
 	return {
 		id: game.id,
 		name: game.name,
+		kindLabel: typeof game.category === 'number' ? (GAME_CATEGORY_LABELS[game.category] || 'Игра') : undefined,
 		poster: game.background_image ? `url(${game.background_image})` : undefined,
 		layoutVariant: 'media',
 		releaseDate: formatDate(game.released),
