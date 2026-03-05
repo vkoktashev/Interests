@@ -1,5 +1,5 @@
 from django.core.paginator import Paginator
-from django.db.models import Count, Avg, Sum, Value, IntegerField, CharField, F
+from django.db.models import Count, Avg, Sum, Value, IntegerField, TextField, F
 from django.db.models.functions import Coalesce, NullIf
 from utils.swagger import openapi, swagger_auto_schema
 from rest_framework import mixins, status
@@ -38,21 +38,22 @@ class TopRatedGamesViewSet(GenericViewSet, mixins.ListModelMixin):
             .annotate(
                 game_slug=Coalesce(
                     NullIf('game__igdb_slug', Value('')),
-                    Value('', output_field=CharField()),
+                    Value('', output_field=TextField()),
+                    output_field=TextField(),
                 ),
                 game_name=Coalesce(
                     NullIf('game__igdb_name', Value('')),
                     Value('Без названия'),
-                    output_field=CharField(),
+                    output_field=TextField(),
                 ),
-                game_backdrop=Coalesce('game__igdb_cover_url', Value('', output_field=CharField()), output_field=CharField()),
+                game_backdrop=Coalesce('game__igdb_cover_url', Value('', output_field=TextField()), output_field=TextField()),
                 game_poster=Coalesce(
                     'game__igdb_cover_url',
-                    Value('', output_field=CharField()),
-                    output_field=CharField(),
+                    Value('', output_field=TextField()),
+                    output_field=TextField(),
                 ),
                 game_release_date=F('game__igdb_release_date'),
-                game_platforms=Coalesce('game__igdb_platforms', Value('', output_field=CharField())),
+                game_platforms=Coalesce('game__igdb_platforms', Value('', output_field=TextField()), output_field=TextField()),
                 ratings_count=Count('id'),
                 average_user_score=Avg('score'),
                 total_points=Sum('score'),
