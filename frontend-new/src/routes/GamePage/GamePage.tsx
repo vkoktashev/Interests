@@ -132,31 +132,31 @@ export function GamePage() {
 
 	function strToFloat(text) {
 		if (typeof text === 'number') {
-			return text.toFixed(1);
+			return (Math.round(text * 10) / 10).toFixed(1);
 		}
 		let cleanStr = text;
 		if (cleanStr && cleanStr !== -1) {
 			if (cleanStr.indexOf("½") + 1) {
-				return parseFloat(cleanStr) + 0.5
+				return (Math.round((parseFloat(cleanStr) + 0.5) * 10) / 10).toFixed(1);
 			} else {
-				return parseFloat(cleanStr).toFixed(1);
+				return (Math.round(parseFloat(cleanStr) * 10) / 10).toFixed(1);
 			}
 		}
 	}
 
 	function hltbToDatalist(hltbInfo) {
 		let newData = [];
-		if (!(!hltbInfo || hltbInfo === "0 часов" || hltbInfo?.gameplay_main === -1)) {
+		if (!(!hltbInfo || hltbInfo === "0 часов" || Number(hltbInfo?.gameplay_main) <= 0)) {
 			if (typeof hltbInfo === 'string') {
 				newData.push(strToFloat(hltbInfo));
 			} else {
 				newData.push(strToFloat(hltbInfo?.gameplay_main));
 			}
 		}
-		if (hltbInfo?.gameplay_main_extra !== -1) {
+		if (Number(hltbInfo?.gameplay_main_extra) > 0) {
 			newData.push(strToFloat(hltbInfo?.gameplay_main_extra));
 		}
-		if (hltbInfo?.gameplay_completionist !== -1) {
+		if (Number(hltbInfo?.gameplay_completionist) > 0) {
 			newData.push(strToFloat(hltbInfo?.gameplay_completionist));
 		}
 		return _uniq(newData).filter(Boolean);
@@ -280,7 +280,7 @@ export function GamePage() {
 									))}
 								</div>
 
-									<TimeToBeat hltbInfo={gameTime} playTime={game.playtime} className={bem.element('time-to-beat')} />
+									<TimeToBeat hltbInfo={gameTime} className={bem.element('time-to-beat')} />
 
 								<div className={bem.element('resources')}>
 									<div className={bem.element('resources-grid')}>

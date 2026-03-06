@@ -74,6 +74,7 @@ class GameBeatTime(models.Model):
     type = models.CharField(max_length=16, choices=TYPE_CHOICES)
     source = models.CharField(max_length=16, choices=SOURCE_CHOICES)
     hours = models.DecimalField(max_digits=6, decimal_places=2)
+    last_update = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         unique_together = (("game", "type", "source"),)

@@ -12,6 +12,13 @@
         font-size: 0.9rem;
     }
 
+    &__source {
+        margin: 0;
+        color: $newText2;
+        font-size: 0.78rem;
+        opacity: 0.9;
+    }
+
     &__element {
         display: inline-flex;
         align-items: center;
