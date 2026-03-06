@@ -1,6 +1,7 @@
 import json
 import os
 import time
+from decimal import Decimal
 from datetime import datetime
 from difflib import SequenceMatcher
 from typing import Any, Optional
@@ -10,7 +11,7 @@ import requests
 from igdb.wrapper import IGDBWrapper
 from django.utils import timezone
 
-from games.models import Game, GameDeveloper, GameGenre, GameScreenshot, GameStore, GameTrailer, Genre, Store
+from games.models import Game, GameBeatTime, GameDeveloper, GameGenre, GameScreenshot, GameStore, GameTrailer, Genre, Store
 from people.models import Developer
 from utils.functions import objects_to_str, update_fields_if_needed_async
 
@@ -532,6 +533,84 @@ async def update_game_stores_from_igdb(game: Game, igdb_game: dict[str, Any]) ->
             to_delete_ids.append(existing_link.id)
     if to_delete_ids:
         await GameStore.objects.filter(id__in=to_delete_ids).adelete()
+
+
+def _seconds_to_hours(value: Any) -> Decimal | None:
+    if value is None:
+        return None
+    try:
+        seconds = int(value)
+    except (TypeError, ValueError):
+        return None
+    if seconds <= 0:
+        return None
+    return (Decimal(seconds) / Decimal(3600)).quantize(Decimal('0.01'))
+
+
+def query_igdb_game_time_to_beat(igdb_game_id: int) -> Optional[dict[str, Any]]:
+    wrapper = get_igdb_wrapper()
+    body = (
+        f'fields id,game_id,hastily,normally,completely,count; '
+        f'where game_id = {int(igdb_game_id)}; '
+        f'limit 1;'
+    )
+    raw = wrapper.api_request('game_time_to_beats', body)
+    if not raw:
+        return None
+    items = json.loads(raw.decode('utf-8')) or []
+    return items[0] if items else None
+
+
+async def update_game_beat_times_from_igdb(game: Game, igdb_game: dict[str, Any]) -> None:
+    game_time_to_beat = igdb_game.get('game_time_to_beat')
+    if isinstance(game_time_to_beat, list):
+        game_time_to_beat = game_time_to_beat[0] if game_time_to_beat else None
+    if not isinstance(game_time_to_beat, dict):
+        game_time_to_beat = None
+
+    if game_time_to_beat is None:
+        igdb_game_id = igdb_game.get('id') or game.igdb_id
+        if igdb_game_id:
+            try:
+                game_time_to_beat = query_igdb_game_time_to_beat(int(igdb_game_id))
+            except Exception:
+                # Do not touch existing data if IGDB beat-time query failed.
+                return
+
+    type_to_value = {
+        GameBeatTime.TYPE_MAIN: (game_time_to_beat or {}).get('hastily'),
+        GameBeatTime.TYPE_EXTRA: (game_time_to_beat or {}).get('normally'),
+        GameBeatTime.TYPE_COMPLETE: (game_time_to_beat or {}).get('completely'),
+    }
+
+    existing_entries = GameBeatTime.objects.filter(game=game, source=GameBeatTime.SOURCE_IGDB)
+    upserted_ids = []
+    for beat_time_type, raw_value in type_to_value.items():
+        hours_value = _seconds_to_hours(raw_value)
+        if hours_value is None:
+            continue
+
+        beat_time = await GameBeatTime.objects.filter(
+            game=game,
+            source=GameBeatTime.SOURCE_IGDB,
+            type=beat_time_type,
+        ).afirst()
+        if beat_time is None:
+            beat_time = await GameBeatTime.objects.acreate(
+                game=game,
+                source=GameBeatTime.SOURCE_IGDB,
+                type=beat_time_type,
+                hours=hours_value,
+                last_update=timezone.now(),
+            )
+        else:
+            await update_fields_if_needed_async(beat_time, {'hours': hours_value, 'last_update': timezone.now()})
+        upserted_ids.append(beat_time.id)
+
+    if upserted_ids:
+        await existing_entries.exclude(id__in=upserted_ids).adelete()
+    else:
+        await existing_entries.adelete()
 
 
 def rank_igdb_matches(

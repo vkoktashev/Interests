@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from django.core.cache import cache
 from howlongtobeatpy import HowLongToBeat
@@ -58,3 +59,52 @@ def get_hltb_game(game_name: str, release_year: int):
     translate_hltb_time(hltb_game, 'completionist', 'gameplay_completionist', 'gameplay_completionist_unit')
 
     return hltb_game
+
+
+def extract_hltb_hours_map(hltb_game):
+    if not isinstance(hltb_game, dict):
+        return {}
+
+    mapping = {
+        'main': hltb_game.get('main_story'),
+        'extra': hltb_game.get('main_extra'),
+        'complete': hltb_game.get('completionist'),
+    }
+    result = {}
+    for key, value in mapping.items():
+        if value in (None, -1):
+            continue
+        try:
+            numeric = float(value)
+        except (TypeError, ValueError):
+            continue
+        if numeric <= 0:
+            continue
+        result[key] = Decimal(str(numeric)).quantize(Decimal('0.01'))
+    return result
+
+
+def build_hltb_response_from_hours(hours_map):
+    response = {
+        'gameplay_main': -1,
+        'gameplay_main_unit': 'часов',
+        'gameplay_main_extra': -1,
+        'gameplay_main_extra_unit': 'часов',
+        'gameplay_completionist': -1,
+        'gameplay_completionist_unit': 'часов',
+    }
+
+    if hours_map.get('main') is not None:
+        value = float(hours_map['main'])
+        response['gameplay_main'] = value
+        response['gameplay_main_unit'] = float_to_hours(value)
+    if hours_map.get('extra') is not None:
+        value = float(hours_map['extra'])
+        response['gameplay_main_extra'] = value
+        response['gameplay_main_extra_unit'] = float_to_hours(value)
+    if hours_map.get('complete') is not None:
+        value = float(hours_map['complete'])
+        response['gameplay_completionist'] = value
+        response['gameplay_completionist_unit'] = float_to_hours(value)
+
+    return response

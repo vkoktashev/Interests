@@ -2,7 +2,7 @@ from datetime import date
 
 from games.models import Game, GameDeveloper, GameGenre, GameScreenshot, GameStore, GameTrailer
 from games.integrations.hltb import translate_hltb_time
-from utils.functions import int_to_hours, objects_to_str
+from utils.functions import objects_to_str
 
 
 def format_game_release_date(value):
@@ -35,7 +35,6 @@ def parse_game(source_game, hltb_game=None):
         'poster': source_game.get('background_image'),
         'release_date': '.'.join(reversed(source_game['released'].split('-')))
         if source_game.get('released') is not None else None,
-        'playtime': f'{source_game.get("playtime")} {int_to_hours(source_game.get("playtime"))}',
         'stores': source_game.get('stores'),
     }
 
@@ -104,8 +103,6 @@ async def parse_game_from_db(game: Game, hltb_game=None):
             score_value = None
 
     release_date_value = game.igdb_release_date
-    playtime_value = 0
-
     new_game = {
         'id': game.id,
         'name': game.igdb_name,
@@ -118,7 +115,6 @@ async def parse_game_from_db(game: Game, hltb_game=None):
         'background': game.igdb_cover_url,
         'poster': game.igdb_cover_url,
         'release_date': format_game_release_date(release_date_value),
-        'playtime': f'{playtime_value} {int_to_hours(playtime_value)}',
         'movies_count': game.igdb_videos_count if game.igdb_videos_count is not None else 0,
         'screenshots_count': game.igdb_screenshots_count if game.igdb_screenshots_count is not None else 0,
         'stores': stores,
