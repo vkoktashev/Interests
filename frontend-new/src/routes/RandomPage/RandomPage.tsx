@@ -34,19 +34,6 @@ function getCandidateId(item: any) {
         ?? item?.name;
 }
 
-function parseTranslateY(transform: string) {
-    if (!transform || transform === 'none') return 0;
-    if (transform.startsWith('matrix3d(')) {
-        const values = transform.replace('matrix3d(', '').replace(')', '').split(',').map(Number);
-        return values[13] || 0;
-    }
-    if (transform.startsWith('matrix(')) {
-        const values = transform.replace('matrix(', '').replace(')', '').split(',').map(Number);
-        return values[5] || 0;
-    }
-    return 0;
-}
-
 const REEL_ITEM_HEIGHT = 36;
 const REEL_VIEW_HEIGHT = 260;
 const REEL_SPIN_MIN_DURATION_MS = 5200;
@@ -54,7 +41,6 @@ const REEL_SETTLE_DURATION_MS = 1200;
 const REEL_FOCUS_HOLD_MS = 500;
 const REEL_MIN_CYCLES = 4;
 const REEL_TARGET_ITEMS = 18;
-const REEL_PX_PER_SEC = 140;
 
 function RandomPage() {
     const user = useSelector(getUser);
@@ -66,17 +52,13 @@ function RandomPage() {
     const [isRevealing, setRevealing] = useState(false);
     const [revealKey, setRevealKey] = useState(0);
     const [candidates, setCandidates] = useState<any[]>([]);
-    const [reelPhase, setReelPhase] = useState<'idle' | 'waiting' | 'spinning' | 'settling' | 'done'>('idle');
+    const [reelPhase, setReelPhase] = useState<'idle' | 'waiting' | 'spinning' | 'done'>('idle');
     const [isReelSettled, setReelSettled] = useState(false);
     const [isImageLoaded, setImageLoaded] = useState(false);
-    const [hasResult, setHasResult] = useState(false);
-    const [minSpinElapsed, setMinSpinElapsed] = useState(false);
     const [isFocusHold, setFocusHold] = useState(false);
     const resultRef = useRef<HTMLDivElement | null>(null);
     const reelTrackRef = useRef<HTMLDivElement | null>(null);
-    const spinTimeoutRef = useRef<number | null>(null);
     const spinOffsetRef = useRef(0);
-    const spinTimeRef = useRef<number | null>(null);
 
     const onSubmit = useCallback((values: any) => {
         if (!values.games && !values.movies && !values.shows) {
@@ -89,11 +71,8 @@ function RandomPage() {
             setReelPhase('waiting');
             setReelSettled(false);
             setImageLoaded(false);
-            setHasResult(false);
-            setMinSpinElapsed(false);
             setFocusHold(false);
             spinOffsetRef.current = 0;
-            spinTimeRef.current = null;
             if (reelTrackRef.current) {
                 reelTrackRef.current.style.transform = 'translate3d(0, 0, 0)';
             }
@@ -125,7 +104,6 @@ function RandomPage() {
                     setCandidates(list);
                     setWinner(list[0] || null);
                     setRevealKey((value) => value + 1);
-                    setHasResult(true);
                     setReelPhase('spinning');
                 })
                 .catch(e => {
@@ -177,66 +155,9 @@ function RandomPage() {
         for (let i = 0; i < repeatCount; i += 1) {
             loop.push(...reelTitles);
         }
-        const distance = baseCount * cyclesToMove * REEL_ITEM_HEIGHT;
-        const duration = Math.max(REEL_SPIN_MIN_DURATION_MS / 1000, distance / REEL_PX_PER_SEC);
-        return {
-            loop,
-            distance,
-            duration,
-            cyclesToMove,
-        };
+        return { loop };
     }, [reelTitles]);
 
-    const reelTargetY = useMemo(() => {
-        if (!winner || !candidates.length) {
-            return undefined;
-        }
-        const winnerId = getCandidateId(winner);
-        const index = candidates.findIndex(item => getCandidateId(item) === winnerId);
-        const baseIndex = index >= 0 ? index : 0;
-        const settleIndex = baseIndex + candidates.length;
-        const centerOffset = (REEL_VIEW_HEIGHT / 2) - (REEL_ITEM_HEIGHT / 2);
-        return centerOffset - settleIndex * REEL_ITEM_HEIGHT;
-    }, [winner, candidates]);
-
-    useEffect(() => {
-        if (reelPhase !== 'settling') return;
-        if (!reelTrackRef.current || reelTargetY === undefined) {
-            setReelSettled(true);
-            return;
-        }
-        const computed = window.getComputedStyle(reelTrackRef.current);
-        const currentTransform = computed.transform === 'none' ? 'translate3d(0, 0, 0)' : computed.transform;
-        const currentY = parseTranslateY(currentTransform);
-        const loopHeight = Math.max(reelMeta.loop.length * REEL_ITEM_HEIGHT, REEL_ITEM_HEIGHT);
-        const k = Math.round((currentY - reelTargetY) / loopHeight);
-        const adjustedTargetY = reelTargetY + k * loopHeight;
-        const start = performance.now();
-        const duration = REEL_SETTLE_DURATION_MS;
-        let rafId: number;
-        const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
-        const tick = (time: number) => {
-            const progress = Math.min(1, (time - start) / duration);
-            const eased = easeOutCubic(progress);
-            const value = currentY + (adjustedTargetY - currentY) * eased;
-            if (reelTrackRef.current) {
-                reelTrackRef.current.style.transform = `translate3d(0, ${value}px, 0)`;
-            }
-            if (progress < 1) {
-                rafId = requestAnimationFrame(tick);
-            } else {
-                setReelSettled(true);
-            }
-        };
-        rafId = requestAnimationFrame(tick);
-        return () => cancelAnimationFrame(rafId);
-    }, [reelPhase, reelMeta.loop.length, reelTargetY]);
-
-    useEffect(() => () => {
-        if (spinTimeoutRef.current) {
-            window.clearTimeout(spinTimeoutRef.current);
-        }
-    }, []);
 
     useEffect(() => {
         if (!isReelSettled || !isImageLoaded) {
@@ -251,48 +172,51 @@ function RandomPage() {
         return () => window.clearTimeout(timer);
     }, [isReelSettled, isImageLoaded]);
 
-    useEffect(() => {
-        if (reelPhase !== 'spinning') {
-            return;
-        }
-        if (spinTimeoutRef.current) {
-            window.clearTimeout(spinTimeoutRef.current);
-        }
-        spinTimeoutRef.current = window.setTimeout(() => {
-            setMinSpinElapsed(true);
-        }, REEL_SPIN_MIN_DURATION_MS);
-    }, [reelPhase]);
 
     useEffect(() => {
-        if (reelPhase === 'spinning' && hasResult && minSpinElapsed) {
-            setReelPhase('settling');
-        }
-    }, [reelPhase, hasResult, minSpinElapsed]);
-
-    useEffect(() => {
-        if (reelPhase !== 'spinning' || !reelTrackRef.current) {
+        if (reelPhase !== 'spinning' || !reelTrackRef.current || !candidates.length || !winner) {
             return;
         }
         const loopHeight = Math.max(reelMeta.loop.length * REEL_ITEM_HEIGHT, REEL_ITEM_HEIGHT);
-        spinOffsetRef.current = spinOffsetRef.current % loopHeight;
-        reelTrackRef.current.style.transform = `translate3d(0, ${-spinOffsetRef.current}px, 0)`;
+        if (loopHeight <= 0) return;
+
+        const winnerId = getCandidateId(winner);
+        const baseIndex = Math.max(0, candidates.findIndex(item => getCandidateId(item) === winnerId));
+        const settleIndex = baseIndex + candidates.length;
+        const centerOffset = (REEL_VIEW_HEIGHT / 2) - (REEL_ITEM_HEIGHT / 2);
+        const targetOffset = ((settleIndex * REEL_ITEM_HEIGHT - centerOffset) % loopHeight + loopHeight) % loopHeight;
+
+        const minDistance = REEL_MIN_CYCLES * loopHeight;
+        let totalDistance = targetOffset;
+        while (totalDistance < minDistance) {
+            totalDistance += loopHeight;
+        }
+
+        const totalDuration = REEL_SPIN_MIN_DURATION_MS + REEL_SETTLE_DURATION_MS;
+        const startTime = performance.now();
+        const easeOutQuart = (t: number) => 1 - Math.pow(1 - t, 4);
+
         let rafId: number;
         const tick = (time: number) => {
-            if (spinTimeRef.current === null) {
-                spinTimeRef.current = time;
-            }
-            const delta = (time - spinTimeRef.current) / 1000;
-            spinTimeRef.current = time;
-            spinOffsetRef.current = (spinOffsetRef.current + REEL_PX_PER_SEC * delta) % loopHeight;
-            const offset = spinOffsetRef.current;
+            const progress = Math.min(1, (time - startTime) / totalDuration);
+            const eased = easeOutQuart(progress);
+            const currentOffset = (totalDistance * eased) % loopHeight;
+
             if (reelTrackRef.current) {
-                reelTrackRef.current.style.transform = `translate3d(0, ${-offset}px, 0)`;
+                reelTrackRef.current.style.transform = `translate3d(0, ${-currentOffset}px, 0)`;
             }
-            rafId = requestAnimationFrame(tick);
+
+            if (progress < 1) {
+                rafId = requestAnimationFrame(tick);
+            } else {
+                spinOffsetRef.current = targetOffset;
+                setReelSettled(true);
+            }
         };
+
         rafId = requestAnimationFrame(tick);
         return () => cancelAnimationFrame(rafId);
-    }, [reelPhase, reelMeta.loop.length]);
+    }, [reelPhase, candidates, winner, reelMeta.loop.length]);
 
     return (
         <div className={bem.block()}>
@@ -380,10 +304,6 @@ function RandomPage() {
                                     spinning: reelPhase === 'spinning',
                                     hold: isFocusHold,
                                 })}
-                                style={{
-                                    ['--reel-distance' as any]: `-${reelMeta.distance}px`,
-                                    ['--reel-duration' as any]: `${reelMeta.duration}s`,
-                                }}
                                 ref={reelTrackRef}
                             >
                                 {reelPhase === 'waiting' ? (
