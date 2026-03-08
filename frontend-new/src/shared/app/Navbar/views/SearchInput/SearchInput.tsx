@@ -256,7 +256,7 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 			onSubmit={(event) => {
 				onSubmit(event, normalizedQuery);
 				setQuery('');
-				setIsFocused(false);
+				inputRef.current?.blur();
 			}}
 			className={bem(bem.block(), className)}>
 			<span className={bem.element('icon')}>

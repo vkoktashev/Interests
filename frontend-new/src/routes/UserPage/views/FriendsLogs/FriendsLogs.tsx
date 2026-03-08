@@ -1,7 +1,7 @@
 import * as React from 'react';
 import useBem from '@steroidsjs/core/hooks/useBem';
 import LogsBlock from '../LogsBlock';
-import {useCallback, useState} from 'react';
+import {useCallback, useRef, useState} from 'react';
 import {useComponents} from '@steroidsjs/core/hooks';
 
 interface IUserLogsProps {
@@ -15,10 +15,14 @@ function FriendsLogs(props: IUserLogsProps) {
     const bem = useBem('FriendsLogs');
     const {http} = useComponents();
     const [logs, setLogs] = useState<any>({count: 0, log: []});
+    const requestIdRef = useRef(0);
 
     const requestUserLogs = useCallback(async (values) => {
+        const requestId = ++requestIdRef.current;
         const response = await http.get(`/users/user/friends_log/`, values);
-        setLogs(response);
+        if (requestId === requestIdRef.current) {
+            setLogs(response);
+        }
     }, []);
 
     const onDeleteLog = useCallback(() => {
