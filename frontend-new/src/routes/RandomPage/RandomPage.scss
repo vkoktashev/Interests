@@ -232,10 +232,6 @@
     animation: none;
   }
 
-  &__reel-track-inner--settling {
-    transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
   &__reel-track-inner--hold {
     filter: drop-shadow(0 0 14px rgba(101, 31, 255, 0.6));
   }
@@ -275,11 +271,3 @@
   }
 }
 
-@keyframes reel-scroll {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  100% {
-    transform: translate3d(0, var(--reel-distance, -240px), 0);
-  }
-}

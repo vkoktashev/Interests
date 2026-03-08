@@ -35,9 +35,9 @@ function LogsBlock(props: ILogsBlockProps) {
 		dispatch(formSubmit(props.formId));
 	}, []);
 
-	const onChange = useCallback(() => {
+	const submitForm = useCallback(() => {
 		dispatch(formSubmit(props.formId));
-	}, []);
+	}, [dispatch, props.formId]);
 
 	return (
 		<div className={bem(bem.block(), props.className)}>
@@ -48,7 +48,6 @@ function LogsBlock(props: ILogsBlockProps) {
 					page_size: 25,
 				}}
 				onSubmit={props.onFormSubmit}
-				onChange={onChange}
 				useRedux
 			>
 				<div className='LogsBlock__header'>
@@ -60,6 +59,7 @@ function LogsBlock(props: ILogsBlockProps) {
 									label={__('Поиск')}
 									aria-label='Поиск'
 									fieldLayoutClassName='LogsBlock__search-input'
+									onChange={submitForm}
 								/>
 							<button
 								className='LogsBlock__mobile-expand'
@@ -83,6 +83,7 @@ function LogsBlock(props: ILogsBlockProps) {
 							multiple
 							showReset
 							fieldLayoutClassName={bem.element('dropdown', {hidden: collapse && width < 540})}
+							onChange={submitForm}
 						/>
 					</div>
 					<DropDownField
@@ -90,6 +91,7 @@ function LogsBlock(props: ILogsBlockProps) {
 						label={__('Записей на странице')}
 						items={[5, 10, 25, 50, 100].map(item => ({id: item, label: item}))}
 						fieldLayoutClassName={bem.element('dropdown', {hidden: collapse && width < 540})}
+						onChange={submitForm}
 					/>
 				</div>
 			</Form>
@@ -109,6 +111,7 @@ function LogsBlock(props: ILogsBlockProps) {
 				showSteps
 				onChange={page => {
 					dispatch(formChange(props.formId, 'page', page));
+					submitForm();
 				}}
 			/>
 		</div>

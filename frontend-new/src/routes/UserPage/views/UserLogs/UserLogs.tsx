@@ -1,7 +1,7 @@
 import * as React from 'react';
 import useBem from '@steroidsjs/core/hooks/useBem';
 import LogsBlock from '../LogsBlock';
-import {useCallback, useState} from 'react';
+import {useCallback, useRef, useState} from 'react';
 import {useComponents, useDispatch} from '@steroidsjs/core/hooks';
 import {formSubmit} from '@steroidsjs/core/actions/form';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
@@ -18,10 +18,16 @@ function UserLogs(props: IUserLogsProps) {
     const {http} = useComponents();
     const dispatch = useDispatch();
     const [logs, setLogs] = useState<any>({count: 0, log: []});
+    const requestIdRef = useRef(0);
+    const lastAppliedRef = useRef(0);
 
     const requestUserLogs = useCallback(async (values) => {
+        const requestId = ++requestIdRef.current;
         const response = await http.get(`/users/user/${props.userId}/log/`, values);
-        setLogs(response);
+        if (requestId > lastAppliedRef.current) {
+            lastAppliedRef.current = requestId;
+            setLogs(response);
+        }
     }, []);
 
     const onDeleteLog = useCallback((logType: string, logId: number) => {
