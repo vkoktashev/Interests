@@ -35,6 +35,7 @@ interface IHintItem {
 	id: string;
 	title: string;
 	year: string;
+	href: string;
 	onClick: () => void;
 }
 
@@ -172,6 +173,7 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 				id: String(hint.slug),
 				title: hint.name,
 				year: getReleaseYear(hint.release_date),
+				href: `/game/${hint.slug}`,
 				onClick: () => dispatch(goToRoute(ROUTE_GAME, {gameId: hint.slug})),
 			}))),
 		},
@@ -184,6 +186,7 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 				id: String(hint.tmdb_id),
 				title: hint.tmdb_name,
 				year: getReleaseYear(hint.tmdb_release_date),
+				href: `/movie/${hint.tmdb_id}`,
 				onClick: () => dispatch(goToRoute(ROUTE_MOVIE, {movieId: hint.tmdb_id})),
 			}))),
 		},
@@ -196,6 +199,7 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 				id: String(hint.tmdb_id),
 				title: hint.tmdb_name,
 				year: getReleaseYear(hint.tmdb_release_date),
+				href: `/show/${hint.tmdb_id}`,
 				onClick: () => dispatch(goToRoute(ROUTE_SHOW, {showId: hint.tmdb_id})),
 			}))),
 		},
@@ -302,7 +306,10 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 				</button>
 			)}
 
-			<div className={bem.element('hints', {visible: shouldShowHints})}>
+			<div
+				className={bem.element('hints', {visible: shouldShowHints})}
+				onMouseLeave={() => setActiveHintIndex(-1)}
+			>
 				<div hidden={!isLoading} className={bem.element('loading')}>
 					Ищем результаты...
 				</div>
@@ -318,13 +325,14 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 						</div>
 						{section.items.length > 0 ? (
 							section.items.map(item => (
-								<button
-								type='button'
+								<a
 								key={item.id}
+								href={item.href}
 								className={bem.element('hint', {active: activeHintIndex === item.flatIndex})}
 								onMouseDown={(event) => event.preventDefault()}
 								onMouseEnter={() => setActiveHintIndex(item.flatIndex)}
-								onClick={() => {
+								onClick={(event) => {
+									event.preventDefault();
 									item.onClick();
 									setQuery('');
 									setActiveHintIndex(-1);
@@ -336,7 +344,7 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 									<span className={bem.element('hint-year')}>
 										{item.year}
 									</span>
-								</button>
+								</a>
 							))
 						) : (
 							<div className={bem.element('section-empty')}>
