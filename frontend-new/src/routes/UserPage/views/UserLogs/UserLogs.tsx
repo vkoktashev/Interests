@@ -19,11 +19,13 @@ function UserLogs(props: IUserLogsProps) {
     const dispatch = useDispatch();
     const [logs, setLogs] = useState<any>({count: 0, log: []});
     const requestIdRef = useRef(0);
+    const lastAppliedRef = useRef(0);
 
     const requestUserLogs = useCallback(async (values) => {
         const requestId = ++requestIdRef.current;
         const response = await http.get(`/users/user/${props.userId}/log/`, values);
-        if (requestId === requestIdRef.current) {
+        if (requestId > lastAppliedRef.current) {
+            lastAppliedRef.current = requestId;
             setLogs(response);
         }
     }, []);

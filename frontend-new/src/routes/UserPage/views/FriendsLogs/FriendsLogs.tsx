@@ -16,11 +16,13 @@ function FriendsLogs(props: IUserLogsProps) {
     const {http} = useComponents();
     const [logs, setLogs] = useState<any>({count: 0, log: []});
     const requestIdRef = useRef(0);
+    const lastAppliedRef = useRef(0);
 
     const requestUserLogs = useCallback(async (values) => {
         const requestId = ++requestIdRef.current;
         const response = await http.get(`/users/user/friends_log/`, values);
-        if (requestId === requestIdRef.current) {
+        if (requestId > lastAppliedRef.current) {
+            lastAppliedRef.current = requestId;
             setLogs(response);
         }
     }, []);
