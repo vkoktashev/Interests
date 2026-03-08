@@ -40,7 +40,6 @@ const REEL_SPIN_MIN_DURATION_MS = 5200;
 const REEL_SETTLE_DURATION_MS = 1200;
 const REEL_FOCUS_HOLD_MS = 500;
 const REEL_MIN_CYCLES = 4;
-const REEL_TARGET_ITEMS = 18;
 
 function RandomPage() {
     const user = useSelector(getUser);
@@ -148,14 +147,14 @@ function RandomPage() {
 
     const reelMeta = useMemo(() => {
         const baseCount = reelTitles.length || 1;
-        const cyclesToMove = Math.max(REEL_MIN_CYCLES, Math.ceil(REEL_TARGET_ITEMS / baseCount));
         const minVisible = Math.ceil(REEL_VIEW_HEIGHT / REEL_ITEM_HEIGHT) + 4;
-        const repeatCount = Math.max(cyclesToMove * 2, Math.ceil(minVisible / baseCount) + 2);
+        const minCycles = REEL_MIN_CYCLES + 2;
+        const repeatCount = Math.max(minCycles, Math.ceil(minVisible / baseCount) + minCycles);
         const loop: string[] = [];
         for (let i = 0; i < repeatCount; i += 1) {
             loop.push(...reelTitles);
         }
-        return { loop };
+        return { loop, baseCount };
     }, [reelTitles]);
 
 
@@ -177,30 +176,26 @@ function RandomPage() {
         if (reelPhase !== 'spinning' || !reelTrackRef.current || !candidates.length || !winner) {
             return;
         }
-        const loopHeight = Math.max(reelMeta.loop.length * REEL_ITEM_HEIGHT, REEL_ITEM_HEIGHT);
-        if (loopHeight <= 0) return;
+        const baseCount = reelMeta.baseCount;
+        const cycleHeight = baseCount * REEL_ITEM_HEIGHT;
+        if (cycleHeight <= 0) return;
 
         const winnerId = getCandidateId(winner);
         const baseIndex = Math.max(0, candidates.findIndex(item => getCandidateId(item) === winnerId));
-        const settleIndex = baseIndex + candidates.length;
         const centerOffset = (REEL_VIEW_HEIGHT / 2) - (REEL_ITEM_HEIGHT / 2);
-        const targetOffset = ((settleIndex * REEL_ITEM_HEIGHT - centerOffset) % loopHeight + loopHeight) % loopHeight;
 
-        const minDistance = REEL_MIN_CYCLES * loopHeight;
-        let totalDistance = targetOffset;
-        while (totalDistance < minDistance) {
-            totalDistance += loopHeight;
-        }
+        // Target: REEL_MIN_CYCLES full cycles + land on winner
+        const totalDistance = REEL_MIN_CYCLES * cycleHeight + baseIndex * REEL_ITEM_HEIGHT - centerOffset;
 
         const totalDuration = REEL_SPIN_MIN_DURATION_MS + REEL_SETTLE_DURATION_MS;
         const startTime = performance.now();
-        const easeOutQuart = (t: number) => 1 - Math.pow(1 - t, 4);
+        const easeOutQuad = (t: number) => 1 - (1 - t) * (1 - t);
 
         let rafId: number;
         const tick = (time: number) => {
             const progress = Math.min(1, (time - startTime) / totalDuration);
-            const eased = easeOutQuart(progress);
-            const currentOffset = (totalDistance * eased) % loopHeight;
+            const eased = easeOutQuad(progress);
+            const currentOffset = totalDistance * eased;
 
             if (reelTrackRef.current) {
                 reelTrackRef.current.style.transform = `translate3d(0, ${-currentOffset}px, 0)`;
@@ -209,14 +204,14 @@ function RandomPage() {
             if (progress < 1) {
                 rafId = requestAnimationFrame(tick);
             } else {
-                spinOffsetRef.current = targetOffset;
+                spinOffsetRef.current = totalDistance;
                 setReelSettled(true);
             }
         };
 
         rafId = requestAnimationFrame(tick);
         return () => cancelAnimationFrame(rafId);
-    }, [reelPhase, candidates, winner, reelMeta.loop.length]);
+    }, [reelPhase, candidates, winner, reelMeta.baseCount]);
 
     return (
         <div className={bem.block()}>
