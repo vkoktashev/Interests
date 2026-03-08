@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import { FaAngleDown, FaAngleUp } from "react-icons/fa";
 import {useBem, useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
@@ -30,10 +30,6 @@ function LogsBlock(props: ILogsBlockProps) {
 	const toggleCollapse = () => {
 		setCollapse(!collapse);
 	};
-
-	useEffect(() => {
-		dispatch(formSubmit(props.formId));
-	}, []);
 
 	const onChange = useCallback(() => {
 		dispatch(formSubmit(props.formId));
