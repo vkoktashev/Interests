@@ -302,7 +302,10 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 				</button>
 			)}
 
-			<div className={bem.element('hints', {visible: shouldShowHints})}>
+			<div
+				className={bem.element('hints', {visible: shouldShowHints})}
+				onMouseLeave={() => setActiveHintIndex(-1)}
+			>
 				<div hidden={!isLoading} className={bem.element('loading')}>
 					Ищем результаты...
 				</div>
