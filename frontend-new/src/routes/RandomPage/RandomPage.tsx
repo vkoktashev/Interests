@@ -139,11 +139,21 @@ function RandomPage() {
         candidates.length ? candidates : fallbackReelItems
     ), [candidates]);
 
-    const reelTitles = useMemo(() => (
-        reelItems.map((item: any) => (
+    const reelTitles = useMemo(() => {
+        const allTitles = reelItems.map((item: any) => (
             typeof item === 'string' ? item : getCandidateTitle(item)
-        ))
-    ), [reelItems]);
+        ));
+        // Limit reel to ~10 unique items to avoid DOM bloat and insane scroll speed
+        const MAX_REEL_TITLES = 10;
+        if (allTitles.length <= MAX_REEL_TITLES) return allTitles;
+        // Always include winner (index 0), sample the rest evenly
+        const sampled: string[] = [allTitles[0]];
+        const step = (allTitles.length - 1) / (MAX_REEL_TITLES - 1);
+        for (let i = 1; i < MAX_REEL_TITLES; i++) {
+            sampled.push(allTitles[Math.round(i * step)]);
+        }
+        return sampled;
+    }, [reelItems]);
 
     const reelMeta = useMemo(() => {
         const baseCount = reelTitles.length || 1;
@@ -180,8 +190,8 @@ function RandomPage() {
         const cycleHeight = baseCount * REEL_ITEM_HEIGHT;
         if (cycleHeight <= 0) return;
 
-        const winnerId = getCandidateId(winner);
-        const baseIndex = Math.max(0, candidates.findIndex(item => getCandidateId(item) === winnerId));
+        const winnerTitle = getCandidateTitle(winner);
+        const baseIndex = Math.max(0, reelTitles.indexOf(winnerTitle));
         const centerOffset = (REEL_VIEW_HEIGHT / 2) - (REEL_ITEM_HEIGHT / 2);
 
         // Target: REEL_MIN_CYCLES full cycles + land on winner
@@ -211,7 +221,7 @@ function RandomPage() {
 
         rafId = requestAnimationFrame(tick);
         return () => cancelAnimationFrame(rafId);
-    }, [reelPhase, candidates, winner, reelMeta.baseCount]);
+    }, [reelPhase, candidates, winner, reelMeta.baseCount, reelTitles]);
 
     return (
         <div className={bem.block()}>
