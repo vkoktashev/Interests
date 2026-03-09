@@ -16,6 +16,7 @@ export interface ICategoryStats {
 }
 
 export interface IPersonalityScoreStat {
+	id?: number;
 	name: string;
 	points: number;
 }

@@ -240,10 +240,20 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
 def parse_movie(movie, request):
     genres = [movie_genre.genre.tmdb_name for movie_genre in movie.moviegenre_set.select_related('genre').all()]
-    cast_names = [movie_person.person.name for movie_person in movie.movieperson_set.select_related('person')
-                  .filter(role=MoviePerson.ROLE_ACTOR).order_by('sort_order')]
-    director_names = [movie_person.person.name for movie_person in movie.movieperson_set.select_related('person')
-                      .filter(role=MoviePerson.ROLE_DIRECTOR).order_by('sort_order')]
+    cast_people = [{
+        'id': movie_person.person.id,
+        'tmdb_id': movie_person.person.tmdb_id,
+        'name': movie_person.person.name,
+    } for movie_person in movie.movieperson_set.select_related('person')
+    .filter(role=MoviePerson.ROLE_ACTOR).order_by('sort_order')]
+    directors_people = [{
+        'id': movie_person.person.id,
+        'tmdb_id': movie_person.person.tmdb_id,
+        'name': movie_person.person.name,
+    } for movie_person in movie.movieperson_set.select_related('person')
+    .filter(role=MoviePerson.ROLE_DIRECTOR).order_by('sort_order')]
+    cast_names = [item['name'] for item in cast_people]
+    director_names = [item['name'] for item in directors_people]
     new_movie = {
         'id': movie.tmdb_id,
         'name': movie.tmdb_name,
@@ -259,6 +269,8 @@ def parse_movie(movie, request):
         'production_companies': movie.tmdb_production_companies,
         'cast': ', '.join(cast_names),
         'directors': ', '.join(director_names),
+        'cast_people': cast_people,
+        'directors_people': directors_people,
         'videos': movie.tmdb_videos
     }
 

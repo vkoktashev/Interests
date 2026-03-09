@@ -623,7 +623,7 @@ def calculate_top_personality_points(user: User) -> dict:
         .filter(movie__usermovie__user=user,
                 movie__usermovie__status__in=[UserMovie.STATUS_WATCHED, UserMovie.STATUS_STOPPED],
                 movie__usermovie__score__gt=0) \
-        .values('person__tmdb_id', 'person__name', 'role') \
+        .values('person__id', 'person__tmdb_id', 'person__name', 'role') \
         .annotate(points=Sum('movie__usermovie__score'))
 
     shows_persons = ShowPerson.objects \
@@ -634,7 +634,7 @@ def calculate_top_personality_points(user: User) -> dict:
                     UserShow.STATUS_WATCHED,
                     UserShow.STATUS_STOPPED,
                 ]) \
-        .values('person__tmdb_id', 'person__name', 'role') \
+        .values('person__id', 'person__tmdb_id', 'person__name', 'role') \
         .annotate(points=Sum('show__usershow__score'))
 
     games_developers = GameDeveloper.objects \
@@ -650,23 +650,24 @@ def calculate_top_personality_points(user: User) -> dict:
         .annotate(points=Sum('game__usergame__score'))
 
     for item in chain(movies_persons, shows_persons):
-        person_id = item.get('person__tmdb_id')
+        person_tmdb_id = item.get('person__tmdb_id')
+        person_id = item.get('person__id')
         name = item.get('person__name')
         role = item.get('role')
         points = int(item.get('points') or 0)
-        if person_id is None or not name:
+        if person_tmdb_id is None or person_id is None or not name:
             continue
 
         if role == MoviePerson.ROLE_ACTOR:
-            current = actors_points.get(person_id)
+            current = actors_points.get(person_tmdb_id)
             if current is None:
-                actors_points[person_id] = {'id': person_id, 'name': name, 'points': points}
+                actors_points[person_tmdb_id] = {'id': person_id, 'name': name, 'points': points}
             else:
                 current['points'] += points
         elif role == MoviePerson.ROLE_DIRECTOR:
-            current = directors_points.get(person_id)
+            current = directors_points.get(person_tmdb_id)
             if current is None:
-                directors_points[person_id] = {'id': person_id, 'name': name, 'points': points}
+                directors_points[person_tmdb_id] = {'id': person_id, 'name': name, 'points': points}
             else:
                 current['points'] += points
 
@@ -677,11 +678,11 @@ def calculate_top_personality_points(user: User) -> dict:
             continue
         developers_points[name] += points
 
-    top_actors = [{'name': item['name'], 'points': item['points']} for item in actors_points.values()]
+    top_actors = [{'id': item['id'], 'name': item['name'], 'points': item['points']} for item in actors_points.values()]
     top_actors.sort(key=lambda entry: (-entry['points'], entry['name']))
     top_actors = top_actors[:10]
 
-    top_directors = [{'name': item['name'], 'points': item['points']} for item in directors_points.values()]
+    top_directors = [{'id': item['id'], 'name': item['name'], 'points': item['points']} for item in directors_points.values()]
     top_directors.sort(key=lambda entry: (-entry['points'], entry['name']))
     top_directors = top_directors[:10]
 

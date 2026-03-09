@@ -97,6 +97,22 @@
       background: rgba(248, 113, 113, 0.08);
       color: #fecaca;
     }
+
+    &_score {
+      border-color: rgba(79, 93, 234, 0.28);
+      background: rgba(79, 93, 234, 0.12);
+      color: $newText3;
+      font-weight: 600;
+      min-width: 2.2rem;
+      justify-content: center;
+    }
+  }
+
+  &__badges {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
   }
 
   &__detail-row {

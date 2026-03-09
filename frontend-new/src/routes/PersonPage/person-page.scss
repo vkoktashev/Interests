@@ -1,0 +1,222 @@
+@import "style/colors";
+
+.person-page {
+  position: relative;
+  max-width: 1300px;
+  color: $newText3;
+
+  &__background {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 100vw;
+    transform: translateX(-50%);
+    background-position: center top;
+    background-size: cover;
+    opacity: 0.25;
+    filter: blur(1px);
+    pointer-events: none;
+    z-index: 0;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 15%, rgba($newAccent2, 0.16), transparent 65%),
+        linear-gradient(180deg, rgba($newBackground1, 0.5), rgba($newBackground1, 0.86));
+    }
+  }
+
+  &__body {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 14px;
+  }
+
+  &__header {
+    display: grid;
+    grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+    gap: 14px;
+    align-items: stretch;
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba($newBackground1, 0.78);
+    backdrop-filter: blur(10px);
+  }
+
+  &__poster {
+    border-radius: 12px;
+    overflow: hidden;
+    min-height: 300px;
+    background: rgba($newBackground2, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  &__poster-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__poster-placeholder {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  &__main {
+    min-width: 0;
+    display: grid;
+    gap: 14px;
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: clamp(1.6rem, 2.4vw, 2.2rem);
+    line-height: 1.1;
+  }
+
+  &__score {
+    flex-shrink: 0;
+  }
+
+  &__info-list {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba($newBackground2, 0.72);
+  }
+
+  &__info-row {
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  &__info-label {
+    color: $newText2;
+  }
+
+  &__info-value {
+    overflow-wrap: anywhere;
+  }
+
+  &__card {
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba($newBackground1, 0.76);
+    backdrop-filter: blur(8px);
+  }
+
+  &__card-title {
+    margin: 0 0 10px;
+    font-size: 1.25rem;
+    font-weight: 500;
+  }
+
+  &__biography {
+    line-height: 1.6;
+    white-space: pre-line;
+    color: $newText3;
+  }
+
+  &__credits-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    align-items: start;
+  }
+
+  &__movies {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 1fr;
+  }
+
+  &__movie-card {
+    .tmdb-media-card__poster {
+      width: 72px;
+      height: 102px;
+    }
+  }
+
+  &__empty {
+    color: $newText2;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px;
+  }
+
+  @media (max-width: 760px) {
+    &__header {
+      grid-template-columns: 1fr;
+      padding: 12px;
+      border-radius: 12px;
+    }
+
+    &__poster {
+      min-height: 220px;
+      max-height: 320px;
+    }
+
+    &__info-row {
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
+
+    &__title-row {
+      align-items: flex-start;
+    }
+
+    &__card {
+      padding: 12px;
+      border-radius: 12px;
+    }
+
+    &__credits-grid {
+      grid-template-columns: 1fr;
+    }
+
+    &__movies {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    &__movie-card {
+      padding: 8px;
+
+      .tmdb-media-card__poster {
+        width: 60px;
+        height: 86px;
+      }
+
+      .tmdb-media-card__body {
+        gap: 4px;
+      }
+
+      .tmdb-media-card__overview {
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+      }
+    }
+  }
+}
