@@ -23,6 +23,7 @@ LAST_ACTIVITY_INTERVAL_SECS = 60 * 10
 YOUTUBE_PREFIX = 'https://www.youtube.com/watch?v='
 TMDB_BACKDROP_PATH_PREFIX = 'https://image.tmdb.org/t/p/w1920_and_h800_multi_faces'
 TMDB_POSTER_PATH_PREFIX = 'https://image.tmdb.org/t/p/w600_and_h900_bestv2'
+TMDB_POSTER_PREVIEW_PATH_PREFIX = 'https://image.tmdb.org/t/p/w220_and_h330_face'
 TMDB_STILL_PATH_PREFIX = 'https://image.tmdb.org/t/p/w1920_and_h1080_bestv2'
 EPISODE_NOT_WATCHED_SCORE = -1
 EPISODE_WATCHED_SCORE = 0
@@ -37,6 +38,7 @@ IGDB_UNAVAILABLE = 'IGDB недоступен.'
 HLTB_UNAVAILABLE = 'HLTB недоступен.'
 GAME_NOT_FOUND = "Игра не найдена."
 MOVIE_NOT_FOUND = "Фильм не найден."
+PERSON_NOT_FOUND = "Человек не найден."
 TMDB_UNAVAILABLE = "TMDB недоступен."
 USER_EMAIL_EXISTS = 'Пользователь с такой электронной почтой уже существует.'
 USER_USERNAME_EXISTS = 'Пользователь с таким никнеймом уже существует.'

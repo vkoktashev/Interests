@@ -16,6 +16,7 @@ import ShowEpisodePage from './ShowEpisodePage';
 import ShowSeasonPage from './ShowSeasonPage';
 import FAQPage from './FAQPage';
 import CommunityPicksPage from './CommunityPicksPage';
+import PersonPage from './PersonPage';
 
 export const ROUTE_ROOT = 'root';
 
@@ -25,6 +26,7 @@ export const ROUTE_SEARCH = 'search';
 export const ROUTE_GAME = 'game';
 export const ROUTE_MOVIE = 'movie';
 export const ROUTE_SHOW = 'show';
+export const ROUTE_PERSON = 'person';
 export const ROUTE_SHOW_SEASON = 'show_season';
 export const ROUTE_SHOW_EPISODE = 'show_episode';
 
@@ -140,6 +142,13 @@ export default {
             path: '/show/:showId',
             title: __('Сериал'),
             component: ShowPage,
+            roles,
+        },
+        [ROUTE_PERSON]: {
+            exact: true,
+            path: '/person/:personId',
+            title: __('Человек'),
+            component: PersonPage,
             roles,
         },
         [ROUTE_SHOW_SEASON]: {

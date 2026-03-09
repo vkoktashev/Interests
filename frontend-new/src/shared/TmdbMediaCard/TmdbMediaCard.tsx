@@ -17,12 +17,19 @@ export type ITmdbMediaCardItem = {
 	platforms?: string;
 	tags?: string;
 	user_status?: string;
+	user_score?: number | null;
+};
+
+export type ITmdbMediaCardDetail = {
+	label: string;
+	value: string;
 };
 
 type ITmdbMediaCardProps = {
 	item: ITmdbMediaCardItem;
 	itemType: 'movie' | 'show' | 'game';
 	className?: string;
+	details?: ITmdbMediaCardDetail[];
 	statusBadge?: {
 		label: string;
 		tone: 'planned' | 'done' | 'progress' | 'stopped';
@@ -55,7 +62,7 @@ function formatScore(value?: number) {
 
 export default function TmdbMediaCard(props: ITmdbMediaCardProps) {
 	const bem = useBem('tmdb-media-card');
-	const {item, itemType, className, statusBadge} = props;
+	const {item, itemType, className, statusBadge, details} = props;
 
 	const href = !item.id
 		? '#'
@@ -64,7 +71,14 @@ export default function TmdbMediaCard(props: ITmdbMediaCardProps) {
 			: `/${itemType}/${item.id}`;
 	const titleText = item.name || item.original_name || 'Без названия';
 	const imageSrc = item.poster_path || item.backdrop_path || '';
-	const hasDetails = Boolean(item.genres || item.platforms || item.tags || item.overview);
+	const providedDetails = (details || []).filter(detail => detail?.label && detail?.value);
+	const fallbackDetails: ITmdbMediaCardDetail[] = [
+		item.genres ? {label: 'Жанры', value: item.genres} : null,
+		item.platforms ? {label: 'Платформы', value: item.platforms} : null,
+		item.tags ? {label: 'Теги', value: item.tags} : null,
+	].filter(Boolean) as ITmdbMediaCardDetail[];
+	const renderDetails = providedDetails.length > 0 ? providedDetails : fallbackDetails;
+	const hasDetails = renderDetails.length > 0 || Boolean(item.overview);
 
 	return (
 		<a className={[bem.block(), className].filter(Boolean).join(' ')} href={href}>
@@ -89,29 +103,28 @@ export default function TmdbMediaCard(props: ITmdbMediaCardProps) {
 					{!!item.vote_count && <span>{item.vote_count} оценок</span>}
 				</div>
 
-				{statusBadge && (
-					<div className={bem.element('badge', {[statusBadge.tone]: true})}>
-						{statusBadge.label}
+				{(statusBadge || typeof item.user_score === 'number') && (
+					<div className={bem.element('badges')}>
+						{statusBadge && (
+							<div className={bem.element('badge', {[statusBadge.tone]: true})}>
+								{statusBadge.label}
+							</div>
+						)}
+						{typeof item.user_score === 'number' && item.user_score > 0 && (
+							<div className={bem.element('badge', {score: true})}>
+								{item.user_score}
+							</div>
+						)}
 					</div>
 				)}
 
 				{hasDetails && (
 					<div className={bem.element('details')}>
-						{!!item.genres && (
-							<div className={bem.element('detail-row')}>
-								<span className={bem.element('detail-label')}>Жанры:</span> {item.genres}
+						{renderDetails.map((detail, index) => (
+							<div key={`${detail.label}-${index}`} className={bem.element('detail-row')}>
+								<span className={bem.element('detail-label')}>{detail.label}:</span> {detail.value}
 							</div>
-						)}
-						{!!item.platforms && (
-							<div className={bem.element('detail-row')}>
-								<span className={bem.element('detail-label')}>Платформы:</span> {item.platforms}
-							</div>
-						)}
-						{!!item.tags && (
-							<div className={bem.element('detail-row')}>
-								<span className={bem.element('detail-label')}>Теги:</span> {item.tags}
-							</div>
-						)}
+						))}
 						{!!item.overview && (
 							<div className={bem.element('overview')}>
 								{item.overview}

@@ -1,0 +1,13 @@
+@import "style/colors";
+
+.person-link {
+  color: $newText3;
+  text-decoration: none;
+  border-bottom: 1px solid rgba($newAccent2, 0.3);
+  transition: color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    color: $newAccent2;
+    border-bottom-color: rgba($newAccent2, 0.7);
+  }
+}

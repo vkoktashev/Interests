@@ -8,6 +8,7 @@ import Rating from '../../shared/Rating';
 import TmdbReviewsBlock from '../../shared/TmdbReviewsBlock/TmdbReviewsBlock';
 import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
 import MediaGalleryBlock from '../../shared/MediaGalleryBlock';
+import PersonLink from '../../shared/PersonLink';
 
 import "./movie-page.scss";
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
@@ -108,16 +109,16 @@ export function MoviePage() {
 		{label: 'Жанр', value: movie?.genres},
 		{label: 'Компания', value: movie?.production_companies},
 		{label: 'Слоган', value: movie?.tagline},
-		{label: 'В ролях', value: movie?.cast},
-		{label: 'Режиссер', value: movie?.directors},
-	]).filter(item => Boolean(item.value)), [
+		{label: 'В ролях', content: renderPersonLinks(movie?.cast_people)},
+		{label: 'Режиссер', content: renderPersonLinks(movie?.directors_people)},
+	]).filter(item => Boolean(item.value || item.content)), [
 		movie?.release_date,
 		movie?.runtime,
 		movie?.genres,
 		movie?.production_companies,
 		movie?.tagline,
-		movie?.cast,
-		movie?.directors,
+		movie?.cast_people,
+		movie?.directors_people,
 	]);
 
 	const overviewPlainText = useMemo(
@@ -158,7 +159,7 @@ export function MoviePage() {
 									{infoRows.map(item => (
 										<div key={item.label} className={bem.element('info-row')}>
 											<span className={bem.element('info-row-label')}>{item.label}</span>
-											<span className={bem.element('info-row-value')}>{item.value}</span>
+											<span className={bem.element('info-row-value')}>{item.content || item.value}</span>
 										</div>
 									))}
 								</div>
@@ -289,5 +290,22 @@ export function MoviePage() {
 				</div>
 			</LoadingOverlay>
 		</div>
+	);
+}
+
+function renderPersonLinks(people?: Array<{id: number; name: string}>) {
+	if (!people?.length) {
+		return '';
+	}
+
+	return (
+		<span>
+			{people.map((person, index) => (
+				<React.Fragment key={person.id}>
+					{index > 0 && ', '}
+					<PersonLink id={person.id} name={person.name} />
+				</React.Fragment>
+			))}
+		</span>
 	);
 }

@@ -74,6 +74,7 @@ function StatisticsBlock({ userId }: IStatisticsBlockProps) {
 								<TopPersonalities
 									chartData={safeStats?.top_actors || []}
 									emptyLabel="Нет данных по актерам"
+									withPersonLinks
 								/>
 							</div>
 							<div className={bem.element('panel-card')}>
@@ -81,6 +82,7 @@ function StatisticsBlock({ userId }: IStatisticsBlockProps) {
 								<TopPersonalities
 									chartData={safeStats?.top_directors || []}
 									emptyLabel="Нет данных по режиссерам"
+									withPersonLinks
 								/>
 							</div>
 							<div className={bem.element('panel-card')}>
