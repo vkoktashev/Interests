@@ -27,34 +27,9 @@ services:
       - redis
     restart: always
 
-#  front:
-#    build: ./frontend
-#    ports:
-#      - "80:80"
-#      - "443:443"
-#    volumes:
-#      - /etc/letsencrypt/:/etc/letsencrypt/
-#      - staticfiles:/code/staticfiles
-#    restart: always
-#    depends_on:
-#      - back
-#      - redis
-
-  front:
-    build: ./frontend-new
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /etc/letsencrypt/:/etc/letsencrypt/
-      - staticfiles:/code/staticfiles
-    restart: always
-    depends_on:
-      - back
-      - redis
-
   redis:
     image: redis:6-alpine
+    restart: always
 
   pg_backup:
     build:
@@ -63,6 +38,8 @@ services:
       - .env
     volumes:
       - ./backups:/app/backups
+      - ./backup-logs:/var/log
+    restart: always
     depends_on:
       - db2
 
