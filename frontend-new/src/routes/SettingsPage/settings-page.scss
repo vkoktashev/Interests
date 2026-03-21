@@ -22,6 +22,13 @@
         font-size: 1rem;
     }
 
+    &__section-text {
+        margin: 0 0 0.9rem;
+        color: $newText2;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+
     &__dropdown {
         max-width: 250px;
     }

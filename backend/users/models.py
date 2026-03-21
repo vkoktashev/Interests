@@ -23,6 +23,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         (PRIVACY_FOLLOWED, 'Друзья'),
     )
 
+    STEAM_ACCOUNT_REGION_RU = 'ru'
+    STEAM_ACCOUNT_REGION_KZ = 'kz'
+
+    STEAM_ACCOUNT_REGION_CHOICES = (
+        (STEAM_ACCOUNT_REGION_RU, 'Россия'),
+        (STEAM_ACCOUNT_REGION_KZ, 'Казахстан'),
+    )
+
     username = models.CharField(
         _('username'),
         max_length=150,
@@ -47,6 +55,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     google_sub = models.CharField(max_length=255, null=True, blank=True, unique=True)
     google_email = models.EmailField(null=True, blank=True)
     use_image_proxy = models.BooleanField(default=True)
+    steam_account_region = models.CharField(
+        max_length=8,
+        choices=STEAM_ACCOUNT_REGION_CHOICES,
+        default=STEAM_ACCOUNT_REGION_RU,
+    )
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []

@@ -110,6 +110,7 @@ class UserLogSerializer(ModelSerializer):
 
 class SettingsSerializer(ModelSerializer):
     privacy = ChoicesField(choices=User.PRIVACY_CHOICES, required=False)
+    steam_account_region = ChoicesField(choices=User.STEAM_ACCOUNT_REGION_CHOICES, required=False)
 
     def validate_backdrop_path(self, value):
         if not value:
@@ -125,7 +126,7 @@ class SettingsSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ('receive_games_releases', 'receive_movies_releases',
-                  'receive_episodes_releases', 'backdrop_path', 'privacy', 'use_image_proxy')
+                  'receive_episodes_releases', 'backdrop_path', 'privacy', 'use_image_proxy', 'steam_account_region')
 
 
 class UserInfoSerializer(ModelSerializer):
