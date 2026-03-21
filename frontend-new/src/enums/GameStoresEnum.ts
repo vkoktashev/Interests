@@ -7,6 +7,8 @@ export class GameStoresEnum {
 
     static IGM = 'igm';
 
+    static PLATI = 'plati';
+
     static PS_STORE = 'playstation-store';
 
     static EGS = 'epic-games';
