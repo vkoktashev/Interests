@@ -171,7 +171,7 @@ async def parse_game_prices_from_db(game: Game, steam_region='ru'):
         })
 
     try:
-        igm_price = await sync_to_async(get_igm_store_price)(game.igdb_slug, game.igdb_name)
+        igm_price = await sync_to_async(get_igm_store_price)(game.igdb_slug, game.igdb_name, steam_region)
     except Exception:
         igm_price = None
 
@@ -184,7 +184,7 @@ async def parse_game_prices_from_db(game: Game, steam_region='ru'):
                 'slug': igm_store['slug'],
             },
             'url': igm_price.get('url') or '',
-            'region': '',
+            'region': steam_region,
             'region_label': '',
             'currency': igm_price.get('currency'),
             'final': igm_price.get('final'),
