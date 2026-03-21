@@ -766,6 +766,9 @@ def calculate_backlog_metrics(user: User) -> dict:
     planned_games = UserGame.objects.filter(user=user, status=UserGame.STATUS_GOING)
     planned_movies = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_GOING)
     planned_shows = UserShow.objects.filter(user=user, status=UserShow.STATUS_GOING)
+    eligible_shows = UserShow.objects.filter(user=user).exclude(
+        status__in=[UserShow.STATUS_NOT_WATCHED, UserShow.STATUS_STOPPED]
+    )
 
     def average_age_days(values):
         datetimes = [item for item in values if item is not None]
@@ -781,41 +784,28 @@ def calculate_backlog_metrics(user: User) -> dict:
 
     movies_minutes = planned_movies.aggregate(total=Sum('movie__tmdb_runtime')).get('total') or 0
 
-    planned_show_rows = list(planned_shows.values('show_id', 'show__tmdb_number_of_episodes', 'show__tmdb_episode_runtime'))
-    planned_show_ids = [row['show_id'] for row in planned_show_rows]
+    eligible_show_ids = list(eligible_shows.values_list('show_id', flat=True))
 
-    episodes_stats_by_show = {
-        row['tmdb_season__tmdb_show_id']: row
-        for row in Episode.objects
-        .filter(tmdb_season__tmdb_show_id__in=planned_show_ids)
-        .values('tmdb_season__tmdb_show_id')
-        .annotate(
-            episodes_in_db=Count('id'),
-            minutes_in_db=Sum(
-                Case(
-                    When(tmdb_runtime=0, then='tmdb_season__tmdb_show__tmdb_episode_runtime'),
-                    default='tmdb_runtime'
-                )
+    eligible_episodes = Episode.objects.filter(
+        tmdb_season__tmdb_show_id__in=eligible_show_ids,
+        tmdb_season__tmdb_season_number__gt=0,
+    )
+
+    watched_episode_ids = set(
+        UserEpisode.objects.filter(
+            user=user,
+            episode__in=eligible_episodes,
+        ).values_list('episode_id', flat=True)
+    )
+
+    shows_minutes = eligible_episodes.exclude(id__in=watched_episode_ids).aggregate(
+        total=Sum(
+            Case(
+                When(tmdb_runtime=0, then='tmdb_season__tmdb_show__tmdb_episode_runtime'),
+                default='tmdb_runtime'
             )
         )
-    }
-
-    shows_minutes = 0
-    for show in planned_show_rows:
-        show_id = show.get('show_id')
-        total_episodes = int(show.get('show__tmdb_number_of_episodes') or 0)
-        fallback_episode_runtime = int(show.get('show__tmdb_episode_runtime') or 0)
-
-        episode_stats = episodes_stats_by_show.get(show_id) or {}
-        episodes_in_db = int(episode_stats.get('episodes_in_db') or 0)
-        minutes_in_db = int(episode_stats.get('minutes_in_db') or 0)
-
-        if total_episodes > 0:
-            missing_episodes = max(total_episodes - episodes_in_db, 0)
-            shows_minutes += minutes_in_db + missing_episodes * max(fallback_episode_runtime, 0)
-        else:
-            # Fallback for shows without declared episode count: use what is already synced in DB.
-            shows_minutes += minutes_in_db
+    ).get('total') or 0
 
     movies_hours = round(movies_minutes / MINUTES_IN_HOUR, 1)
     shows_hours = round(shows_minutes / MINUTES_IN_HOUR, 1)

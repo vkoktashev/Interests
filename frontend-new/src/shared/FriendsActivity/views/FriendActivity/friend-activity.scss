@@ -96,8 +96,15 @@
 				min-width: 0;
 		}
 
-		&__score-chip {
+		&__score-area {
 				flex-shrink: 0;
+				display: flex;
+				flex-direction: column;
+				align-items: flex-end;
+				gap: 6px;
+		}
+
+		&__score-chip {
 				display: inline-flex;
 				align-items: center;
 				padding: 5px 9px;
@@ -105,6 +112,18 @@
 				border: 1px solid rgba($newAccent2, 0.18);
 				background: rgba($newAccent2, 0.09);
 				color: $newText3;
+				font-size: 0.82rem;
+				line-height: 1.1;
+		}
+
+		&__spent-time {
+				display: inline-flex;
+				align-items: center;
+				padding: 4px 9px;
+				border-radius: 999px;
+				border: 1px solid rgba(255, 255, 255, 0.08);
+				background: rgba(255, 255, 255, 0.05);
+				color: $newText2;
 				font-size: 0.82rem;
 				line-height: 1.1;
 		}
