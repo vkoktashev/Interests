@@ -2,6 +2,7 @@ from datetime import date
 
 from asgiref.sync import sync_to_async
 
+from games.integrations.igm import get_igm_store_info, get_igm_store_price
 from games.integrations.steam import get_steam_region_label, get_steam_store_price
 from games.models import Game, GameDeveloper, GameGenre, GameScreenshot, GameStore, GameTrailer
 from games.integrations.hltb import translate_hltb_time
@@ -166,6 +167,30 @@ async def parse_game_prices_from_db(game: Game, steam_region='ru'):
             'discount_percent': steam_price.get('discount_percent'),
             'formatted_final': steam_price.get('formatted_final'),
             'formatted_initial': steam_price.get('formatted_initial'),
+        })
+
+    try:
+        igm_price = await sync_to_async(get_igm_store_price)(game.igdb_slug, game.igdb_name)
+    except Exception:
+        igm_price = None
+
+    if igm_price:
+        igm_store = get_igm_store_info()
+        prices.append({
+            'store': {
+                'id': igm_store['id'],
+                'name': igm_store['name'],
+                'slug': igm_store['slug'],
+            },
+            'url': igm_price.get('url') or '',
+            'region': '',
+            'region_label': '',
+            'currency': igm_price.get('currency'),
+            'final': igm_price.get('final'),
+            'initial': igm_price.get('initial'),
+            'discount_percent': igm_price.get('discount_percent'),
+            'formatted_final': igm_price.get('formatted_final'),
+            'formatted_initial': igm_price.get('formatted_initial'),
         })
 
     return {

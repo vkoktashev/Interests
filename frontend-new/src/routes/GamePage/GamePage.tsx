@@ -20,7 +20,6 @@ import GameStores from "../../shared/GameStores";
 import LoginForm from '../../modals/LoginForm';
 import MediaGalleryBlock from '../../shared/MediaGalleryBlock';
 import GamePrices from './views/GamePrices';
-import {GameStoresEnum} from '../../enums/GameStoresEnum';
 import {IGamePricesResponse} from '../../interfaces/IGamePrice';
 import "./game-page.scss";
 import {Button, TextField} from '@steroidsjs/core/ui/form';
@@ -52,14 +51,10 @@ export function GamePage() {
 	}), [gameId, shouldLoadHltb]);
 	const {data: gameTime} = useFetch(gameTimeFetchConfig);
 
-	const hasSteamStore = useMemo(
-		() => Boolean(game?.stores?.some(item => item?.store?.slug === GameStoresEnum.STEAM)),
-		[game?.stores],
-	);
-	const gamePricesFetchConfig = useMemo(() => gameId && game && hasSteamStore && ({
+	const gamePricesFetchConfig = useMemo(() => gameId && game && ({
 		url: `/games/game/${gameId}/prices/`,
 		method: 'get',
-	}), [gameId, game?.id, hasSteamStore, user?.id]);
+	}), [gameId, game?.id, user?.id, user?.steam_account_region]);
 	const {data: gamePricesResponse, isLoading: isPricesLoading} = useFetch(gamePricesFetchConfig as any);
 	const gamePrices = useMemo(
 		() => ((gamePricesResponse as IGamePricesResponse)?.slug === gameId

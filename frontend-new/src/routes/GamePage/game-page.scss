@@ -253,12 +253,25 @@
       border-color: rgba(59, 130, 246, 0.3);
       background: rgba(59, 130, 246, 0.1);
     }
+
+    &_igm:hover {
+      border-color: rgba($newAccent2, 0.35);
+      background: rgba($newAccent2, 0.12);
+    }
   }
 
   &__price-card-icon {
     font-size: 15px;
     color: $newText2;
     flex-shrink: 0;
+  }
+
+  &__price-card-label {
+    color: $newText2;
+    font-size: 0.82rem;
+    line-height: 1;
+    font-weight: 500;
+    white-space: nowrap;
   }
 
   &__price-card-price {

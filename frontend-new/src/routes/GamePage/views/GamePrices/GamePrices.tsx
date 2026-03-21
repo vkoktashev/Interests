@@ -22,7 +22,7 @@ export default function GamePrices(props: IGamePricesProps) {
             <div className={bem.element('resource-group-label')}>Цены</div>
             {props.isLoading ? (
                 <div className={bem.element('prices-loading')}>
-                    Загружаем цены Steam...
+                    Загружаем цены...
                 </div>
             ) : (
                 <div className={bem.element('prices-list')}>
@@ -39,6 +39,11 @@ export default function GamePrices(props: IGamePricesProps) {
                                 title={`${price.store.name}: ${price.formatted_final}`}
                             >
                                 {StoreIcon && <StoreIcon className={bem.element('price-card-icon')} />}
+                                {!StoreIcon && (
+                                    <span className={bem.element('price-card-label')}>
+                                        {price.store.name}
+                                    </span>
+                                )}
                                 <span className={bem.element('price-card-price')}>
                                     {price.formatted_final}
                                 </span>

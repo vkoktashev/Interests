@@ -5,6 +5,8 @@ import { RiXboxLine } from "react-icons/ri";
 export class GameStoresEnum {
     static STEAM = 'steam';
 
+    static IGM = 'igm';
+
     static PS_STORE = 'playstation-store';
 
     static EGS = 'epic-games';
