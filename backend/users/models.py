@@ -46,6 +46,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     privacy = models.CharField(max_length=50, choices=PRIVACY_CHOICES, default=PRIVACY_ALL)
     google_sub = models.CharField(max_length=255, null=True, blank=True, unique=True)
     google_email = models.EmailField(null=True, blank=True)
+    use_image_proxy = models.BooleanField(default=True)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []

@@ -111,8 +111,11 @@ class UserLogSerializer(ModelSerializer):
 class SettingsSerializer(ModelSerializer):
     privacy = ChoicesField(choices=User.PRIVACY_CHOICES, required=False)
 
-    @staticmethod
-    def validate_backdrop_path(value):
+    def validate_backdrop_path(self, value):
+        if not value:
+            return value
+        if self.instance and self.instance.backdrop_path == value:
+            return value
         if not (Game.objects.filter(Q(igdb_cover_url=value)).exists() or
                 Movie.objects.filter(tmdb_backdrop_path=value).exists() or
                 Show.objects.filter(tmdb_backdrop_path=value).exists()):
@@ -122,7 +125,7 @@ class SettingsSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ('receive_games_releases', 'receive_movies_releases',
-                  'receive_episodes_releases', 'backdrop_path', 'privacy')
+                  'receive_episodes_releases', 'backdrop_path', 'privacy', 'use_image_proxy')
 
 
 class UserInfoSerializer(ModelSerializer):

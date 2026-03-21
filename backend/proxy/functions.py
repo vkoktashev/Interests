@@ -33,6 +33,11 @@ def get_proxy_url(request_or_scheme, path_prefix_or_url, path=None):
     if not url:
         return ''
 
+    if (hasattr(request_or_scheme, 'user')
+            and hasattr(request_or_scheme.user, 'use_image_proxy')
+            and not request_or_scheme.user.use_image_proxy):
+        return url
+
     encoded_url = quote(url, safe='')
     absolute_prefix = _get_absolute_proxy_prefix(request_or_scheme)
     proxy_path_prefix = _get_proxy_public_path_prefix(request_or_scheme)

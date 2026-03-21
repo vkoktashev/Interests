@@ -138,6 +138,17 @@ function SettingsPage() {
 							</section>
 							<section className={bem.element('card')}>
 								<h3 className={bem.element('subheader')}>
+									Изображения
+								</h3>
+								<div className={bem.element('option-list')}>
+									<CheckboxField
+										attribute="use_image_proxy"
+										label={__('Прокси для картинок с TMDB')}
+									/>
+								</div>
+							</section>
+							<section className={bem.element('card')}>
+								<h3 className={bem.element('subheader')}>
 									Приватность
 								</h3>
 								<DropDownField
