@@ -31,7 +31,7 @@ from games.integrations.igdb import (
     update_game_stores_from_igdb,
 )
 from games.models import Game, GameBeatTime, UserGame
-from games.services.parser_service import parse_game_from_db
+from games.services.parser_service import parse_game_from_db, parse_game_prices_from_db
 from games.services.refresh_service import GAME_DETAILS_REFRESH_INTERVAL, enqueue_game_refresh
 from games.tasks import refresh_hltb_beat_times_by_game_id
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer, GameSerializer
@@ -208,6 +208,30 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             enqueue_game_refresh(game_slug, game_igdb_id, refresh_version)
 
         return response
+
+    @swagger_auto_schema(
+        operation_description="Retrieve external store prices for a specific game by its slug.",
+        manual_parameters=[
+            openapi.Parameter('slug', openapi.IN_PATH, type=openapi.TYPE_STRING),
+        ],
+        responses={
+            200: openapi.Response('OK'),
+            404: openapi.Response('Game Not Found'),
+        }
+    )
+    @action(detail=True, methods=['get'])
+    async def prices(self, request, *args, **kwargs):
+        slug = kwargs.get('slug')
+        game = await self._get_game_by_public_slug(slug)
+        if game is None:
+            return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+
+        steam_region = 'ru'
+        if getattr(request.user, 'is_authenticated', False):
+            steam_region = request.user.steam_account_region or 'ru'
+
+        prices_payload = await parse_game_prices_from_db(game, steam_region=steam_region)
+        return Response(prices_payload)
 
     @swagger_auto_schema(
         operation_description="Retrieve HLTB data for a specific game by its slug.",

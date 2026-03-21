@@ -24,6 +24,17 @@ const privacyItems = [
 	},
 ];
 
+const steamRegionItems = [
+	{
+		id: 'Россия',
+		label: 'Россия',
+	},
+	{
+		id: 'Казахстан',
+		label: 'Казахстан',
+	},
+];
+
 const SETTINGS_FORM_ID = 'settings_form_id';
 
 function SettingsPage() {
@@ -135,6 +146,31 @@ function SettingsPage() {
 										label={__('релиз новых серий сериалов')}
 									/>
 								</div>
+							</section>
+							<section className={bem.element('card')}>
+								<h3 className={bem.element('subheader')}>
+									Изображения
+								</h3>
+								<div className={bem.element('option-list')}>
+									<CheckboxField
+										attribute="use_image_proxy"
+										label={__('Прокси для картинок с TMDB')}
+									/>
+								</div>
+							</section>
+							<section className={bem.element('card')}>
+								<h3 className={bem.element('subheader')}>
+									Steam
+								</h3>
+								<p className={bem.element('section-text')}>
+									Регион нужен, чтобы показывать цену Steam для вашего аккаунта.
+								</p>
+								<DropDownField
+									attribute='steam_account_region'
+									items={steamRegionItems}
+									label={__('Регион Steam аккаунта')}
+									fieldLayoutClassName={bem.element('dropdown')}
+								/>
 							</section>
 							<section className={bem.element('card')}>
 								<h3 className={bem.element('subheader')}>

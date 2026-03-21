@@ -19,6 +19,8 @@ import InputNumber from '../../shared/InputNumber';
 import GameStores from "../../shared/GameStores";
 import LoginForm from '../../modals/LoginForm';
 import MediaGalleryBlock from '../../shared/MediaGalleryBlock';
+import GamePrices from './views/GamePrices';
+import {IGamePricesResponse} from '../../interfaces/IGamePrice';
 import "./game-page.scss";
 import {Button, TextField} from '@steroidsjs/core/ui/form';
 
@@ -48,6 +50,18 @@ export function GamePage() {
 		method: 'get',
 	}), [gameId, shouldLoadHltb]);
 	const {data: gameTime} = useFetch(gameTimeFetchConfig);
+
+	const gamePricesFetchConfig = useMemo(() => gameId && game && ({
+		url: `/games/game/${gameId}/prices/`,
+		method: 'get',
+	}), [gameId, game?.id, user?.id, user?.steam_account_region]);
+	const {data: gamePricesResponse, isLoading: isPricesLoading} = useFetch(gamePricesFetchConfig as any);
+	const gamePrices = useMemo(
+		() => ((gamePricesResponse as IGamePricesResponse)?.slug === gameId
+			? (((gamePricesResponse as IGamePricesResponse)?.items) || [])
+			: []),
+		[gameId, gamePricesResponse],
+	);
 
 	const userInfoFetchConfig = useMemo(() => gameId && user && ({
 		url: `/games/game/${gameId}/user_info/`,
@@ -284,9 +298,12 @@ export function GamePage() {
 
 								<div className={bem.element('resources')}>
 									<div className={bem.element('resources-grid')}>
-										<div className={bem.element('resource-group')}>
-											<div className={bem.element('resource-group-label')}>Магазины</div>
-											<GameStores stores={game.stores} showLabel={false} className={bem.element('stores')} />
+										<div className={bem.element('resource-column')}>
+											<div className={bem.element('resource-group')}>
+												<div className={bem.element('resource-group-label')}>Магазины</div>
+												<GameStores stores={game.stores} showLabel={false} className={bem.element('stores')} />
+											</div>
+											<GamePrices prices={gamePrices} isLoading={isPricesLoading} />
 										</div>
 
 										<div className={bem.element('resource-group')} hidden={!mediaLinks.length}>

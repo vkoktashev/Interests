@@ -32,7 +32,7 @@ export function FriendActivity({info, className}: IFriendActivityProps) {
 	const dispatch = useDispatch();
 	const avatarUrl = info?.user?.avatar || info?.user?.image || getDefaultAvatarUrl(info?.user?.username || info?.user?.id || 'user');
 	const hasReview = Boolean(info?.review?.trim());
-	const hasSpentTime = typeof info?.spent_time === 'number' && info.spent_time > 0;
+	const hasSpentTime = Number(info?.spent_time) > 0;
 	const hasScore = typeof info?.score === 'number' && info.score > 0;
 	const formattedLastUpdated = formatDate(info?.last_updated);
 	const userHref = window.location.origin + '/user/' + info.user.id;
@@ -81,23 +81,21 @@ export function FriendActivity({info, className}: IFriendActivityProps) {
 					</p>
 				</div>
 
-				{hasScore && (
-					<div className={bem.element('score-chip')}>
-						Оценка {info.score}/10
-					</div>
-				)}
+				<div className={bem.element('score-area')}>
+					{hasScore && (
+						<div className={bem.element('score-chip')}>
+							Оценка {info.score}/10
+						</div>
+					)}
+					{hasSpentTime && (
+						<div className={bem.element('spent-time')}>
+							{info.spent_time} {intToHours(Number(info.spent_time) || 0)}
+						</div>
+					)}
+				</div>
 			</div>
 
 			<div className={bem.element('content')}>
-				{hasSpentTime && (
-					<p className={bem.element('meta-row')}>
-						<span className={bem.element('label')}>Время прохождения</span>
-						<span className={bem.element('value')}>
-							{info.spent_time} {intToHours(info.spent_time || 0)}
-						</span>
-					</p>
-				)}
-
 				{hasReview && (
 					<div className={bem.element('review')}>
 						<p className={bem.element('review-text')}>{info.review}</p>
