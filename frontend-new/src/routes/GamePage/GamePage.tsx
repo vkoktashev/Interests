@@ -224,8 +224,7 @@ export function GamePage() {
 		if (!game?.id) {
 			return '';
 		}
-		const backendUrl = (process.env.APP_BACKEND_URL || '').replace(/\/+$/, '');
-		return `${backendUrl}/admin/games/game/${game.id}/change/`;
+		return `https://django-admin.your-interests.ru/admin/games/game/${game.id}/change/`;
 	}, [game?.id]);
 
 	const infoRows = useMemo(() => ([
