@@ -15,7 +15,7 @@ PLATI_GAME_URL_TEMPLATE = 'https://plati.market/games/{slug}/{category_id}/'
 PLATI_REQUEST_TIMEOUT_SECS = 8
 PLATI_CACHE_TTL_SECS = 60 * 60
 PLATI_CACHE_MISS = object()
-PLATI_CACHE_VERSION = 'v4'
+PLATI_CACHE_VERSION = 'v5'
 PLATI_STORE_INFO = {
     'id': 1002,
     'name': 'Plati',
@@ -86,6 +86,7 @@ PLATI_HEADERS = {
 PLATI_ALLOWED_REGION_TOKENS = (
     'россия',
     'рф',
+    'ру',
     'ru',
     'russia',
     'казахстан',
@@ -93,6 +94,9 @@ PLATI_ALLOWED_REGION_TOKENS = (
     'kazakhstan',
     'снг',
     'cis',
+    'мир',
+    'world',
+    'worldwide',
 )
 
 
