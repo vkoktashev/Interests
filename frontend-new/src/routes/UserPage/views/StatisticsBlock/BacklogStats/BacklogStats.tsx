@@ -41,7 +41,7 @@ function BacklogStats({ data }: IBacklogStatsProps) {
 					</span>
 				</div>
 				<div className={bem.element('backlog-metric')}>
-					<span className={bem.element('backlog-metric-label')}>Оценка часов до закрытия</span>
+					<span className={bem.element('backlog-metric-label')}>Оценка часов (сумма)</span>
 					<span className={bem.element('backlog-metric-value')}>
 						{Number(data?.estimated_hours_to_close?.total || 0).toFixed(1)} ч.
 					</span>
