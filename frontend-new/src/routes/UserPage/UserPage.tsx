@@ -37,7 +37,7 @@ function UserPage() {
 	}), [userId]);
 	const {data: user, isLoading, fetch} = useFetch(userFetchConfig);
 
-	const isCurrentUser = user?.id === currentUser.id;
+	const isCurrentUser = user?.id === currentUser?.id;
 
 	const setUserStatus = useCallback(async (payload: any) => {
 		http.send('PUT', `/users/user/${userId}/follow/`, payload).then(() => {
@@ -133,12 +133,14 @@ function UserPage() {
 						{activeCategory === "Друзья" && (
 							<div>
 								<FriendBlock users={user.followed_users ? user.followed_users : []}/>
-								<div hidden={currentUser.username !== user.username}>
-									<h4 className='user-page__friends-header'>
-										{__('Активность друзей:')}
-									</h4>
-									<FriendsLogs userId={userId}/>
-								</div>
+								{isCurrentUser && (
+									<div>
+										<h4 className='user-page__friends-header'>
+											{__('Активность друзей:')}
+										</h4>
+										<FriendsLogs userId={userId}/>
+									</div>
+								)}
 							</div>
 						)}
 					</CategoriesTab>
