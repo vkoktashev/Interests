@@ -88,6 +88,7 @@ export interface IBacklogAverageAge {
 }
 
 export interface IBacklogEstimatedHours {
+	games: number;
 	movies: number;
 	shows: number;
 	total: number;

@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from games.models import UserGame, GameLog, Game, GameDeveloper
+from games.models import UserGame, GameLog, Game, GameDeveloper, GameBeatTime
 from games.serializers import GameStatsSerializer, GameLogSerializer, GameSerializer, TypedGameSerializer
 from movies.models import UserMovie, MovieLog, Movie, MoviePerson
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer, MovieSerializer, TypedMovieSerializer
@@ -784,6 +784,22 @@ def calculate_backlog_metrics(user: User) -> dict:
 
     movies_minutes = planned_movies.aggregate(total=Sum('movie__tmdb_runtime')).get('total') or 0
 
+    planned_game_ids = list(planned_games.values_list('game_id', flat=True))
+    beat_times = GameBeatTime.objects.filter(
+        game_id__in=planned_game_ids,
+        type=GameBeatTime.TYPE_EXTRA,
+    ).values('game_id', 'source', 'hours')
+
+    game_hours_by_id = {}
+    for row in beat_times:
+        gid = row['game_id']
+        source = row['source']
+        hours = float(row['hours'])
+        if gid not in game_hours_by_id or source == GameBeatTime.SOURCE_HLTB:
+            game_hours_by_id[gid] = hours
+
+    games_hours = round(sum(game_hours_by_id.values()), 1)
+
     eligible_show_ids = list(eligible_shows.values_list('show_id', flat=True))
 
     eligible_episodes = Episode.objects.filter(
@@ -829,9 +845,10 @@ def calculate_backlog_metrics(user: User) -> dict:
                 'overall': average_age_days(all_updated),
             },
             'estimated_hours_to_close': {
+                'games': games_hours,
                 'movies': movies_hours,
                 'shows': shows_hours,
-                'total': round(movies_hours + shows_hours, 1),
+                'total': round(games_hours + movies_hours + shows_hours, 1),
             },
         }
     }

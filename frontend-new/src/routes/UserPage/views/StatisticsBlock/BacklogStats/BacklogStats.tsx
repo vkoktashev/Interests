@@ -41,7 +41,7 @@ function BacklogStats({ data }: IBacklogStatsProps) {
 					</span>
 				</div>
 				<div className={bem.element('backlog-metric')}>
-					<span className={bem.element('backlog-metric-label')}>Оценка часов (фильмы + сериалы)</span>
+					<span className={bem.element('backlog-metric-label')}>Оценка часов до закрытия</span>
 					<span className={bem.element('backlog-metric-value')}>
 						{Number(data?.estimated_hours_to_close?.total || 0).toFixed(1)} ч.
 					</span>
@@ -99,6 +99,10 @@ function BacklogStats({ data }: IBacklogStatsProps) {
 				<div className={bem.element('backlog-card')}>
 					<h5 className={bem.element('backlog-card-title')}>Оценка часов до закрытия</h5>
 					<div className={bem.element('backlog-age-list')}>
+						<div className={bem.element('backlog-age-item')}>
+							<span>Игры</span>
+							<strong>{Number(data?.estimated_hours_to_close?.games || 0).toFixed(1)} ч.</strong>
+						</div>
 						<div className={bem.element('backlog-age-item')}>
 							<span>Фильмы</span>
 							<strong>{Number(data?.estimated_hours_to_close?.movies || 0).toFixed(1)} ч.</strong>
