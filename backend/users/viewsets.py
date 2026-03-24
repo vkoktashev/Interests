@@ -787,18 +787,28 @@ def calculate_backlog_metrics(user: User) -> dict:
     planned_game_ids = list(planned_games.values_list('game_id', flat=True))
     beat_times = GameBeatTime.objects.filter(
         game_id__in=planned_game_ids,
-        type=GameBeatTime.TYPE_EXTRA,
-    ).values('game_id', 'source', 'hours')
+        type__in=[GameBeatTime.TYPE_EXTRA, GameBeatTime.TYPE_MAIN],
+        hours__gt=0,
+    ).values('game_id', 'source', 'type', 'hours')
 
     game_hours_by_id = {}
     for row in beat_times:
         gid = row['game_id']
         source = row['source']
+        beat_type = row['type']
         hours = float(row['hours'])
-        if gid not in game_hours_by_id or source == GameBeatTime.SOURCE_HLTB:
-            game_hours_by_id[gid] = hours
+        existing = game_hours_by_id.get(gid)
+        if existing is None:
+            game_hours_by_id[gid] = (hours, source, beat_type)
+        else:
+            _, ex_source, ex_type = existing
+            # Priority: HLTB extra > IGDB extra > HLTB main > IGDB main
+            def _rank(s, t):
+                return (t == GameBeatTime.TYPE_EXTRA, s == GameBeatTime.SOURCE_HLTB)
+            if _rank(source, beat_type) > _rank(ex_source, ex_type):
+                game_hours_by_id[gid] = (hours, source, beat_type)
 
-    games_hours = round(sum(game_hours_by_id.values()), 1)
+    games_hours = round(sum(h for h, _, _ in game_hours_by_id.values()), 1)
 
     eligible_show_ids = list(eligible_shows.values_list('show_id', flat=True))
 
