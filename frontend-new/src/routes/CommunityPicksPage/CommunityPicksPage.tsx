@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import LoadingOverlay from 'react-loading-overlay';
-import {RadioListField} from '@steroidsjs/core/ui/form';
 import Pagination from '@steroidsjs/core/ui/list/Pagination/Pagination';
 import {useBem, useComponents} from '@steroidsjs/core/hooks';
 import CategoriesTab from '../../shared/CategoriesTab';
@@ -23,7 +22,7 @@ type IApiItem = {
 	user_status?: string;
 	ratings_count?: number;
 	average_user_score?: number;
-	total_points?: number;
+	weighted_score?: number;
 	platform_score?: number | null;
 };
 
@@ -33,8 +32,6 @@ type IApiResponse = {
 	page: number;
 	page_size: number;
 };
-
-type TSortMode = 'total_points' | 'average_score';
 
 const PAGE_SIZE = 50;
 const CATEGORIES: TCategory[] = ['Игры', 'Фильмы', 'Сериалы'];
@@ -84,7 +81,6 @@ function CommunityPicksPage() {
 		Фильмы: false,
 		Сериалы: false,
 	});
-	const [sortMode, setSortMode] = useState<TSortMode>('total_points');
 
 	const currentPage = pageByCategory[activeCategory];
 	const currentData = dataByCategory[activeCategory];
@@ -99,7 +95,7 @@ function CommunityPicksPage() {
 
 		setLoadingByCategory(prev => ({...prev, [category]: true}));
 
-		http.get(categoryConfig.url, {page, page_size: PAGE_SIZE, sort: sortMode})
+		http.get(categoryConfig.url, {page, page_size: PAGE_SIZE})
 			.then((response: IApiResponse) => {
 				if (!isMounted) {
 					return;
@@ -122,8 +118,8 @@ function CommunityPicksPage() {
 					...prev,
 					[category]: {results: [], count: 0, page, page_size: PAGE_SIZE},
 				}));
-				})
-				.finally(() => {
+			})
+			.finally(() => {
 				if (!isMounted) {
 					return;
 				}
@@ -133,7 +129,7 @@ function CommunityPicksPage() {
 		return () => {
 			isMounted = false;
 		};
-	}, [activeCategory, pageByCategory, http, sortMode]);
+	}, [activeCategory, pageByCategory, http]);
 
 	return (
 		<div className={bem.block()}>
@@ -141,29 +137,8 @@ function CommunityPicksPage() {
 				<div>
 					<h1 className={bem.element('title')}>Выбор пользователей Interests</h1>
 					<p className={bem.element('subtitle')}>
-						Полные рейтинги Interests. При равенстве учитывается metascore / TMDB score.
+						Полные рейтинги Interests по формуле IMDb. При равенстве учитывается Metascore / TMDB score.
 					</p>
-				</div>
-				<div className={bem.element('sorter')}>
-					<div className={bem.element('sorter-label')}>Режим сортировки</div>
-					<RadioListField
-						className={bem.element('sorter-switch')}
-						orientation='horizontal'
-						selectedIds={[sortMode]}
-						onChange={(value: any) => {
-							const nextValue = Array.isArray(value) ? value[0] : value;
-							setSortMode((nextValue || 'total_points') as TSortMode);
-							setPageByCategory({
-								Игры: 1,
-								Фильмы: 1,
-								Сериалы: 1,
-							});
-						}}
-						items={[
-							{id: 'total_points', label: 'По сумме баллов'},
-							{id: 'average_score', label: 'По средней оценке'},
-						]}
-					/>
 				</div>
 			</div>
 
@@ -219,9 +194,11 @@ function CommunityPicksPage() {
 												top2: rank === 2,
 												top3: rank === 3,
 											})}>
-												<div className={bem.element('points-main')}>{item.total_points || 0}</div>
-												<div className={bem.element('points-label')}>
-													{pluralizeRu(item.total_points || 0, 'балл', 'балла', 'баллов')}
+												<div className={bem.element('points-main')}>
+													{typeof item.weighted_score === 'number' ? item.weighted_score.toFixed(2) : '0.00'}
+												</div>
+												<div className={bem.element('points-meta')}>
+													{item.ratings_count || 0} {pluralizeRu(item.ratings_count || 0, 'оценка', 'оценки', 'оценок')}
 												</div>
 												{typeof item.platform_score === 'number' && item.platform_score >= 0 && (
 													<div className={bem.element('points-meta')}>

@@ -1,7 +1,8 @@
 from django.core.paginator import Paginator
-from django.db.models import Count, Avg, Sum, Value, IntegerField
+from django.db.models import Count, Avg, Value, IntegerField
 from django.db.models.functions import Coalesce
 from utils.swagger import openapi, swagger_auto_schema
+from utils.rating import get_imdb_weighted_score_annotation
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -19,7 +20,6 @@ class TopRatedShowsViewSet(GenericViewSet, mixins.ListModelMixin):
     )
     def list(self, request, *args, **kwargs):
         limit_param = request.GET.get('limit')
-        sort_mode = request.GET.get('sort', 'total_points')
         try:
             page = int(request.GET.get('page', 1))
         except (TypeError, ValueError):
@@ -31,8 +31,11 @@ class TopRatedShowsViewSet(GenericViewSet, mixins.ListModelMixin):
         page = max(page, 1)
         page_size = min(max(page_size, 1), 50)
 
-        rows_qs = UserShow.objects.filter(score__gt=0) \
-            .exclude(status=UserShow.STATUS_NOT_WATCHED) \
+        base_qs = UserShow.objects.filter(score__gt=0) \
+            .exclude(status=UserShow.STATUS_NOT_WATCHED)
+        global_average_score = base_qs.aggregate(value=Avg('score')).get('value') or 0
+
+        rows_qs = base_qs \
             .values(
                 'show__tmdb_id',
                 'show__tmdb_name',
@@ -45,14 +48,11 @@ class TopRatedShowsViewSet(GenericViewSet, mixins.ListModelMixin):
             .annotate(
                 ratings_count=Count('id'),
                 average_user_score=Avg('score'),
-                total_points=Sum('score'),
                 platform_score=Coalesce('show__tmdb_score', Value(-1), output_field=IntegerField()),
             )
-
-        if sort_mode == 'average_score':
-            rows_qs = rows_qs.order_by('-average_user_score', '-total_points', '-platform_score', '-ratings_count', 'show__tmdb_name')
-        else:
-            rows_qs = rows_qs.order_by('-total_points', '-average_user_score', '-platform_score', '-ratings_count', 'show__tmdb_name')
+        rows_qs = rows_qs.annotate(
+            weighted_score=get_imdb_weighted_score_annotation(global_average_score),
+        ).order_by('-weighted_score', '-platform_score', '-ratings_count', '-average_user_score', 'show__tmdb_name')
 
         if limit_param is not None:
             try:
@@ -84,7 +84,7 @@ class TopRatedShowsViewSet(GenericViewSet, mixins.ListModelMixin):
             'user_status': user_status_by_show_id.get(row.get('show__tmdb_id')),
             'ratings_count': int(row.get('ratings_count') or 0),
             'average_user_score': round(float(row.get('average_user_score') or 0), 1),
-            'total_points': int(row.get('total_points') or 0),
+            'weighted_score': round(float(row.get('weighted_score') or 0), 2),
             'platform_score': row.get('show__tmdb_score'),
         } for row in rows]
 
@@ -93,5 +93,5 @@ class TopRatedShowsViewSet(GenericViewSet, mixins.ListModelMixin):
             'count': total_count,
             'page': page if limit_param is None else 1,
             'page_size': page_size if limit_param is None else len(results),
-            'sort': sort_mode,
+            'sort': 'imdb',
         }, status=status.HTTP_200_OK)
