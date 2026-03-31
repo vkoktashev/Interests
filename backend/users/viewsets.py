@@ -189,7 +189,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(calendar_dict, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny], authentication_classes=[])
     def full_release_calendar(self, request):
         today_date = datetime.today().date()
         calendar_dict = collections.defaultdict(dict)
