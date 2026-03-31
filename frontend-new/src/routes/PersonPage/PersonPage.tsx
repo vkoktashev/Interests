@@ -1,7 +1,8 @@
-import React, {useEffect, useMemo} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 
 import './person-page.scss';
 import {useBem, useSelector, useFetch} from '@steroidsjs/core/hooks';
+import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getRouteParam} from '@steroidsjs/core/reducers/router';
 import {Loader} from '@steroidsjs/core/ui/layout';
 
@@ -45,9 +46,55 @@ const STATUS_BADGE_MAP: Record<string, {label: string; tone: 'planned' | 'done' 
 	'Смотрю': {label: 'Смотрю', tone: 'progress'},
 };
 
+const SECONDARY_CHARACTER_PATTERNS = [
+	/\bself\b/i,
+	/\bhimself\b/i,
+	/\bherself\b/i,
+	/\bthemselves\b/i,
+	/\bcameo\b/i,
+	/\barchive footage\b/i,
+	/\buncredited\b/i,
+];
+
+function isPrimaryWork(item: TPersonMovie | TPersonShow): boolean {
+	if ((item.roles || []).includes('director')) {
+		return true;
+	}
+
+	const character = (item.character || '').trim();
+	if (!character) {
+		return true;
+	}
+
+	return !SECONDARY_CHARACTER_PATTERNS.some(pattern => pattern.test(character));
+}
+
+function getEmptyWorksText(
+	mediaLabel: 'фильмов' | 'сериалов',
+	isOnlyMine: boolean,
+	isPrimaryOnly: boolean,
+): string {
+	if (isOnlyMine && isPrimaryOnly) {
+		return `У вас пока нет отмеченных основных ${mediaLabel} с этим человеком.`;
+	}
+	if (isOnlyMine) {
+		return `У вас пока нет отмеченных ${mediaLabel} с этим человеком.`;
+	}
+	if (isPrimaryOnly) {
+		return `Основные работы в разделе ${mediaLabel} пока не найдены.`;
+	}
+	return `${mediaLabel === 'фильмов'
+		? 'Фильмы с этим человеком пока не найдены.'
+		: 'Сериалы с этим человеком пока не найдены.'}`;
+}
+
 export function PersonPage() {
 	const bem = useBem('person-page');
+	const user = useSelector(getUser);
 	const personId = useSelector(state => getRouteParam(state, 'personId'));
+	const isAuthorized = Boolean(user?.id);
+	const [isOnlyMine, setIsOnlyMine] = useState(false);
+	const [isPrimaryOnly, setIsPrimaryOnly] = useState(false);
 
 	const fetchConfig = useMemo(() => personId && ({
 		url: `/people/person/${personId}/`,
@@ -60,17 +107,39 @@ export function PersonPage() {
 		document.title = person?.name ? `${person.name} — Interests` : 'Interests';
 	}, [person?.name]);
 
+	useEffect(() => {
+		if (!isAuthorized) {
+			setIsOnlyMine(false);
+		}
+	}, [isAuthorized]);
+
+	const alsoKnownAs = Array.isArray(person?.also_known_as) ? person.also_known_as : [];
+	const movies = Array.isArray(person?.movies) ? person.movies as TPersonMovie[] : [];
+	const shows = Array.isArray(person?.shows) ? person.shows as TPersonShow[] : [];
+	const visibleMovies = useMemo(
+		() => movies.filter(movie => (
+			(!isOnlyMine || Boolean(movie.user_status)) &&
+			(!isPrimaryOnly || isPrimaryWork(movie))
+		)),
+		[isOnlyMine, isPrimaryOnly, movies]
+	);
+	const visibleShows = useMemo(
+		() => shows.filter(show => (
+			(!isOnlyMine || Boolean(show.user_status)) &&
+			(!isPrimaryOnly || isPrimaryWork(show))
+		)),
+		[isOnlyMine, isPrimaryOnly, shows]
+	);
+	const infoRows = [
+		{label: 'Дата рождения', value: person?.birthday},
+		{label: 'Дата смерти', value: person?.deathday},
+		{label: 'Место рождения', value: person?.place_of_birth},
+		{label: 'Также известен как', value: alsoKnownAs.join(', ')},
+	].filter(item => Boolean(item.value));
+
 	if (!person) {
 		return <Loader />;
 	}
-
-	const alsoKnownAs = Array.isArray(person.also_known_as) ? person.also_known_as : [];
-	const infoRows = [
-		{label: 'Дата рождения', value: person.birthday},
-		{label: 'Дата смерти', value: person.deathday},
-		{label: 'Место рождения', value: person.place_of_birth},
-		{label: 'Также известен как', value: alsoKnownAs.join(', ')},
-	].filter(item => Boolean(item.value));
 
 	return (
 		<div className={bem.block()}>
@@ -111,12 +180,33 @@ export function PersonPage() {
 					</div>
 				</section>
 
+				<section className={bem.element('filters')}>
+					{isAuthorized && (
+						<button
+							type='button'
+							className={bem.element('filter-button', {active: isOnlyMine})}
+							aria-pressed={isOnlyMine}
+							onClick={() => setIsOnlyMine(value => !value)}
+						>
+							Только моё
+						</button>
+					)}
+					<button
+						type='button'
+						className={bem.element('filter-button', {active: isPrimaryOnly})}
+						aria-pressed={isPrimaryOnly}
+						onClick={() => setIsPrimaryOnly(value => !value)}
+					>
+						Основные работы
+					</button>
+				</section>
+
 				<div className={bem.element('credits-grid')}>
 					<section className={bem.element('card')}>
 						<h3 className={bem.element('card-title')}>Фильмы</h3>
 						<div className={bem.element('movies')}>
-							{(person.movies || []).length > 0 ? (
-								(person.movies as TPersonMovie[]).map(movie => (
+							{visibleMovies.length > 0 ? (
+								visibleMovies.map(movie => (
 									<TmdbMediaCard
 										key={movie.id}
 										itemType='movie'
@@ -138,7 +228,9 @@ export function PersonPage() {
 									/>
 								))
 							) : (
-								<div className={bem.element('empty')}>Фильмы с этим человеком пока не найдены.</div>
+								<div className={bem.element('empty')}>
+									{getEmptyWorksText('фильмов', isOnlyMine, isPrimaryOnly)}
+								</div>
 							)}
 						</div>
 					</section>
@@ -146,8 +238,8 @@ export function PersonPage() {
 					<section className={bem.element('card')}>
 						<h3 className={bem.element('card-title')}>Сериалы</h3>
 						<div className={bem.element('movies')}>
-							{(person.shows || []).length > 0 ? (
-								(person.shows as TPersonShow[]).map(show => (
+							{visibleShows.length > 0 ? (
+								visibleShows.map(show => (
 									<TmdbMediaCard
 										key={show.id}
 										itemType='show'
@@ -169,7 +261,9 @@ export function PersonPage() {
 									/>
 								))
 							) : (
-								<div className={bem.element('empty')}>Сериалы с этим человеком пока не найдены.</div>
+								<div className={bem.element('empty')}>
+									{getEmptyWorksText('сериалов', isOnlyMine, isPrimaryOnly)}
+								</div>
 							)}
 						</div>
 					</section>

@@ -1,5 +1,5 @@
-import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW} from '../../index';
-import {IGameSearchItem, ISearchCardData, ITmdbMediaItem} from './searchTypes';
+import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_PERSON, ROUTE_SHOW} from '../../index';
+import {IGameSearchItem, IPersonSearchItem, ISearchCardData, ITmdbMediaItem} from './searchTypes';
 
 const DETAILS_LIMIT = 6;
 const GAME_CATEGORY_LABELS: Record<number, string> = {
@@ -86,6 +86,21 @@ export function mapShowToCard(show: ITmdbMediaItem): ISearchCardData {
 		route: ROUTE_SHOW,
 		routeParams: {
 			showId: show.id,
+		},
+	};
+}
+
+export function mapPersonToCard(person: IPersonSearchItem): ISearchCardData {
+	return {
+		id: person.id,
+		name: person.name || 'Без имени',
+		poster: person.profile_path,
+		layoutVariant: 'media',
+		kindLabel: person.known_for_department || 'Человек',
+		overview: person.known_for_titles?.length ? `Известен по: ${person.known_for_titles.join(', ')}` : '',
+		route: ROUTE_PERSON,
+		routeParams: {
+			personId: person.id,
 		},
 	};
 }

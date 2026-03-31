@@ -1,6 +1,6 @@
-import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW} from '../../index';
+import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_PERSON, ROUTE_SHOW} from '../../index';
 
-export const SEARCH_CATEGORIES = ['Игры', 'Фильмы', 'Сериалы', 'Пользователи'] as const;
+export const SEARCH_CATEGORIES = ['Игры', 'Фильмы', 'Сериалы', 'Люди', 'Пользователи'] as const;
 
 export type TSearchCategory = (typeof SEARCH_CATEGORIES)[number];
 
@@ -15,7 +15,7 @@ export interface ISearchCardData {
 	platforms?: string;
 	overview?: string;
 	layoutVariant?: 'default' | 'media';
-	route: typeof ROUTE_GAME | typeof ROUTE_MOVIE | typeof ROUTE_SHOW;
+	route: typeof ROUTE_GAME | typeof ROUTE_MOVIE | typeof ROUTE_SHOW | typeof ROUTE_PERSON;
 	routeParams: Record<string, unknown>;
 }
 
@@ -44,6 +44,20 @@ export interface ITmdbMediaItem {
 
 export interface ITmdbSearchResponse {
 	results?: ITmdbMediaItem[];
+	total_results?: number;
+}
+
+export interface IPersonSearchItem {
+	id: number;
+	tmdb_id: number;
+	name: string;
+	profile_path?: string;
+	known_for_department?: string;
+	known_for_titles?: string[];
+}
+
+export interface IPersonSearchResponse {
+	results?: IPersonSearchItem[];
 	total_results?: number;
 }
 

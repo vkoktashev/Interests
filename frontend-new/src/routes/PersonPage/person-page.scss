@@ -127,6 +127,41 @@
     backdrop-filter: blur(8px);
   }
 
+  &__filters {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__filter-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba($newBackground2, 0.72);
+    color: $newText2;
+    font-size: 0.92rem;
+    font-weight: 600;
+    transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    cursor: pointer;
+
+    &:hover {
+      color: $newText3;
+      border-color: rgba($newAccent2, 0.5);
+    }
+
+    &_active {
+      color: $newText3;
+      border-color: rgba($newAccent2, 0.75);
+      background:
+        linear-gradient(145deg, rgba($newAccent2, 0.24), rgba($newAccent1, 0.16)),
+        rgba($newBackground2, 0.88);
+    }
+  }
+
   &__card-title {
     margin: 0 0 10px;
     font-size: 1.25rem;
@@ -190,6 +225,12 @@
     &__card {
       padding: 12px;
       border-radius: 12px;
+    }
+
+    &__filter-button {
+      min-height: 36px;
+      width: 100%;
+      justify-content: center;
     }
 
     &__credits-grid {
