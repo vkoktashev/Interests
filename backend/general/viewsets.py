@@ -4,9 +4,14 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import UntypedToken
 
 from users.serializers import UserInfoSerializer
+
+
+class InvalidBearerTokenError(Exception):
+    pass
 
 
 class GeneralViewSet(GenericViewSet):
@@ -24,12 +29,18 @@ class GeneralViewSet(GenericViewSet):
 
         try:
             payload = UntypedToken(token)
-            user_id = payload.get('user_id')
-            if not user_id:
-                return None
-            return get_user_model().objects.filter(id=user_id).first()
-        except Exception:
-            return None
+        except TokenError:
+            raise InvalidBearerTokenError
+
+        user_id = payload.get('user_id')
+        if not user_id:
+            raise InvalidBearerTokenError
+
+        user = get_user_model().objects.filter(id=user_id).first()
+        if not user:
+            raise InvalidBearerTokenError
+
+        return user
 
     @action(
         detail=False,
@@ -39,7 +50,11 @@ class GeneralViewSet(GenericViewSet):
     )
     def init(self, request):
         result = {}
-        user = request.user if request.user.is_authenticated else self._resolve_user_from_bearer(request)
+        try:
+            user = request.user if request.user.is_authenticated else self._resolve_user_from_bearer(request)
+        except InvalidBearerTokenError:
+            return Response({'detail': 'Invalid token.'}, status=status.HTTP_401_UNAUTHORIZED)
+
         if user:
             result["user"] = UserInfoSerializer(user).data
         return Response(result, status=status.HTTP_200_OK)

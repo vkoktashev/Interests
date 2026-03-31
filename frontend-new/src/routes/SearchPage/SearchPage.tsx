@@ -9,10 +9,13 @@ import {useComponents, useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import CategoriesTab from '../../shared/CategoriesTab';
 import GameCards from './views/GameCards';
 import MovieCards from './views/MovieCards';
+import PersonCards from './views/PersonCards';
 import ShowCards from './views/ShowCards';
 import UserCards from './views/UserCards';
 import {
 	IGameSearchItem,
+	IPersonSearchItem,
+	IPersonSearchResponse,
 	ITmdbMediaItem,
 	ITmdbSearchResponse,
 	IUserSearchItem,
@@ -34,6 +37,7 @@ interface ISearchResultsState {
 	Игры: IGameSearchItem[];
 	Фильмы: ITmdbMediaItem[];
 	Сериалы: ITmdbMediaItem[];
+	Люди: IPersonSearchItem[];
 	Пользователи: IUserSearchItem[];
 }
 
@@ -42,6 +46,7 @@ function getInitialResults(): ISearchResultsState {
 		Игры: [],
 		Фильмы: [],
 		Сериалы: [],
+		Люди: [],
 		Пользователи: [],
 	};
 }
@@ -51,6 +56,7 @@ function getInitialTotals(): Record<TSearchCategory, number> {
 		Игры: 0,
 		Фильмы: 0,
 		Сериалы: 0,
+		Люди: 0,
 		Пользователи: 0,
 	};
 }
@@ -66,6 +72,7 @@ const CATEGORY_LOADING_TEXT: Record<TSearchCategory, string> = {
 	Игры: 'Ищем игры...',
 	Фильмы: 'Ищем фильмы...',
 	Сериалы: 'Ищем сериалы...',
+	Люди: 'Ищем людей...',
 	Пользователи: 'Ищем пользователей...',
 };
 
@@ -161,6 +168,17 @@ function SearchPage() {
 		updateCategoryResults('Сериалы', items, total, requestId);
 	}, [http, updateCategoryResults]);
 
+	const searchPeople = useCallback(async (query: string, page: number, requestId: number) => {
+		const response = (await http.get('/people/search/tmdb/', {
+			query,
+			page,
+			page_size: PAGE_SIZE,
+		})) as IPersonSearchResponse;
+		const items = Array.isArray(response?.results) ? response.results : [];
+		const total = Number(response?.total_results) || resolveTotalWithoutMeta(items.length, page);
+		updateCategoryResults('Люди', items, total, requestId);
+	}, [http, updateCategoryResults]);
+
 	const searchUsers = useCallback(async (query: string, page: number, requestId: number) => {
 		const response = await http.get('/users/search/', {
 			query,
@@ -203,6 +221,9 @@ function SearchPage() {
 			if (nextCategory === 'Сериалы') {
 				await searchShows(nextQuery, nextPage, requestId);
 			}
+			if (nextCategory === 'Люди') {
+				await searchPeople(nextQuery, nextPage, requestId);
+			}
 			if (nextCategory === 'Пользователи') {
 				await searchUsers(nextQuery, nextPage, requestId);
 			}
@@ -211,7 +232,7 @@ function SearchPage() {
 				setLoading(false);
 			}
 		}
-	}, [clearResults, dispatch, searchGames, searchMovies, searchShows, searchUsers]);
+	}, [clearResults, dispatch, searchGames, searchMovies, searchPeople, searchShows, searchUsers]);
 
 	useEffect(() => {
 		const normalizedRouteQuery = normalizeQuery(queryFromRoute);
@@ -246,6 +267,9 @@ function SearchPage() {
 		if (activeCategory === 'Сериалы') {
 			return <ShowCards shows={results['Сериалы']} />;
 		}
+		if (activeCategory === 'Люди') {
+			return <PersonCards people={results['Люди']} />;
+		}
 		return <UserCards users={results['Пользователи']} />;
 	}, [activeCategory, normalizedQuery, results]);
 
@@ -268,7 +292,7 @@ function SearchPage() {
 					<div className='search-page__form-head'>
 						<div>
 							<h1 className='search-page__title'>Поиск</h1>
-							<p className='search-page__subtitle'>Найдите игры, фильмы, сериалы и пользователей</p>
+							<p className='search-page__subtitle'>Найдите игры, фильмы, сериалы, людей и пользователей</p>
 						</div>
 					</div>
 					<div className='search-page__input-wrap'>

@@ -1,8 +1,9 @@
-import React, {useCallback, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import Calendar from 'react-calendar';
 import LoadingOverlay from 'react-loading-overlay';
 import {Loader} from '@steroidsjs/core/ui/layout';
-import {useBem, useFetch} from '@steroidsjs/core/hooks';
+import {useBem, useFetch, useSelector} from '@steroidsjs/core/hooks';
+import {getUser} from '@steroidsjs/core/reducers/auth';
 
 import useWindowDimensions from '../../hooks/useWindowDimensions';
 import DayInfo from './views/DayInfo';
@@ -14,6 +15,10 @@ import './calendar-page.scss';
 import './react-calendar.scss';
 
 const MOBILE_BREAKPOINT = 860;
+const CALENDAR_MODE_PERSONAL = 'personal';
+const CALENDAR_MODE_PUBLIC = 'public';
+
+type TCalendarMode = typeof CALENDAR_MODE_PERSONAL | typeof CALENDAR_MODE_PUBLIC;
 
 function pad(number: number): string {
 	return number < 10 ? `0${number}` : String(number);
@@ -65,14 +70,25 @@ function sortCalendarEntries(entries: TCalendarEntry[]): TCalendarEntry[] {
 
 function CalendarPage() {
 	const bem = useBem('CalendarPage');
+	const user = useSelector(getUser);
 	const {width} = useWindowDimensions();
 	const isMobile = width <= MOBILE_BREAKPOINT;
+	const isAuthorized = Boolean(user?.id);
 	const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+	const [mode, setMode] = useState<TCalendarMode>(isAuthorized ? CALENDAR_MODE_PERSONAL : CALENDAR_MODE_PUBLIC);
 
-	const {data, isLoading} = useFetch(useMemo(() => ({
-		url: '/users/user/release_calendar/',
+	useEffect(() => {
+		if (!isAuthorized) {
+			setMode(CALENDAR_MODE_PUBLIC);
+		}
+	}, [isAuthorized]);
+
+	const isPublicMode = mode === CALENDAR_MODE_PUBLIC;
+	const fetchConfig = useMemo(() => ({
+		url: isPublicMode ? '/users/user/full_release_calendar/' : '/users/user/release_calendar/',
 		method: 'get',
-	}), []));
+	}), [isPublicMode]);
+	const {data, isLoading} = useFetch(fetchConfig);
 
 	const calendarMap = useMemo(() => normalizeCalendar(data), [data]);
 	const selectedDay = useMemo(() => calendarMap[toDateKey(selectedDate)] || EMPTY_CALENDAR_DAY, [calendarMap, selectedDate]);
@@ -148,11 +164,30 @@ function CalendarPage() {
 	return (
 		<div className={bem.block()}>
 			<section className={bem.element('hero')}>
-				<div>
+				<div className={bem.element('hero-main')}>
 					<h1 className={bem.element('title')}>Календарь релизов</h1>
 					<p className={bem.element('subtitle')}>
-						Следите за ближайшими играми, фильмами и сериями в одном месте
+						{isPublicMode
+							? 'Смотрите все ближайшие релизы сайта: игры, фильмы и серии в одном календаре'
+							: 'Следите за ближайшими играми, фильмами и сериями из ваших списков'}
 					</p>
+					<div className={bem.element('modes')}>
+						<button
+							type='button'
+							className={bem.element('mode-button', {active: mode === CALENDAR_MODE_PERSONAL})}
+							onClick={() => setMode(CALENDAR_MODE_PERSONAL)}
+							disabled={!isAuthorized}
+						>
+							Мои релизы
+						</button>
+						<button
+							type='button'
+							className={bem.element('mode-button', {active: isPublicMode})}
+							onClick={() => setMode(CALENDAR_MODE_PUBLIC)}
+						>
+							Все релизы сайта
+						</button>
+					</div>
 				</div>
 				<div className={bem.element('stats')}>
 					<div className={bem.element('stat')}>
@@ -186,7 +221,9 @@ function CalendarPage() {
 				</div>
 
 				<section className={bem.element('timeline-card')}>
-					<h2 className={bem.element('timeline-title')}>Лента ближайших релизов</h2>
+					<h2 className={bem.element('timeline-title')}>
+						{isPublicMode ? 'Лента всех ближайших релизов' : 'Лента ваших ближайших релизов'}
+					</h2>
 					<ReleasesList entries={entries} />
 				</section>
 			</LoadingOverlay>
