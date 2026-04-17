@@ -5,11 +5,28 @@ import {IModalProps} from '@steroidsjs/core/ui/modal/Modal/Modal';
 import './register-form.scss';
 import {login} from '@steroidsjs/core/actions/auth';
 import {formChange} from '@steroidsjs/core/actions/form';
-import {Button, EmailField, Form, InputField, PasswordField} from '@steroidsjs/core/ui/form';
+import {
+	Button,
+	EmailField,
+	Form,
+	InputField,
+	PasswordField,
+	RadioListField
+} from '@steroidsjs/core/ui/form';
 import {getFormValues} from '@steroidsjs/core/reducers/form';
 import GoogleSignInButton from '../../shared/auth/GoogleSignInButton';
 
 const REGISTRATION_FORM = 'registration_form';
+const genderItems = [
+	{
+		id: 'male',
+		label: 'Мужской',
+	},
+	{
+		id: 'female',
+		label: 'Женский',
+	},
+];
 
 export function RegisterForm(props: IModalProps) {
     const bem = useBem('register-form');
@@ -40,6 +57,7 @@ export function RegisterForm(props: IModalProps) {
 				const response = await http.post('/users/auth/google_signup_complete/', {
 					signup_token: googleSignupPending.signupToken,
 					username: values.username,
+					gender: values.gender,
 				});
 				dispatch(login(response.access, false, {
 					refreshToken: response.refresh,
@@ -90,6 +108,7 @@ export function RegisterForm(props: IModalProps) {
 		>
 			<Form
 				formId={REGISTRATION_FORM}
+				initialValues={{gender: 'male'}}
 				onSubmit={onRegistration}
 				className={bem.element('form')}
 				useRedux
@@ -138,6 +157,12 @@ export function RegisterForm(props: IModalProps) {
 							placeholder={__('Например, cinefox')}
 							className={bem.element('input')}
 							inputProps={{autoComplete: 'username'}}
+						/>
+						<RadioListField
+							attribute='gender'
+							items={genderItems}
+							label={__('Пол')}
+							fieldLayoutClassName={bem.element('input')}
 						/>
 						{isGoogleMode ? (
 							<div className={bem.element('google-selected')}>

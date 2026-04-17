@@ -67,6 +67,7 @@ class AuthViewSet(GenericViewSet):
             'refresh': str(refresh),
             'username': user.username,
             'email': user.email,
+            'gender': user.gender,
         }
 
     @staticmethod
@@ -218,6 +219,7 @@ class AuthViewSet(GenericViewSet):
     def google_signup_complete(self, request):
         signup_token = (request.data.get('signup_token') or '').strip()
         username = (request.data.get('username') or '').strip()
+        gender = (request.data.get('gender') or User.GENDER_MALE).strip()
 
         if not signup_token or not username:
             return Response({ERROR: 'Не переданы обязательные данные.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -230,6 +232,7 @@ class AuthViewSet(GenericViewSet):
         serializer = UserSerializer(data={
             'username': username,
             'email': pending_data['email'],
+            'gender': gender,
             # Temporary value only for serializer validation; will be replaced by unusable password.
             'password': secrets.token_urlsafe(16),
         })
@@ -238,6 +241,7 @@ class AuthViewSet(GenericViewSet):
         user = User.objects.create(
             username=username,
             email=pending_data['email'],
+            gender=gender,
             is_active=True,
             google_sub=pending_data['sub'],
             google_email=pending_data['email'],

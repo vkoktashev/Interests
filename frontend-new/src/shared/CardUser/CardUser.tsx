@@ -8,6 +8,7 @@ import {getDefaultAvatarUrl} from '../avatar';
 interface IUserCard {
 	id: number | string;
 	username?: string;
+	gender?: 'male' | 'female';
 	avatar?: string;
 	image?: string;
 }
@@ -20,7 +21,7 @@ interface ICardUserProps {
 function CardUser({ user, className }: ICardUserProps) {
 	const bem = useBem('card-user');
 	const username = user?.username || 'Пользователь';
-	const avatarUrl = user?.avatar || user?.image || getDefaultAvatarUrl(username || user?.id || 'user');
+	const avatarUrl = user?.avatar || user?.image || getDefaultAvatarUrl(username || user?.id || 'user', user?.gender);
 
 	return (
 		<Link

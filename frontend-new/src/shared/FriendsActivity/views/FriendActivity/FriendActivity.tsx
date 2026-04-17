@@ -9,6 +9,7 @@ import './friend-activity.scss';
 interface IFriendUser {
 	id: number | string,
 	username: string,
+	gender?: 'male' | 'female',
 	avatar?: string,
 	image?: string,
 }
@@ -30,7 +31,9 @@ interface IFriendActivityProps {
 export function FriendActivity({info, className}: IFriendActivityProps) {
 	const bem = useBem('friend-activity');
 	const dispatch = useDispatch();
-	const avatarUrl = info?.user?.avatar || info?.user?.image || getDefaultAvatarUrl(info?.user?.username || info?.user?.id || 'user');
+	const avatarUrl = info?.user?.avatar
+		|| info?.user?.image
+		|| getDefaultAvatarUrl(info?.user?.username || info?.user?.id || 'user', info?.user?.gender);
 	const hasReview = Boolean(info?.review?.trim());
 	const hasSpentTime = Number(info?.spent_time) > 0;
 	const hasScore = typeof info?.score === 'number' && info.score > 0;

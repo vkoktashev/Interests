@@ -17,6 +17,8 @@ from utils.serializers import ChoicesField
 
 
 class UserSerializer(ModelSerializer):
+    gender = serializers.ChoiceField(choices=User.GENDER_CHOICES, required=False)
+
     @staticmethod
     def validate_email(value):
         if User.objects.filter(email__iexact=value).exists():
@@ -46,7 +48,7 @@ class UserSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password')
+        fields = ('id', 'username', 'email', 'password', 'gender')
         extra_kwargs = {
             'password': {'write_only': True},
             'email': {'write_only': True},
@@ -72,13 +74,14 @@ class UserFollowSerializer(ModelSerializer):
 class FollowedUserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username')
-        read_only_fields = ('id', 'username')
+        fields = ('id', 'username', 'gender')
+        read_only_fields = ('id', 'username', 'gender')
 
 
 class UserLogSerializer(ModelSerializer):
     user = SerializerMethodField('get_username')
     user_id = SerializerMethodField('get_user_id')
+    user_gender = SerializerMethodField('get_user_gender')
     type = SerializerMethodField('get_type')
     target = SerializerMethodField('get_target')
     target_id = SerializerMethodField('get_target_id')
@@ -90,6 +93,10 @@ class UserLogSerializer(ModelSerializer):
     @staticmethod
     def get_user_id(user_log):
         return user_log.user.id
+
+    @staticmethod
+    def get_user_gender(user_log):
+        return user_log.user.gender
 
     @staticmethod
     def get_type(user_log):
@@ -110,6 +117,7 @@ class UserLogSerializer(ModelSerializer):
 
 class SettingsSerializer(ModelSerializer):
     privacy = ChoicesField(choices=User.PRIVACY_CHOICES, required=False)
+    gender = serializers.ChoiceField(choices=User.GENDER_CHOICES, required=False)
     steam_account_region = ChoicesField(choices=User.STEAM_ACCOUNT_REGION_CHOICES, required=False)
 
     def validate_backdrop_path(self, value):
@@ -126,7 +134,8 @@ class SettingsSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ('receive_games_releases', 'receive_movies_releases',
-                  'receive_episodes_releases', 'backdrop_path', 'privacy', 'use_image_proxy', 'steam_account_region')
+                  'receive_episodes_releases', 'backdrop_path', 'privacy', 'gender',
+                  'use_image_proxy', 'steam_account_region')
 
 
 class UserInfoSerializer(ModelSerializer):
@@ -138,7 +147,7 @@ class UserInfoSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'last_activity', 'backdrop_path', 'permissions')
+        fields = ('id', 'username', 'gender', 'last_activity', 'backdrop_path', 'permissions')
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -152,6 +161,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         token['username'] = user.username
         token['email'] = user.email
+        token['gender'] = user.gender
 
         return token
 

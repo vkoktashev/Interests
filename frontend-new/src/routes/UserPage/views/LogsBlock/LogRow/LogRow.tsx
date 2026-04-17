@@ -16,8 +16,9 @@ import {getUser} from '@steroidsjs/core/reducers/auth';
 function LogRow({ log, showUsername, onDeleteLog, className }) {
 	const bem = useBem('log-row');
 	const isOwnLog = useSelector(state => getUser(state)?.username === log.user);
+	const gender = normalizeGender(log.user_gender);
 
-	const actionText = translateActionType(log.action_type, log.action_result, log.type);
+	const actionText = translateActionType(log.action_type, log.action_result, log.type, gender);
 	const typeText = translateType(log.type, log.action_type);
 	const targetNode = nameToLink(log.target, log.type, log.target_id, bem);
 	const userNode = showUsername ? userToLink(log.user, log.user_id, bem) : null;
@@ -59,34 +60,46 @@ function intToHours(number) {
 	else return "часов";
 }
 
-function translateActionType(action, actionResult, logType) {
+function normalizeGender(gender) {
+	return gender === 'female' ? 'female' : 'male';
+}
+
+function getGenderText(gender, forms) {
+	return normalizeGender(gender) === 'female' ? forms.female : forms.male;
+}
+
+function translateActionType(action, actionResult, logType, gender) {
 	switch (action) {
 		case 'score':
 			switch (actionResult) {
 				case '0':
 					if (logType !== 'episode') {
-						return 'оценил(а)';
+						return getGenderText(gender, {male: 'оценил', female: 'оценила'});
 					}
-					return 'посмотрел(а)';
+					return getGenderText(gender, {male: 'посмотрел', female: 'посмотрела'});
 				case '-1':
-					return 'не смотрела(а)';
+					return getGenderText(gender, {male: 'не смотрел', female: 'не смотрела'});
 				default:
-					return "оценил(а)";
+					return getGenderText(gender, {male: 'оценил', female: 'оценила'});
 			}
 		case "status":
-			return "изменил(а) статус";
+			return getGenderText(gender, {male: 'изменил статус', female: 'изменила статус'});
 		case "review":
-			return "оставил(а) отзыв на";
+			return getGenderText(gender, {male: 'оставил отзыв на', female: 'оставила отзыв на'});
 		case "spent_time":
-			return "изменил(а) время прохождения";
+			return getGenderText(gender, {male: 'изменил время прохождения', female: 'изменила время прохождения'});
 		case "episodes": {
 			const count = Number(actionResult);
-			if (count > 0) return `посмотрел(а) ${count} серий`;
-			return `не смотрел(а) ${Math.abs(count)} серий`;
+			if (count > 0) {
+				return `${getGenderText(gender, {male: 'посмотрел', female: 'посмотрела'})} ${count} серий`;
+			}
+			return `${getGenderText(gender, {male: 'не смотрел', female: 'не смотрела'})} ${Math.abs(count)} серий`;
 		}
 		case "is_following":
-			if (actionResult === "True") return "подписан(а) на";
-			return "отписан(а) от";
+			if (actionResult === "True") {
+				return getGenderText(gender, {male: 'подписался на', female: 'подписалась на'});
+			}
+			return getGenderText(gender, {male: 'отписался от', female: 'отписалась от'});
 		default:
 			return action;
 	}

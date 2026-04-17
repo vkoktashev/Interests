@@ -6,7 +6,7 @@ import {showNotification} from '@steroidsjs/core/actions/notifications';
 import {openModal} from '@steroidsjs/core/actions/modal';
 import "./settings-page.scss";
 import {Loader} from '@steroidsjs/core/ui/layout';
-import {Button, CheckboxField, DropDownField, Form} from '@steroidsjs/core/ui/form';
+import {Button, CheckboxField, DropDownField, Form, RadioListField} from '@steroidsjs/core/ui/form';
 import {getFormValues} from '@steroidsjs/core/reducers/form';
 import GoogleSignInButton from '../../shared/auth/GoogleSignInButton';
 import LoginForm from '../../modals/LoginForm';
@@ -23,6 +23,17 @@ const privacyItems = [
 	{
 		id: 'Друзья',
 		label: 'Мои подписки',
+	},
+];
+
+const genderItems = [
+	{
+		id: 'male',
+		label: 'Мужской',
+	},
+	{
+		id: 'female',
+		label: 'Женский',
 	},
 ];
 
@@ -159,6 +170,30 @@ function SettingsPage() {
 						<div className={bem.element('grid')}>
 							<section className={bem.element('card')}>
 								<h3 className={bem.element('subheader')}>
+									Профиль
+								</h3>
+								<RadioListField
+									attribute='gender'
+									items={genderItems}
+									label={__('Пол')}
+									fieldLayoutClassName={bem.element('dropdown')}
+								/>
+								<DropDownField
+									attribute='privacy'
+									items={privacyItems}
+									label={__('Кто может видеть мой профиль')}
+									fieldLayoutClassName={bem.element('dropdown')}
+								/>
+								{
+									settings?.privacy !== formValues?.privacy && formValues?.privacy === 'Никто' && (
+										<div className={bem.element('warning')}>
+											{__('Внимание! Полное закрытие профиля удалит вас из подписок других пользователей!')}
+										</div>
+									)
+								}
+							</section>
+							<section className={bem.element('card')}>
+								<h3 className={bem.element('subheader')}>
 									Подписка на почтовые уведомления
 								</h3>
 								<div className={bem.element('option-list')}>
@@ -200,24 +235,6 @@ function SettingsPage() {
 									label={__('Регион Steam аккаунта')}
 									fieldLayoutClassName={bem.element('dropdown')}
 								/>
-							</section>
-							<section className={bem.element('card')}>
-								<h3 className={bem.element('subheader')}>
-									Приватность
-								</h3>
-								<DropDownField
-									attribute='privacy'
-									items={privacyItems}
-									label={__('Кто может видеть мой профиль')}
-									fieldLayoutClassName={bem.element('dropdown')}
-								/>
-								{
-									settings?.privacy !== formValues?.privacy && formValues?.privacy === 'Никто' && (
-										<div className={bem.element('warning')}>
-											{__('Внимание! Полное закрытие профиля удалит вас из подписок других пользователей!')}
-										</div>
-									)
-								}
 							</section>
 							<section className={bem.element('card')}>
 								<h3 className={bem.element('subheader')}>
