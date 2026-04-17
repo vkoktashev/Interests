@@ -9,8 +9,9 @@
     border-radius: 8px;
     background-color: transparent;
     color: $newText2;
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.4;
+    letter-spacing: 0.05px;
     transition: background-color 0.2s ease;
 
     &:hover {
@@ -45,8 +46,7 @@
     }
 
     &__action {
-        color: $newText3;
-        font-weight: 600;
+        color: $newText2;
     }
 
     &__type {
@@ -65,7 +65,10 @@
     }
 
     &__link {
+        font-size: inherit;
         font-weight: 600;
+        line-height: inherit;
+        letter-spacing: inherit;
         color: $newText3;
         text-decoration: none;
         border-bottom: 1px solid transparent;
@@ -73,6 +76,12 @@
         &:hover {
             border-bottom-color: rgba(241, 241, 251, 0.5);
         }
+    }
+
+    & &__link {
+        font-size: inherit;
+        line-height: inherit;
+        letter-spacing: inherit;
     }
     &__inline {
         display: inline-flex;
