@@ -7,3 +7,4 @@ frontend-new/.eslintcache
 frontend-new/node_modules
 frontend-new/build/
 ./frontend-new/.env
+frontend-dist/
