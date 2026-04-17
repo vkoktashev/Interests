@@ -36,10 +36,10 @@ function SeasonBlock({
 	}), [showID, seasonNumber]);
 	const {data: showSeason, isLoading: showSeasonIsLoading} = useFetch(showSeasonFetchConfig);
 
-	const userInfoFetchConfig = useMemo(() => ({
+	const userInfoFetchConfig = useMemo(() => user && ({
 		url: `/shows/show/${showID}/season/${seasonNumber}/user_info/`,
 		method: 'get',
-	}), [showID, seasonNumber]);
+	}), [showID, seasonNumber, user]);
 	const {data: showUserInfo, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
 
 	const totalEpisodesCount = showSeason?.episodes?.length || 0;

@@ -42,7 +42,7 @@ function SeasonPage() {
 	const userInfoFetchConfig = useMemo(() => showId && user && ({
 		url: `/shows/show/${showId}/season/${showSeasonId}/user_info/`,
 		method: 'get',
-	}), [showId, showSeasonId]);
+	}), [showId, showSeasonId, user]);
 	const {
 		data: userInfoResponse,
 		isLoading: userInfoIsLoading,
