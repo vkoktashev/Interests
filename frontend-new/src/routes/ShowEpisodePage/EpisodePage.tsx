@@ -38,7 +38,7 @@ function EpisodePage() {
 	const userInfoFetchConfig = useMemo(() => showId && user && ({
 		url: `/shows/show/${showId}/season/${showSeasonId}/episode/${showEpisodeId}/user_info/`,
 		method: 'get',
-	}), [showId, showSeasonId, showEpisodeId]);
+	}), [showId, showSeasonId, showEpisodeId, user]);
 	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
 
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);

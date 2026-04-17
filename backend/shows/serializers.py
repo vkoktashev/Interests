@@ -73,6 +73,7 @@ class ShowStatsSerializer(UserShowReadSerializer):
 class ShowLogSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField('get_username')
     user_id = serializers.SerializerMethodField('get_user_id')
+    user_gender = serializers.SerializerMethodField('get_user_gender')
     type = serializers.SerializerMethodField('get_type')
     target = serializers.SerializerMethodField('get_target')
     target_id = serializers.SerializerMethodField('get_target_id')
@@ -84,6 +85,10 @@ class ShowLogSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_user_id(show_log):
         return show_log.user.id
+
+    @staticmethod
+    def get_user_gender(show_log):
+        return show_log.user.gender
 
     @staticmethod
     def get_type(show_log):
@@ -105,6 +110,7 @@ class ShowLogSerializer(serializers.ModelSerializer):
 class SeasonLogSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField('get_username')
     user_id = serializers.SerializerMethodField('get_user_id')
+    user_gender = serializers.SerializerMethodField('get_user_gender')
     type = serializers.SerializerMethodField('get_type')
     target = serializers.SerializerMethodField('get_target')
     target_id = serializers.SerializerMethodField('get_target_id')
@@ -116,6 +122,10 @@ class SeasonLogSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_user_id(season_log):
         return season_log.user.id
+
+    @staticmethod
+    def get_user_gender(season_log):
+        return season_log.user.gender
 
     @staticmethod
     def get_type(season_log):
@@ -139,6 +149,7 @@ class SeasonLogSerializer(serializers.ModelSerializer):
 class EpisodeLogSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField('get_username')
     user_id = serializers.SerializerMethodField('get_user_id')
+    user_gender = serializers.SerializerMethodField('get_user_gender')
     type = serializers.SerializerMethodField('get_type')
     target = serializers.SerializerMethodField('get_target')
     target_id = serializers.SerializerMethodField('get_target_id')
@@ -150,6 +161,10 @@ class EpisodeLogSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_user_id(episode_log):
         return episode_log.user.id
+
+    @staticmethod
+    def get_user_gender(episode_log):
+        return episode_log.user.gender
 
     @staticmethod
     def get_type(episode_log):

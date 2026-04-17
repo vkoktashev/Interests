@@ -41,7 +41,7 @@ export function MoviePage() {
 	const userInfoFetchConfig = useMemo(() => movieId && user && ({
 		url: `/movies/movie/${movieId}/user_info/`,
 		method: 'get',
-	}), [movieId]);
+	}), [movieId, user]);
 	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);

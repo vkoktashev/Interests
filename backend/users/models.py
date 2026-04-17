@@ -16,11 +16,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     PRIVACY_NOBODY = 'nobody'
     PRIVACY_ALL = 'all'
     PRIVACY_FOLLOWED = 'followed'
+    GENDER_MALE = 'male'
+    GENDER_FEMALE = 'female'
 
     PRIVACY_CHOICES = (
         (PRIVACY_NOBODY, 'Никто'),
         (PRIVACY_ALL, 'Все'),
         (PRIVACY_FOLLOWED, 'Друзья'),
+    )
+    GENDER_CHOICES = (
+        (GENDER_MALE, 'Мужской'),
+        (GENDER_FEMALE, 'Женский'),
     )
 
     STEAM_ACCOUNT_REGION_RU = 'ru'
@@ -52,6 +58,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     receive_episodes_releases = models.BooleanField(default=False)
     backdrop_path = models.CharField(max_length=200, null=True)
     privacy = models.CharField(max_length=50, choices=PRIVACY_CHOICES, default=PRIVACY_ALL)
+    gender = models.CharField(max_length=16, choices=GENDER_CHOICES, default=GENDER_MALE)
     google_sub = models.CharField(max_length=255, null=True, blank=True, unique=True)
     google_email = models.EmailField(null=True, blank=True)
     use_image_proxy = models.BooleanField(default=True)

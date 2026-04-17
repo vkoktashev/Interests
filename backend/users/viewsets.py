@@ -299,7 +299,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         # followed_users
         followed_users = User.objects.filter(
             id__in=UserFollow.objects.filter(user=user, is_following=True).values('followed_user')) \
-            .values('id', 'username')
+            .values('id', 'username', 'gender')
 
         response_data = {'is_available': is_available, 'is_followed': user_is_followed,
                          'followed_users': followed_users,

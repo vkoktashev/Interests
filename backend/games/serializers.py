@@ -84,6 +84,7 @@ class FollowedUserGameSerializer(UserGameSerializer):
 class GameLogSerializer(ModelSerializer):
     user = SerializerMethodField('get_username')
     user_id = SerializerMethodField('get_user_id')
+    user_gender = SerializerMethodField('get_user_gender')
     type = SerializerMethodField('get_type')
     target = SerializerMethodField('get_target')
     target_id = SerializerMethodField('get_target_id')
@@ -95,6 +96,10 @@ class GameLogSerializer(ModelSerializer):
     @staticmethod
     def get_user_id(game_log):
         return game_log.user.id
+
+    @staticmethod
+    def get_user_gender(game_log):
+        return game_log.user.gender
 
     @staticmethod
     def get_type(game_log):

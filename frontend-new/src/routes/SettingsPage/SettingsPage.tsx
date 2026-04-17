@@ -1,13 +1,15 @@
-import React, {useState, useEffect, useMemo, useCallback} from 'react';
+import React, {useState, useMemo, useCallback} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
+import {openModal} from '@steroidsjs/core/actions/modal';
 import "./settings-page.scss";
 import {Loader} from '@steroidsjs/core/ui/layout';
-import {Button, CheckboxField, DropDownField, Form} from '@steroidsjs/core/ui/form';
+import {Button, CheckboxField, DropDownField, Form, RadioListField} from '@steroidsjs/core/ui/form';
 import {getFormValues} from '@steroidsjs/core/reducers/form';
 import GoogleSignInButton from '../../shared/auth/GoogleSignInButton';
+import LoginForm from '../../modals/LoginForm';
 
 const privacyItems = [
 	{
@@ -21,6 +23,17 @@ const privacyItems = [
 	{
 		id: 'Друзья',
 		label: 'Мои подписки',
+	},
+];
+
+const genderItems = [
+	{
+		id: 'male',
+		label: 'Мужской',
+	},
+	{
+		id: 'female',
+		label: 'Женский',
 	},
 ];
 
@@ -40,19 +53,20 @@ const SETTINGS_FORM_ID = 'settings_form_id';
 function SettingsPage() {
 	const bem = useBem('settings-page');
 	const user = useSelector(getUser);
+	const isAuthorized = Boolean(user?.id);
 	const formValues = useSelector(state => getFormValues(state, SETTINGS_FORM_ID));
 	const {http} = useComponents();
 	const dispatch = useDispatch();
 
-	const settingsFetchConfig = useMemo(() => ({
+	const settingsFetchConfig = useMemo(() => isAuthorized ? ({
 		url: '/users/user/user_settings/',
 		method: 'get',
-	}), []);
+	}) : null, [isAuthorized]);
 	const {data: settings, isLoading} = useFetch(settingsFetchConfig);
-	const googleLinkStatusFetchConfig = useMemo(() => ({
+	const googleLinkStatusFetchConfig = useMemo(() => isAuthorized ? ({
 		url: '/users/auth/google_link_status/',
 		method: 'get',
-	}), []);
+	}) : null, [isAuthorized]);
 	const {
 		data: googleLinkStatus,
 		fetch: fetchGoogleLinkStatus,
@@ -98,6 +112,32 @@ function SettingsPage() {
 		}
 	}, [dispatch, fetchGoogleLinkStatus, http]);
 
+	if (!isAuthorized) {
+		return (
+			<div className={bem.block()}>
+				<div className={bem.element('body')}>
+					<div className={bem.element('hero')}>
+						<div>
+							<h1 className={bem.element('header')}>
+								Настройки
+							</h1>
+							<p className={bem.element('subtitle')}>
+								Войдите в аккаунт, чтобы управлять уведомлениями, приватностью и связанными аккаунтами.
+							</p>
+						</div>
+					</div>
+					<div className={bem.element('actions')}>
+						<Button
+							className={bem.element('save-button')}
+							label={__('Войти')}
+							onClick={() => dispatch(openModal(LoginForm))}
+						/>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	if (isLoading || !settings) {
 		return <Loader />;
 	}
@@ -128,6 +168,30 @@ function SettingsPage() {
 						useRedux
 					>
 						<div className={bem.element('grid')}>
+							<section className={bem.element('card')}>
+								<h3 className={bem.element('subheader')}>
+									Профиль
+								</h3>
+								<RadioListField
+									attribute='gender'
+									items={genderItems}
+									label={__('Пол')}
+									fieldLayoutClassName={bem.element('dropdown')}
+								/>
+								<DropDownField
+									attribute='privacy'
+									items={privacyItems}
+									label={__('Кто может видеть мой профиль')}
+									fieldLayoutClassName={bem.element('dropdown')}
+								/>
+								{
+									settings?.privacy !== formValues?.privacy && formValues?.privacy === 'Никто' && (
+										<div className={bem.element('warning')}>
+											{__('Внимание! Полное закрытие профиля удалит вас из подписок других пользователей!')}
+										</div>
+									)
+								}
+							</section>
 							<section className={bem.element('card')}>
 								<h3 className={bem.element('subheader')}>
 									Подписка на почтовые уведомления
@@ -171,24 +235,6 @@ function SettingsPage() {
 									label={__('Регион Steam аккаунта')}
 									fieldLayoutClassName={bem.element('dropdown')}
 								/>
-							</section>
-							<section className={bem.element('card')}>
-								<h3 className={bem.element('subheader')}>
-									Приватность
-								</h3>
-								<DropDownField
-									attribute='privacy'
-									items={privacyItems}
-									label={__('Кто может видеть мой профиль')}
-									fieldLayoutClassName={bem.element('dropdown')}
-								/>
-								{
-									settings?.privacy !== formValues?.privacy && formValues?.privacy === 'Никто' && (
-										<div className={bem.element('warning')}>
-											{__('Внимание! Полное закрытие профиля удалит вас из подписок других пользователей!')}
-										</div>
-									)
-								}
 							</section>
 							<section className={bem.element('card')}>
 								<h3 className={bem.element('subheader')}>
@@ -246,7 +292,7 @@ function SettingsPage() {
 				</LoadingOverlay>
 				<div className={bem.element('footer')}>
 					<p className={bem.element('email')}>
-						Ваша почта {user.email}
+						Ваша почта {user?.email}
 					</p>
 				</div>
 			</div>

@@ -56,6 +56,7 @@ class FollowedUserMovieSerializer(UserMovieReadSerializer):
 class MovieLogSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField('get_username')
     user_id = serializers.SerializerMethodField('get_user_id')
+    user_gender = serializers.SerializerMethodField('get_user_gender')
     type = serializers.SerializerMethodField('get_type')
     target = serializers.SerializerMethodField('get_target')
     target_id = serializers.SerializerMethodField('get_target_id')
@@ -67,6 +68,10 @@ class MovieLogSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_user_id(movie_log):
         return movie_log.user.id
+
+    @staticmethod
+    def get_user_gender(movie_log):
+        return movie_log.user.gender
 
     @staticmethod
     def get_type(movie_log):
