@@ -6,10 +6,12 @@ import {getFormValues} from '@steroidsjs/core/reducers/form';
 import {Button, Form} from '@steroidsjs/core/ui/form';
 import {formReset, formSubmit} from '@steroidsjs/core/actions/form';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
+import {openModal} from '@steroidsjs/core/actions/modal';
 
 import ShowBlock from './views/ShowBlock';
 import {ISetEpisodesPayload, IUnwatchedShow} from './views/types';
 import pluralizeRu from './views/pluralizeRu';
+import LoginForm from '../../modals/LoginForm';
 import './unwatched-page.scss';
 
 const FORM_ID = 'unwatchedEpisodesForm';
@@ -20,15 +22,16 @@ function UnwatchedPage() {
 	const {http} = useComponents();
 	const [buttonIsLoading, setButtonLoading] = useState(false);
 	const user = useSelector(getUser);
+	const isAuthorized = Boolean(user?.id);
 	const formValues = useSelector(state => getFormValues(state, FORM_ID) || {});
 	const checkedKeys = useMemo(() => Object.entries(formValues).filter(([, value]) => Boolean(value)), [formValues]);
 	const checkedCount = checkedKeys.length;
 	const hasCheckedEpisodes = checkedCount > 0;
 
-	const fetchConfig = useMemo(() => (user ? {
+	const fetchConfig = useMemo(() => (isAuthorized ? {
 		url: '/shows/show/unwatched_episodes/',
 		method: 'get',
-	} : null), [user]);
+	} : null), [isAuthorized]);
 	const {data, isLoading, fetch} = useFetch(fetchConfig);
 	const unwatchedShows = (Array.isArray(data) ? data : []) as IUnwatchedShow[];
 
@@ -82,6 +85,29 @@ function UnwatchedPage() {
 		}
 	}, [dispatch, fetch, setEpisodesStatus]);
 
+	if (!isAuthorized) {
+		return (
+			<div className={bem.block()}>
+				<div className={bem.element('body')}>
+					<section className={bem.element('hero')}>
+						<div>
+							<h1 className={bem.element('title')}>Непросмотренные серии</h1>
+							<p className={bem.element('subtitle')}>
+								Войдите в аккаунт, чтобы видеть персональный список непросмотренных серий.
+							</p>
+						</div>
+					</section>
+
+					<div className={bem.element('empty')}>
+						<Button onClick={() => dispatch(openModal(LoginForm))}>
+							Войти
+						</Button>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className={bem.block()}>
 			<Form
@@ -126,7 +152,7 @@ function UnwatchedPage() {
 								<ShowBlock
 									show={show}
 									setShowEpisodeUserStatus={setEpisodesStatus}
-									loggedIn={!!user}
+									loggedIn={isAuthorized}
 									key={show.tmdb_id}
 									className={bem.element('show-block')}
 								/>
