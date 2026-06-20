@@ -106,6 +106,7 @@ export function MoviePage() {
 
 	const infoRows = useMemo(() => ([
 		{label: 'Дата релиза', value: movie?.release_date},
+		{label: 'Цифровой релиз', value: movie?.digital_release_date},
 		{label: 'Продолжительность', value: movie?.runtime ? `${movie.runtime} мин` : ''},
 		{label: 'Жанр', value: movie?.genres},
 		{label: 'Компания', value: movie?.production_companies},
@@ -114,6 +115,7 @@ export function MoviePage() {
 		{label: 'Режиссер', content: renderPersonLinks(movie?.directors_people)},
 	]).filter(item => Boolean(item.value || item.content)), [
 		movie?.release_date,
+		movie?.digital_release_date,
 		movie?.runtime,
 		movie?.genres,
 		movie?.production_companies,

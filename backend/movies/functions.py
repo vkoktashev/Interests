@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.core.cache import cache
 from django.utils import timezone
 import tmdbsimple as tmdb
@@ -7,7 +9,27 @@ from people.models import Person
 from utils.constants import TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, LANGUAGE, CACHE_TIMEOUT, YOUTUBE_PREFIX
 
 
-def get_movie_new_fields(tmdb_movie, tmdb_movie_videos=None):
+TMDB_DIGITAL_RELEASE_TYPE = 4
+
+
+def get_digital_release_date(tmdb_release_dates):
+    digital_release_dates = []
+
+    for country in (tmdb_release_dates or {}).get('results') or []:
+        for release in country.get('release_dates') or []:
+            if release.get('type') != TMDB_DIGITAL_RELEASE_TYPE or not release.get('release_date'):
+                continue
+
+            try:
+                release_date = datetime.fromisoformat(release['release_date'].replace('Z', '+00:00')).date()
+            except (TypeError, ValueError):
+                continue
+            digital_release_dates.append(release_date)
+
+    return min(digital_release_dates, default=None)
+
+
+def get_movie_new_fields(tmdb_movie, tmdb_movie_videos=None, tmdb_release_dates=None):
     parsed_videos = []
     if tmdb_movie_videos is not None:
         youtube_videos = [video for video in tmdb_movie_videos if video.get('site') == 'YouTube']
@@ -22,6 +44,7 @@ def get_movie_new_fields(tmdb_movie, tmdb_movie_videos=None):
         'tmdb_name': tmdb_movie.get('title'),
         'tmdb_runtime': tmdb_movie.get('runtime') if tmdb_movie.get('runtime') is not None else 0,
         'tmdb_release_date': tmdb_movie.get('release_date') if tmdb_movie.get('release_date') != "" else None,
+        'tmdb_digital_release_date': get_digital_release_date(tmdb_release_dates),
         'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_movie['backdrop_path']
         if tmdb_movie.get('backdrop_path') is not None else '',
         'tmdb_poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_movie['poster_path']
@@ -64,6 +87,15 @@ def get_tmdb_movie_videos(tmdb_id):
         tmdb_movie_videos = tmdb.Movies(tmdb_id).videos(language=LANGUAGE)['results']
         cache.set(key, tmdb_movie_videos, CACHE_TIMEOUT)
     return tmdb_movie_videos
+
+
+def get_tmdb_movie_release_dates(tmdb_id):
+    key = f'movie_{tmdb_id}_release_dates'
+    tmdb_release_dates = cache.get(key, None)
+    if tmdb_release_dates is None:
+        tmdb_release_dates = tmdb.Movies(tmdb_id).release_dates()
+        cache.set(key, tmdb_release_dates, CACHE_TIMEOUT)
+    return tmdb_release_dates
 
 
 def get_cast_crew(tmdb_id):

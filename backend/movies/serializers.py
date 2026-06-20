@@ -115,6 +115,7 @@ class MovieSerializer(serializers.ModelSerializer):
             'tmdb_name',
             'tmdb_runtime',
             'tmdb_release_date',
+            'tmdb_digital_release_date',
             'tmdb_backdrop_path',
             'tmdb_poster_path',
         )

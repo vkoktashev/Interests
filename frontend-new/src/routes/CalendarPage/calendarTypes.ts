@@ -9,6 +9,7 @@ export interface ICalendarMovie {
 	tmdb_id: number;
 	tmdb_name: string;
 	tmdb_poster_path?: string;
+	calendar_release_type?: 'theatrical' | 'digital';
 }
 
 export interface ICalendarEpisode {

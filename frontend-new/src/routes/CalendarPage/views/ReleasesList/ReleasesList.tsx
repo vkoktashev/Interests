@@ -156,7 +156,10 @@ function ReleasesList({entries}: IReleasesListProps) {
 							))}
 
 							{day.movies.map(movie => (
-								<div key={`movie-${movie.tmdb_id}`} className={bem.element('release-card')}>
+								<div
+									key={`movie-${movie.tmdb_id}-${movie.calendar_release_type || 'theatrical'}`}
+									className={bem.element('release-card')}
+								>
 									<ReleaseCover src={movie.tmdb_poster_path} alt={movie.tmdb_name} type='movie'/>
 									<div className={bem.element('release-body')}>
 										<div className={bem.element('release-title')}>
@@ -164,6 +167,9 @@ function ReleasesList({entries}: IReleasesListProps) {
 												{movie.tmdb_name}
 											</Link>
 										</div>
+										{movie.calendar_release_type === 'digital' ? (
+											<div className={bem.element('release-meta')}>Цифровой релиз</div>
+										) : null}
 									</div>
 								</div>
 							))}

@@ -10,7 +10,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from movies.functions import get_movie_new_fields, update_movie_genres, get_tmdb_movie, get_tmdb_movie_videos, \
-    get_cast_crew, update_movie_people, get_tmdb_movie_reviews, get_tmdb_movie_recommendations
+    get_cast_crew, get_tmdb_movie_release_dates, update_movie_people, get_tmdb_movie_reviews, \
+    get_tmdb_movie_recommendations
 from movies.models import UserMovie, Movie, MoviePerson
 from movies.serializers import UserMovieReadSerializer, FollowedUserMovieSerializer, UserMovieWriteSerializer
 from movies.tasks import refresh_movie_details
@@ -46,6 +47,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 tmdb_movie = get_tmdb_movie(tmdb_id)
                 tmdb_cast_crew = get_cast_crew(tmdb_id)
                 tmdb_movie_videos = get_tmdb_movie_videos(tmdb_id)
+                tmdb_release_dates = get_tmdb_movie_release_dates(tmdb_id)
             except HTTPError as e:
                 error_code = int(e.args[0].split(' ', 1)[0])
                 if error_code == 404:
@@ -54,7 +56,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             except (ConnectionError, Timeout):
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-            new_fields = get_movie_new_fields(tmdb_movie, tmdb_movie_videos)
+            new_fields = get_movie_new_fields(tmdb_movie, tmdb_movie_videos, tmdb_release_dates)
 
             movie, created = Movie.objects.filter().get_or_create(tmdb_id=tmdb_movie.get('id'),
                                                                   defaults=new_fields)
@@ -271,6 +273,7 @@ def parse_movie(movie, request):
         'overview': movie.tmdb_overview,
         'runtime': movie.tmdb_runtime,
         'release_date': format_date(movie.tmdb_release_date),
+        'digital_release_date': format_date(movie.tmdb_digital_release_date),
         'score': movie.tmdb_score,
         'tagline': movie.tmdb_tagline,
         'backdrop_path': get_proxy_url(request, movie.tmdb_backdrop_path),

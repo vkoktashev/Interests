@@ -12,6 +12,7 @@ class Movie(models.Model):
     tmdb_name = models.CharField(max_length=200)
     tmdb_runtime = models.IntegerField(validators=[MinValueValidator(0)])
     tmdb_release_date = models.DateField(null=True)
+    tmdb_digital_release_date = models.DateField(null=True)
     tmdb_backdrop_path = models.CharField(max_length=200, blank=True)
     tmdb_poster_path = models.CharField(max_length=200, blank=True)
     tmdb_overview = models.TextField(blank=True)
