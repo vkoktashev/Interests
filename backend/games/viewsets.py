@@ -35,6 +35,7 @@ from games.services.parser_service import parse_game_from_db, parse_game_prices_
 from games.services.refresh_service import GAME_DETAILS_REFRESH_INTERVAL, enqueue_game_refresh
 from games.tasks import refresh_hltb_beat_times_by_game_id
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer, GameSerializer
+from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
 from utils.constants import IGDB_UNAVAILABLE, ERROR, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, GAME_NOT_FOUND
 from utils.functions import get_page_size, update_fields_if_needed_async
@@ -375,11 +376,20 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 .exclude(status=UserGame.STATUS_NOT_PLAYED)
             serializer = FollowedUserGameSerializer(followed_user_games, many=True)
             friends_info = await serializer.adata
+
+            public_user_ids = get_public_non_followed_user_ids(request.user)
+            public_user_games = UserGame.objects.select_related('user') \
+                .filter(user__in=public_user_ids, game=game) \
+                .exclude(status=UserGame.STATUS_NOT_PLAYED) \
+                .order_by('-updated_at')[:20]
+            serializer = FollowedUserGameSerializer(public_user_games, many=True)
+            users_info = await serializer.adata
         except Game.DoesNotExist:
             user_info = None
             friends_info = ()
+            users_info = ()
 
-        return Response({'user_info': user_info, 'friends_info': friends_info})
+        return Response({'user_info': user_info, 'friends_info': friends_info, 'users_info': users_info})
 
     @swagger_auto_schema(
         operation_description="Update the user's game status or information for a specific game.",

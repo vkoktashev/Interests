@@ -17,6 +17,7 @@ from shows.models import Show, UserShow, Episode, UserEpisode, EpisodeLog, ShowL
 from shows.serializers import ShowSerializer, UserShowReadSerializer, FollowedUserShowSerializer, UserEpisodeSerializer, \
     SeasonSerializer, EpisodeSerializer, UserShowWriteSerializer
 from shows.tasks import update_shows, update_all_shows_task, refresh_show_details
+from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
 from utils.constants import ERROR, SHOW_NOT_FOUND, TMDB_UNAVAILABLE, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE, \
     TMDB_POSTER_PATH_PREFIX, TMDB_BACKDROP_PATH_PREFIX
@@ -147,11 +148,20 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 .filter(user__in=user_follow_query, show=show)
             serializer = FollowedUserShowSerializer(followed_user_shows, many=True)
             friends_info = serializer.data
+
+            public_user_ids = get_public_non_followed_user_ids(request.user)
+            public_user_shows = UserShow.objects.select_related('user') \
+                .exclude(status=UserShow.STATUS_NOT_WATCHED) \
+                .filter(user__in=public_user_ids, show=show) \
+                .order_by('-updated_at')[:20]
+            serializer = FollowedUserShowSerializer(public_user_shows, many=True)
+            users_info = serializer.data
         except (Show.DoesNotExist, ValueError):
             user_info = None
             friends_info = ()
+            users_info = ()
 
-        return Response({'user_info': user_info, 'friends_info': friends_info})
+        return Response({'user_info': user_info, 'friends_info': friends_info, 'users_info': users_info})
 
     @swagger_auto_schema(
         manual_parameters=[

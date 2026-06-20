@@ -19,6 +19,7 @@ from shows.serializers import UserSeasonSerializer, FollowedUserSeasonSerializer
     ShowSerializer
 from shows.show_viewsets import user_watched_show
 from shows.tasks import refresh_season_details
+from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
 from utils.constants import ERROR, SEASON_NOT_FOUND, TMDB_UNAVAILABLE, SHOW_NOT_FOUND
 from utils.functions import update_fields_if_needed
@@ -158,6 +159,17 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 .exclude(score=UserSeason._meta.get_field('score').get_default())
             serializer = FollowedUserSeasonSerializer(followed_user_seasons, many=True)
             friends_info = serializer.data
+
+            public_user_ids = get_public_non_followed_user_ids(request.user)
+            public_user_seasons = UserSeason.objects.select_related('user') \
+                .filter(user__in=public_user_ids, season=season) \
+                .exclude(id__in=UserSeason.objects
+                         .filter(season__tmdb_show__usershow__user=F('user_id'),
+                                 season__tmdb_show__usershow__status=UserShow.STATUS_NOT_WATCHED)) \
+                .exclude(score=UserSeason._meta.get_field('score').get_default()) \
+                .order_by('-id')[:20]
+            serializer = FollowedUserSeasonSerializer(public_user_seasons, many=True)
+            users_info = serializer.data
             user_episodes = UserEpisode.objects.select_related('episode').filter(user=request.user,
                                                                                  episode__tmdb_season=season)
             episodes_user_info = UserEpisodeInSeasonSerializer(user_episodes, many=True).data
@@ -165,11 +177,13 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             show = None
             user_info = None
             friends_info = ()
+            users_info = ()
             episodes_user_info = ()
 
         return Response({'user_info': user_info,
                          'episodes_user_info': episodes_user_info,
                          'friends_info': friends_info,
+                         'users_info': users_info,
                          'user_watched_show': user_watched_show(show, request.user)})
 
 

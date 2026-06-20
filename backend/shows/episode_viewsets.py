@@ -19,6 +19,7 @@ from shows.models import UserEpisode, Show, Season, Episode, UserShow, EpisodePe
 from shows.serializers import UserEpisodeSerializer, FollowedUserEpisodeSerializer, ShowSerializer
 from shows.show_viewsets import user_watched_show
 from shows.tasks import refresh_episode_details
+from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
 from utils.constants import ERROR, EPISODE_NOT_FOUND, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, EPISODE_NOT_WATCHED_SCORE
 from utils.functions import update_fields_if_needed
@@ -160,13 +161,26 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 .exclude(score=EPISODE_NOT_WATCHED_SCORE)
             serializer = FollowedUserEpisodeSerializer(followed_user_episodes, many=True)
             friends_info = serializer.data
+
+            public_user_ids = get_public_non_followed_user_ids(request.user)
+            public_user_episodes = UserEpisode.objects.select_related('user') \
+                .filter(user__in=public_user_ids, episode=episode) \
+                .exclude(id__in=UserEpisode.objects
+                         .filter(episode__tmdb_season__tmdb_show__usershow__user=F('user_id'),
+                                 episode__tmdb_season__tmdb_show__usershow__status=UserShow.STATUS_NOT_WATCHED)) \
+                .exclude(score=EPISODE_NOT_WATCHED_SCORE) \
+                .order_by('-id')[:20]
+            serializer = FollowedUserEpisodeSerializer(public_user_episodes, many=True)
+            users_info = serializer.data
         except (Show.DoesNotExist, Season.DoesNotExist, Episode.DoesNotExist, ValueError):
             show = None
             user_info = None
             friends_info = ()
+            users_info = ()
 
         return Response({'user_info': user_info,
                          'friends_info': friends_info,
+                         'users_info': users_info,
                          'user_watched_show': user_watched_show(show, request.user)})
 
 

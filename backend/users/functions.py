@@ -1,4 +1,4 @@
-from users.models import UserFollow
+from users.models import User, UserFollow
 
 
 def is_user_available(current_user, target_user):
@@ -15,3 +15,11 @@ def is_user_available(current_user, target_user):
             return False
 
     return True
+
+
+def get_public_non_followed_user_ids(user):
+    followed_user_ids = UserFollow.objects.filter(user=user, is_following=True).values('followed_user')
+    return User.objects.filter(privacy=User.PRIVACY_ALL) \
+        .exclude(id=user.id) \
+        .exclude(id__in=followed_user_ids) \
+        .values('id')

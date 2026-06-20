@@ -15,6 +15,7 @@ from movies.models import UserMovie, Movie, MoviePerson
 from movies.serializers import UserMovieReadSerializer, FollowedUserMovieSerializer, UserMovieWriteSerializer
 from movies.tasks import refresh_movie_details
 from proxy.functions import get_proxy_url
+from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
 from utils.constants import ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, TMDB_POSTER_PATH_PREFIX, TMDB_BACKDROP_PATH_PREFIX
 from utils.functions import update_fields_if_needed
@@ -89,11 +90,20 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 .exclude(status=UserMovie.STATUS_NOT_WATCHED)
             serializer = FollowedUserMovieSerializer(followed_user_movies, many=True)
             friends_info = serializer.data
+
+            public_user_ids = get_public_non_followed_user_ids(request.user)
+            public_user_movies = UserMovie.objects.select_related('user') \
+                .filter(user__in=public_user_ids, movie=movie) \
+                .exclude(status=UserMovie.STATUS_NOT_WATCHED) \
+                .order_by('-updated_at')[:20]
+            serializer = FollowedUserMovieSerializer(public_user_movies, many=True)
+            users_info = serializer.data
         except (Movie.DoesNotExist, ValueError):
             user_info = None
             friends_info = ()
+            users_info = ()
 
-        return Response({'user_info': user_info, 'friends_info': friends_info})
+        return Response({'user_info': user_info, 'friends_info': friends_info, 'users_info': users_info})
 
     @swagger_auto_schema(
         manual_parameters=[
