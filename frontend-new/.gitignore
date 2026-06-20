@@ -5,6 +5,7 @@
 .DS_Store
 Thumbs.db
 public/index-lang.json
+public/bundle-*-lang.json
 node_modules
 !.gitempty
 /.env

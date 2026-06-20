@@ -21,8 +21,10 @@ jobs:
       - name: Deploy via SSH
         run: |
           ssh -o StrictHostKeyChecking=no -p 1544 interests@your-interests.ru << 'EOF'
+          set -euo pipefail
           cd Interests
-          sudo git pull
+          sudo git fetch origin production
+          sudo git reset --hard origin/production
           sudo bash ./build-frontend.sh
           sudo docker compose down
           sudo docker compose build
