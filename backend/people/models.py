@@ -16,6 +16,11 @@ class Person(models.Model):
 
     class Meta:
         db_table = 'people_person'
+        verbose_name = 'человек'
+        verbose_name_plural = 'люди'
+
+    def __str__(self):
+        return self.name or f'Person #{self.tmdb_id}'
 
 
 class Developer(models.Model):
@@ -25,3 +30,8 @@ class Developer(models.Model):
 
     class Meta:
         db_table = 'people_developer'
+        verbose_name = 'игровая студия'
+        verbose_name_plural = 'игровые студии'
+
+    def __str__(self):
+        return self.name or f'Developer #{self.igdb_id}'

@@ -5,7 +5,8 @@ from django.db.models import Q
 from requests import HTTPError, ConnectionError
 
 from config.celery import app
-from shows.functions import get_show_new_fields, get_tmdb_show, get_tmdb_show_videos, sync_show_genres, \
+from shows.functions import clear_tmdb_episode_cache, clear_tmdb_season_cache, clear_tmdb_show_cache, \
+    get_show_new_fields, get_tmdb_show, get_tmdb_show_videos, sync_show_genres, \
     get_tmdb_show_credits, sync_show_people, upsert_season_from_tmdb, get_tmdb_season, sync_season_episodes, \
     get_tmdb_season_credits, sync_season_people, get_tmdb_episode, get_episode_new_fields, get_tmdb_episode_credits, \
     sync_episode_people
@@ -23,17 +24,23 @@ def setup_periodic_tasks(sender, **kwargs):
 
 
 @app.task
-def refresh_show_details(tmdb_id):
+def refresh_show_details(tmdb_id, force=False):
+    if force:
+        clear_tmdb_show_cache(tmdb_id)
     update_show_details(tmdb_id)
 
 
 @app.task
-def refresh_season_details(show_tmdb_id, season_number):
+def refresh_season_details(show_tmdb_id, season_number, force=False):
+    if force:
+        clear_tmdb_season_cache(show_tmdb_id, season_number)
     update_season_details(show_tmdb_id, season_number)
 
 
 @app.task
-def refresh_episode_details(show_tmdb_id, season_number, episode_number):
+def refresh_episode_details(show_tmdb_id, season_number, episode_number, force=False):
+    if force:
+        clear_tmdb_episode_cache(show_tmdb_id, season_number, episode_number)
     update_episode_details(show_tmdb_id, season_number, episode_number)
 
 

@@ -27,6 +27,13 @@ class Game(models.Model):
     hltb_name = models.CharField(max_length=200, blank=True)
     hltb_id = models.IntegerField(null=True, blank=True)
 
+    def __str__(self):
+        return self.igdb_name or self.hltb_name or self.igdb_slug or f'Game #{self.pk}'
+
+    class Meta:
+        verbose_name = 'игра'
+        verbose_name_plural = 'игры'
+
 
 class Genre(models.Model):
     igdb_id = models.IntegerField(primary_key=True)

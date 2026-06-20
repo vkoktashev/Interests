@@ -43,6 +43,13 @@ class Show(models.Model):
     tmdb_videos = models.JSONField(default=list, blank=True)
     tmdb_last_update = models.DateTimeField(null=True)
 
+    def __str__(self):
+        return self.tmdb_name or self.tmdb_original_name or f'Show #{self.tmdb_id}'
+
+    class Meta:
+        verbose_name = 'сериал'
+        verbose_name_plural = 'сериалы'
+
 
 class Season(models.Model):
     tmdb_id = models.IntegerField(unique=True)
@@ -56,6 +63,12 @@ class Season(models.Model):
 
     class Meta:
         unique_together = (("tmdb_season_number", "tmdb_show"),)
+        verbose_name = 'сезон'
+        verbose_name_plural = 'сезоны'
+
+    def __str__(self):
+        season_name = self.tmdb_name or f'Season {self.tmdb_season_number}'
+        return f'{self.tmdb_show} — {season_name}'
 
 
 class Episode(models.Model):
@@ -71,10 +84,18 @@ class Episode(models.Model):
     tmdb_last_update = models.DateTimeField(null=True)
 
     class Meta:
+        verbose_name = 'серия'
+        verbose_name_plural = 'серии'
         UniqueConstraint(
             name='unique_season_episode_number',
             fields=['tmdb_season", "tmdb_episode_number'],
             deferrable=Deferrable.DEFERRED,
+        )
+
+    def __str__(self):
+        return (
+            f'{self.tmdb_season.tmdb_show} — '
+            f'S{self.tmdb_season.tmdb_season_number}E{self.tmdb_episode_number} {self.tmdb_name}'
         )
 
 
@@ -99,6 +120,8 @@ class UserShow(UserScore):
 
     class Meta:
         unique_together = (("user", "show"),)
+        verbose_name = 'сериал пользователя'
+        verbose_name_plural = 'сериалы пользователей'
 
 
 class UserSeason(UserScore):
@@ -106,6 +129,8 @@ class UserSeason(UserScore):
 
     class Meta:
         unique_together = (("user", "season"),)
+        verbose_name = 'сезон пользователя'
+        verbose_name_plural = 'сезоны пользователей'
 
 
 class UserEpisode(UserScore):
@@ -114,6 +139,8 @@ class UserEpisode(UserScore):
 
     class Meta:
         unique_together = (("user", "episode"),)
+        verbose_name = 'серия пользователя'
+        verbose_name_plural = 'серии пользователей'
 
 
 class ShowLog(UserLogAbstract):
@@ -122,13 +149,25 @@ class ShowLog(UserLogAbstract):
 
     show = models.ForeignKey(Show, on_delete=models.PROTECT)
 
+    class Meta:
+        verbose_name = 'лог сериала'
+        verbose_name_plural = 'логи сериалов'
+
 
 class SeasonLog(UserLogAbstract):
     season = models.ForeignKey(Season, on_delete=models.PROTECT)
 
+    class Meta:
+        verbose_name = 'лог сезона'
+        verbose_name_plural = 'логи сезонов'
+
 
 class EpisodeLog(UserLogAbstract):
     episode = models.ForeignKey(Episode, on_delete=models.PROTECT)
+
+    class Meta:
+        verbose_name = 'лог серии'
+        verbose_name_plural = 'логи серий'
 
 
 class ShowGenre(models.Model):

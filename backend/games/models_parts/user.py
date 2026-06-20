@@ -28,7 +28,13 @@ class UserGame(UserScore):
 
     class Meta:
         unique_together = (("user", "game"),)
+        verbose_name = 'игра пользователя'
+        verbose_name_plural = 'игры пользователей'
 
 
 class GameLog(UserLogAbstract):
     game = models.ForeignKey(Game, on_delete=models.PROTECT)
+
+    class Meta:
+        verbose_name = 'лог игры'
+        verbose_name_plural = 'логи игр'

@@ -65,6 +65,15 @@ def get_tmdb_movie_key(tmdb_id):
     return f'movie_{tmdb_id}'
 
 
+def clear_tmdb_movie_cache(tmdb_id):
+    cache.delete_many((
+        get_tmdb_movie_key(tmdb_id),
+        f'movie_{tmdb_id}_videos',
+        f'movie_{tmdb_id}_release_dates',
+        f'movie_{tmdb_id}_cast_crew',
+    ))
+
+
 def get_tmdb_movie(tmdb_id):
     key = get_tmdb_movie_key(tmdb_id)
     tmdb_movie = cache.get(key, None)

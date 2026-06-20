@@ -77,6 +77,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.username
 
+    class Meta:
+        verbose_name = 'пользователь'
+        verbose_name_plural = 'пользователи'
+
 
 class UserScore(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -122,6 +126,10 @@ class UserLog(models.Model):
     action_type = models.CharField(max_length=30, choices=ACTION_TYPE_CHOICES)
     followed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_user')
 
+    class Meta:
+        verbose_name = 'лог подписки'
+        verbose_name_plural = 'логи подписок'
+
 
 class UserFollow(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user')
@@ -130,9 +138,15 @@ class UserFollow(models.Model):
 
     class Meta:
         unique_together = (("user", "followed_user"),)
+        verbose_name = 'подписка'
+        verbose_name_plural = 'подписки'
 
 
 class UserPasswordToken(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     reset_token = models.CharField(max_length=500, unique=True)
     is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'токен сброса пароля'
+        verbose_name_plural = 'токены сброса пароля'

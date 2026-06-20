@@ -27,6 +27,11 @@ class GameDeveloper(models.Model):
 
     class Meta:
         unique_together = (("game", "developer"),)
+        verbose_name = 'студия игры'
+        verbose_name_plural = 'студии игр'
+
+    def __str__(self):
+        return f'{self.game} — {self.developer}'
 
 
 class GameTrailer(models.Model):

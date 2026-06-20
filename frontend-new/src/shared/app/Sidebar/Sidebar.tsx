@@ -11,7 +11,7 @@ import {
 	FaRandom,
 	FaTimes,
 } from 'react-icons/fa';
-import {MdLiveTv, MdSettings} from 'react-icons/md';
+import {MdAdminPanelSettings, MdLiveTv, MdSettings} from 'react-icons/md';
 import {useBem, useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import {goToRoute} from '@steroidsjs/core/actions/router';
 import {openModal} from '@steroidsjs/core/actions/modal';
@@ -40,9 +40,11 @@ interface ISidebarAction {
 	onClick?: () => void;
 	href?: string;
 	accent?: boolean;
+	external?: boolean;
 }
 
 const MOBILE_BREAKPOINT = 540;
+const DJANGO_ADMIN_URL = 'https://django-admin.your-interests.ru/admin/';
 
 export function Sidebar(props: {className?: string}) {
 	const bem = useBem('sidebar');
@@ -112,6 +114,13 @@ export function Sidebar(props: {className?: string}) {
 		{key: 'unwatched', title: 'Непросмотренное', icon: <MdLiveTv />, onClick: () => openRoute(ROUTE_UNWATCHED), href: '/unwatched'},
 		{key: 'calendar', title: 'Календарь', icon: <FaCalendar />, onClick: () => openRoute(ROUTE_CALENDAR), href: '/calendar'},
 		{key: 'randomizer', title: 'Рандомайзер', icon: <FaRandom />, onClick: () => openRoute(ROUTE_RANDOMIZER), href: '/random'},
+		...(user?.is_staff ? [{
+			key: 'admin',
+			title: 'Админка',
+			icon: <MdAdminPanelSettings />,
+			href: DJANGO_ADMIN_URL,
+			external: true,
+		}] : []),
 		{key: 'settings', title: 'Настройки', icon: <MdSettings />, onClick: () => openRoute(ROUTE_SETTINGS), href: '/settings'},
 		{key: 'logout', title: 'Выход', icon: <FaSignOutAlt />, onClick: logoutAction, accent: true},
 	];
@@ -152,8 +161,10 @@ export function Sidebar(props: {className?: string}) {
 										key={action.key}
 										href={action.href}
 										className={bem.element('item', {accent: action.accent})}
+										target={action.external ? '_blank' : undefined}
+										rel={action.external ? 'noreferrer' : undefined}
 										onClick={(e) => {
-											if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+											if (!action.onClick || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
 												return;
 											}
 											e.preventDefault();

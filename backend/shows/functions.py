@@ -301,3 +301,25 @@ def get_tmdb_season_key(show_tmdb_id, season_number):
 
 def get_tmdb_episode_key(show_tmdb_id, season_number, episode_number):
     return f'show_{show_tmdb_id}_season_{season_number}_episode_{episode_number}'
+
+
+def clear_tmdb_show_cache(tmdb_id):
+    cache.delete_many((
+        get_tmdb_show_key(tmdb_id),
+        f'show_{tmdb_id}_videos',
+        f'show_{tmdb_id}_credits',
+    ))
+
+
+def clear_tmdb_season_cache(show_tmdb_id, season_number):
+    cache.delete_many((
+        get_tmdb_season_key(show_tmdb_id, season_number),
+        f'show_{show_tmdb_id}_season_{season_number}_credits',
+    ))
+
+
+def clear_tmdb_episode_cache(show_tmdb_id, season_number, episode_number):
+    cache.delete_many((
+        get_tmdb_episode_key(show_tmdb_id, season_number, episode_number),
+        f'show_{show_tmdb_id}_season_{season_number}_episode_{episode_number}_credits',
+    ))
