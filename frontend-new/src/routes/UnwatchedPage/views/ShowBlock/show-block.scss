@@ -9,12 +9,32 @@
     overflow: hidden;
 
     &__head {
+        position: relative;
         display: grid;
         grid-template-columns: 56px minmax(0, 1fr) auto;
         align-items: center;
         gap: 10px;
         padding: 10px 12px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: var(--watch-progress, 0%);
+            background: linear-gradient(
+                90deg,
+                rgba($newAccent2, 0.16),
+                rgba($newAccent1, 0.08)
+            );
+            transition: width 0.25s ease;
+            pointer-events: none;
+        }
+
+        > * {
+            position: relative;
+        }
     }
 
     &__poster {
