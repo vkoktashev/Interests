@@ -1,5 +1,6 @@
 import React from 'react';
 import {MdApps, MdLocalMovies, MdLiveTv, MdVideogameAsset} from 'react-icons/md';
+import {useBem} from '@steroidsjs/core/hooks';
 import {Link} from '@steroidsjs/core/ui/nav';
 import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW, ROUTE_SHOW_EPISODE} from '../../../index';
 import {ICalendarDay, TCalendarEntry} from '../../calendarTypes';
@@ -7,6 +8,45 @@ import './releases-list.scss';
 
 interface IReleasesListProps {
 	entries: TCalendarEntry[];
+}
+
+type TReleaseType = 'game' | 'movie' | 'episode';
+
+interface IReleaseCoverProps {
+	src?: string;
+	alt: string;
+	type: TReleaseType;
+}
+
+function getReleaseIcon(type: TReleaseType) {
+	if (type === 'game') {
+		return <MdVideogameAsset />;
+	}
+	if (type === 'movie') {
+		return <MdLocalMovies />;
+	}
+	return <MdLiveTv />;
+}
+
+function ReleaseCover({src, alt, type}: IReleaseCoverProps) {
+	const bem = useBem('releases-list');
+
+	if (src) {
+		return (
+			<img
+				className={bem.element('cover')}
+				src={src}
+				alt={alt}
+				loading='lazy'
+			/>
+		);
+	}
+
+	return (
+		<div className={bem.element('cover-placeholder', {[type]: true})} aria-hidden='true'>
+			{getReleaseIcon(type)}
+		</div>
+	);
 }
 
 function getDayType(day: ICalendarDay): 'game' | 'movie' | 'episode' | 'mixed' {
@@ -64,6 +104,8 @@ function getDaysLeftLabel(dateKey: string): string {
 }
 
 function ReleasesList({entries}: IReleasesListProps) {
+	const bem = useBem('releases-list');
+
 	if (entries.length === 0) {
 		return (
 			<div className='releases-list releases-list_empty'>
@@ -101,42 +143,64 @@ function ReleasesList({entries}: IReleasesListProps) {
 
 						<div className='releases-list__content'>
 							{day.games.map(game => (
-								<div key={`game-${game.id}`} className='releases-list__item'>
-									<span className='releases-list__badge releases-list__badge_game'>Игра</span>
-									<Link toRoute={ROUTE_GAME} toRouteParams={{gameId: game.slug}}>
-										{game.name}
-									</Link>
+								<div key={`game-${game.id}`} className={bem.element('release-card')}>
+									<ReleaseCover src={game.poster_path} alt={game.name} type='game'/>
+									<div className={bem.element('release-body')}>
+										<div className={bem.element('release-title')}>
+											<Link toRoute={ROUTE_GAME} toRouteParams={{gameId: game.slug}}>
+												{game.name}
+											</Link>
+										</div>
+									</div>
 								</div>
 							))}
 
 							{day.movies.map(movie => (
-								<div key={`movie-${movie.tmdb_id}`} className='releases-list__item'>
-									<span className='releases-list__badge releases-list__badge_movie'>Фильм</span>
-									<Link toRoute={ROUTE_MOVIE} toRouteParams={{movieId: movie.tmdb_id}}>
-										{movie.tmdb_name}
-									</Link>
+								<div
+									key={`movie-${movie.tmdb_id}-${movie.calendar_release_type || 'theatrical'}`}
+									className={bem.element('release-card')}
+								>
+									<ReleaseCover src={movie.tmdb_poster_path} alt={movie.tmdb_name} type='movie'/>
+									<div className={bem.element('release-body')}>
+										<div className={bem.element('release-title')}>
+											<Link toRoute={ROUTE_MOVIE} toRouteParams={{movieId: movie.tmdb_id}}>
+												{movie.tmdb_name}
+											</Link>
+										</div>
+										{movie.calendar_release_type === 'digital' ? (
+											<div className={bem.element('release-meta')}>Цифровой релиз</div>
+										) : null}
+									</div>
 								</div>
 							))}
 
 							{day.episodes.map(episode => (
-								<div key={`episode-${episode.tmdb_id}`} className='releases-list__item'>
-									<span className='releases-list__badge releases-list__badge_episode'>Серия</span>
-									<Link
-										toRoute={ROUTE_SHOW_EPISODE}
-										toRouteParams={{
-											showId: episode.tmdb_show.tmdb_id,
-											showSeasonId: episode.tmdb_season_number,
-											showEpisodeId: episode.tmdb_episode_number,
-										}}
-									>
-										S{episode.tmdb_season_number}E{episode.tmdb_episode_number}
-									</Link>
-									<span>
-										{' '}сериала{' '}
-										<Link toRoute={ROUTE_SHOW} toRouteParams={{showId: episode.tmdb_show.tmdb_id}}>
-											{episode.tmdb_show.tmdb_name}
-										</Link>
-									</span>
+								<div key={`episode-${episode.tmdb_id}`} className={bem.element('release-card')}>
+									<ReleaseCover
+										src={episode.tmdb_show.tmdb_poster_path}
+										alt={episode.tmdb_show.tmdb_name}
+										type='episode'
+									/>
+									<div className={bem.element('release-body')}>
+										<div className={bem.element('release-title')}>
+											<Link
+												toRoute={ROUTE_SHOW_EPISODE}
+												toRouteParams={{
+													showId: episode.tmdb_show.tmdb_id,
+													showSeasonId: episode.tmdb_season_number,
+													showEpisodeId: episode.tmdb_episode_number,
+												}}
+											>
+												S{episode.tmdb_season_number}E{episode.tmdb_episode_number}
+												{episode.tmdb_name ? ` · ${episode.tmdb_name}` : ''}
+											</Link>
+										</div>
+										<div className={bem.element('release-meta')}>
+											<Link toRoute={ROUTE_SHOW} toRouteParams={{showId: episode.tmdb_show.tmdb_id}}>
+												{episode.tmdb_show.tmdb_name}
+											</Link>
+										</div>
+									</div>
 								</div>
 							))}
 						</div>

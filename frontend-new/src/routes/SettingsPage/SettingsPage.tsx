@@ -206,6 +206,10 @@ function SettingsPage() {
 										label={__('релиз новых фильмов')}
 									/>
 									<CheckboxField
+										attribute="receive_movies_digital_releases"
+										label={__('цифровой релиз фильмов')}
+									/>
+									<CheckboxField
 										attribute="receive_episodes_releases"
 										label={__('релиз новых серий сериалов')}
 									/>

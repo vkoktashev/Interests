@@ -133,7 +133,7 @@ class SettingsSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('receive_games_releases', 'receive_movies_releases',
+        fields = ('receive_games_releases', 'receive_movies_releases', 'receive_movies_digital_releases',
                   'receive_episodes_releases', 'backdrop_path', 'privacy', 'gender',
                   'use_image_proxy', 'steam_account_region')
 

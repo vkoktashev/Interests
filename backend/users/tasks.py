@@ -30,13 +30,16 @@ def send_release_emails():
         release_date=F('igdb_release_date')
     ).filter(release_date=today_date)
     today_movies = Movie.objects.filter(tmdb_release_date=today_date)
+    today_digital_movies = Movie.objects.filter(tmdb_digital_release_date=today_date)
     today_episodes = Episode.objects.filter(tmdb_release_date=today_date)
 
     for user in User.objects.filter(Q(receive_episodes_releases=True) |
                                     Q(receive_games_releases=True) |
-                                    Q(receive_movies_releases=True)):
+                                    Q(receive_movies_releases=True) |
+                                    Q(receive_movies_digital_releases=True)):
         games_message = ''
         movies_message = ''
+        digital_movies_message = ''
         episodes_message = ''
         message_empty = True
 
@@ -64,6 +67,22 @@ def send_release_emails():
                     movies_message += f'<a href="http://{SITE_URL}/movie/{movie.tmdb_id}/">' \
                                       f'{movie.tmdb_name}</a><br>'
                 movies_message += '<br>'
+                message_empty = False
+
+        if user.receive_movies_digital_releases:
+            digital_movies = today_digital_movies.filter(usermovie__user=user) \
+                .exclude(usermovie__status=UserMovie.STATUS_NOT_WATCHED) \
+                .exclude(usermovie__status=UserMovie.STATUS_STOPPED)
+
+            if user.receive_movies_releases:
+                digital_movies = digital_movies.exclude(tmdb_release_date=today_date)
+
+            if digital_movies.exists():
+                digital_movies_message += 'Цифровые релизы фильмов:<br>'
+                for movie in digital_movies:
+                    digital_movies_message += f'<a href="http://{SITE_URL}/movie/{movie.tmdb_id}/">' \
+                                              f'{movie.tmdb_name}</a><br>'
+                digital_movies_message += '<br>'
                 message_empty = False
 
         if user.receive_episodes_releases:
@@ -102,7 +121,8 @@ def send_release_emails():
 
             mail_subject = 'Новые релизы!'
 
-            message = introduction_message + games_message + movies_message + episodes_message + preferences_message
+            message = introduction_message + games_message + movies_message + digital_movies_message + \
+                episodes_message + preferences_message
             email = EmailMultiAlternatives(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
             email.content_subtype = 'html'
             email.send()

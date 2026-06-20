@@ -45,6 +45,7 @@ export function MoviePage() {
 	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
+	const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 
 	const setMovieStatus = useCallback(async (payload) => {
 		http.send('PUT', `/movies/movie/${movieId}/`, payload).catch(e => {
@@ -105,6 +106,7 @@ export function MoviePage() {
 
 	const infoRows = useMemo(() => ([
 		{label: 'Дата релиза', value: movie?.release_date},
+		{label: 'Цифровой релиз', value: movie?.digital_release_date},
 		{label: 'Продолжительность', value: movie?.runtime ? `${movie.runtime} мин` : ''},
 		{label: 'Жанр', value: movie?.genres},
 		{label: 'Компания', value: movie?.production_companies},
@@ -113,6 +115,7 @@ export function MoviePage() {
 		{label: 'Режиссер', content: renderPersonLinks(movie?.directors_people)},
 	]).filter(item => Boolean(item.value || item.content)), [
 		movie?.release_date,
+		movie?.digital_release_date,
 		movie?.runtime,
 		movie?.genres,
 		movie?.production_companies,
@@ -275,12 +278,23 @@ export function MoviePage() {
 										<FriendsActivity info={friendsInfo} />
 									) : (
 										<div className={bem.element('friends-empty')}>
-											Никто из друзей ещё не смотрел этот фильм
-										</div>
-									)}
-								</section>
+										Никто из друзей ещё не смотрел этот фильм
+									</div>
+								)}
+							</section>
 
-								<TmdbReviewsBlock
+							<section className={bem.element('content-card', {friends: true})} hidden={!user}>
+								<h4 className={bem.element('friends-header')}>Отзывы пользователей</h4>
+								{usersInfo?.length > 0 ? (
+									<FriendsActivity info={usersInfo} />
+								) : (
+									<div className={bem.element('friends-empty')}>
+										Другие пользователи ещё не смотрели этот фильм
+									</div>
+								)}
+							</section>
+
+							<TmdbReviewsBlock
 									className={bem.element('content-card', {tmdbReviews: true})}
 									endpoint={`/movies/movie/${movieId}/tmdb_reviews/`}
 								/>

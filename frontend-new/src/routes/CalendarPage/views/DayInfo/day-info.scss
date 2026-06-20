@@ -38,6 +38,11 @@
         line-height: 1.3;
     }
 
+    &__item-note {
+        color: $newText2;
+        font-size: 0.82rem;
+    }
+
     &__link {
         color: $newAccent2;
         text-decoration: none;

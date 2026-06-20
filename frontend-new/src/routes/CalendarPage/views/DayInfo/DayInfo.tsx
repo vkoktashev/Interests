@@ -1,4 +1,5 @@
 import React, {useMemo} from 'react';
+import {useBem} from '@steroidsjs/core/hooks';
 import {Link} from '@steroidsjs/core/ui/nav';
 import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW, ROUTE_SHOW_EPISODE} from '../../../index';
 import {ICalendarDay} from '../../calendarTypes';
@@ -22,6 +23,7 @@ interface ICategory {
 }
 
 function DayInfo({day, date, compact}: IDayInfoProps) {
+	const bem = useBem('day-info');
 	const categories = useMemo<ICategory[]>(() => {
 		return [
 			{
@@ -44,15 +46,20 @@ function DayInfo({day, date, compact}: IDayInfoProps) {
 				key: 'movies',
 				title: 'Фильмы',
 				items: day.movies.map(movie => ({
-					id: movie.tmdb_id,
+					id: `${movie.tmdb_id}-${movie.calendar_release_type || 'theatrical'}`,
 					render: (
-						<Link
-							className='day-info__link'
-							toRoute={ROUTE_MOVIE}
-							toRouteParams={{movieId: movie.tmdb_id}}
-						>
-							{movie.tmdb_name}
-						</Link>
+						<span>
+							<Link
+								className='day-info__link'
+								toRoute={ROUTE_MOVIE}
+								toRouteParams={{movieId: movie.tmdb_id}}
+							>
+								{movie.tmdb_name}
+							</Link>
+							{movie.calendar_release_type === 'digital' ? (
+								<span className={bem.element('item-note')}> · цифровой релиз</span>
+							) : null}
+						</span>
 					),
 				})),
 			},
@@ -87,7 +94,7 @@ function DayInfo({day, date, compact}: IDayInfoProps) {
 				})),
 			},
 		];
-	}, [day]);
+	}, [bem, day]);
 
 	const hasItems = categories.some(category => category.items.length > 0);
 

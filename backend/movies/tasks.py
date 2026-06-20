@@ -6,7 +6,7 @@ from requests import HTTPError, ConnectionError, Timeout
 
 from config.celery import app
 from movies.functions import get_movie_new_fields, get_tmdb_movie, get_cast_crew, get_tmdb_movie_videos, \
-    update_movie_genres, update_movie_people
+    get_tmdb_movie_release_dates, update_movie_genres, update_movie_people
 from movies.models import Movie
 from utils.constants import UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
 from utils.functions import update_fields_if_needed
@@ -25,7 +25,9 @@ def update_upcoming_movies():
     today_date = datetime.today().date()
 
     movies = Movie.objects \
-        .filter(Q(tmdb_release_date__gte=today_date) | Q(tmdb_release_date=None))
+        .filter(Q(tmdb_release_date__gte=today_date) |
+                Q(tmdb_release_date=None) |
+                Q(tmdb_digital_release_date__gte=today_date))
 
     for movie in movies:
         update_movie_details(movie.tmdb_id, movie)
@@ -42,10 +44,11 @@ def update_movie_details(tmdb_id, movie_obj=None):
         tmdb_movie = get_tmdb_movie(tmdb_id)
         tmdb_cast_crew = get_cast_crew(tmdb_id)
         tmdb_movie_videos = get_tmdb_movie_videos(tmdb_id)
+        tmdb_release_dates = get_tmdb_movie_release_dates(tmdb_id)
     except (HTTPError, ConnectionError, Timeout):
         return
 
-    new_fields = get_movie_new_fields(tmdb_movie, tmdb_movie_videos)
+    new_fields = get_movie_new_fields(tmdb_movie, tmdb_movie_videos, tmdb_release_dates)
 
     if movie_obj is None:
         movie_obj, created = Movie.objects.get_or_create(tmdb_id=tmdb_id, defaults=new_fields)

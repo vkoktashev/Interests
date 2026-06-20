@@ -132,6 +132,12 @@ function StatisticsBlock({ userId }: IStatisticsBlockProps) {
 									<h4 className={bem.element('chart-title')}>Динамика по годам</h4>
 									<YearsChart chartData={category.stats?.years || []} />
 								</div>
+								{category.key === 'episodes' ? (
+									<div className={bem.element('chart-card')}>
+										<h4 className={bem.element('chart-title')}>Динамика сезонов по годам</h4>
+										<YearsChart chartData={category.stats?.season_years || []} />
+									</div>
+								) : null}
 							</div>
 						</section>
 					))}

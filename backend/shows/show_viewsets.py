@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.utils import timezone
 from utils.swagger import openapi, swagger_auto_schema
 from requests import HTTPError, ConnectionError, Timeout
@@ -17,6 +17,7 @@ from shows.models import Show, UserShow, Episode, UserEpisode, EpisodeLog, ShowL
 from shows.serializers import ShowSerializer, UserShowReadSerializer, FollowedUserShowSerializer, UserEpisodeSerializer, \
     SeasonSerializer, EpisodeSerializer, UserShowWriteSerializer
 from shows.tasks import update_shows, update_all_shows_task, refresh_show_details
+from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
 from utils.constants import ERROR, SHOW_NOT_FOUND, TMDB_UNAVAILABLE, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE, \
     TMDB_POSTER_PATH_PREFIX, TMDB_BACKDROP_PATH_PREFIX
@@ -147,11 +148,20 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 .filter(user__in=user_follow_query, show=show)
             serializer = FollowedUserShowSerializer(followed_user_shows, many=True)
             friends_info = serializer.data
+
+            public_user_ids = get_public_non_followed_user_ids(request.user)
+            public_user_shows = UserShow.objects.select_related('user') \
+                .exclude(status=UserShow.STATUS_NOT_WATCHED) \
+                .filter(user__in=public_user_ids, show=show) \
+                .order_by('-updated_at')[:20]
+            serializer = FollowedUserShowSerializer(public_user_shows, many=True)
+            users_info = serializer.data
         except (Show.DoesNotExist, ValueError):
             user_info = None
             friends_info = ()
+            users_info = ()
 
-        return Response({'user_info': user_info, 'friends_info': friends_info})
+        return Response({'user_info': user_info, 'friends_info': friends_info, 'users_info': users_info})
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -485,10 +495,26 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                                     (Q(usershow__status=UserShow.STATUS_WATCHING) |
                                      Q(usershow__status=UserShow.STATUS_WATCHED)))
 
-        episodes = Episode.objects.select_related('tmdb_season', 'tmdb_season__tmdb_show') \
+        available_episodes = Episode.objects \
             .filter(tmdb_season__tmdb_show__in=shows, tmdb_release_date__lte=today_date) \
+            .exclude(tmdb_season__tmdb_season_number=0)
+
+        progress_by_show_id = {
+            row['tmdb_season__tmdb_show_id']: row
+            for row in available_episodes
+            .values('tmdb_season__tmdb_show_id')
+            .annotate(
+                total_episodes_count=Count('id', distinct=True),
+                watched_episodes_count=Count(
+                    'id',
+                    filter=Q(userepisode__user=request.user, userepisode__score__gt=-1),
+                    distinct=True,
+                ),
+            )
+        }
+
+        episodes = available_episodes.select_related('tmdb_season', 'tmdb_season__tmdb_show') \
             .exclude(userepisode__in=UserEpisode.objects.filter(score__gt=-1, user=request.user)) \
-            .exclude(tmdb_season__tmdb_season_number=0) \
             .order_by('tmdb_season__tmdb_season_number', 'tmdb_episode_number')
 
         shows_info = []
@@ -509,7 +535,12 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             if not show_found:
                 show_data = ShowSerializer(show, context={'request': request}).data
-                show_data.update({'seasons': []})
+                progress = progress_by_show_id.get(show.id, {})
+                show_data.update({
+                    'seasons': [],
+                    'total_episodes_count': progress.get('total_episodes_count', 0),
+                    'watched_episodes_count': progress.get('watched_episodes_count', 0),
+                })
                 shows_info.append(show_data)
                 show_index = len(shows_info) - 1
 

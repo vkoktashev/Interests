@@ -1,5 +1,5 @@
 import React from "react";
-import { FaVk, FaDiscord } from "react-icons/fa";
+import { FaTelegramPlane, FaDiscord } from "react-icons/fa";
 import classnames from "classnames";
 import "./footer.scss";
 import {Icon} from '@steroidsjs/core/ui/content';
@@ -11,10 +11,10 @@ function Footer({ className }: any) {
 
 	const socialLinks = [
 		{
-			key: 'vk',
-			label: 'VK',
-			href: 'https://vk.com/interests_fun',
-			icon: <FaVk />,
+			key: 'telegram',
+			label: 'Telegram',
+			href: 'http://t.me/interests_news',
+			icon: <FaTelegramPlane />,
 		},
 		{
 			key: 'discord',

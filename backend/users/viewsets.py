@@ -44,6 +44,34 @@ def resolve_user_timezone(tz_name: Optional[str]):
         return timezone.get_current_timezone()
 
 
+def add_movie_calendar_releases(calendar_dict, movie, today_date):
+    movie_data = dict(MovieSerializer(movie).data)
+
+    if movie.tmdb_release_date and movie.tmdb_release_date >= today_date:
+        release_date_str = str(movie.tmdb_release_date)
+        release_date = calendar_dict[release_date_str]
+        if not release_date:
+            release_date = collections.defaultdict(list)
+            calendar_dict[release_date_str] = release_date
+        release_date['movies'].append({
+            **movie_data,
+            'calendar_release_type': 'theatrical',
+        })
+
+    if (movie.tmdb_digital_release_date and
+            movie.tmdb_digital_release_date >= today_date and
+            movie.tmdb_digital_release_date != movie.tmdb_release_date):
+        release_date_str = str(movie.tmdb_digital_release_date)
+        release_date = calendar_dict[release_date_str]
+        if not release_date:
+            release_date = collections.defaultdict(list)
+            calendar_dict[release_date_str] = release_date
+        release_date['movies'].append({
+            **movie_data,
+            'calendar_release_type': 'digital',
+        })
+
+
 class MyTokenRefreshView(TokenRefreshView):
     permission_classes = [AllowAny]
     serializer_class = MyTokenRefreshSerializer
@@ -152,19 +180,15 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         # movies
         movies = Movie.objects \
-            .filter(Q(usermovie__user=request.user, tmdb_release_date__gte=today_date) &
+            .filter(Q(usermovie__user=request.user) &
                     ~Q(usermovie__user=request.user, usermovie__status__in=[UserMovie.STATUS_NOT_WATCHED,
-                                                                            UserMovie.STATUS_STOPPED]))
+                                                                            UserMovie.STATUS_STOPPED])) \
+            .filter(Q(tmdb_release_date__gte=today_date) |
+                    Q(tmdb_digital_release_date__gte=today_date)) \
+            .distinct()
 
         for movie in movies:
-            tmdb_release_date_str = str(movie.tmdb_release_date)
-            release_date = calendar_dict[tmdb_release_date_str]
-
-            if not release_date:
-                release_date = collections.defaultdict(list)
-                calendar_dict[tmdb_release_date_str] = release_date
-
-            release_date['movies'].append(MovieSerializer(movie).data)
+            add_movie_calendar_releases(calendar_dict, movie, today_date)
 
         # episodes
         shows = Show.objects \
@@ -209,17 +233,13 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             release_date['games'].append(GameSerializer(game).data)
 
         # movies
-        movies = Movie.objects.filter(tmdb_release_date__gte=today_date)
+        movies = Movie.objects.filter(
+            Q(tmdb_release_date__gte=today_date) |
+            Q(tmdb_digital_release_date__gte=today_date)
+        )
 
         for movie in movies:
-            tmdb_release_date_str = str(movie.tmdb_release_date)
-            release_date = calendar_dict[tmdb_release_date_str]
-
-            if not release_date:
-                release_date = collections.defaultdict(list)
-                calendar_dict[tmdb_release_date_str] = release_date
-
-            release_date['movies'].append(MovieSerializer(movie).data)
+            add_movie_calendar_releases(calendar_dict, movie, today_date)
 
         # episodes
         shows = Show.objects.all()
@@ -600,16 +620,25 @@ def calculate_shows_stats(user: User) -> dict:
             .exclude(status__in=[UserShow.STATUS_NOT_WATCHED, UserShow.STATUS_GOING]) \
             .annotate(year=ExtractYear('show__tmdb_release_date')) \
             .values('year').annotate(count=Count('id')).exclude(year=None).order_by()
+
+        watched_seasons_by_years = watched_episodes \
+            .exclude(episode__tmdb_season__tmdb_season_number=0) \
+            .annotate(year=ExtractYear('episode__tmdb_season__tmdb_air_date')) \
+            .values('year') \
+            .annotate(count=Count('episode__tmdb_season', distinct=True)) \
+            .exclude(year=None).order_by()
     else:
         shows_total_spent_time = 0
         shows_genres_spent_time = []
         watched_shows_by_years = []
+        watched_seasons_by_years = []
 
     result = {'episodes': {
         'count': watched_episodes.count(),
         'total_spent_time': shows_total_spent_time,
         'genres': shows_genres_spent_time,
-        'years': watched_shows_by_years
+        'years': watched_shows_by_years,
+        'season_years': watched_seasons_by_years
     }}
     return result
 

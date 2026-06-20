@@ -55,6 +55,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_activity = models.DateTimeField(default=timezone.now)
     receive_games_releases = models.BooleanField(default=False)
     receive_movies_releases = models.BooleanField(default=False)
+    receive_movies_digital_releases = models.BooleanField(default=False)
     receive_episodes_releases = models.BooleanField(default=False)
     backdrop_path = models.CharField(max_length=200, null=True)
     privacy = models.CharField(max_length=50, choices=PRIVACY_CHOICES, default=PRIVACY_ALL)

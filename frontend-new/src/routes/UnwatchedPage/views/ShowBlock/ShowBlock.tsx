@@ -65,6 +65,11 @@ function ShowBlock({
 		() => show?.seasons?.reduce((sum, season) => sum + (season.episodes?.length || 0), 0) || 0,
 		[show],
 	);
+	const totalAvailableEpisodes = Number(show.total_episodes_count || 0);
+	const watchedEpisodes = Math.min(Number(show.watched_episodes_count || 0), totalAvailableEpisodes);
+	const progressPercent = totalAvailableEpisodes > 0
+		? Math.round(watchedEpisodes * 100 / totalAvailableEpisodes)
+		: 0;
 
 	useEffect(() => {
 		setOpenSeasons(
@@ -85,7 +90,11 @@ function ShowBlock({
 
 	return (
 		<article className={classnames(bem.block(), className)}>
-			<div className={bem.element('head')}>
+			<div
+				className={bem.element('head')}
+				style={{'--watch-progress': `${progressPercent}%`} as React.CSSProperties}
+				title={`Просмотрено ${watchedEpisodes} из ${totalAvailableEpisodes} серий`}
+			>
 				<div className={bem.element('poster')}>
 					{!posterLoadError && posterSrc ? (
 						<img

@@ -51,6 +51,7 @@ function SeasonPage() {
 
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
+	const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 	const userWatchedShow = useMemo(() => userInfoResponse?.user_watched_show, [userInfoResponse]);
 
 	const setShowSeasonStatus = useCallback(async (payload) => {
@@ -420,11 +421,22 @@ function SeasonPage() {
 										<FriendsActivity info={friendsInfo} />
 									) : (
 										<div className={bem.element('friends-empty')}>
-											Никто из друзей ещё не смотрел этот сезон
-										</div>
-									)}
-								</section>
-							</div>
+										Никто из друзей ещё не смотрел этот сезон
+									</div>
+								)}
+							</section>
+
+							<section className={bem.element('content-card', {friends: true})} hidden={!user}>
+								<h4 className={bem.element('friends-header')}>Отзывы пользователей</h4>
+								{usersInfo?.length > 0 ? (
+									<FriendsActivity info={usersInfo} />
+								) : (
+									<div className={bem.element('friends-empty')}>
+										Другие пользователи ещё не смотрели этот сезон
+									</div>
+								)}
+							</section>
+						</div>
 						</div>
 					</div>
 				</div>

@@ -48,6 +48,7 @@ function ShowPage(props) {
 
     const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
     const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
+    const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 
     const setShowStatus = useCallback(async (payload) => {
         http.send('PUT', `/shows/show/${showId}/`, payload).catch(e => {
@@ -309,6 +310,17 @@ function ShowPage(props) {
                                     ) : (
                                         <div className={bem.element('friends-empty')}>
                                             Никто из друзей ещё не смотрел этот сериал
+                                        </div>
+                                    )}
+                                </section>
+
+                                <section className={bem.element('content-card', {friends: true})} hidden={!user}>
+                                    <h4 className={bem.element('friends-header')}>Отзывы пользователей</h4>
+                                    {usersInfo?.length > 0 ? (
+                                        <FriendsActivity info={usersInfo} />
+                                    ) : (
+                                        <div className={bem.element('friends-empty')}>
+                                            Другие пользователи ещё не смотрели этот сериал
                                         </div>
                                     )}
                                 </section>
