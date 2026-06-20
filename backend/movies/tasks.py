@@ -5,7 +5,7 @@ from django.db.models import Q
 from requests import HTTPError, ConnectionError, Timeout
 
 from config.celery import app
-from movies.functions import get_movie_new_fields, get_tmdb_movie, get_cast_crew, get_tmdb_movie_videos, \
+from movies.functions import clear_tmdb_movie_cache, get_movie_new_fields, get_tmdb_movie, get_cast_crew, get_tmdb_movie_videos, \
     get_tmdb_movie_release_dates, update_movie_genres, update_movie_people
 from movies.models import Movie
 from utils.constants import UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
@@ -35,7 +35,9 @@ def update_upcoming_movies():
 
 
 @app.task
-def refresh_movie_details(tmdb_id):
+def refresh_movie_details(tmdb_id, force=False):
+    if force:
+        clear_tmdb_movie_cache(tmdb_id)
     update_movie_details(tmdb_id)
 
 

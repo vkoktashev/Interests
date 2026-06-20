@@ -147,7 +147,7 @@ class UserInfoSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'gender', 'last_activity', 'backdrop_path', 'permissions')
+        fields = ('id', 'username', 'gender', 'last_activity', 'backdrop_path', 'permissions', 'is_staff')
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):

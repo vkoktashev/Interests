@@ -1,0 +1,13 @@
+{% extends "admin/change_form.html" %}
+
+{% block object-tools-items %}
+    {{ block.super }}
+    {% if force_refresh_url %}
+        <li>
+            <form action="{{ force_refresh_url }}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="button">{{ force_refresh_label }}</button>
+            </form>
+        </li>
+    {% endif %}
+{% endblock %}

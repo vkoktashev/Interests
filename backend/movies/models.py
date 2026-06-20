@@ -22,6 +22,13 @@ class Movie(models.Model):
     tmdb_videos = models.JSONField(default=list, blank=True)
     tmdb_last_update = models.DateTimeField(null=True)
 
+    def __str__(self):
+        return self.tmdb_name or self.tmdb_original_name or f'Movie #{self.tmdb_id}'
+
+    class Meta:
+        verbose_name = 'фильм'
+        verbose_name_plural = 'фильмы'
+
 
 class UserMovie(UserScore):
     STATUS_WATCHED = 'watched'
@@ -42,10 +49,16 @@ class UserMovie(UserScore):
 
     class Meta:
         unique_together = (("user", "movie"),)
+        verbose_name = 'фильм пользователя'
+        verbose_name_plural = 'фильмы пользователей'
 
 
 class MovieLog(UserLogAbstract):
     movie = models.ForeignKey(Movie, on_delete=models.PROTECT)
+
+    class Meta:
+        verbose_name = 'лог фильма'
+        verbose_name_plural = 'логи фильмов'
 
 
 class Genre(models.Model):
