@@ -600,16 +600,25 @@ def calculate_shows_stats(user: User) -> dict:
             .exclude(status__in=[UserShow.STATUS_NOT_WATCHED, UserShow.STATUS_GOING]) \
             .annotate(year=ExtractYear('show__tmdb_release_date')) \
             .values('year').annotate(count=Count('id')).exclude(year=None).order_by()
+
+        watched_seasons_by_years = watched_episodes \
+            .exclude(episode__tmdb_season__tmdb_season_number=0) \
+            .annotate(year=ExtractYear('episode__tmdb_season__tmdb_air_date')) \
+            .values('year') \
+            .annotate(count=Count('episode__tmdb_season', distinct=True)) \
+            .exclude(year=None).order_by()
     else:
         shows_total_spent_time = 0
         shows_genres_spent_time = []
         watched_shows_by_years = []
+        watched_seasons_by_years = []
 
     result = {'episodes': {
         'count': watched_episodes.count(),
         'total_spent_time': shows_total_spent_time,
         'genres': shows_genres_spent_time,
-        'years': watched_shows_by_years
+        'years': watched_shows_by_years,
+        'season_years': watched_seasons_by_years
     }}
     return result
 

@@ -13,6 +13,7 @@ export interface ICategoryStats {
 	total_spent_time: number;
 	genres: IGenreStat[];
 	years: IYearStat[];
+	season_years?: IYearStat[];
 }
 
 export interface IPersonalityScoreStat {
