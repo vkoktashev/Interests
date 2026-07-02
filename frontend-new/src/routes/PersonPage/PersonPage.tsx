@@ -36,6 +36,7 @@ type TPersonShow = {
 const ROLE_LABELS: Record<string, string> = {
 	actor: 'Актер',
 	director: 'Режиссер',
+	creator: 'Создатель',
 };
 
 const STATUS_BADGE_MAP: Record<string, {label: string; tone: 'planned' | 'done' | 'progress' | 'stopped'}> = {
@@ -57,7 +58,7 @@ const SECONDARY_CHARACTER_PATTERNS = [
 ];
 
 function isPrimaryWork(item: TPersonMovie | TPersonShow): boolean {
-	if ((item.roles || []).includes('director')) {
+	if ((item.roles || []).some(role => role === 'director' || role === 'creator')) {
 		return true;
 	}
 

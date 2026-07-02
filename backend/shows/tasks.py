@@ -58,7 +58,7 @@ def update_show_details(show_tmdb_id):
         update_fields_if_needed(show, new_fields)
 
     sync_show_genres(show, tmdb_show)
-    sync_show_people(show, tmdb_show_credits)
+    sync_show_people(show, tmdb_show_credits, tmdb_show)
 
     for tmdb_season in tmdb_show.get('seasons') or []:
         upsert_season_from_tmdb(show, tmdb_season)

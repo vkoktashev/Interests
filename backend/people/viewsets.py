@@ -17,6 +17,13 @@ from utils.constants import ERROR, PERSON_NOT_FOUND, TMDB_UNAVAILABLE, TMDB_POST
 from utils.swagger import openapi, swagger_auto_schema
 
 PERSON_DETAILS_REFRESH_INTERVAL = timedelta(days=7)
+MOVIE_CREW_ROLES_BY_JOB = {
+    'Director': 'director',
+}
+SHOW_CREW_ROLES_BY_JOB = {
+    'Director': 'director',
+    'Creator': 'creator',
+}
 
 
 class PersonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -95,7 +102,8 @@ def parse_person(person, request):
     movies = parse_credits_items(
         request=request,
         cast_items=movies_credits.get('cast') or [],
-        crew_items=[item for item in (movies_credits.get('crew') or []) if item.get('job') == 'Director'],
+        crew_items=movies_credits.get('crew') or [],
+        crew_roles_by_job=MOVIE_CREW_ROLES_BY_JOB,
         name_key='title',
         original_name_key='original_title',
         release_date_key='release_date',
@@ -103,7 +111,8 @@ def parse_person(person, request):
     shows = parse_credits_items(
         request=request,
         cast_items=shows_credits.get('cast') or [],
-        crew_items=[item for item in (shows_credits.get('crew') or []) if item.get('job') == 'Director'],
+        crew_items=shows_credits.get('crew') or [],
+        crew_roles_by_job=SHOW_CREW_ROLES_BY_JOB,
         name_key='name',
         original_name_key='original_name',
         release_date_key='first_air_date',
@@ -137,7 +146,15 @@ def safe_get_credits(fetch_fn, tmdb_id):
         return {'cast': [], 'crew': []}
 
 
-def parse_credits_items(request, cast_items, crew_items, name_key, original_name_key, release_date_key):
+def parse_credits_items(
+        request,
+        cast_items,
+        crew_items,
+        crew_roles_by_job,
+        name_key,
+        original_name_key,
+        release_date_key
+):
     by_item = {}
 
     for item in cast_items:
@@ -159,13 +176,17 @@ def parse_credits_items(request, cast_items, crew_items, name_key, original_name
         }
 
     for item in crew_items:
+        role = crew_roles_by_job.get(item.get('job'))
+        if role is None:
+            continue
+
         tmdb_id = item.get('id')
         if not tmdb_id:
             continue
         existing = by_item.get(tmdb_id)
         if existing:
-            if 'director' not in existing['roles']:
-                existing['roles'].append('director')
+            if role not in existing['roles']:
+                existing['roles'].append(role)
             continue
         by_item[tmdb_id] = {
             'id': tmdb_id,
@@ -175,7 +196,7 @@ def parse_credits_items(request, cast_items, crew_items, name_key, original_name
             '_release_date_raw': item.get(release_date_key) or '',
             'release_date': format_date(item.get(release_date_key)),
             'score': int(item['vote_average'] * 10) if item.get('vote_average') else None,
-            'roles': ['director'],
+            'roles': [role],
             'character': '',
             'user_status': None,
             'user_score': None,

@@ -55,7 +55,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             if not created:
                 update_fields_if_needed(show, show_fields)
             sync_show_genres(show, tmdb_show)
-            sync_show_people(show, tmdb_show_credits)
+            sync_show_people(show, tmdb_show_credits, tmdb_show)
 
         season = Season.objects.filter(tmdb_show=show, tmdb_season_number=season_number).first()
         has_missing_episodes = season is not None and not season.episode_set.exists()

@@ -13,6 +13,7 @@ import ScoreBlock from '../../shared/ScoreBlock';
 import TmdbReviewsBlock from '../../shared/TmdbReviewsBlock/TmdbReviewsBlock';
 import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
 import MediaGalleryBlock from '../../shared/MediaGalleryBlock';
+import PersonLink from '../../shared/PersonLink';
 
 import "./show-page.scss";
 import LoginForm from '../../modals/LoginForm';
@@ -98,13 +99,15 @@ function ShowPage(props) {
     const infoRows = useMemo(() => ([
         {label: 'Жанр', value: show?.genres},
         {label: 'Компания', value: show?.production_companies},
+        {label: 'В ролях', content: renderPersonLinks(show?.cast_people)},
+        {label: 'Создатели', content: renderPersonLinks(show?.creators_people)},
         {label: 'Первая серия', value: show?.first_air_date},
         {label: 'Последняя серия', value: show?.last_air_date},
         {label: 'Длительность серии', value: show?.episode_run_time ? `${show.episode_run_time} мин` : ''},
         {label: 'Количество сезонов', value: show?.seasons_count},
         {label: 'Количество серий', value: show?.episodes_count},
         {label: 'Статус', value: show?.status},
-    ]).filter(item => item.value !== undefined && item.value !== null && item.value !== ''), [
+    ]).filter(item => Boolean(item.value || item.content)), [
         show?.genres,
         show?.production_companies,
         show?.first_air_date,
@@ -113,6 +116,8 @@ function ShowPage(props) {
         show?.seasons_count,
         show?.episodes_count,
         show?.status,
+        show?.cast_people,
+        show?.creators_people,
     ]);
 
     const overviewPlainText = useMemo(
@@ -169,7 +174,7 @@ function ShowPage(props) {
                                     {infoRows.map(item => (
                                         <div key={String(item.label)} className={bem.element('info-row')}>
                                             <span className={bem.element('info-row-label')}>{item.label}</span>
-                                            <span className={bem.element('info-row-value')}>{item.value}</span>
+                                            <span className={bem.element('info-row-value')}>{item.content || item.value}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -335,6 +340,23 @@ function ShowPage(props) {
 				</div>
 			</LoadingOverlay>
 		</div>
+	);
+}
+
+function renderPersonLinks(people?: Array<{id: number; name: string}>) {
+	if (!people?.length) {
+		return '';
+	}
+
+	return (
+		<span>
+			{people.map((person, index) => (
+				<React.Fragment key={person.id}>
+					{index > 0 && ', '}
+					<PersonLink id={person.id} name={person.name} />
+				</React.Fragment>
+			))}
+		</span>
 	);
 }
 

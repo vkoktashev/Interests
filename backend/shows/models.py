@@ -181,9 +181,11 @@ class ShowGenre(models.Model):
 class ShowPerson(models.Model):
     ROLE_ACTOR = 'actor'
     ROLE_DIRECTOR = 'director'
+    ROLE_CREATOR = 'creator'
     ROLE_CHOICES = (
         (ROLE_ACTOR, 'Actor'),
         (ROLE_DIRECTOR, 'Director'),
+        (ROLE_CREATOR, 'Creator'),
     )
 
     show = models.ForeignKey(Show, on_delete=models.CASCADE)

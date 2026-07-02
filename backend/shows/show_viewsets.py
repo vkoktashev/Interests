@@ -75,7 +75,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                     update_fields_if_needed(show, new_fields)
 
                 sync_show_genres(show, tmdb_show)
-                sync_show_people(show, tmdb_show_credits)
+                sync_show_people(show, tmdb_show_credits, tmdb_show)
 
                 for tmdb_season in tmdb_show.get('seasons') or []:
                     upsert_season_from_tmdb(show, tmdb_season)
@@ -609,10 +609,12 @@ def get_show_info(show_id, request):
 
 def parse_show(show, request):
     genres = [show_genre.genre.tmdb_name for show_genre in show.showgenre_set.select_related('genre').all()]
-    cast_names = [show_person.person.name for show_person in show.showperson_set.select_related('person')
-                  .filter(role=ShowPerson.ROLE_ACTOR).order_by('sort_order')]
-    director_names = [show_person.person.name for show_person in show.showperson_set.select_related('person')
-                      .filter(role=ShowPerson.ROLE_DIRECTOR).order_by('sort_order')]
+    cast_people = get_show_people(show, ShowPerson.ROLE_ACTOR)
+    directors_people = get_show_people(show, ShowPerson.ROLE_DIRECTOR)
+    creators_people = get_show_people(show, ShowPerson.ROLE_CREATOR)
+    cast_names = [item['name'] for item in cast_people]
+    director_names = [item['name'] for item in directors_people]
+    creator_names = [item['name'] for item in creators_people]
     seasons = [{
         'id': season.tmdb_id,
         'name': season.tmdb_name,
@@ -642,7 +644,26 @@ def parse_show(show, request):
         'seasons': seasons,
         'cast': ', '.join(cast_names),
         'directors': ', '.join(director_names),
+        'creators': ', '.join(creator_names),
+        'cast_people': cast_people,
+        'directors_people': directors_people,
+        'creators_people': creators_people,
     }
+
+
+def get_show_people(show, role):
+    show_people = (
+        show.showperson_set
+        .select_related('person')
+        .filter(role=role)
+        .order_by('sort_order')
+    )
+
+    return [{
+        'id': show_person.person.id,
+        'tmdb_id': show_person.person.tmdb_id,
+        'name': show_person.person.name,
+    } for show_person in show_people]
 
 
 def translate_tmdb_status(tmdb_status):
