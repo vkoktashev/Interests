@@ -31,3 +31,4 @@ class GeneralInitTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['user']['id'], user.id)
         self.assertEqual(response.json()['user']['username'], user.username)
+        self.assertEqual(response.json()['user']['email'], user.email)

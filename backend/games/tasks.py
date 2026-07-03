@@ -6,11 +6,9 @@ from celery.schedules import crontab
 from django.core.cache import cache
 from django.db.models import Q
 from django.utils import timezone
-from howlongtobeatpy import HowLongToBeat
-from requests.exceptions import ConnectionError
 
 from config.celery import app
-from games.functions import get_hltb_game_key
+from games.functions import is_game_released
 from games.integrations.hltb import get_game_release_year, get_hltb_game, extract_hltb_hours_map
 from games.integrations.igdb import (
     get_igdb_game_new_fields,
@@ -23,10 +21,16 @@ from games.integrations.igdb import (
     update_game_stores_from_igdb,
 )
 from games.models import Game, GameBeatTime
-from utils.constants import UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE, CACHE_TIMEOUT
+from utils.constants import UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
 from utils.functions import update_fields_if_needed
 
 logger = logging.getLogger(__name__)
+
+HLTB_REFRESH_LOCK_TIMEOUT_SECONDS = 60 * 2
+
+
+def get_hltb_refresh_lock_key(game_id):
+    return f'hltb_refresh_enqueued_{game_id}'
 
 
 @app.on_after_finalize.connect
@@ -86,8 +90,6 @@ def update_upcoming_games():
                 game.igdb_id,
                 game.igdb_slug,
             )
-
-        refresh_hltb_cache(game)
 
     logger.info(
         'update_upcoming_games: finish candidates=%s updated=%s skipped=%s failed=%s',
@@ -222,21 +224,23 @@ def _apply_igdb_game_details(game_obj, igdb_game, source):
     return 'updated', game_obj.id
 
 
-@app.task(ignore_result=True)
-def refresh_hltb_beat_times_by_game_id(game_id):
-    game_obj = Game.objects.filter(id=game_id).first()
-    if game_obj is None:
-        logger.warning('refresh_hltb_beat_times_by_game_id: game not found by id=%s', game_id)
-        return None
+def refresh_hltb_beat_times_for_game(game_obj, now=None):
     if not game_obj.igdb_name:
-        logger.warning('refresh_hltb_beat_times_by_game_id: empty game name for id=%s', game_id)
+        logger.warning('refresh_hltb_beat_times_for_game: empty game name for id=%s', game_obj.id)
         return None
+    if not is_game_released(game_obj):
+        logger.debug('refresh_hltb_beat_times_for_game: skipped game id=%s reason=unreleased', game_obj.id)
+        return None
+
+    if now is None:
+        now = timezone.now()
+    update_fields_if_needed(game_obj, {'hltb_last_attempt': now})
 
     release_year = get_game_release_year(game_obj.igdb_release_date)
     hltb_game = get_hltb_game(game_obj.igdb_name, release_year)
     if not hltb_game:
-        logger.debug('refresh_hltb_beat_times_by_game_id: no HLTB result for game id=%s', game_id)
-        return game_id
+        logger.debug('refresh_hltb_beat_times_for_game: no HLTB result for game id=%s', game_obj.id)
+        return None
 
     update_fields_if_needed(game_obj, {
         'hltb_name': hltb_game.get('game_name') or game_obj.hltb_name,
@@ -244,9 +248,12 @@ def refresh_hltb_beat_times_by_game_id(game_id):
     })
 
     hours_map = extract_hltb_hours_map(hltb_game)
+    if not hours_map:
+        logger.debug('refresh_hltb_beat_times_for_game: no valid HLTB hours for game id=%s', game_obj.id)
+        return None
+
     existing_entries = GameBeatTime.objects.filter(game=game_obj, source=GameBeatTime.SOURCE_HLTB)
     upserted_ids = []
-    now = timezone.now()
     for beat_type, hours_value in (
         (GameBeatTime.TYPE_MAIN, hours_map.get('main')),
         (GameBeatTime.TYPE_EXTRA, hours_map.get('extra')),
@@ -276,34 +283,21 @@ def refresh_hltb_beat_times_by_game_id(game_id):
     else:
         existing_entries.delete()
 
-    return game_id
+    return hours_map
 
 
-def refresh_hltb_cache(game):
-    game_name = game.igdb_name
-    if not game_name:
-        logger.debug('refresh_hltb_cache: skipped game id=%s reason=empty_name', game.id)
-        return 'skipped'
+@app.task(ignore_result=True)
+def refresh_hltb_beat_times_by_game_id(game_id):
+    game_obj = Game.objects.filter(id=game_id).first()
+    if game_obj is None:
+        logger.warning('refresh_hltb_beat_times_by_game_id: game not found by id=%s', game_id)
+        return None
 
-    hltb_key = get_hltb_game_key(game_name)
     try:
-        results = HowLongToBeat(1).search(game_name.replace('’', '\''), similarity_case_sensitive=False)
-        hltb_game = max(results, key=lambda element: element.similarity).__dict__
-        cache.set(hltb_key, hltb_game, CACHE_TIMEOUT)
-        logger.debug(
-            'refresh_hltb_cache: refreshed game id=%s name=%s hltb_id=%s',
-            game.id,
-            game_name,
-            hltb_game.get('game_id'),
-        )
-        return 'updated'
-    except (ValueError, TypeError):
-        cache.set(hltb_key, None, CACHE_TIMEOUT)
-        logger.debug('refresh_hltb_cache: skipped game id=%s name=%s reason=no_hltb_result', game.id, game_name)
-        return 'skipped'
-    except ConnectionError:
-        logger.warning('refresh_hltb_cache: failed game id=%s name=%s reason=connection_error', game.id, game_name)
-        return 'failed'
+        refresh_hltb_beat_times_for_game(game_obj)
+    finally:
+        cache.delete(get_hltb_refresh_lock_key(game_id))
+    return game_id
 
 
 def _get_changed_fields(obj, new_fields):

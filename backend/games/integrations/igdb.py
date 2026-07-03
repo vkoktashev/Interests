@@ -1,8 +1,9 @@
 import json
 import os
 import time
+from calendar import monthrange
 from decimal import Decimal
-from datetime import datetime
+from datetime import date, datetime
 from difflib import SequenceMatcher
 from typing import Any, Optional
 from urllib.parse import urlparse
@@ -84,6 +85,13 @@ IGDB_RELEASE_DATE_FORMAT_QUARTERS = {
     Game.IGDB_RELEASE_DATE_FORMAT_Q2: 'Q2',
     Game.IGDB_RELEASE_DATE_FORMAT_Q3: 'Q3',
     Game.IGDB_RELEASE_DATE_FORMAT_Q4: 'Q4',
+}
+
+IGDB_RELEASE_DATE_FORMAT_QUARTER_END_MONTHS = {
+    Game.IGDB_RELEASE_DATE_FORMAT_Q1: 3,
+    Game.IGDB_RELEASE_DATE_FORMAT_Q2: 6,
+    Game.IGDB_RELEASE_DATE_FORMAT_Q3: 9,
+    Game.IGDB_RELEASE_DATE_FORMAT_Q4: 12,
 }
 
 
@@ -327,6 +335,34 @@ def _format_igdb_release_date_display(
     return format_game_release_date(release_date_value) or ''
 
 
+def _normalize_igdb_release_date_value(
+    release_date: dict[str, Any] | None,
+    release_date_value,
+    date_format: int | None,
+):
+    release_year = _get_igdb_release_date_year(release_date, release_date_value)
+    if not release_year:
+        return release_date_value
+
+    if date_format == Game.IGDB_RELEASE_DATE_FORMAT_MONTH:
+        release_month = _get_igdb_release_date_month(release_date, release_date_value)
+        if not release_month:
+            return release_date_value
+        try:
+            return date(release_year, release_month, monthrange(release_year, release_month)[1])
+        except ValueError:
+            return release_date_value
+
+    if date_format == Game.IGDB_RELEASE_DATE_FORMAT_YEAR:
+        return date(release_year, 12, 31)
+
+    quarter_end_month = IGDB_RELEASE_DATE_FORMAT_QUARTER_END_MONTHS.get(date_format)
+    if quarter_end_month:
+        return date(release_year, quarter_end_month, monthrange(release_year, quarter_end_month)[1])
+
+    return release_date_value
+
+
 def _get_igdb_release_info(igdb_game: dict[str, Any]) -> dict[str, Any]:
     release_date = _select_igdb_release_date(igdb_game)
     date_format = _get_igdb_release_date_format(release_date)
@@ -334,6 +370,11 @@ def _get_igdb_release_info(igdb_game: dict[str, Any]) -> dict[str, Any]:
     if release_timestamp is None:
         release_timestamp = igdb_game.get('first_release_date')
     release_date_value = _parse_igdb_release_date(release_timestamp)
+    release_date_value = _normalize_igdb_release_date_value(
+        release_date,
+        release_date_value,
+        date_format,
+    )
     release_date_display = _format_igdb_release_date_display(
         release_date,
         release_date_value,

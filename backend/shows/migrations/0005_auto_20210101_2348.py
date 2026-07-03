@@ -10,6 +10,42 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL(
+            sql="""
+                DO $$
+                DECLARE
+                    constraint_record record;
+                BEGIN
+                    FOR constraint_record IN
+                        SELECT
+                            constraint_info.conrelid::regclass AS table_name,
+                            constraint_info.conname AS constraint_name
+                        FROM pg_constraint constraint_info
+                        WHERE constraint_info.contype = 'f'
+                            AND constraint_info.confrelid IN (
+                                'shows_show'::regclass,
+                                'shows_season'::regclass,
+                                'shows_episode'::regclass
+                            )
+                            AND EXISTS (
+                                SELECT 1
+                                FROM unnest(constraint_info.confkey) AS referenced_key(attnum)
+                                JOIN pg_attribute referenced_attribute
+                                    ON referenced_attribute.attrelid = constraint_info.confrelid
+                                    AND referenced_attribute.attnum = referenced_key.attnum
+                                WHERE referenced_attribute.attname = 'id'
+                            )
+                    LOOP
+                        EXECUTE format(
+                            'ALTER TABLE %s DROP CONSTRAINT %I',
+                            constraint_record.table_name,
+                            constraint_record.constraint_name
+                        );
+                    END LOOP;
+                END $$;
+            """,
+            reverse_sql=migrations.RunSQL.noop,
+        ),
         migrations.RemoveField(
             model_name='episode',
             name='id',
