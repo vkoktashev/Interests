@@ -112,67 +112,74 @@ def sync_season_episodes(season, tmdb_episodes):
     Episode.objects.filter(tmdb_season=season).exclude(id__in=new_ids).delete()
 
 
-def sync_people_links(parent_obj, tmdb_credits, relation_model, parent_field):
+def sync_people_links(parent_obj, tmdb_credits, relation_model, parent_field, extra_people_by_role=None):
     cast = (tmdb_credits.get('cast') or [])[:5]
     crew = tmdb_credits.get('crew') or []
     directors = [person for person in crew if person.get('job') == 'Director']
-
-    existing_links = relation_model.objects.filter(**{parent_field: parent_obj}).select_related('person')
     links_to_keep = []
 
-    for index, person_data in enumerate(cast):
-        person_id = person_data.get('id')
-        person_name = person_data.get('name')
-        if person_id is None or not person_name:
-            continue
+    links_to_keep.extend(sync_people_role_links(
+        parent_obj,
+        cast,
+        relation_model,
+        parent_field,
+        relation_model.ROLE_ACTOR
+    ))
+    links_to_keep.extend(sync_people_role_links(
+        parent_obj,
+        directors,
+        relation_model,
+        parent_field,
+        relation_model.ROLE_DIRECTOR
+    ))
 
-        person_obj, _ = Person.objects.get_or_create(tmdb_id=person_id, defaults={'name': person_name})
-        if person_obj.name != person_name:
-            person_obj.name = person_name
-            person_obj.save(update_fields=('name',))
-
-        relation_obj, _ = relation_model.objects.get_or_create(
-            **{
-                parent_field: parent_obj,
-                'person': person_obj,
-                'role': relation_model.ROLE_ACTOR
-            },
-            defaults={'sort_order': index}
+    for role, people in (extra_people_by_role or {}).items():
+        links_to_keep.extend(
+            sync_people_role_links(parent_obj, people, relation_model, parent_field, role)
         )
-        if relation_obj.sort_order != index:
-            relation_obj.sort_order = index
-            relation_obj.save(update_fields=('sort_order',))
-        links_to_keep.append(relation_obj.id)
-
-    for index, person_data in enumerate(directors):
-        person_id = person_data.get('id')
-        person_name = person_data.get('name')
-        if person_id is None or not person_name:
-            continue
-
-        person_obj, _ = Person.objects.get_or_create(tmdb_id=person_id, defaults={'name': person_name})
-        if person_obj.name != person_name:
-            person_obj.name = person_name
-            person_obj.save(update_fields=('name',))
-
-        relation_obj, _ = relation_model.objects.get_or_create(
-            **{
-                parent_field: parent_obj,
-                'person': person_obj,
-                'role': relation_model.ROLE_DIRECTOR
-            },
-            defaults={'sort_order': index}
-        )
-        if relation_obj.sort_order != index:
-            relation_obj.sort_order = index
-            relation_obj.save(update_fields=('sort_order',))
-        links_to_keep.append(relation_obj.id)
 
     relation_model.objects.filter(**{parent_field: parent_obj}).exclude(id__in=links_to_keep).delete()
 
 
-def sync_show_people(show, tmdb_show_credits):
-    sync_people_links(show, tmdb_show_credits, ShowPerson, 'show')
+def sync_people_role_links(parent_obj, people, relation_model, parent_field, role):
+    links_to_keep = []
+
+    for index, person_data in enumerate(people):
+        person_id = person_data.get('id')
+        person_name = person_data.get('name')
+        if person_id is None or not person_name:
+            continue
+
+        person_obj, _ = Person.objects.get_or_create(tmdb_id=person_id, defaults={'name': person_name})
+        if person_obj.name != person_name:
+            person_obj.name = person_name
+            person_obj.save(update_fields=('name',))
+
+        relation_obj, _ = relation_model.objects.get_or_create(
+            **{
+                parent_field: parent_obj,
+                'person': person_obj,
+                'role': role
+            },
+            defaults={'sort_order': index}
+        )
+        if relation_obj.sort_order != index:
+            relation_obj.sort_order = index
+            relation_obj.save(update_fields=('sort_order',))
+        links_to_keep.append(relation_obj.id)
+
+    return links_to_keep
+
+
+def sync_show_people(show, tmdb_show_credits, tmdb_show):
+    creators = (tmdb_show.get('created_by') or [])
+    sync_people_links(
+        show,
+        tmdb_show_credits,
+        ShowPerson,
+        'show',
+        {ShowPerson.ROLE_CREATOR: creators}
+    )
 
 
 def sync_season_people(season, tmdb_season_credits):

@@ -54,6 +54,7 @@ function NextReleaseCard({loggedIn}: INextReleaseCardProps) {
 					date,
 					kind: 'game',
 					title: game.name,
+					displayDate: game.release_date_display,
 					route: ROUTE_GAME,
 					params: {gameId: game.slug},
 				};
@@ -94,6 +95,9 @@ function NextReleaseCard({loggedIn}: INextReleaseCardProps) {
 	const calendarNote = loggedIn
 		? "Подписки и напоминания"
 		: "Войдите, чтобы увидеть персональные релизы";
+	const nextReleaseDateLabel = nextRelease?.kind === 'game' && nextRelease.displayDate
+		? nextRelease.displayDate
+		: (nextRelease ? formatDateLabel(nextRelease.date) : '');
 
 	return (
 		<div className={bem.element('card', {accent: true})}>
@@ -138,7 +142,7 @@ function NextReleaseCard({loggedIn}: INextReleaseCardProps) {
 			</p>
 			<p className={bem.element('card-note')}>
 				{nextRelease
-					? formatDateLabel(nextRelease.date)
+					? nextReleaseDateLabel
 					: (
 						<Link className={bem.element('link')} toRoute={ROUTE_CALENDAR}>
 							Открыть календарь

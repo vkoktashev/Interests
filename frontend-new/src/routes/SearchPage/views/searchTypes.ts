@@ -26,6 +26,7 @@ export interface IGameSearchItem {
 	category?: number;
 	background_image?: string;
 	released?: string;
+	released_display?: string;
 	genres?: Array<{name: string}>;
 	tags?: Array<{name: string}>;
 	platforms?: Array<{platform: {name: string}}>;

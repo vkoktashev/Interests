@@ -11,6 +11,7 @@ interface IGameHint {
 	slug: string;
 	name: string;
 	release_date?: string;
+	release_date_display?: string;
 }
 
 interface IMovieHint {
@@ -60,8 +61,9 @@ interface ISearchInputProps {
 const DEBOUNCE_MS = 260;
 const MOBILE_BREAKPOINT = 600;
 
-function getReleaseYear(date?: string) {
-	return date?.slice(0, 4) || '';
+function getReleaseYear(date?: string, displayDate?: string) {
+	const match = (displayDate || date || '').match(/\d{4}/);
+	return match?.[0] || '';
 }
 
 export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchInputProps) {
@@ -172,7 +174,7 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 			items: withIndexes(limitItems(hints.games).map(hint => ({
 				id: String(hint.slug),
 				title: hint.name,
-				year: getReleaseYear(hint.release_date),
+				year: getReleaseYear(hint.release_date, hint.release_date_display),
 				href: `/game/${hint.slug}`,
 				onClick: () => dispatch(goToRoute(ROUTE_GAME, {gameId: hint.slug})),
 			}))),

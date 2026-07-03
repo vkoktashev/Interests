@@ -164,8 +164,14 @@
   }
 
   &__time-to-beat {
-    padding-top: 2px;
+    padding: 12px 0;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  &__time-to-beat + &__resources {
+    padding-top: 0;
+    border-top: 0;
   }
 
   &__resources {

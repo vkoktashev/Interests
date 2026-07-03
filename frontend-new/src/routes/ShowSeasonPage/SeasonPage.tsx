@@ -81,10 +81,10 @@ function SeasonPage() {
 	}, [dispatch, showId, showSeasonId]);
 
 	useEffect(() => {
-		if (showSeason?.show?.tmdb_name) {
-			document.title = showSeason?.show?.tmdb_name + " - " + showSeason?.name;
+		if (showSeason?.show?.tmdb_name && showSeason?.name) {
+			document.title = `${showSeason.show.tmdb_name} - ${showSeason.name}`;
 		}
-	}, [showSeason]);
+	}, [showSeason?.name, showSeason?.show?.tmdb_name]);
 
 	useEffect(() => {
 		setOverviewExpanded(false);

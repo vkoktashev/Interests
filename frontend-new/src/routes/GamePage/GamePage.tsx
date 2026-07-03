@@ -49,7 +49,7 @@ export function GamePage() {
 		url: `/games/game/${gameId}/hltb/`,
 		method: 'get',
 	}), [gameId, shouldLoadHltb]);
-	const {data: gameTime} = useFetch(gameTimeFetchConfig);
+	const {data: gameTime, isLoading: isGameTimeLoading} = useFetch(gameTimeFetchConfig);
 
 	const gamePricesFetchConfig = useMemo(() => gameId && game && ({
 		url: `/games/game/${gameId}/prices/`,
@@ -88,8 +88,10 @@ export function GamePage() {
 	);
 
 	useEffect(() => {
-		document.title = game?.name || 'Interests';
-	}, [game]);
+		if (game?.name) {
+			document.title = game.name;
+		}
+	}, [game?.name]);
 
 	useEffect(() => {
 		setOverviewExpanded(false);
@@ -227,13 +229,14 @@ export function GamePage() {
 		}
 		return `https://django-admin.your-interests.ru/admin/games/game/${game.id}/change/`;
 	}, [game?.id]);
+	const releaseDateText = game?.release_date_display || game?.release_date;
 
 	const infoRows = useMemo(() => ([
 		{label: 'Разработчики', value: game?.developers},
-		{label: 'Дата релиза', value: game?.release_date},
+		{label: 'Дата релиза', value: releaseDateText},
 		{label: 'Жанр', value: game?.genres},
 		{label: 'Платформы', value: game?.platforms},
-	]).filter(item => Boolean(item.value)), [game?.developers, game?.release_date, game?.genres, game?.platforms]);
+	]).filter(item => Boolean(item.value)), [game?.developers, releaseDateText, game?.genres, game?.platforms]);
 
 	const overviewPlainText = useMemo(
 		() => String(game?.overview || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
@@ -294,7 +297,11 @@ export function GamePage() {
 									))}
 								</div>
 
-									<TimeToBeat hltbInfo={gameTime} className={bem.element('time-to-beat')} />
+								<TimeToBeat
+									hltbInfo={gameTime}
+									isLoading={isGameTimeLoading}
+									className={bem.element('time-to-beat')}
+								/>
 
 								<div className={bem.element('resources')}>
 									<div className={bem.element('resources-grid')}>

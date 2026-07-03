@@ -1,7 +1,11 @@
+export const IGDB_RELEASE_DATE_FORMAT_EXACT = 0;
+
 export interface ICalendarGame {
 	id: number;
 	name: string;
 	slug: string;
+	release_date_format?: number | null;
+	release_date_display?: string;
 	poster_path?: string;
 }
 
@@ -39,3 +43,11 @@ export const EMPTY_CALENDAR_DAY: ICalendarDay = {
 	movies: [],
 	episodes: [],
 };
+
+export function hasApproximateGameReleaseDate(game: ICalendarGame): boolean {
+	return Boolean(
+		game.release_date_display &&
+		typeof game.release_date_format === 'number' &&
+		game.release_date_format !== IGDB_RELEASE_DATE_FORMAT_EXACT
+	);
+}

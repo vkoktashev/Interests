@@ -8,6 +8,7 @@ interface IPickItem {
 	poster_path?: string;
 	backdrop_path?: string;
 	release_date?: string;
+	release_date_display?: string;
 	overview?: string;
 	genres?: string;
 	platforms?: string;
@@ -58,6 +59,7 @@ function CommunityPicksBlock() {
 			poster_path: item.poster_path,
 			backdrop_path: item.backdrop_path,
 			release_date: item.release_date,
+			release_date_display: item.release_date_display,
 			vote_average: item.average_user_score,
 			vote_count: item.ratings_count,
 			overview: item.overview,
