@@ -248,6 +248,10 @@ export function GamePage() {
 		() => Boolean(game?.trailers?.length || game?.screenshots?.length),
 		[game?.trailers?.length, game?.screenshots?.length],
 	);
+	const hasStores = useMemo(
+		() => Boolean(game?.stores?.length),
+		[game?.stores?.length],
+	);
 
 	if (!game) {
 		return <Loader />;
@@ -306,10 +310,12 @@ export function GamePage() {
 								<div className={bem.element('resources')}>
 									<div className={bem.element('resources-grid')}>
 										<div className={bem.element('resource-column')}>
-											<div className={bem.element('resource-group')}>
-												<div className={bem.element('resource-group-label')}>Магазины</div>
-												<GameStores stores={game.stores} showLabel={false} className={bem.element('stores')} />
-											</div>
+											{hasStores && (
+												<div className={bem.element('resource-group')}>
+													<div className={bem.element('resource-group-label')}>Магазины</div>
+													<GameStores stores={game.stores} showLabel={false} className={bem.element('stores')} />
+												</div>
+											)}
 											<GamePrices prices={gamePrices} isLoading={isPricesLoading} />
 										</div>
 
