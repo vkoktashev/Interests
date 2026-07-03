@@ -1,26 +1,12 @@
-from datetime import date
-
 from asgiref.sync import sync_to_async
 
+from games.functions import format_game_release_date, get_game_release_date_display
 from games.integrations.igm import get_igm_store_info, get_igm_store_price
 from games.integrations.plati import get_plati_store_info, get_plati_store_price
 from games.integrations.steam import get_steam_region_label, get_steam_store_price
 from games.models import Game, GameDeveloper, GameGenre, GameScreenshot, GameStore, GameTrailer
 from games.integrations.hltb import translate_hltb_time
 from utils.functions import objects_to_str
-
-
-def format_game_release_date(value):
-    if not value:
-        return None
-    if isinstance(value, date):
-        return value.strftime('%d.%m.%Y')
-    if isinstance(value, str):
-        try:
-            return date.fromisoformat(value).strftime('%d.%m.%Y')
-        except ValueError:
-            return None
-    return None
 
 
 def parse_game(source_game, hltb_game=None):
@@ -40,6 +26,10 @@ def parse_game(source_game, hltb_game=None):
         'poster': source_game.get('background_image'),
         'release_date': '.'.join(reversed(source_game['released'].split('-')))
         if source_game.get('released') is not None else None,
+        'release_date_display': source_game.get('released_display') or (
+            '.'.join(reversed(source_game['released'].split('-')))
+            if source_game.get('released') is not None else None
+        ),
         'stores': source_game.get('stores'),
     }
 
@@ -108,6 +98,7 @@ async def parse_game_from_db(game: Game, hltb_game=None):
             score_value = None
 
     release_date_value = game.igdb_release_date
+    release_date_display = get_game_release_date_display(game)
     new_game = {
         'id': game.id,
         'name': game.igdb_name,
@@ -120,6 +111,7 @@ async def parse_game_from_db(game: Game, hltb_game=None):
         'background': game.igdb_cover_url,
         'poster': game.igdb_cover_url,
         'release_date': format_game_release_date(release_date_value),
+        'release_date_display': release_date_display,
         'movies_count': game.igdb_videos_count if game.igdb_videos_count is not None else 0,
         'screenshots_count': game.igdb_screenshots_count if game.igdb_screenshots_count is not None else 0,
         'stores': stores,

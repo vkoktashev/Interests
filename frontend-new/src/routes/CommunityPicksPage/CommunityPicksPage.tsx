@@ -15,6 +15,7 @@ type IApiItem = {
 	poster_path?: string;
 	backdrop_path?: string;
 	release_date?: string;
+	release_date_display?: string;
 	overview?: string;
 	genres?: string;
 	platforms?: string;
@@ -159,6 +160,7 @@ function CommunityPicksPage() {
 									poster_path: item.poster_path,
 									backdrop_path: item.backdrop_path,
 									release_date: item.release_date,
+									release_date_display: item.release_date_display,
 									overview: item.overview,
 									genres: item.genres,
 									platforms: item.platforms,

@@ -3,7 +3,7 @@ import {MdApps, MdLocalMovies, MdLiveTv, MdVideogameAsset} from 'react-icons/md'
 import {useBem} from '@steroidsjs/core/hooks';
 import {Link} from '@steroidsjs/core/ui/nav';
 import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW, ROUTE_SHOW_EPISODE} from '../../../index';
-import {ICalendarDay, TCalendarEntry} from '../../calendarTypes';
+import {hasApproximateGameReleaseDate, ICalendarDay, TCalendarEntry} from '../../calendarTypes';
 import './releases-list.scss';
 
 interface IReleasesListProps {
@@ -151,6 +151,9 @@ function ReleasesList({entries}: IReleasesListProps) {
 												{game.name}
 											</Link>
 										</div>
+										{hasApproximateGameReleaseDate(game) ? (
+											<div className={bem.element('release-meta')}>{game.release_date_display}</div>
+										) : null}
 									</div>
 								</div>
 							))}

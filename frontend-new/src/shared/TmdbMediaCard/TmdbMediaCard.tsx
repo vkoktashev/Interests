@@ -10,6 +10,7 @@ export type ITmdbMediaCardItem = {
 	poster_path?: string;
 	backdrop_path?: string;
 	release_date?: string;
+	release_date_display?: string;
 	vote_average?: number;
 	vote_count?: number;
 	overview?: string;
@@ -79,6 +80,7 @@ export default function TmdbMediaCard(props: ITmdbMediaCardProps) {
 	].filter(Boolean) as ITmdbMediaCardDetail[];
 	const renderDetails = providedDetails.length > 0 ? providedDetails : fallbackDetails;
 	const hasDetails = renderDetails.length > 0 || Boolean(item.overview);
+	const releaseDateText = item.release_date_display || formatDate(item.release_date);
 
 	return (
 		<a className={[bem.block(), className].filter(Boolean).join(' ')} href={href}>
@@ -99,7 +101,7 @@ export default function TmdbMediaCard(props: ITmdbMediaCardProps) {
 				</div>
 
 				<div className={bem.element('meta')}>
-					<span>{formatDate(item.release_date)}</span>
+					<span>{releaseDateText}</span>
 					{!!item.vote_count && <span>{item.vote_count} оценок</span>}
 				</div>
 

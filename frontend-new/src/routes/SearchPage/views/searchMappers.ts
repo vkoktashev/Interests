@@ -49,7 +49,7 @@ export function mapGameToCard(game: IGameSearchItem): ISearchCardData {
 		kindLabel: typeof game.category === 'number' ? (GAME_CATEGORY_LABELS[game.category] || 'Игра') : undefined,
 		poster: game.background_image ? `url(${game.background_image})` : undefined,
 		layoutVariant: 'media',
-		releaseDate: formatDate(game.released),
+		releaseDate: game.released_display || formatDate(game.released),
 		genres: joinNames(game.genres, genre => genre.name),
 		tags: joinNames(game.tags, tag => tag.name, DETAILS_LIMIT),
 		platforms: joinNames(game.platforms, platform => platform.platform.name),

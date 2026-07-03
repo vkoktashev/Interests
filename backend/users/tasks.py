@@ -4,7 +4,6 @@ import logging
 from celery.schedules import crontab
 from django.core.mail import EmailMultiAlternatives
 from django.db.models import Q
-from django.db.models import F
 
 from config.celery import app
 from config.settings import EMAIL_HOST_USER
@@ -219,9 +218,11 @@ def get_actual_today_games(today_date):
         else:
             skipped_count += 1
 
-    actual_games = Game.objects.annotate(
-        release_date=F('igdb_release_date')
-    ).filter(id__in=candidate_ids, release_date__lte=today_date)
+    actual_games = Game.objects.filter(
+        id__in=candidate_ids,
+        igdb_release_date=today_date,
+        igdb_release_date_format=Game.IGDB_RELEASE_DATE_FORMAT_EXACT,
+    )
     logger.info(
         'send_release_emails: game refresh finish candidates=%s updated=%s skipped=%s failed=%s actual=%s',
         len(candidate_ids),
@@ -266,7 +267,14 @@ def refresh_game_for_release_email(game):
         return 'failed'
 
     if status == 'updated':
-        game.refresh_from_db(fields=('igdb_name', 'igdb_id', 'igdb_slug', 'igdb_release_date'))
+        game.refresh_from_db(fields=(
+            'igdb_name',
+            'igdb_id',
+            'igdb_slug',
+            'igdb_release_date',
+            'igdb_release_date_format',
+            'igdb_release_date_display',
+        ))
         logger.debug(
             'send_release_emails: refreshed game id=%s refreshed_game_id=%s name=%s igdb_id=%s igdb_slug=%s release_date=%s',
             game.id,

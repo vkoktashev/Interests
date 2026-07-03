@@ -6,7 +6,7 @@ from typing import Optional
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.core.paginator import Paginator
-from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, QuerySet, Case, When
+from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, QuerySet, Case, When, IntegerField
 from django.db.models.functions import ExtractYear, Coalesce
 from django.utils import timezone
 from rest_framework import status, mixins
@@ -70,6 +70,28 @@ def add_movie_calendar_releases(calendar_dict, movie, today_date):
             **movie_data,
             'calendar_release_type': 'digital',
         })
+
+
+def order_game_calendar_releases(games: QuerySet) -> QuerySet:
+    return games.annotate(
+        calendar_release_precision=Case(
+            When(igdb_release_date_format=Game.IGDB_RELEASE_DATE_FORMAT_EXACT, then=0),
+            When(igdb_release_date_format=Game.IGDB_RELEASE_DATE_FORMAT_MONTH, then=1),
+            When(
+                igdb_release_date_format__in=[
+                    Game.IGDB_RELEASE_DATE_FORMAT_Q1,
+                    Game.IGDB_RELEASE_DATE_FORMAT_Q2,
+                    Game.IGDB_RELEASE_DATE_FORMAT_Q3,
+                    Game.IGDB_RELEASE_DATE_FORMAT_Q4,
+                ],
+                then=2,
+            ),
+            When(igdb_release_date_format=Game.IGDB_RELEASE_DATE_FORMAT_YEAR, then=3),
+            When(igdb_release_date_format=Game.IGDB_RELEASE_DATE_FORMAT_TBD, then=4),
+            default=5,
+            output_field=IntegerField(),
+        )
+    ).order_by('release_date', 'calendar_release_precision', 'igdb_name', 'id')
 
 
 class MyTokenRefreshView(TokenRefreshView):
@@ -159,7 +181,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         calendar_dict = collections.defaultdict(dict)
 
         # games
-        games = Game.objects.annotate(
+        games = order_game_calendar_releases(Game.objects.annotate(
             release_date=F('igdb_release_date')
         ).filter(
             Q(usergame__user=request.user, release_date__gte=today_date) &
@@ -167,7 +189,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 usergame__user=request.user,
                 usergame__status__in=[UserGame.STATUS_NOT_PLAYED, UserGame.STATUS_STOPPED],
             )
-        )
+        ))
         for game in games:
             release_date_str = str(game.release_date)
             release_date = calendar_dict[release_date_str]
@@ -219,9 +241,9 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         calendar_dict = collections.defaultdict(dict)
 
         # games
-        games = Game.objects.annotate(
+        games = order_game_calendar_releases(Game.objects.annotate(
             release_date=F('igdb_release_date')
-        ).filter(release_date__gte=today_date)
+        ).filter(release_date__gte=today_date))
         for game in games:
             release_date_str = str(game.release_date)
             release_date = calendar_dict[release_date_str]

@@ -11,6 +11,7 @@ import requests
 from igdb.wrapper import IGDBWrapper
 from django.utils import timezone
 
+from games.functions import format_game_release_date
 from games.models import Game, GameBeatTime, GameDeveloper, GameGenre, GameScreenshot, GameStore, GameTrailer, Genre, Store
 from people.models import Developer
 from utils.functions import objects_to_str, update_fields_if_needed_async
@@ -46,6 +47,44 @@ IGDB_STORE_BY_HOST = (
     ('play.google.com', {'id': 12, 'slug': 'google-play', 'name': 'Google Play'}),
     ('itch.io', {'id': 15, 'slug': 'itch', 'name': 'itch.io'}),
 )
+
+IGDB_RELEASE_DATE_FIELDS = (
+    'release_dates.category,release_dates.date,release_dates.date_format,release_dates.human,'
+    'release_dates.y,release_dates.m,release_dates.d,release_dates.release_region'
+)
+
+IGDB_RUSSIAN_MONTHS = {
+    1: 'январь',
+    2: 'февраль',
+    3: 'март',
+    4: 'апрель',
+    5: 'май',
+    6: 'июнь',
+    7: 'июль',
+    8: 'август',
+    9: 'сентябрь',
+    10: 'октябрь',
+    11: 'ноябрь',
+    12: 'декабрь',
+}
+
+IGDB_RELEASE_DATE_FORMAT_PRECISION = {
+    Game.IGDB_RELEASE_DATE_FORMAT_EXACT: 0,
+    Game.IGDB_RELEASE_DATE_FORMAT_MONTH: 1,
+    Game.IGDB_RELEASE_DATE_FORMAT_Q1: 2,
+    Game.IGDB_RELEASE_DATE_FORMAT_Q2: 2,
+    Game.IGDB_RELEASE_DATE_FORMAT_Q3: 2,
+    Game.IGDB_RELEASE_DATE_FORMAT_Q4: 2,
+    Game.IGDB_RELEASE_DATE_FORMAT_YEAR: 3,
+    Game.IGDB_RELEASE_DATE_FORMAT_TBD: 4,
+}
+
+IGDB_RELEASE_DATE_FORMAT_QUARTERS = {
+    Game.IGDB_RELEASE_DATE_FORMAT_Q1: 'Q1',
+    Game.IGDB_RELEASE_DATE_FORMAT_Q2: 'Q2',
+    Game.IGDB_RELEASE_DATE_FORMAT_Q3: 'Q3',
+    Game.IGDB_RELEASE_DATE_FORMAT_Q4: 'Q4',
+}
 
 
 def _normalize(value: str | None) -> str:
@@ -111,7 +150,7 @@ def query_igdb_games(query: str, limit: int = 20) -> list[dict[str, Any]]:
     body = (
         f'search "{safe_query}"; '
         f'fields id,name,slug,category,game_type,first_release_date,aggregated_rating,total_rating,'
-        f'rating_count,cover.url,url; '
+        f'{IGDB_RELEASE_DATE_FIELDS},rating_count,cover.url,url; '
         f'limit {max(1, min(limit, 50))};'
     )
     raw = wrapper.api_request('games', body)
@@ -157,6 +196,157 @@ def _parse_igdb_release_date(value: Any):
         return None
 
 
+def _get_igdb_release_date_format(release_date: dict[str, Any] | None) -> int | None:
+    if not isinstance(release_date, dict):
+        return None
+
+    value = release_date.get('date_format')
+    if value is None:
+        value = release_date.get('category')
+    if isinstance(value, dict):
+        value = value.get('id') or value.get('value')
+    if isinstance(value, int):
+        return value
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _get_igdb_release_date_year(release_date: dict[str, Any] | None, release_date_value) -> int | None:
+    if isinstance(release_date, dict):
+        value = release_date.get('y')
+        if isinstance(value, int):
+            return value
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            pass
+    return release_date_value.year if release_date_value else None
+
+
+def _get_igdb_release_date_month(release_date: dict[str, Any] | None, release_date_value) -> int | None:
+    if isinstance(release_date, dict):
+        value = release_date.get('m')
+        if isinstance(value, int):
+            return value
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            pass
+    return release_date_value.month if release_date_value else None
+
+
+def _get_igdb_release_date_precision(release_date: dict[str, Any]) -> int:
+    date_format = _get_igdb_release_date_format(release_date)
+    return IGDB_RELEASE_DATE_FORMAT_PRECISION.get(date_format, 5)
+
+
+def _get_igdb_release_date_region_priority(release_date: dict[str, Any]) -> int:
+    return 0 if release_date.get('release_region') == 8 else 1
+
+
+def _get_igdb_release_date_timestamp(release_date: dict[str, Any]) -> int | None:
+    value = release_date.get('date')
+    return value if isinstance(value, int) else None
+
+
+def _select_igdb_release_date(igdb_game: dict[str, Any]) -> dict[str, Any] | None:
+    release_dates = [
+        item
+        for item in (igdb_game.get('release_dates') or [])
+        if isinstance(item, dict)
+    ]
+    if not release_dates:
+        return None
+
+    first_release_date = _parse_igdb_release_date(igdb_game.get('first_release_date'))
+    if first_release_date:
+        matching_release_dates = [
+            item
+            for item in release_dates
+            if _parse_igdb_release_date(_get_igdb_release_date_timestamp(item)) == first_release_date
+        ]
+        if matching_release_dates:
+            return sorted(
+                matching_release_dates,
+                key=lambda item: (
+                    _get_igdb_release_date_precision(item),
+                    _get_igdb_release_date_region_priority(item),
+                    item.get('id') or 0,
+                ),
+            )[0]
+
+    dated_release_dates = [
+        item
+        for item in release_dates
+        if _get_igdb_release_date_timestamp(item) is not None
+    ]
+    if dated_release_dates:
+        return sorted(
+            dated_release_dates,
+            key=lambda item: (
+                _get_igdb_release_date_timestamp(item),
+                _get_igdb_release_date_precision(item),
+                _get_igdb_release_date_region_priority(item),
+            ),
+        )[0]
+
+    for release_date in release_dates:
+        if _get_igdb_release_date_format(release_date) == Game.IGDB_RELEASE_DATE_FORMAT_TBD:
+            return release_date
+    return release_dates[0]
+
+
+def _format_igdb_release_date_display(
+    release_date: dict[str, Any] | None,
+    release_date_value,
+    date_format: int | None,
+) -> str:
+    if date_format == Game.IGDB_RELEASE_DATE_FORMAT_TBD:
+        return 'TBD'
+
+    release_year = _get_igdb_release_date_year(release_date, release_date_value)
+    release_month = _get_igdb_release_date_month(release_date, release_date_value)
+
+    if date_format == Game.IGDB_RELEASE_DATE_FORMAT_EXACT:
+        return format_game_release_date(release_date_value) or ''
+    if date_format == Game.IGDB_RELEASE_DATE_FORMAT_MONTH:
+        month_name = IGDB_RUSSIAN_MONTHS.get(release_month)
+        return f'{month_name} {release_year}' if month_name and release_year else ''
+    if date_format == Game.IGDB_RELEASE_DATE_FORMAT_YEAR:
+        return str(release_year) if release_year else ''
+    if date_format in IGDB_RELEASE_DATE_FORMAT_QUARTERS:
+        quarter = IGDB_RELEASE_DATE_FORMAT_QUARTERS[date_format]
+        return f'{quarter} {release_year}' if release_year else ''
+
+    if isinstance(release_date, dict):
+        human = release_date.get('human')
+        if human:
+            return str(human)
+    return format_game_release_date(release_date_value) or ''
+
+
+def _get_igdb_release_info(igdb_game: dict[str, Any]) -> dict[str, Any]:
+    release_date = _select_igdb_release_date(igdb_game)
+    date_format = _get_igdb_release_date_format(release_date)
+    release_timestamp = _get_igdb_release_date_timestamp(release_date) if release_date else None
+    if release_timestamp is None:
+        release_timestamp = igdb_game.get('first_release_date')
+    release_date_value = _parse_igdb_release_date(release_timestamp)
+    release_date_display = _format_igdb_release_date_display(
+        release_date,
+        release_date_value,
+        date_format,
+    )
+
+    return {
+        'date': release_date_value,
+        'date_format': date_format,
+        'date_display': release_date_display,
+    }
+
+
 def _resolve_store_info(url: str, category: int | None) -> dict[str, Any] | None:
     if not url:
         return None
@@ -191,7 +381,8 @@ def get_game_search_results(query: str, page: int, page_size: int) -> list[dict[
     safe_query = (query or '').replace('\\', '\\\\').replace('"', '\\"')
     body = (
         f'search "{safe_query}"; '
-        f'fields id,name,slug,category,game_type,first_release_date,cover.url,genres.name,platforms.name,keywords.name; '
+        f'fields id,name,slug,category,game_type,first_release_date,{IGDB_RELEASE_DATE_FIELDS},'
+        f'cover.url,genres.name,platforms.name,keywords.name; '
         f'limit {safe_page_size}; '
         f'offset {offset};'
     )
@@ -229,6 +420,7 @@ def get_game_search_results(query: str, page: int, page_size: int) -> list[dict[
         game_category = game.get('category')
         if game_category is None:
             game_category = game.get('game_type')
+        release_info = _get_igdb_release_info(game)
         platforms = [{'platform': {'name': (item or {}).get('name', '')}} for item in (game.get('platforms') or [])]
         genres = [{'name': (item or {}).get('name', '')} for item in (game.get('genres') or [])]
         tags = [{'name': (item or {}).get('name', '')} for item in (game.get('keywords') or [])]
@@ -238,7 +430,9 @@ def get_game_search_results(query: str, page: int, page_size: int) -> list[dict[
             'slug': game.get('slug') or '',
             'category': game_category,
             'background_image': _format_igdb_cover_url((game.get('cover') or {}).get('url')),
-            'released': _format_igdb_release_date(game.get('first_release_date')),
+            'released': release_info['date'].isoformat() if release_info['date'] else None,
+            'released_display': release_info['date_display'],
+            'released_format': release_info['date_format'],
             'genres': genres,
             'tags': tags,
             'platforms': platforms,
@@ -250,7 +444,7 @@ def query_igdb_game_by_id(igdb_id: int) -> Optional[dict[str, Any]]:
     wrapper = get_igdb_wrapper()
     body = (
         f'fields id,name,slug,category,first_release_date,summary,rating,rating_count,aggregated_rating,'
-        f'aggregated_rating_count,cover.url,url,platforms.name,genres.id,genres.name,genres.slug,'
+        f'aggregated_rating_count,{IGDB_RELEASE_DATE_FIELDS},cover.url,url,platforms.name,genres.id,genres.name,genres.slug,'
         f'involved_companies.developer,involved_companies.company.id,involved_companies.company.name,'
         f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height,'
         f'websites.id,websites.url,websites.category; '
@@ -269,7 +463,7 @@ def query_igdb_game_by_slug(slug: str) -> Optional[dict[str, Any]]:
     safe_slug = (slug or '').replace('\\', '\\\\').replace('"', '\\"')
     body = (
         f'fields id,name,slug,category,first_release_date,summary,rating,rating_count,aggregated_rating,'
-        f'aggregated_rating_count,cover.url,url,platforms.name,genres.id,genres.name,genres.slug,'
+        f'aggregated_rating_count,{IGDB_RELEASE_DATE_FIELDS},cover.url,url,platforms.name,genres.id,genres.name,genres.slug,'
         f'involved_companies.developer,involved_companies.company.id,involved_companies.company.name,'
         f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height,'
         f'websites.id,websites.url,websites.category; '
@@ -313,7 +507,8 @@ def resolve_igdb_game_details(game: Optional[Game], requested_slug: str) -> Opti
 
 def get_igdb_game_new_fields(igdb_game: dict[str, Any]) -> dict[str, Any]:
     platforms = objects_to_str(igdb_game.get('platforms') or [])
-    first_release_date = _parse_igdb_release_date(igdb_game.get('first_release_date'))
+    release_info = _get_igdb_release_info(igdb_game)
+    first_release_date = release_info['date']
     release_year = first_release_date.year if first_release_date else None
     videos_count = len(igdb_game.get('videos') or [])
     screenshots_count = len(igdb_game.get('screenshots') or [])
@@ -324,6 +519,8 @@ def get_igdb_game_new_fields(igdb_game: dict[str, Any]) -> dict[str, Any]:
         'igdb_slug': igdb_game.get('slug') or '',
         'igdb_year': release_year,
         'igdb_release_date': first_release_date,
+        'igdb_release_date_format': release_info['date_format'],
+        'igdb_release_date_display': release_info['date_display'] or '',
         'igdb_summary': igdb_game.get('summary') or '',
         'igdb_rating': igdb_game.get('rating'),
         'igdb_rating_count': igdb_game.get('rating_count'),
