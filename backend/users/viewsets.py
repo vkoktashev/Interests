@@ -322,7 +322,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 Count(
                     'show__season__episode__userepisode__id',
                     filter=Q(show__season__episode__userepisode__user=user) &
-                           ~Q(show__season__episode__userepisode__score=-1),
+                           ~Q(show__season__episode__userepisode__score=-1) &
+                           ~Q(show__season__tmdb_season_number=0),
                     distinct=True,
                 ),
                 0,
