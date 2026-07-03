@@ -18,6 +18,7 @@ from movies.tasks import refresh_movie_details
 from proxy.functions import get_proxy_url
 from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
+from utils.celery import enqueue_background_task
 from utils.constants import ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, TMDB_POSTER_PATH_PREFIX, TMDB_BACKDROP_PATH_PREFIX
 from utils.functions import update_fields_if_needed
 
@@ -291,10 +292,7 @@ def parse_movie(movie, request):
 
 
 def enqueue_movie_refresh(tmdb_id):
-    try:
-        refresh_movie_details.delay(tmdb_id)
-    except Exception:
-        pass
+    enqueue_background_task(refresh_movie_details, args=(tmdb_id,), task_name='refresh_movie_details')
 
 
 def format_date(value):

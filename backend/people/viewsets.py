@@ -13,6 +13,7 @@ from people.models import Person
 from people.tasks import refresh_person_details
 from proxy.functions import get_proxy_url
 from shows.models import Show, UserShow
+from utils.celery import enqueue_background_task
 from utils.constants import ERROR, PERSON_NOT_FOUND, TMDB_UNAVAILABLE, TMDB_POSTER_PREVIEW_PATH_PREFIX
 from utils.swagger import openapi, swagger_auto_schema
 
@@ -284,10 +285,7 @@ def load_or_refresh_person(person, tmdb_id):
 
 
 def enqueue_person_refresh(tmdb_id):
-    try:
-        refresh_person_details.delay(tmdb_id)
-    except Exception:
-        pass
+    enqueue_background_task(refresh_person_details, args=(tmdb_id,), task_name='refresh_person_details')
 
 
 def format_date(value):

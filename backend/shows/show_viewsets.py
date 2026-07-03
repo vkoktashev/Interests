@@ -19,6 +19,7 @@ from shows.serializers import ShowSerializer, UserShowReadSerializer, FollowedUs
 from shows.tasks import update_shows, update_all_shows_task, refresh_show_details
 from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
+from utils.celery import enqueue_background_task
 from utils.constants import ERROR, SHOW_NOT_FOUND, TMDB_UNAVAILABLE, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE, \
     TMDB_POSTER_PATH_PREFIX, TMDB_BACKDROP_PATH_PREFIX
 from utils.functions import update_fields_if_needed
@@ -674,10 +675,7 @@ def translate_tmdb_status(tmdb_status):
 
 
 def enqueue_show_refresh(tmdb_id):
-    try:
-        refresh_show_details.delay(tmdb_id)
-    except Exception:
-        pass
+    enqueue_background_task(refresh_show_details, args=(tmdb_id,), task_name='refresh_show_details')
 
 
 def format_date(value):

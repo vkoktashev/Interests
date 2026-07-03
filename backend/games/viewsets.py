@@ -37,6 +37,7 @@ from games.tasks import refresh_hltb_beat_times_by_game_id
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer, GameSerializer
 from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
+from utils.celery import enqueue_background_task
 from utils.constants import IGDB_UNAVAILABLE, ERROR, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, GAME_NOT_FOUND
 from utils.functions import get_page_size, update_fields_if_needed_async
 
@@ -297,7 +298,11 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                     max(last_update_values) <= timezone.now() - self.HLTB_REFRESH_INTERVAL
                 )
                 if is_stale:
-                    refresh_hltb_beat_times_by_game_id.delay(game.id)
+                    enqueue_background_task(
+                        refresh_hltb_beat_times_by_game_id,
+                        args=(game.id,),
+                        task_name='refresh_hltb_beat_times_by_game_id'
+                    )
             elif not hltb_entries:
                 # We can show IGDB time immediately, and warm up HLTB if timing data is stale.
                 last_update_values = [entry.last_update for entry in igdb_entries if entry.last_update]
@@ -305,7 +310,11 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                     max(last_update_values) <= timezone.now() - self.HLTB_REFRESH_INTERVAL
                 )
                 if is_stale:
-                    refresh_hltb_beat_times_by_game_id.delay(game.id)
+                    enqueue_background_task(
+                        refresh_hltb_beat_times_by_game_id,
+                        args=(game.id,),
+                        task_name='refresh_hltb_beat_times_by_game_id'
+                    )
 
             payload = build_hltb_response_from_hours(hours_map)
             payload['source'] = preferred_source

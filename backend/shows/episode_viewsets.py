@@ -21,6 +21,7 @@ from shows.show_viewsets import user_watched_show
 from shows.tasks import refresh_episode_details
 from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
+from utils.celery import enqueue_background_task
 from utils.constants import ERROR, EPISODE_NOT_FOUND, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, EPISODE_NOT_WATCHED_SCORE
 from utils.functions import update_fields_if_needed
 
@@ -206,10 +207,11 @@ def parse_episode(episode, request):
 
 
 def enqueue_episode_refresh(show_tmdb_id, season_number, episode_number):
-    try:
-        refresh_episode_details.delay(show_tmdb_id, season_number, episode_number)
-    except Exception:
-        pass
+    enqueue_background_task(
+        refresh_episode_details,
+        args=(show_tmdb_id, season_number, episode_number),
+        task_name='refresh_episode_details'
+    )
 
 
 def format_date(value):

@@ -21,6 +21,7 @@ from shows.show_viewsets import user_watched_show
 from shows.tasks import refresh_season_details
 from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
+from utils.celery import enqueue_background_task
 from utils.constants import ERROR, SEASON_NOT_FOUND, TMDB_UNAVAILABLE, SHOW_NOT_FOUND
 from utils.functions import update_fields_if_needed
 
@@ -221,10 +222,11 @@ def parse_season(season, request):
 
 
 def enqueue_season_refresh(show_tmdb_id, season_number):
-    try:
-        refresh_season_details.delay(show_tmdb_id, season_number)
-    except Exception:
-        pass
+    enqueue_background_task(
+        refresh_season_details,
+        args=(show_tmdb_id, season_number),
+        task_name='refresh_season_details'
+    )
 
 
 def format_date(value):
