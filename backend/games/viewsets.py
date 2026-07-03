@@ -168,7 +168,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         return bool(await sync_to_async(cache.get)(get_hltb_refresh_lock_key(game_id)))
 
     @staticmethod
-    async def _enqueue_hltb_refresh(game, now):
+    async def _enqueue_hltb_refresh(game):
         lock_key = get_hltb_refresh_lock_key(game.id)
         is_lock_acquired = await sync_to_async(cache.add)(lock_key, True, HLTB_REFRESH_LOCK_TIMEOUT_SECONDS)
         if not is_lock_acquired:
@@ -183,7 +183,6 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             await sync_to_async(cache.delete)(lock_key)
             return False
 
-        await update_fields_if_needed_async(game, {'hltb_last_attempt': now})
         return True
 
     @swagger_auto_schema(
@@ -338,7 +337,7 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         now = timezone.now()
         is_hltb_refreshing = await self._is_hltb_refresh_active(game.id)
         if not is_hltb_refreshing and self._should_queue_hltb_refresh(game, hltb_entries, now):
-            is_hltb_refreshing = await self._enqueue_hltb_refresh(game, now)
+            is_hltb_refreshing = await self._enqueue_hltb_refresh(game)
 
         if hltb_entries or igdb_entries:
             preferred_source = GameBeatTime.SOURCE_HLTB if hltb_entries else GameBeatTime.SOURCE_IGDB

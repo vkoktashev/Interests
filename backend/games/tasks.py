@@ -26,7 +26,7 @@ from utils.functions import update_fields_if_needed
 
 logger = logging.getLogger(__name__)
 
-HLTB_REFRESH_LOCK_TIMEOUT_SECONDS = 60 * 2
+HLTB_REFRESH_LOCK_TIMEOUT_SECONDS = 60 * 10
 
 
 def get_hltb_refresh_lock_key(game_id):
