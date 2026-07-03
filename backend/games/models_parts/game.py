@@ -37,6 +37,7 @@ class Game(models.Model):
     # howlongtobeat
     hltb_name = models.CharField(max_length=200, blank=True)
     hltb_id = models.IntegerField(null=True, blank=True)
+    hltb_last_attempt = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.igdb_name or self.hltb_name or self.igdb_slug or f'Game #{self.pk}'

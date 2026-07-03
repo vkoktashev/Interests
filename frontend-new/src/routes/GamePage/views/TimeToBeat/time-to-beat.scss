@@ -3,7 +3,7 @@
 .time-to-beat {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: baseline;
     gap: 8px;
 
     &__label {
@@ -15,7 +15,7 @@
 
     &__loading {
         color: $newText2;
-        font-size: 0.88rem;
+        font-size: 0.9rem;
         line-height: 1.25;
     }
 

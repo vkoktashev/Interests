@@ -14,6 +14,7 @@ interface IHltbInfo {
 	gameplay_completionist: number;
 	gameplay_completionist_unit: string;
 	source?: TTimeSource;
+	refreshing?: boolean;
 }
 
 export type ITimeToBeatProps = {
@@ -94,7 +95,7 @@ export function TimeToBeat(props: ITimeToBeatProps) {
 			</p>
 			{props.isLoading ? (
 				<div className='time-to-beat__loading'>
-					Загружаем время...
+					загружаем...
 				</div>
 			) : (
 				metricElements

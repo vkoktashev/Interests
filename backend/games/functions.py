@@ -5,6 +5,15 @@ def get_hltb_game_key(game_name):
     return f'hltb_search_{game_name.replace(" ", "_")}'
 
 
+def is_game_released(game, today=None):
+    release_date = getattr(game, 'igdb_release_date', None)
+    if not release_date:
+        return True
+
+    today_date = today or date.today()
+    return release_date <= today_date
+
+
 def format_game_release_date(value):
     if not value:
         return None

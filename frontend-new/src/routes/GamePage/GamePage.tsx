@@ -24,6 +24,9 @@ import {IGamePricesResponse} from '../../interfaces/IGamePrice';
 import "./game-page.scss";
 import {Button, TextField} from '@steroidsjs/core/ui/form';
 
+const HLTB_REFRESH_POLL_INTERVAL_MS = 3000;
+const HLTB_REFRESH_MAX_POLLS = 5;
+
 export function GamePage() {
 	const bem = useBem('game-page');
 	const user = useSelector(getUser);
@@ -37,6 +40,7 @@ export function GamePage() {
 	const [userRate, setUserRate] = useState(0);
 	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
 	const [shouldLoadHltb, setShouldLoadHltb] = useState(false);
+	const [hltbRefreshPolls, setHltbRefreshPolls] = useState(0);
 	const [isMobileViewport, setIsMobileViewport] = useState(false);
 
 	const gameFetchConfig = useMemo(() => gameId && ({
@@ -49,7 +53,13 @@ export function GamePage() {
 		url: `/games/game/${gameId}/hltb/`,
 		method: 'get',
 	}), [gameId, shouldLoadHltb]);
-	const {data: gameTime, isLoading: isGameTimeLoading} = useFetch(gameTimeFetchConfig);
+	const {data: gameTime, isLoading: isGameTimeLoading, fetch: fetchGameTime} = useFetch(gameTimeFetchConfig);
+	const displayedGameTime = shouldLoadHltb ? gameTime : undefined;
+	const gameTimeHasMetrics = useMemo(() => hasTimeToBeatMetrics(displayedGameTime), [displayedGameTime]);
+	const shouldShowGameTimeLoading = (
+		(isGameTimeLoading && !gameTimeHasMetrics)
+		|| Boolean(displayedGameTime?.refreshing && !gameTimeHasMetrics)
+	);
 
 	const gamePricesFetchConfig = useMemo(() => gameId && game && ({
 		url: `/games/game/${gameId}/prices/`,
@@ -99,6 +109,7 @@ export function GamePage() {
 
 	useEffect(() => {
 		setShouldLoadHltb(false);
+		setHltbRefreshPolls(0);
 	}, [gameId]);
 
 	useEffect(() => {
@@ -112,6 +123,19 @@ export function GamePage() {
 
 		return () => window.clearTimeout(timeoutId);
 	}, [gameId, game]);
+
+	useEffect(() => {
+		if (!displayedGameTime?.refreshing || !fetchGameTime || hltbRefreshPolls >= HLTB_REFRESH_MAX_POLLS) {
+			return;
+		}
+
+		const timeoutId = window.setTimeout(() => {
+			setHltbRefreshPolls(value => value + 1);
+			fetchGameTime();
+		}, HLTB_REFRESH_POLL_INTERVAL_MS);
+
+		return () => window.clearTimeout(timeoutId);
+	}, [displayedGameTime?.refreshing, fetchGameTime, gameId, hltbRefreshPolls]);
 
 	useEffect(() => {
 		const updateViewport = () => {
@@ -159,6 +183,14 @@ export function GamePage() {
 				return (Math.round(parseFloat(cleanStr) * 10) / 10).toFixed(1);
 			}
 		}
+	}
+
+	function hasTimeToBeatMetrics(hltbInfo) {
+		return (
+			Number(hltbInfo?.gameplay_main) > 0
+			|| Number(hltbInfo?.gameplay_main_extra) > 0
+			|| Number(hltbInfo?.gameplay_completionist) > 0
+		);
 	}
 
 	function hltbToDatalist(hltbInfo) {
@@ -302,8 +334,8 @@ export function GamePage() {
 								</div>
 
 								<TimeToBeat
-									hltbInfo={gameTime}
-									isLoading={isGameTimeLoading}
+									hltbInfo={displayedGameTime}
+									isLoading={shouldShowGameTimeLoading}
 									className={bem.element('time-to-beat')}
 								/>
 
@@ -437,7 +469,7 @@ export function GamePage() {
 													min={0}
 													max={100000}
 													onChange={(value) => setSpentTime(value as any)}
-													dataList={hltbToDatalist(gameTime || (game as any).hltb)}
+													dataList={hltbToDatalist(displayedGameTime || (game as any).hltb)}
 												/>
 											</div>
 											<Button
