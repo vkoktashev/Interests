@@ -73,6 +73,7 @@ function SettingsPage() {
 		isLoading: isGoogleLinkStatusLoading,
 	} = useFetch(googleLinkStatusFetchConfig);
 	const [isGoogleActionLoading, setGoogleActionLoading] = useState(false);
+	const email = settings?.email || user?.email;
 
 	const patchSettings = useCallback(async (values) => {
 		http.send('PATCH', '/users/user/user_settings/', values)
@@ -296,7 +297,7 @@ function SettingsPage() {
 				</LoadingOverlay>
 				<div className={bem.element('footer')}>
 					<p className={bem.element('email')}>
-						Ваша почта {user?.email}
+						Ваша почта: {email}
 					</p>
 				</div>
 			</div>
