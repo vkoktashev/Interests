@@ -64,8 +64,10 @@ function ShowPage(props) {
     }, [showId]);
 
 	useEffect(() => {
-		document.title = show?.name || 'Interests';
-	}, [show]);
+		if (show?.name) {
+			document.title = show.name;
+		}
+	}, [show?.name]);
 
 	useEffect(() => {
 		setOverviewExpanded(false);

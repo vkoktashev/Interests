@@ -88,8 +88,10 @@ export function GamePage() {
 	);
 
 	useEffect(() => {
-		document.title = game?.name || 'Interests';
-	}, [game]);
+		if (game?.name) {
+			document.title = game.name;
+		}
+	}, [game?.name]);
 
 	useEffect(() => {
 		setOverviewExpanded(false);

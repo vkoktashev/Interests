@@ -2,10 +2,10 @@ import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from 'react-loading-overlay';
 import {Form, InputField} from '@steroidsjs/core/ui/form';
 import Pagination from '@steroidsjs/core/ui/list/Pagination/Pagination';
-import {formChange, formSubmit} from '@steroidsjs/core/actions/form';
-import {getFormValues} from '@steroidsjs/core/reducers/form';
+import {formChange} from '@steroidsjs/core/actions/form';
 import {getRouteParams} from '@steroidsjs/core/reducers/router';
 import {useComponents, useDispatch, useSelector} from '@steroidsjs/core/hooks';
+import {push, replace} from 'connected-react-router';
 import CategoriesTab from '../../shared/CategoriesTab';
 import GameCards from './views/GameCards';
 import MovieCards from './views/MovieCards';
@@ -68,6 +68,19 @@ const INITIAL_FORM_VALUES: ISearchFormValues = {
 };
 
 
+const CATEGORY_SLUGS: Record<TSearchCategory, string> = {
+	Игры: 'games',
+	Фильмы: 'movies',
+	Сериалы: 'shows',
+	Люди: 'people',
+	Пользователи: 'users',
+};
+
+const CATEGORY_BY_SLUG = SEARCH_CATEGORIES.reduce((acc, category) => {
+	acc[CATEGORY_SLUGS[category]] = category;
+	return acc;
+}, {} as Record<string, TSearchCategory>);
+
 const CATEGORY_LOADING_TEXT: Record<TSearchCategory, string> = {
 	Игры: 'Ищем игры...',
 	Фильмы: 'Ищем фильмы...',
@@ -83,11 +96,56 @@ function normalizeQuery(value: unknown): string {
 	return String(value).trim();
 }
 
+function decodeQueryParam(value: unknown): string {
+	if (!value) {
+		return '';
+	}
+	const rawValue = String(value).replace(/\+/g, ' ');
+	try {
+		return decodeURIComponent(rawValue);
+	} catch {
+		return rawValue;
+	}
+}
+
 function getCategory(value: unknown): TSearchCategory {
 	if (SEARCH_CATEGORIES.includes(value as TSearchCategory)) {
 		return value as TSearchCategory;
 	}
 	return SEARCH_CATEGORIES[0];
+}
+
+function getCategoryBySlug(value: unknown): TSearchCategory {
+	const normalizedValue = normalizeQuery(value).toLowerCase();
+	return CATEGORY_BY_SLUG[normalizedValue] || getCategory(value);
+}
+
+function getPage(value: unknown): number {
+	const page = Math.floor(Number(value));
+	if (!isFinite(page) || page < 1) {
+		return 1;
+	}
+	return page;
+}
+
+function buildSearchUrl(values: ISearchFormValues): string {
+	const params = new URLSearchParams();
+	const query = normalizeQuery(values.query);
+	const activeCategory = getCategory(values.activeCategory);
+	const page = getPage(values.page);
+
+	if (query) {
+		params.set('query', query);
+	}
+	if (query || activeCategory !== SEARCH_CATEGORIES[0]) {
+		params.set('category', CATEGORY_SLUGS[activeCategory]);
+	}
+	if (query && page > 1) {
+		params.set('page', String(page));
+	}
+
+	const queryString = params.toString();
+	return queryString ? `/search?${queryString}` : '/search';
 }
 
 function resolveTotalWithoutMeta(itemsLength: number, page: number): number {
@@ -100,18 +158,16 @@ function resolveTotalWithoutMeta(itemsLength: number, page: number): number {
 function SearchPage() {
 	const dispatch = useDispatch();
 	const {http} = useComponents();
-	const formValues = useSelector(state => (getFormValues(state, SEARCH_PAGE_FORM) || INITIAL_FORM_VALUES) as ISearchFormValues);
 
-	const rawQuery = useSelector(state => getRouteParams(state)?.query);
-	const queryFromRoute = rawQuery ? decodeURIComponent(String(rawQuery)) : '';
-	const activeCategory = getCategory(formValues.activeCategory);
-	const currentPage = Number(formValues.page) || 1;
-	const normalizedQuery = normalizeQuery(formValues.query);
+	const routeParams = useSelector(getRouteParams) || {};
+	const queryFromRoute = normalizeQuery(decodeQueryParam(routeParams.query));
+	const activeCategory = getCategoryBySlug(routeParams.category);
+	const currentPage = getPage(routeParams.page);
+	const normalizedQuery = queryFromRoute;
 
 	const [isLoading, setLoading] = useState(false);
 	const [results, setResults] = useState<ISearchResultsState>(getInitialResults());
 	const [totals, setTotals] = useState<Record<TSearchCategory, number>>(getInitialTotals());
-	const lastQueryRef = useRef(normalizeQuery(queryFromRoute));
 	const requestIdRef = useRef(0);
 
 	const clearResults = useCallback(() => {
@@ -191,23 +247,16 @@ function SearchPage() {
 
 	const runSearch = useCallback(async (values: ISearchFormValues) => {
 		const nextQuery = normalizeQuery(values.query);
-		const nextPage = Number(values.page) || 1;
+		const nextPage = getPage(values.page);
 		const nextCategory = getCategory(values.activeCategory);
 
-		if (lastQueryRef.current !== nextQuery && nextPage !== 1) {
-			dispatch(formChange(SEARCH_PAGE_FORM, 'page', 1));
-			dispatch(formSubmit(SEARCH_PAGE_FORM));
-			return;
-		}
-
 		if (!nextQuery) {
-			lastQueryRef.current = '';
+			requestIdRef.current += 1;
 			clearResults();
 			setLoading(false);
 			return;
 		}
 
-		lastQueryRef.current = nextQuery;
 		const requestId = ++requestIdRef.current;
 		setLoading(true);
 
@@ -232,22 +281,36 @@ function SearchPage() {
 				setLoading(false);
 			}
 		}
-	}, [clearResults, dispatch, searchGames, searchMovies, searchPeople, searchShows, searchUsers]);
+	}, [clearResults, searchGames, searchMovies, searchPeople, searchShows, searchUsers]);
+
+	const navigateToSearch = useCallback((values: ISearchFormValues, isReplace = false) => {
+		const action = isReplace ? replace : push;
+		dispatch(action(buildSearchUrl(values)));
+	}, [dispatch]);
+
+	const submitSearch = useCallback((values: ISearchFormValues) => {
+		navigateToSearch({
+			query: values.query,
+			activeCategory: getCategory(values.activeCategory),
+			page: 1,
+		});
+	}, [navigateToSearch]);
 
 	useEffect(() => {
-		const normalizedRouteQuery = normalizeQuery(queryFromRoute);
 		dispatch(formChange(SEARCH_PAGE_FORM, {
-			query: normalizedRouteQuery,
-			page: 1,
+			query: queryFromRoute,
+			page: currentPage,
+			activeCategory,
 		}));
+	}, [activeCategory, currentPage, dispatch, queryFromRoute]);
 
-		if (normalizedRouteQuery) {
-			dispatch(formSubmit(SEARCH_PAGE_FORM));
-		} else {
-			clearResults();
-			setLoading(false);
-		}
-	}, [clearResults, dispatch, queryFromRoute]);
+	useEffect(() => {
+		runSearch({
+			query: queryFromRoute,
+			page: currentPage,
+			activeCategory,
+		});
+	}, [activeCategory, currentPage, queryFromRoute, runSearch]);
 
 	const content = useMemo(() => {
 		if (!normalizedQuery) {
@@ -284,9 +347,11 @@ function SearchPage() {
 					className='search-page__form'
 					initialValues={{
 						...INITIAL_FORM_VALUES,
-						query: normalizeQuery(queryFromRoute),
+						query: queryFromRoute,
+						page: currentPage,
+						activeCategory,
 					}}
-					onSubmit={runSearch}
+					onSubmit={submitSearch}
 					useRedux
 				>
 					<div className='search-page__form-head'>
@@ -309,13 +374,11 @@ function SearchPage() {
 					activeCategory={activeCategory}
 					onChangeCategory={(category: string) => {
 						const normalizedCategory = getCategory(category);
-						dispatch(formChange(SEARCH_PAGE_FORM, {
+						navigateToSearch({
+							query: queryFromRoute,
 							activeCategory: normalizedCategory,
 							page: 1,
-						}));
-						if (normalizeQuery(formValues.query)) {
-							dispatch(formSubmit(SEARCH_PAGE_FORM));
-						}
+						}, true);
 					}}
 				>
 					<div className='search-page__results'>
@@ -337,8 +400,11 @@ function SearchPage() {
 									pageSize: PAGE_SIZE,
 								}}
 								onChange={page => {
-									dispatch(formChange(SEARCH_PAGE_FORM, 'page', page));
-									dispatch(formSubmit(SEARCH_PAGE_FORM));
+									navigateToSearch({
+										query: queryFromRoute,
+										activeCategory,
+										page,
+									}, true);
 								}}
 							/>
 						)}

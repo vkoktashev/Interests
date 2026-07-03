@@ -105,7 +105,9 @@ export function PersonPage() {
 	const {data: person} = useFetch(fetchConfig);
 
 	useEffect(() => {
-		document.title = person?.name ? `${person.name} — Interests` : 'Interests';
+		if (person?.name) {
+			document.title = `${person.name} - Interests`;
+		}
 	}, [person?.name]);
 
 	useEffect(() => {

@@ -58,10 +58,10 @@ function EpisodePage() {
 	}, [showId, showSeasonId, showEpisodeId]);
 
 	useEffect(() => {
-		if (showEpisode?.show?.tmdb_name) {
-			document.title = showEpisode?.show?.tmdb_name + " - " + showEpisode?.name;
+		if (showEpisode?.show?.tmdb_name && showEpisode?.name) {
+			document.title = `${showEpisode.show.tmdb_name} - ${showEpisode.name}`;
 		}
-	}, [showEpisode]);
+	}, [showEpisode?.name, showEpisode?.show?.tmdb_name]);
 
 	useEffect(() => {
 		setOverviewExpanded(false);
