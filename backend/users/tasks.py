@@ -8,7 +8,6 @@ from django.db.models import Q
 from config.celery import app
 from config.settings import EMAIL_HOST_USER
 from games.models import Game, UserGame
-from games.tasks import refresh_game_details_by_igdb_id_with_status, refresh_game_details_with_status
 from movies.models import Movie, UserMovie
 from shows.models import Episode, Show, UserShow
 from users.models import User
@@ -29,7 +28,10 @@ def setup_periodic_tasks(sender, **kwargs):
 def send_release_emails():
     today_date = datetime.today().date()
 
-    today_games = get_actual_today_games(today_date)
+    today_games = Game.objects.filter(
+        igdb_release_date=today_date,
+        igdb_release_date_format=Game.IGDB_RELEASE_DATE_FORMAT_EXACT,
+    )
     today_movies = Movie.objects.filter(tmdb_release_date=today_date)
     today_digital_movies = Movie.objects.filter(tmdb_digital_release_date=today_date)
     today_episodes = Episode.objects.filter(tmdb_release_date=today_date)
@@ -186,112 +188,3 @@ def send_release_emails():
         skipped_count,
         failed_count,
     )
-
-
-def get_actual_today_games(today_date):
-    candidate_ids = list(
-        Game.objects.filter(
-            igdb_release_date=today_date,
-            usergame__user__receive_games_releases=True,
-        )
-        .exclude(usergame__status=UserGame.STATUS_NOT_PLAYED)
-        .exclude(usergame__status=UserGame.STATUS_STOPPED)
-        .values_list('id', flat=True)
-        .distinct()
-    )
-    updated_count = 0
-    skipped_count = 0
-    failed_count = 0
-
-    logger.info('send_release_emails: game refresh start today=%s candidates=%s', today_date, len(candidate_ids))
-
-    if not candidate_ids:
-        logger.info('send_release_emails: game refresh finish candidates=0 updated=0 skipped=0 failed=0 actual=0')
-        return Game.objects.none()
-
-    for game in Game.objects.filter(id__in=candidate_ids):
-        status = refresh_game_for_release_email(game)
-        if status == 'updated':
-            updated_count += 1
-        elif status == 'failed':
-            failed_count += 1
-        else:
-            skipped_count += 1
-
-    actual_games = Game.objects.filter(
-        id__in=candidate_ids,
-        igdb_release_date=today_date,
-        igdb_release_date_format=Game.IGDB_RELEASE_DATE_FORMAT_EXACT,
-    )
-    logger.info(
-        'send_release_emails: game refresh finish candidates=%s updated=%s skipped=%s failed=%s actual=%s',
-        len(candidate_ids),
-        updated_count,
-        skipped_count,
-        failed_count,
-        actual_games.count(),
-    )
-    return actual_games
-
-
-def refresh_game_for_release_email(game):
-    logger.debug(
-        'send_release_emails: refreshing game id=%s name=%s igdb_id=%s igdb_slug=%s release_date=%s',
-        game.id,
-        game.igdb_name,
-        game.igdb_id,
-        game.igdb_slug,
-        game.igdb_release_date,
-    )
-
-    try:
-        if game.igdb_id:
-            status, game_id = refresh_game_details_by_igdb_id_with_status(game.igdb_id)
-        elif game.igdb_slug:
-            status, game_id = refresh_game_details_with_status(game.igdb_slug)
-        else:
-            logger.warning(
-                'send_release_emails: skipped game id=%s name=%s reason=no_igdb_identity',
-                game.id,
-                game.igdb_name,
-            )
-            return 'skipped'
-    except Exception:
-        logger.exception(
-            'send_release_emails: failed to refresh game id=%s name=%s igdb_id=%s igdb_slug=%s',
-            game.id,
-            game.igdb_name,
-            game.igdb_id,
-            game.igdb_slug,
-        )
-        return 'failed'
-
-    if status == 'updated':
-        game.refresh_from_db(fields=(
-            'igdb_name',
-            'igdb_id',
-            'igdb_slug',
-            'igdb_release_date',
-            'igdb_release_date_format',
-            'igdb_release_date_display',
-        ))
-        logger.debug(
-            'send_release_emails: refreshed game id=%s refreshed_game_id=%s name=%s igdb_id=%s igdb_slug=%s release_date=%s',
-            game.id,
-            game_id,
-            game.igdb_name,
-            game.igdb_id,
-            game.igdb_slug,
-            game.igdb_release_date,
-        )
-    else:
-        logger.warning(
-            'send_release_emails: game refresh %s game id=%s refreshed_game_id=%s name=%s igdb_id=%s igdb_slug=%s',
-            status,
-            game.id,
-            game_id,
-            game.igdb_name,
-            game.igdb_id,
-            game.igdb_slug,
-        )
-    return status
