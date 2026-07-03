@@ -49,7 +49,7 @@ export function GamePage() {
 		url: `/games/game/${gameId}/hltb/`,
 		method: 'get',
 	}), [gameId, shouldLoadHltb]);
-	const {data: gameTime} = useFetch(gameTimeFetchConfig);
+	const {data: gameTime, isLoading: isGameTimeLoading} = useFetch(gameTimeFetchConfig);
 
 	const gamePricesFetchConfig = useMemo(() => gameId && game && ({
 		url: `/games/game/${gameId}/prices/`,
@@ -295,7 +295,11 @@ export function GamePage() {
 									))}
 								</div>
 
-									<TimeToBeat hltbInfo={gameTime} className={bem.element('time-to-beat')} />
+								<TimeToBeat
+									hltbInfo={gameTime}
+									isLoading={isGameTimeLoading}
+									className={bem.element('time-to-beat')}
+								/>
 
 								<div className={bem.element('resources')}>
 									<div className={bem.element('resources-grid')}>

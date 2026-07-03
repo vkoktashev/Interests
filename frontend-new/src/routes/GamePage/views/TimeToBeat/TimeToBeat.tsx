@@ -19,6 +19,7 @@ interface IHltbInfo {
 export type ITimeToBeatProps = {
 	hltbInfo?: IHltbInfo;
 	className?: string;
+	isLoading?: boolean;
 };
 
 function toPositiveNumber(value?: number): number | null {
@@ -37,7 +38,7 @@ function toTenth(value: number): string {
 }
 
 export function TimeToBeat(props: ITimeToBeatProps) {
-	if (!props.hltbInfo) {
+	if (!props.hltbInfo && !props.isLoading) {
 		return null;
 	}
 
@@ -82,7 +83,7 @@ export function TimeToBeat(props: ITimeToBeatProps) {
 			</div>
 		));
 
-	if (!metricElements.length) {
+	if (!props.isLoading && !metricElements.length) {
 		return null;
 	}
 
@@ -91,7 +92,13 @@ export function TimeToBeat(props: ITimeToBeatProps) {
 			<p className='time-to-beat__label'>
 				Время прохождения {hltbInfo?.source ? `(${sourceLabel})` : ''}
 			</p>
-			{metricElements}
+			{props.isLoading ? (
+				<div className='time-to-beat__loading'>
+					Загружаем время...
+				</div>
+			) : (
+				metricElements
+			)}
 		</div>
 	);
 }
