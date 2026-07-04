@@ -5,7 +5,7 @@ from games.integrations.igm import get_igm_store_info, get_igm_store_price
 from games.integrations.plati import get_plati_store_info, get_plati_store_price
 from games.integrations.steam import get_steam_region_label, get_steam_store_price
 from games.models import Game, GameDeveloper, GameGenre, GameScreenshot, GameStore, GameTrailer
-from games.integrations.hltb import translate_hltb_time
+from games.integrations.hltb import add_hltb_gameplay_fields
 from utils.functions import objects_to_str
 
 
@@ -34,9 +34,7 @@ def parse_game(source_game, hltb_game=None):
     }
 
     if hltb_game is not None:
-        translate_hltb_time(hltb_game, 'main_story', 'gameplay_main', 'gameplay_main_unit')
-        translate_hltb_time(hltb_game, 'main_extra', 'gameplay_main_extra', 'gameplay_main_extra_unit')
-        translate_hltb_time(hltb_game, 'completionist', 'gameplay_completionist', 'gameplay_completionist_unit')
+        add_hltb_gameplay_fields(hltb_game)
         new_game.update({'hltb': hltb_game})
 
     return new_game
@@ -121,9 +119,7 @@ async def parse_game_from_db(game: Game, hltb_game=None):
     }
 
     if hltb_game is not None:
-        translate_hltb_time(hltb_game, 'main_story', 'gameplay_main', 'gameplay_main_unit')
-        translate_hltb_time(hltb_game, 'main_extra', 'gameplay_main_extra', 'gameplay_main_extra_unit')
-        translate_hltb_time(hltb_game, 'completionist', 'gameplay_completionist', 'gameplay_completionist_unit')
+        add_hltb_gameplay_fields(hltb_game)
         new_game.update({'hltb': hltb_game})
 
     return new_game

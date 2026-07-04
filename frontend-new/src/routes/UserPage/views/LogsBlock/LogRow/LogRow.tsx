@@ -1,6 +1,7 @@
 import React from "react";
 import {useBem, useSelector} from '@steroidsjs/core/hooks';
 import Rating from '../../../../../shared/Rating';
+import formatHours from '../../../../../shared/formatHours';
 import "./log-row.scss";
 import {Link} from '@steroidsjs/core/ui/nav';
 import {
@@ -52,13 +53,6 @@ function LogRow({ log, showUsername, onDeleteLog, className }) {
 			</button>
 		</div>
 	);
-}
-
-function intToHours(number) {
-	if (11 <= number && number <= 14) return "часов";
-	else if (number % 10 === 1) return "час";
-	else if (2 <= number % 10 && number % 10 <= 4) return "часа";
-	else return "часов";
 }
 
 function intToSeries(number) {
@@ -329,7 +323,7 @@ function actionResultToStr(actionType, actionResult, target) {
 		case "review":
 			return `"${actionResult}"`;
 		case "spent_time":
-			return `${actionResultNumber} ${intToHours(actionResultNumber)}`;
+			return formatHours(actionResultNumber);
 		case "episodes":
 			return "";
 		case "is_following":
