@@ -199,6 +199,14 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 
+CACHE_URL = os.environ.get('CACHE_URL', os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/1'))
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': CACHE_URL,
+    },
+}
+
 LANGUAGE_CODE = 'ru-ru'
 
 TIME_ZONE = 'UTC'
