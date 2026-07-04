@@ -40,8 +40,10 @@ export function GamePage() {
 	const [userRate, setUserRate] = useState(0);
 	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
 	const [shouldLoadHltb, setShouldLoadHltb] = useState(false);
+	const [hltbFetchGameId, setHltbFetchGameId] = useState<any>();
 	const [hltbRefreshPolls, setHltbRefreshPolls] = useState(0);
-	const [visibleGameTime, setVisibleGameTime] = useState<any>();
+	const [isGameTimeRequestStarted, setGameTimeRequestStarted] = useState(false);
+	const [visibleGameTime, setVisibleGameTime] = useState<{gameId: any; data: any}>();
 	const [isMobileViewport, setIsMobileViewport] = useState(false);
 
 	const gameFetchConfig = useMemo(() => gameId && ({
@@ -50,15 +52,14 @@ export function GamePage() {
 	}), [gameId]);
 	const {data: game, isLoading} = useFetch(gameFetchConfig);
 
-	const gameTimeFetchConfig = useMemo(() => gameId && shouldLoadHltb && ({
+	const shouldFetchCurrentGameTime = shouldLoadHltb && hltbFetchGameId === gameId;
+	const gameTimeFetchConfig = useMemo(() => gameId && shouldFetchCurrentGameTime && ({
 		url: `/games/game/${gameId}/hltb/`,
 		method: 'get',
-	}), [gameId, shouldLoadHltb]);
+	}), [gameId, shouldFetchCurrentGameTime]);
 	const {data: gameTime, isLoading: isGameTimeLoading, fetch: fetchGameTime} = useFetch(gameTimeFetchConfig);
-	const fetchedGameTime = shouldLoadHltb ? gameTime : undefined;
-	const displayedGameTime = shouldLoadHltb
-		? (fetchedGameTime === undefined ? visibleGameTime : fetchedGameTime)
-		: undefined;
+	const cachedGameTime = visibleGameTime?.gameId === gameId ? visibleGameTime.data : undefined;
+	const displayedGameTime = shouldFetchCurrentGameTime ? cachedGameTime : undefined;
 	const gameTimeHasMetrics = useMemo(() => hasTimeToBeatMetrics(displayedGameTime), [displayedGameTime]);
 	const shouldShowGameTimeLoading = (
 		(isGameTimeLoading && !gameTimeHasMetrics)
@@ -113,17 +114,33 @@ export function GamePage() {
 
 	useEffect(() => {
 		setShouldLoadHltb(false);
+		setHltbFetchGameId(undefined);
 		setHltbRefreshPolls(0);
+		setGameTimeRequestStarted(false);
 		setVisibleGameTime(undefined);
 	}, [gameId]);
 
 	useEffect(() => {
-		if (!shouldLoadHltb || gameTime === undefined) {
+		if (shouldFetchCurrentGameTime && isGameTimeLoading) {
+			setGameTimeRequestStarted(true);
+		}
+	}, [isGameTimeLoading, shouldFetchCurrentGameTime]);
+
+	useEffect(() => {
+		if (
+			!shouldFetchCurrentGameTime
+			|| !isGameTimeRequestStarted
+			|| isGameTimeLoading
+			|| gameTime === undefined
+		) {
 			return;
 		}
 
-		setVisibleGameTime(gameTime);
-	}, [gameTime, shouldLoadHltb]);
+		setVisibleGameTime({
+			gameId,
+			data: gameTime,
+		});
+	}, [gameId, gameTime, isGameTimeLoading, isGameTimeRequestStarted, shouldFetchCurrentGameTime]);
 
 	useEffect(() => {
 		if (!gameId || !game) {
@@ -131,6 +148,7 @@ export function GamePage() {
 		}
 
 		const timeoutId = window.setTimeout(() => {
+			setHltbFetchGameId(gameId);
 			setShouldLoadHltb(true);
 		}, 400);
 
