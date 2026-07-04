@@ -41,6 +41,7 @@ export function GamePage() {
 	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
 	const [shouldLoadHltb, setShouldLoadHltb] = useState(false);
 	const [hltbRefreshPolls, setHltbRefreshPolls] = useState(0);
+	const [visibleGameTime, setVisibleGameTime] = useState<any>();
 	const [isMobileViewport, setIsMobileViewport] = useState(false);
 
 	const gameFetchConfig = useMemo(() => gameId && ({
@@ -54,7 +55,10 @@ export function GamePage() {
 		method: 'get',
 	}), [gameId, shouldLoadHltb]);
 	const {data: gameTime, isLoading: isGameTimeLoading, fetch: fetchGameTime} = useFetch(gameTimeFetchConfig);
-	const displayedGameTime = shouldLoadHltb ? gameTime : undefined;
+	const fetchedGameTime = shouldLoadHltb ? gameTime : undefined;
+	const displayedGameTime = shouldLoadHltb
+		? (fetchedGameTime === undefined ? visibleGameTime : fetchedGameTime)
+		: undefined;
 	const gameTimeHasMetrics = useMemo(() => hasTimeToBeatMetrics(displayedGameTime), [displayedGameTime]);
 	const shouldShowGameTimeLoading = (
 		(isGameTimeLoading && !gameTimeHasMetrics)
@@ -110,7 +114,16 @@ export function GamePage() {
 	useEffect(() => {
 		setShouldLoadHltb(false);
 		setHltbRefreshPolls(0);
+		setVisibleGameTime(undefined);
 	}, [gameId]);
+
+	useEffect(() => {
+		if (!shouldLoadHltb || gameTime === undefined) {
+			return;
+		}
+
+		setVisibleGameTime(gameTime);
+	}, [gameTime, shouldLoadHltb]);
 
 	useEffect(() => {
 		if (!gameId || !game) {
@@ -125,7 +138,12 @@ export function GamePage() {
 	}, [gameId, game]);
 
 	useEffect(() => {
-		if (!displayedGameTime?.refreshing || !fetchGameTime || hltbRefreshPolls >= HLTB_REFRESH_MAX_POLLS) {
+		if (
+			!displayedGameTime?.refreshing
+			|| !fetchGameTime
+			|| isGameTimeLoading
+			|| hltbRefreshPolls >= HLTB_REFRESH_MAX_POLLS
+		) {
 			return;
 		}
 
@@ -135,7 +153,7 @@ export function GamePage() {
 		}, HLTB_REFRESH_POLL_INTERVAL_MS);
 
 		return () => window.clearTimeout(timeoutId);
-	}, [displayedGameTime?.refreshing, fetchGameTime, gameId, hltbRefreshPolls]);
+	}, [displayedGameTime?.refreshing, fetchGameTime, gameId, hltbRefreshPolls, isGameTimeLoading]);
 
 	useEffect(() => {
 		const updateViewport = () => {
