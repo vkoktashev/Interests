@@ -34,7 +34,11 @@ function SeasonBlock({
 		url: `/shows/show/${showID}/season/${seasonNumber}/`,
 		method: 'get',
 	}), [showID, seasonNumber]);
-	const {data: showSeason, isLoading: showSeasonIsLoading} = useFetch(showSeasonFetchConfig);
+	const {
+		data: showSeason,
+		isLoading: showSeasonIsLoading,
+		axiosError: showSeasonError,
+	} = useFetch(showSeasonFetchConfig);
 
 	const userInfoFetchConfig = useMemo(() => user && ({
 		url: `/shows/show/${showID}/season/${seasonNumber}/user_info/`,
@@ -151,7 +155,7 @@ function SeasonBlock({
 		onEpisodesDirtyChange?.(hasPendingEpisodeSelectionChanges);
 	}, [hasPendingEpisodeSelectionChanges, onEpisodesDirtyChange]);
 
-	if (showSeason && !showSeason?.episodes?.length) {
+	if (showSeasonError || (!showSeasonIsLoading && !showSeason) || (showSeason && !showSeason.episodes?.length)) {
 		return null;
 	}
 

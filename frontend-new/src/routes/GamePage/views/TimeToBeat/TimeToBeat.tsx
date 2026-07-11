@@ -11,6 +11,7 @@ interface IHltbInfo {
 	gameplay_main: number;
 	gameplay_main_extra: number;
 	gameplay_completionist: number;
+	hltb_id?: number;
 	source?: TTimeSource;
 	refreshing?: boolean;
 }

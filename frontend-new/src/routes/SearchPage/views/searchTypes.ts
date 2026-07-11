@@ -32,6 +32,11 @@ export interface IGameSearchItem {
 	platforms?: Array<{platform: {name: string}}>;
 }
 
+export interface IGameSearchResponse {
+	results?: IGameSearchItem[];
+	has_next?: boolean;
+}
+
 export interface ITmdbMediaItem {
 	id: number;
 	title?: string;

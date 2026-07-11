@@ -37,12 +37,24 @@ function LogRow({ log, showUsername, onDeleteLog, className }) {
 		<div className={bem(bem.block(), className)}>
 			<div className={bem.element('time')}>{timeText}</div>
 			<div className={bem.element('content')}>
-				{userNode && <span className={bem.element('user')}>{userNode}</span>}
+				{userNode && (
+					<>
+						<span className={bem.element('user')}>{userNode}</span>{' '}
+					</>
+				)}
 				<span className={bem.element('action')}>{actionText}</span>
-				{typeText && <span className={bem.element('type')}>{typeText}</span>}
-				<span className={bem.element('target')}>{targetNode}</span>
+				{typeText && (
+					<>
+						{' '}<span className={bem.element('type')}>{typeText}</span>
+					</>
+				)}
+				{' '}<span className={bem.element('target')}>{targetNode}</span>
 				{showSeparator && <span className={bem.element('separator')}>:</span>}
-				{resultNode && <span className={bem.element('result')}>{resultNode}</span>}
+				{resultNode && (
+					<>
+						{' '}<span className={bem.element('result')}>{resultNode}</span>
+					</>
+				)}
 			</div>
 			<button
 				className={bem.element('delete-button', {hidden: !isOwnLog})}
@@ -246,7 +258,9 @@ function nameToLink(name, type, id, bem) {
 						className={bem.element('link')}>
 						{name.name}
 					</Link>
+					{' '}
 					<span className={bem.element('muted')}>сериала</span>
+					{' '}
 					<Link
 						toRoute={ROUTE_SHOW}
 						toRouteParams={{
@@ -270,7 +284,9 @@ function nameToLink(name, type, id, bem) {
 						className={bem.element('link')}>
 						{intToEpisodeInLogContext(id.episode_number)} {id.season_number} {intToSeasonsInEpisodeContext(id.season_number)}
 					</Link>
+					{' '}
 					<span className={bem.element('muted')}>сериала</span>
+					{' '}
 					<Link
 						toRoute={ROUTE_SHOW}
 						toRouteParams={{

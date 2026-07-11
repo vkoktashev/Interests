@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from django.db.models import Count, Q
+from django.db.models import Count, Max, Q
 from django.utils import timezone
 from utils.swagger import openapi, swagger_auto_schema
 from requests import HTTPError, ConnectionError, Timeout
@@ -12,7 +12,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from proxy.functions import get_proxy_url
 from shows.functions import get_show_new_fields, get_tmdb_show, get_tmdb_show_videos, get_tmdb_show_credits, \
-    sync_show_genres, sync_show_people, upsert_season_from_tmdb, get_tmdb_show_reviews, get_tmdb_show_recommendations
+    sync_show_genres, sync_show_people, sync_show_seasons, get_tmdb_show_reviews, get_tmdb_show_recommendations
 from shows.models import Show, UserShow, Episode, UserEpisode, EpisodeLog, ShowLog, ShowPerson
 from shows.serializers import ShowSerializer, UserShowReadSerializer, FollowedUserShowSerializer, UserEpisodeSerializer, \
     SeasonSerializer, EpisodeSerializer, UserShowWriteSerializer
@@ -46,12 +46,13 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         tmdb_id = kwargs.get('tmdb_id')
         show = Show.objects.filter(tmdb_id=tmdb_id).first()
 
-        seasons_count_in_db = show.season_set.count() if show is not None else 0
-        expected_seasons_count = (show.tmdb_number_of_seasons or 0) if show is not None else 0
+        expected_season_numbers = set(show.tmdb_season_numbers or []) if show is not None else set()
+        database_season_numbers = set(
+            show.season_set.values_list('tmdb_season_number', flat=True)
+        ) if show is not None else set()
         has_missing_seasons = (
-            show is not None and
-            expected_seasons_count > 0 and
-            seasons_count_in_db < expected_seasons_count
+            bool(expected_season_numbers) and
+            bool(expected_season_numbers - database_season_numbers)
         )
         should_fetch_from_tmdb = show is None or show.tmdb_last_update is None or has_missing_seasons
 
@@ -78,8 +79,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 sync_show_genres(show, tmdb_show)
                 sync_show_people(show, tmdb_show_credits, tmdb_show)
 
-                for tmdb_season in tmdb_show.get('seasons') or []:
-                    upsert_season_from_tmdb(show, tmdb_season)
+                sync_show_seasons(show, tmdb_show.get('seasons'))
 
         response = Response(parse_show(show, request))
 
@@ -561,6 +561,43 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             show_episodes = shows_info[show_index]['seasons'][season_index]['episodes']
             show_episodes.append(EpisodeSerializer(episode).data)
 
+        show_tmdb_ids = [show_info['tmdb_id'] for show_info in shows_info]
+        last_watched_at_by_show_tmdb_id = {
+            row['episode__tmdb_season__tmdb_show__tmdb_id']: row['last_watched_at']
+            for row in EpisodeLog.objects
+            .filter(
+                user=request.user,
+                action_type=EpisodeLog.ACTION_TYPE_SCORE,
+                episode__tmdb_season__tmdb_show__tmdb_id__in=show_tmdb_ids,
+            )
+            .exclude(action_result=str(EPISODE_NOT_WATCHED_SCORE))
+            .values('episode__tmdb_season__tmdb_show__tmdb_id')
+            .annotate(last_watched_at=Max('created'))
+        }
+
+        last_bulk_watched_rows = ShowLog.objects \
+            .filter(
+                user=request.user,
+                action_type=ShowLog.ACTION_TYPE_EPISODES,
+                show__tmdb_id__in=show_tmdb_ids,
+            ) \
+            .exclude(action_result__startswith='-') \
+            .values('show__tmdb_id') \
+            .annotate(last_watched_at=Max('created'))
+
+        for row in last_bulk_watched_rows:
+            show_tmdb_id = row['show__tmdb_id']
+            last_watched_at = row['last_watched_at']
+            current_last_watched_at = last_watched_at_by_show_tmdb_id.get(show_tmdb_id)
+            if current_last_watched_at is None or last_watched_at > current_last_watched_at:
+                last_watched_at_by_show_tmdb_id[show_tmdb_id] = last_watched_at
+
+        shows_info.sort(
+            key=lambda show_info: last_watched_at_by_show_tmdb_id[show_info['tmdb_id']].timestamp()
+            if show_info['tmdb_id'] in last_watched_at_by_show_tmdb_id else 0,
+            reverse=True,
+        )
+
         return Response(shows_info)
 
     @swagger_auto_schema(
@@ -623,7 +660,10 @@ def parse_show(show, request):
         'poster_path': get_proxy_url(request, season.tmdb_poster_path),
         'air_date': season.tmdb_air_date.strftime('%d.%m.%Y') if season.tmdb_air_date else None,
         'season_number': season.tmdb_season_number,
-    } for season in show.season_set.order_by('tmdb_season_number').all()]
+    } for season in show.season_set.filter(
+        tmdb_season_number__in=show.tmdb_season_numbers,
+        episode__isnull=False,
+    ).order_by('tmdb_season_number').distinct()]
 
     return {
         'id': show.tmdb_id,

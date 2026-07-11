@@ -199,13 +199,24 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 
-CACHE_URL = os.environ.get('CACHE_URL', os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/1'))
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': CACHE_URL,
-    },
-}
+CACHE_URL = os.environ.get('CACHE_URL')
+if DEBUG and not CACHE_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'interests-local',
+        },
+    }
+else:
+    CACHE_URL = CACHE_URL or os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/1')
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': CACHE_URL,
+        },
+    }
+
+CELERY_LOCAL_FALLBACK = DEBUG and CACHES['default']['BACKEND'] == 'django.core.cache.backends.locmem.LocMemCache'
 
 LANGUAGE_CODE = 'ru-ru'
 
