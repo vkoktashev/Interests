@@ -16,6 +16,7 @@ import {QueryParamProvider} from 'use-query-params';
 import {ReactRouter5Adapter} from 'use-query-params/adapters/react-router-5';
 
 const APP_TITLE = 'Interests';
+const ROOT_PATH = '/';
 const ROUTE_SEARCH = 'search';
 
 function decodeTitleParam(value: unknown): string {
@@ -39,7 +40,11 @@ function withAppTitle(title: string): string {
     return `${title} - ${APP_TITLE}`;
 }
 
-function getDocumentTitle(route: any, routeParams: Record<string, unknown>): string {
+function getDocumentTitle(route: any, routeParams: Record<string, unknown>, routePathname: string): string {
+    if (routePathname === ROOT_PATH) {
+        return APP_TITLE;
+    }
+
     const routeTitle = String(route?.title || APP_TITLE).trim();
 
     if (route?.id === ROUTE_SEARCH) {
@@ -59,7 +64,7 @@ export default function Layout(props: React.PropsWithChildren<any>) {
     const route = useSelector(getRoute);
     const routeParams = useSelector(getRouteParams) || {};
     const routePathname = useSelector(state => state.router?.location?.pathname || '');
-    const documentTitle = getDocumentTitle(route, routeParams);
+    const documentTitle = getDocumentTitle(route, routeParams, routePathname);
 
     setTheme('dark');
 
