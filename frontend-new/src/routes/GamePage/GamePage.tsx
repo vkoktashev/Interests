@@ -52,7 +52,8 @@ export function GamePage() {
 	}), [gameId]);
 	const {data: game, isLoading} = useFetch(gameFetchConfig);
 
-	const shouldFetchCurrentGameTime = shouldLoadHltb && hltbFetchGameId === gameId;
+	const isCurrentGameReleased = game?.slug === gameId && game?.is_released;
+	const shouldFetchCurrentGameTime = isCurrentGameReleased && shouldLoadHltb && hltbFetchGameId === gameId;
 	const gameTimeFetchConfig = useMemo(() => gameId && shouldFetchCurrentGameTime && ({
 		url: `/games/game/${gameId}/hltb/`,
 		method: 'get',
@@ -143,7 +144,7 @@ export function GamePage() {
 	}, [gameId, gameTime, isGameTimeLoading, isGameTimeRequestStarted, shouldFetchCurrentGameTime]);
 
 	useEffect(() => {
-		if (!gameId || !game) {
+		if (!gameId || !isCurrentGameReleased) {
 			return;
 		}
 
@@ -153,7 +154,7 @@ export function GamePage() {
 		}, 400);
 
 		return () => window.clearTimeout(timeoutId);
-	}, [gameId, game]);
+	}, [gameId, isCurrentGameReleased]);
 
 	useEffect(() => {
 		if (
