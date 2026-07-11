@@ -36,6 +36,7 @@ class Show(models.Model):
     tmdb_status = models.CharField(max_length=30, blank=True, choices=TMDB_STATUS_CHOICES)
     tmdb_number_of_episodes = models.IntegerField(default=0)
     tmdb_number_of_seasons = models.IntegerField(default=0)
+    tmdb_season_numbers = models.JSONField(default=list, blank=True)
     tmdb_last_air_date = models.DateField(null=True)
     tmdb_overview = models.TextField(blank=True)
     tmdb_score = models.IntegerField(null=True)

@@ -12,7 +12,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from proxy.functions import get_proxy_url
 from shows.functions import get_show_new_fields, get_tmdb_show, get_tmdb_show_videos, get_tmdb_show_credits, \
-    sync_show_genres, sync_show_people, upsert_season_from_tmdb, get_tmdb_show_reviews, get_tmdb_show_recommendations
+    sync_show_genres, sync_show_people, sync_show_seasons, get_tmdb_show_reviews, get_tmdb_show_recommendations
 from shows.models import Show, UserShow, Episode, UserEpisode, EpisodeLog, ShowLog, ShowPerson
 from shows.serializers import ShowSerializer, UserShowReadSerializer, FollowedUserShowSerializer, UserEpisodeSerializer, \
     SeasonSerializer, EpisodeSerializer, UserShowWriteSerializer
@@ -46,12 +46,13 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         tmdb_id = kwargs.get('tmdb_id')
         show = Show.objects.filter(tmdb_id=tmdb_id).first()
 
-        seasons_count_in_db = show.season_set.count() if show is not None else 0
-        expected_seasons_count = (show.tmdb_number_of_seasons or 0) if show is not None else 0
+        expected_season_numbers = set(show.tmdb_season_numbers or []) if show is not None else set()
+        database_season_numbers = set(
+            show.season_set.values_list('tmdb_season_number', flat=True)
+        ) if show is not None else set()
         has_missing_seasons = (
-            show is not None and
-            expected_seasons_count > 0 and
-            seasons_count_in_db < expected_seasons_count
+            bool(expected_season_numbers) and
+            bool(expected_season_numbers - database_season_numbers)
         )
         should_fetch_from_tmdb = show is None or show.tmdb_last_update is None or has_missing_seasons
 
@@ -78,8 +79,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 sync_show_genres(show, tmdb_show)
                 sync_show_people(show, tmdb_show_credits, tmdb_show)
 
-                for tmdb_season in tmdb_show.get('seasons') or []:
-                    upsert_season_from_tmdb(show, tmdb_season)
+                sync_show_seasons(show, tmdb_show.get('seasons'))
 
         response = Response(parse_show(show, request))
 
@@ -660,7 +660,10 @@ def parse_show(show, request):
         'poster_path': get_proxy_url(request, season.tmdb_poster_path),
         'air_date': season.tmdb_air_date.strftime('%d.%m.%Y') if season.tmdb_air_date else None,
         'season_number': season.tmdb_season_number,
-    } for season in show.season_set.order_by('tmdb_season_number').all()]
+    } for season in show.season_set.filter(
+        tmdb_season_number__in=show.tmdb_season_numbers,
+        episode__isnull=False,
+    ).order_by('tmdb_season_number').distinct()]
 
     return {
         'id': show.tmdb_id,

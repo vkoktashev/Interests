@@ -8,7 +8,8 @@ from requests import HTTPError, ConnectionError
 from config.celery import app
 from shows.functions import clear_tmdb_episode_cache, clear_tmdb_season_cache, clear_tmdb_show_cache, \
     get_show_new_fields, get_tmdb_show, get_tmdb_show_videos, sync_show_genres, \
-    get_tmdb_show_credits, sync_show_people, upsert_season_from_tmdb, get_tmdb_season, sync_season_episodes, \
+    get_tmdb_show_credits, sync_show_people, sync_show_seasons, upsert_season_from_tmdb, get_tmdb_season, \
+    sync_season_episodes, \
     get_tmdb_season_credits, sync_season_people, get_tmdb_episode, get_episode_new_fields, get_tmdb_episode_credits, \
     sync_episode_people
 from shows.models import Show, UserShow, Season, Episode
@@ -100,11 +101,7 @@ def update_show_details(show_tmdb_id):
         sync_show_genres(show, tmdb_show)
         sync_show_people(show, tmdb_show_credits, tmdb_show)
 
-        seasons_count = 0
-        for tmdb_season in tmdb_show.get('seasons') or []:
-            season = upsert_season_from_tmdb(show, tmdb_season)
-            if season is not None:
-                seasons_count += 1
+        season_sync_result = sync_show_seasons(show, tmdb_show.get('seasons'))
     except Exception:
         logger.exception(
             'update_show_details: failed to apply TMDB show details for show id=%s name=%s tmdb_id=%s',
@@ -115,13 +112,16 @@ def update_show_details(show_tmdb_id):
         return None
 
     logger.debug(
-        'update_show_details: refreshed show id=%s name=%s tmdb_id=%s created=%s changed_fields=%s seasons=%s',
+        'update_show_details: refreshed show id=%s name=%s tmdb_id=%s created=%s changed_fields=%s '
+        'seasons=%s deleted_seasons=%s retained_seasons=%s',
         show.id,
         show.tmdb_name,
         show.tmdb_id,
         created,
         changed_fields,
-        seasons_count,
+        season_sync_result['synced'],
+        season_sync_result['deleted'],
+        season_sync_result['retained'],
     )
     return show
 
