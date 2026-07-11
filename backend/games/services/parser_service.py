@@ -117,6 +117,7 @@ async def parse_game_from_db(game: Game, hltb_game=None):
         'trailers': trailers,
         'screenshots': screenshots,
         'red_tigerino_playlist_url': game.red_tigerino_playlist_url,
+        'hltb_id': game.hltb_id,
     }
 
     if hltb_game is not None:

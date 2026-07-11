@@ -6,7 +6,7 @@ import {openModal} from '@steroidsjs/core/actions/modal';
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
 import _uniq from 'lodash/uniq';
-import {FaTwitch, FaYoutube, FaPencilAlt} from 'react-icons/fa';
+import {FaPencilAlt, FaTwitch, FaYoutube} from 'react-icons/fa';
 import {SiIgdb} from 'react-icons/si';
 import {GiTigerHead} from 'react-icons/gi';
 import {Loader} from '@steroidsjs/core/ui/layout'
@@ -25,7 +25,11 @@ import "./game-page.scss";
 import {Button, TextField} from '@steroidsjs/core/ui/form';
 
 const HLTB_REFRESH_POLL_INTERVAL_MS = 3000;
-const HLTB_REFRESH_MAX_POLLS = 5;
+const HLTB_REFRESH_MAX_POLLS = 20;
+
+function HltbIcon(props: {className?: string}) {
+	return <span className={props.className} aria-hidden='true' />;
+}
 
 export function GamePage() {
 	const bem = useBem('game-page');
@@ -251,6 +255,7 @@ export function GamePage() {
 	const mediaLinks = useMemo(() => {
 		const gameName = (game?.name || '').trim();
 		const gameSlug = (game?.slug || '').trim();
+		const hltbId = game?.hltb_id || displayedGameTime?.hltb_id;
 		if (!gameName) {
 			return [];
 		}
@@ -276,6 +281,15 @@ export function GamePage() {
 			},
 		];
 
+		if (hltbId) {
+			links.push({
+				id: 'hltb',
+				title: 'HowLongToBeat',
+				href: `https://howlongtobeat.com/game/${encodeURIComponent(hltbId)}`,
+				Icon: HltbIcon,
+			});
+		}
+
 		if (game?.red_tigerino_playlist_url) {
 			links.push({
 				id: 'redTigerino',
@@ -286,7 +300,13 @@ export function GamePage() {
 		}
 
 			return links.filter(item => Boolean(item.href));
-		}, [game?.name, game?.slug, game?.red_tigerino_playlist_url]);
+		}, [
+			displayedGameTime?.hltb_id,
+			game?.hltb_id,
+			game?.name,
+			game?.slug,
+			game?.red_tigerino_playlist_url,
+		]);
 
 	const canEditRedTigerinoPlaylist = useMemo(
 		() => Boolean(user?.permissions?.includes('games.change_game')),

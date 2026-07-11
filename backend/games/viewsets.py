@@ -345,11 +345,19 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             hours_map = self._build_hours_map(preferred_entries)
             payload = build_hltb_response_from_hours(hours_map)
             payload['source'] = preferred_source
+            if game.hltb_id:
+                payload['hltb_id'] = game.hltb_id
             payload['refreshing'] = is_hltb_refreshing
             return Response(payload)
 
         if is_hltb_refreshing:
-            return Response({'refreshing': True})
+            payload = {'refreshing': True}
+            if game.hltb_id:
+                payload['hltb_id'] = game.hltb_id
+            return Response(payload)
+
+        if game.hltb_id:
+            return Response({'hltb_id': game.hltb_id})
 
         return Response({})
 

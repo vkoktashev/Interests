@@ -327,6 +327,12 @@
       background: rgba(239, 68, 68, 0.12);
     }
 
+    &_hltb:hover {
+      color: $newText3;
+      border-color: rgba($newAccent2, 0.35);
+      background: rgba($newAccent2, 0.12);
+    }
+
     &_redTigerino {
       color: rgba(248, 113, 113, 0.88);
       border-color: rgba(239, 68, 68, 0.24);
@@ -345,6 +351,16 @@
 
     &_igdb {
       font-size: 24px;
+    }
+
+    &_hltb {
+      display: inline-block;
+      width: 14px;
+      height: 16px;
+      background:
+        linear-gradient(currentColor 0 0) left / 4px 100% no-repeat,
+        linear-gradient(currentColor 0 0) right / 4px 100% no-repeat,
+        linear-gradient(currentColor 0 0) center / 100% 4px no-repeat;
     }
   }
 
