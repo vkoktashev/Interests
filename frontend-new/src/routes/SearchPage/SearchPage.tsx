@@ -14,6 +14,7 @@ import ShowCards from './views/ShowCards';
 import UserCards from './views/UserCards';
 import {
 	IGameSearchItem,
+	IGameSearchResponse,
 	IPersonSearchItem,
 	IPersonSearchResponse,
 	ITmdbMediaItem,
@@ -155,6 +156,10 @@ function resolveTotalWithoutMeta(itemsLength: number, page: number): number {
 	return page * PAGE_SIZE + 1;
 }
 
+function resolveTotalWithHasNext(itemsLength: number, page: number, hasNext: boolean): number {
+	return (page - 1) * PAGE_SIZE + itemsLength + (hasNext ? 1 : 0);
+}
+
 function SearchPage() {
 	const dispatch = useDispatch();
 	const {http} = useComponents();
@@ -193,13 +198,14 @@ function SearchPage() {
 	);
 
 	const searchGames = useCallback(async (query: string, page: number, requestId: number) => {
-		const response = await http.get('/games/search/igdb/', {
+		const response = (await http.get('/games/search/igdb/', {
 			query,
 			page,
 			page_size: PAGE_SIZE,
-		});
-		const items = (Array.isArray(response) ? response : []) as IGameSearchItem[];
-		updateCategoryResults('Игры', items, resolveTotalWithoutMeta(items.length, page), requestId);
+		})) as IGameSearchResponse;
+		const items = Array.isArray(response?.results) ? response.results : [];
+		const total = resolveTotalWithHasNext(items.length, page, Boolean(response?.has_next));
+		updateCategoryResults('Игры', items, total, requestId);
 	}, [http, updateCategoryResults]);
 
 	const searchMovies = useCallback(async (query: string, page: number, requestId: number) => {

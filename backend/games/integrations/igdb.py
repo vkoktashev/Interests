@@ -411,31 +411,33 @@ def _resolve_store_info(url: str, category: int | None) -> dict[str, Any] | None
     }
 
 
-def get_game_search_results(query: str, page: int, page_size: int) -> list[dict[str, Any]]:
+def get_game_search_results(query: str, page: int, page_size: int) -> dict[str, Any]:
     safe_page = max(int(page or 1), 1)
     safe_page_size = max(int(page_size or 12), 1)
     if not (query or '').strip():
-        return []
+        return {'results': [], 'has_next': False}
 
     offset = (safe_page - 1) * safe_page_size
+    request_limit = safe_page_size + 1
     wrapper = get_igdb_wrapper()
     safe_query = (query or '').replace('\\', '\\\\').replace('"', '\\"')
     body = (
         f'search "{safe_query}"; '
         f'fields id,name,slug,category,game_type,first_release_date,{IGDB_RELEASE_DATE_FIELDS},'
         f'cover.url,genres.name,platforms.name,keywords.name; '
-        f'limit {safe_page_size}; '
+        f'limit {request_limit}; '
         f'offset {offset};'
     )
     raw = wrapper.api_request('games', body)
     if not raw:
-        return []
+        return {'results': [], 'has_next': False}
 
     games = json.loads(raw.decode('utf-8')) or []
+    should_paginate_locally = not games
     if not games:
         # Fallback 1: simpler IGDB search payload can return matches when rich payload returns empty.
         try:
-            games = query_igdb_games(query, limit=max(safe_page_size, 20))
+            games = query_igdb_games(query, limit=max(offset + request_limit, 20))
         except Exception:
             games = []
 
@@ -450,11 +452,11 @@ def get_game_search_results(query: str, page: int, page_size: int) -> list[dict[
             if slug_game:
                 games = [slug_game]
 
-    if safe_page > 1:
-        offset = (safe_page - 1) * safe_page_size
-        games = games[offset: offset + safe_page_size]
-    else:
-        games = games[:safe_page_size]
+    if should_paginate_locally:
+        games = games[offset: offset + request_limit]
+
+    has_next = len(games) > safe_page_size
+    games = games[:safe_page_size]
 
     result = []
     for game in games or []:
@@ -478,7 +480,7 @@ def get_game_search_results(query: str, page: int, page_size: int) -> list[dict[
             'tags': tags,
             'platforms': platforms,
         })
-    return result
+    return {'results': result, 'has_next': has_next}
 
 
 def query_igdb_game_by_id(igdb_id: int) -> Optional[dict[str, Any]]:
