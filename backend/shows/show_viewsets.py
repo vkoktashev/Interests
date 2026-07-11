@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from django.db.models import Count, Q
+from django.db.models import Count, Max, Q
 from django.utils import timezone
 from utils.swagger import openapi, swagger_auto_schema
 from requests import HTTPError, ConnectionError, Timeout
@@ -560,6 +560,43 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
             show_episodes = shows_info[show_index]['seasons'][season_index]['episodes']
             show_episodes.append(EpisodeSerializer(episode).data)
+
+        show_tmdb_ids = [show_info['tmdb_id'] for show_info in shows_info]
+        last_watched_at_by_show_tmdb_id = {
+            row['episode__tmdb_season__tmdb_show__tmdb_id']: row['last_watched_at']
+            for row in EpisodeLog.objects
+            .filter(
+                user=request.user,
+                action_type=EpisodeLog.ACTION_TYPE_SCORE,
+                episode__tmdb_season__tmdb_show__tmdb_id__in=show_tmdb_ids,
+            )
+            .exclude(action_result=str(EPISODE_NOT_WATCHED_SCORE))
+            .values('episode__tmdb_season__tmdb_show__tmdb_id')
+            .annotate(last_watched_at=Max('created'))
+        }
+
+        last_bulk_watched_rows = ShowLog.objects \
+            .filter(
+                user=request.user,
+                action_type=ShowLog.ACTION_TYPE_EPISODES,
+                show__tmdb_id__in=show_tmdb_ids,
+            ) \
+            .exclude(action_result__startswith='-') \
+            .values('show__tmdb_id') \
+            .annotate(last_watched_at=Max('created'))
+
+        for row in last_bulk_watched_rows:
+            show_tmdb_id = row['show__tmdb_id']
+            last_watched_at = row['last_watched_at']
+            current_last_watched_at = last_watched_at_by_show_tmdb_id.get(show_tmdb_id)
+            if current_last_watched_at is None or last_watched_at > current_last_watched_at:
+                last_watched_at_by_show_tmdb_id[show_tmdb_id] = last_watched_at
+
+        shows_info.sort(
+            key=lambda show_info: last_watched_at_by_show_tmdb_id[show_info['tmdb_id']].timestamp()
+            if show_info['tmdb_id'] in last_watched_at_by_show_tmdb_id else 0,
+            reverse=True,
+        )
 
         return Response(shows_info)
 
