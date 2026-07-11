@@ -70,7 +70,18 @@ export default function Layout(props: React.PropsWithChildren<any>) {
 
     const components = useComponents();
 
-    const {status, data} = useLayout(() => components.http.post('/init'));
+    const {status, data} = useLayout(async () => {
+        try {
+            return await components.http.post('/init');
+        } catch (error: any) {
+            if (error?.response?.status === 401) {
+                components.http.onLogout();
+                return components.http.post('/init');
+            }
+
+            throw error;
+        }
+    });
 
     React.useEffect(() => {
         document.title = documentTitle;
