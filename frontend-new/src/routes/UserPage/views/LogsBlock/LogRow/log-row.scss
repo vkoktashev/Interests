@@ -35,11 +35,7 @@
     }
 
     &__content {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        column-gap: 2px;
-        row-gap: 4px;
+        display: block;
         min-width: 0;
         color: $newText2;
         flex: 0 1 auto;
@@ -84,9 +80,7 @@
         letter-spacing: inherit;
     }
     &__inline {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
+        display: inline;
     }
     &__muted {
         color: $newText2;
@@ -129,7 +123,6 @@
         &__content {
             flex: 1 1 auto;
             min-width: 0;
-            gap: 4px;
         }
 
         &__delete-button {
