@@ -216,6 +216,8 @@ else:
         },
     }
 
+CELERY_LOCAL_FALLBACK = DEBUG and CACHES['default']['BACKEND'] == 'django.core.cache.backends.locmem.LocMemCache'
+
 LANGUAGE_CODE = 'ru-ru'
 
 TIME_ZONE = 'UTC'
