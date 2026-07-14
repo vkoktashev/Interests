@@ -1,4 +1,5 @@
 import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_PERSON, ROUTE_SHOW} from '../../index';
+import {getUserStatusBadge} from '../../../shared/mediaStatus';
 import {GAME_TYPE_LABELS, IGameSearchItem, IPersonSearchItem, ISearchCardData, ITmdbMediaItem} from './searchTypes';
 
 const DETAILS_LIMIT = 6;
@@ -35,6 +36,7 @@ export function mapGameToCard(game: IGameSearchItem): ISearchCardData {
 		kindLabel: typeof gameType === 'number' ? (GAME_TYPE_LABELS[gameType] || 'Игра') : undefined,
 		poster: game.background_image ? `url(${game.background_image})` : undefined,
 		layoutVariant: 'media',
+		statusBadge: getUserStatusBadge('game', game.user_status) || undefined,
 		releaseDate: game.released_display || formatDate(game.released),
 		genres: joinNames(game.genres, genre => genre.name),
 		tags: joinNames(game.tags, tag => tag.name, DETAILS_LIMIT),
@@ -52,6 +54,7 @@ export function mapMovieToCard(movie: ITmdbMediaItem): ISearchCardData {
 		name: movie.title || 'Без названия',
 		poster: movie.poster_path || movie.backdrop_path,
 		layoutVariant: 'media',
+		statusBadge: getUserStatusBadge('movie', movie.user_status) || undefined,
 		releaseDate: formatDate(movie.release_date),
 		overview: movie.overview || '',
 		route: ROUTE_MOVIE,
@@ -67,6 +70,7 @@ export function mapShowToCard(show: ITmdbMediaItem): ISearchCardData {
 		name: show.name || 'Без названия',
 		poster: show.poster_path || show.backdrop_path,
 		layoutVariant: 'media',
+		statusBadge: getUserStatusBadge('show', show.user_status) || undefined,
 		releaseDate: formatDate(show.first_air_date),
 		overview: show.overview || '',
 		route: ROUTE_SHOW,

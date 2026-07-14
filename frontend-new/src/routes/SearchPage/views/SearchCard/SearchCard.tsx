@@ -34,7 +34,14 @@ function SearchCard({info, className}: ISearchCardProps) {
 
 				<div className={bem.element('body')}>
 					<div className={bem.element('body-main')}>
-						<h4 className={bem.element('name')}>{info.name}</h4>
+						<div className={bem.element('title-row')}>
+							<h4 className={bem.element('name')}>{info.name}</h4>
+							{info.statusBadge && (
+								<span className={bem.element('status', {[info.statusBadge.tone]: true})}>
+									{info.statusBadge.label}
+								</span>
+							)}
+						</div>
 						{hasDetails && (
 							<div className={bem.element('details')}>
 								{info.genres && (

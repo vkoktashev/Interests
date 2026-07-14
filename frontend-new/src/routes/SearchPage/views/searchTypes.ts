@@ -1,4 +1,5 @@
 import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_PERSON, ROUTE_SHOW} from '../../index';
+import type {IMediaStatusBadge} from '../../../shared/mediaStatus';
 
 export const SEARCH_CATEGORIES = ['Игры', 'Фильмы', 'Сериалы', 'Люди', 'Пользователи'] as const;
 
@@ -57,6 +58,7 @@ export interface ISearchCardData {
 	platforms?: string;
 	overview?: string;
 	layoutVariant?: 'default' | 'media';
+	statusBadge?: IMediaStatusBadge;
 	route: typeof ROUTE_GAME | typeof ROUTE_MOVIE | typeof ROUTE_SHOW | typeof ROUTE_PERSON;
 	routeParams: Record<string, unknown>;
 }
@@ -73,6 +75,7 @@ export interface IGameSearchItem {
 	genres?: Array<{name: string}>;
 	tags?: Array<{name: string}>;
 	platforms?: Array<{platform: {name: string}}>;
+	user_status?: string | null;
 }
 
 export interface IGameSearchResponse {
@@ -96,6 +99,7 @@ export interface ITmdbMediaItem {
 	overview?: string;
 	release_date?: string;
 	first_air_date?: string;
+	user_status?: string | null;
 }
 
 export interface ITmdbSearchResponse {

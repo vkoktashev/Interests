@@ -12,11 +12,28 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from proxy.functions import get_proxy_url
-from shows.models import Show
+from shows.models import Show, UserShow
 from shows.serializers import ShowSerializer
 from utils.constants import DEFAULT_PAGE_NUMBER, TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, \
     DEFAULT_PAGE_SIZE, LANGUAGE, CACHE_TIMEOUT
 from utils.functions import get_page_size
+
+
+def _attach_shows_user_status(request, results):
+    for result in results:
+        result['user_status'] = None
+
+    if not results or not request.user.is_authenticated:
+        return
+
+    tmdb_ids = [result.get('id', result.get('tmdb_id')) for result in results]
+    user_shows = UserShow.objects.filter(user=request.user, show__tmdb_id__in=tmdb_ids) \
+        .values('show__tmdb_id', 'status')
+    user_status_by_tmdb_id = {row['show__tmdb_id']: row['status'] for row in user_shows}
+
+    for result in results:
+        tmdb_id = result.get('id', result.get('tmdb_id'))
+        result['user_status'] = user_status_by_tmdb_id.get(tmdb_id)
 
 
 class SearchShowsViewSet(GenericViewSet, mixins.ListModelMixin):
@@ -48,6 +65,7 @@ class SearchShowsViewSet(GenericViewSet, mixins.ListModelMixin):
             result['poster_path'] = get_proxy_url(request,
                                                   TMDB_POSTER_PATH_PREFIX,
                                                   result.get('poster_path'))
+        _attach_shows_user_status(request, results['results'])
 
         return Response(results, status=status.HTTP_200_OK)
 
@@ -80,8 +98,10 @@ class SearchShowsViewSet(GenericViewSet, mixins.ListModelMixin):
             .order_by('-similarity', 'tmdb_name')
         paginator_page = Paginator(shows, page_size).get_page(page)
         serializer = ShowSerializer(paginator_page.object_list, many=True)
+        results = serializer.data
+        _attach_shows_user_status(request, results)
 
-        return Response(serializer.data)
+        return Response(results)
 
 
 def get_show_search_results(query, page):

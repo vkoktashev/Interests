@@ -50,6 +50,49 @@ IGDB_PLATFORMS_CACHE_KEY = 'igdb:platforms'
 IGDB_PLATFORMS_CACHE_TIMEOUT = 24 * 60 * 60
 
 
+def _attach_games_user_status(request, results, ids_are_internal=False):
+    for result in results:
+        result['user_status'] = None
+
+    if not results or not request.user.is_authenticated:
+        return
+
+    if ids_are_internal:
+        game_ids = [result.get('id') for result in results if result.get('id') is not None]
+        user_games = UserGame.objects.filter(user=request.user, game_id__in=game_ids) \
+            .values('game_id', 'status')
+        user_status_by_game_id = {row['game_id']: row['status'] for row in user_games}
+
+        for result in results:
+            result['user_status'] = user_status_by_game_id.get(result.get('id'))
+        return
+
+    igdb_ids = [result.get('id') for result in results if result.get('id') is not None]
+    slugs = [result.get('slug') for result in results if result.get('slug')]
+    user_games = UserGame.objects.filter(user=request.user) \
+        .filter(
+            Q(game__igdb_id__in=igdb_ids) |
+            Q(game__igdb_slug__in=slugs) |
+            Q(game__rawg_slug__in=slugs)
+        ) \
+        .values('game__igdb_id', 'game__igdb_slug', 'game__rawg_slug', 'status')
+    user_status_by_igdb_id = {
+        row['game__igdb_id']: row['status']
+        for row in user_games
+        if row['game__igdb_id'] is not None
+    }
+    user_status_by_slug = {}
+    for row in user_games:
+        if row['game__igdb_slug']:
+            user_status_by_slug[row['game__igdb_slug']] = row['status']
+        if row['game__rawg_slug']:
+            user_status_by_slug[row['game__rawg_slug']] = row['status']
+
+    for result in results:
+        result['user_status'] = user_status_by_igdb_id.get(result.get('id')) \
+            or user_status_by_slug.get(result.get('slug'))
+
+
 class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
     serializer_class = GameSerializer
     queryset = Game.objects.all()
@@ -114,6 +157,8 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
             results = get_game_search_results(query, page, page_size, game_types, platform_ids)
         except Exception:
             return Response(IGDB_UNAVAILABLE, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        await sync_to_async(_attach_games_user_status)(request, results.get('results') or [])
 
         return Response(results)
 
@@ -184,8 +229,10 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
         paginator = Paginator(games, page_size)
         paginator_page = paginator.get_page(page)
         serializer = GameSerializer(paginator_page.object_list, many=True)
+        results = serializer.data
+        _attach_games_user_status(request, results, ids_are_internal=True)
 
-        return Response(serializer.data)
+        return Response(results)
 
 
 class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):

@@ -5,6 +5,8 @@ import {useBem, useComponents, useDispatch} from '@steroidsjs/core/hooks';
 import {goToRoute} from '@steroidsjs/core/actions/router';
 import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW} from '../../../../../routes';
 import useWindowDimensions from '../../../../../hooks/useWindowDimensions';
+import {getUserStatusBadge} from '../../../../mediaStatus';
+import type {IMediaStatusBadge} from '../../../../mediaStatus';
 import './search-input.scss';
 
 interface IGameHint {
@@ -12,18 +14,21 @@ interface IGameHint {
 	name: string;
 	release_date?: string;
 	release_date_display?: string;
+	user_status?: string | null;
 }
 
 interface IMovieHint {
 	tmdb_id: number;
 	tmdb_name: string;
 	tmdb_release_date?: string;
+	user_status?: string | null;
 }
 
 interface IShowHint {
 	tmdb_id: number;
 	tmdb_name: string;
 	tmdb_release_date?: string;
+	user_status?: string | null;
 }
 
 interface IHintsState {
@@ -38,6 +43,7 @@ interface IHintItem {
 	year: string;
 	href: string;
 	onClick: () => void;
+	statusBadge?: IMediaStatusBadge;
 }
 
 interface IHintItemWithIndex extends IHintItem {
@@ -175,6 +181,7 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 				id: String(hint.slug),
 				title: hint.name,
 				year: getReleaseYear(hint.release_date, hint.release_date_display),
+				statusBadge: getUserStatusBadge('game', hint.user_status) || undefined,
 				href: `/game/${hint.slug}`,
 				onClick: () => dispatch(goToRoute(ROUTE_GAME, {gameId: hint.slug})),
 			}))),
@@ -188,6 +195,7 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 				id: String(hint.tmdb_id),
 				title: hint.tmdb_name,
 				year: getReleaseYear(hint.tmdb_release_date),
+				statusBadge: getUserStatusBadge('movie', hint.user_status) || undefined,
 				href: `/movie/${hint.tmdb_id}`,
 				onClick: () => dispatch(goToRoute(ROUTE_MOVIE, {movieId: hint.tmdb_id})),
 			}))),
@@ -201,6 +209,7 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 				id: String(hint.tmdb_id),
 				title: hint.tmdb_name,
 				year: getReleaseYear(hint.tmdb_release_date),
+				statusBadge: getUserStatusBadge('show', hint.user_status) || undefined,
 				href: `/show/${hint.tmdb_id}`,
 				onClick: () => dispatch(goToRoute(ROUTE_SHOW, {showId: hint.tmdb_id})),
 			}))),
@@ -340,8 +349,15 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 									setActiveHintIndex(-1);
 								}}
 							>
-									<span className={bem.element('hint-title')}>
-										{item.title}
+									<span className={bem.element('hint-main')}>
+										<span className={bem.element('hint-title')}>
+											{item.title}
+										</span>
+										{item.statusBadge && (
+											<span className={bem.element('hint-status', {[item.statusBadge.tone]: true})}>
+												{item.statusBadge.label}
+											</span>
+										)}
 									</span>
 									<span className={bem.element('hint-year')}>
 										{item.year}
