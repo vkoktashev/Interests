@@ -339,6 +339,7 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 								<a
 								key={item.id}
 								href={item.href}
+								title={item.title}
 								className={bem.element('hint', {active: activeHintIndex === item.flatIndex})}
 								onMouseDown={(event) => event.preventDefault()}
 								onMouseEnter={() => setActiveHintIndex(item.flatIndex)}
