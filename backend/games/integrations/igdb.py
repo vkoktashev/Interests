@@ -19,6 +19,7 @@ from utils.functions import objects_to_str, update_fields_if_needed_async
 
 TWITCH_TOKEN_URL = 'https://id.twitch.tv/oauth2/token'
 IGDB_API_TIMEOUT = 8
+IGDB_GAME_TYPE_IDS = frozenset(range(15))
 
 _token_cache: dict[str, Any] = {
     'access_token': None,
@@ -152,13 +153,80 @@ def get_igdb_wrapper() -> IGDBWrapper:
     return IGDBWrapper(client_id, access_token)
 
 
-def query_igdb_games(query: str, limit: int = 20) -> list[dict[str, Any]]:
+def _build_igdb_game_filters(
+    game_types: list[int] | None,
+    platform_ids: list[int] | None,
+) -> str:
+    conditions = []
+    if game_types:
+        values = ','.join(str(game_type) for game_type in sorted(set(game_types)))
+        conditions.append(f'game_type = ({values})')
+    if platform_ids:
+        values = ','.join(str(platform_id) for platform_id in sorted(set(platform_ids)))
+        conditions.append(f'platforms = ({values})')
+
+    return f'where {" & ".join(conditions)}; ' if conditions else ''
+
+
+def _get_igdb_game_type(game: dict[str, Any]) -> int | None:
+    game_type = game.get('game_type')
+    if game_type is None:
+        game_type = game.get('category')
+    if isinstance(game_type, dict):
+        game_type = game_type.get('id')
+    if isinstance(game_type, int):
+        return game_type
+    try:
+        return int(game_type)
+    except (TypeError, ValueError):
+        return None
+
+
+def _get_igdb_platform_ids(game: dict[str, Any]) -> set[int]:
+    platform_ids = set()
+    for platform in game.get('platforms') or []:
+        value = platform.get('id') if isinstance(platform, dict) else platform
+        try:
+            platform_ids.add(int(value))
+        except (TypeError, ValueError):
+            continue
+    return platform_ids
+
+
+def query_igdb_platforms() -> list[dict[str, Any]]:
+    wrapper = get_igdb_wrapper()
+    body = 'fields id,name,abbreviation,slug; sort name asc; limit 500;'
+    raw = wrapper.api_request('platforms', body)
+    if not raw:
+        return []
+
+    platforms = json.loads(raw.decode('utf-8')) or []
+    return [
+        {
+            'id': platform['id'],
+            'name': platform['name'],
+            'abbreviation': platform.get('abbreviation') or '',
+            'slug': platform.get('slug') or '',
+        }
+        for platform in platforms
+        if isinstance(platform.get('id'), int) and platform.get('name')
+    ]
+
+
+def query_igdb_games(
+    query: str,
+    limit: int = 20,
+    game_types: list[int] | None = None,
+    platform_ids: list[int] | None = None,
+) -> list[dict[str, Any]]:
     wrapper = get_igdb_wrapper()
     safe_query = (query or '').replace('"', '\\"')
+    game_filters = _build_igdb_game_filters(game_types, platform_ids)
     body = (
         f'search "{safe_query}"; '
         f'fields id,name,slug,category,game_type,first_release_date,aggregated_rating,total_rating,'
-        f'{IGDB_RELEASE_DATE_FIELDS},rating_count,cover.url,url; '
+        f'{IGDB_RELEASE_DATE_FIELDS},rating_count,cover.url,url,platforms.id,platforms.name; '
+        f'{game_filters}'
         f'limit {max(1, min(limit, 50))};'
     )
     raw = wrapper.api_request('games', body)
@@ -411,20 +479,33 @@ def _resolve_store_info(url: str, category: int | None) -> dict[str, Any] | None
     }
 
 
-def get_game_search_results(query: str, page: int, page_size: int) -> dict[str, Any]:
+def get_game_search_results(
+    query: str,
+    page: int,
+    page_size: int,
+    game_types: list[int] | None = None,
+    platform_ids: list[int] | None = None,
+) -> dict[str, Any]:
     safe_page = max(int(page or 1), 1)
     safe_page_size = max(int(page_size or 12), 1)
     if not (query or '').strip():
+        return {'results': [], 'has_next': False}
+
+    normalized_game_types = None if game_types is None else sorted(set(game_types))
+    normalized_platform_ids = None if platform_ids is None else sorted(set(platform_ids))
+    if normalized_game_types == [] or normalized_platform_ids == []:
         return {'results': [], 'has_next': False}
 
     offset = (safe_page - 1) * safe_page_size
     request_limit = safe_page_size + 1
     wrapper = get_igdb_wrapper()
     safe_query = (query or '').replace('\\', '\\\\').replace('"', '\\"')
+    game_filters = _build_igdb_game_filters(normalized_game_types, normalized_platform_ids)
     body = (
         f'search "{safe_query}"; '
         f'fields id,name,slug,category,game_type,first_release_date,{IGDB_RELEASE_DATE_FIELDS},'
-        f'cover.url,genres.name,platforms.name,keywords.name; '
+        f'cover.url,genres.name,platforms.id,platforms.name,keywords.name; '
+        f'{game_filters}'
         f'limit {request_limit}; '
         f'offset {offset};'
     )
@@ -437,7 +518,12 @@ def get_game_search_results(query: str, page: int, page_size: int) -> dict[str, 
     if not games:
         # Fallback 1: simpler IGDB search payload can return matches when rich payload returns empty.
         try:
-            games = query_igdb_games(query, limit=max(offset + request_limit, 20))
+            games = query_igdb_games(
+                query,
+                limit=max(offset + request_limit, 20),
+                game_types=normalized_game_types,
+                platform_ids=normalized_platform_ids,
+            )
         except Exception:
             games = []
 
@@ -449,7 +535,13 @@ def get_game_search_results(query: str, page: int, page_size: int) -> dict[str, 
                 slug_game = query_igdb_game_by_slug(slug_candidate)
             except Exception:
                 slug_game = None
-            if slug_game:
+            if slug_game and (
+                normalized_game_types is None
+                or _get_igdb_game_type(slug_game) in normalized_game_types
+            ) and (
+                normalized_platform_ids is None
+                or bool(_get_igdb_platform_ids(slug_game).intersection(normalized_platform_ids))
+            ):
                 games = [slug_game]
 
     if should_paginate_locally:
@@ -460,9 +552,7 @@ def get_game_search_results(query: str, page: int, page_size: int) -> dict[str, 
 
     result = []
     for game in games or []:
-        game_category = game.get('category')
-        if game_category is None:
-            game_category = game.get('game_type')
+        game_type = _get_igdb_game_type(game)
         release_info = _get_igdb_release_info(game)
         platforms = [{'platform': {'name': (item or {}).get('name', '')}} for item in (game.get('platforms') or [])]
         genres = [{'name': (item or {}).get('name', '')} for item in (game.get('genres') or [])]
@@ -471,7 +561,8 @@ def get_game_search_results(query: str, page: int, page_size: int) -> dict[str, 
             'id': game.get('id'),
             'name': game.get('name') or '',
             'slug': game.get('slug') or '',
-            'category': game_category,
+            'game_type': game_type,
+            'category': game_type,
             'background_image': _format_igdb_cover_url((game.get('cover') or {}).get('url')),
             'released': release_info['date'].isoformat() if release_info['date'] else None,
             'released_display': release_info['date_display'],
@@ -486,8 +577,8 @@ def get_game_search_results(query: str, page: int, page_size: int) -> dict[str, 
 def query_igdb_game_by_id(igdb_id: int) -> Optional[dict[str, Any]]:
     wrapper = get_igdb_wrapper()
     body = (
-        f'fields id,name,slug,category,first_release_date,summary,rating,rating_count,aggregated_rating,'
-        f'aggregated_rating_count,{IGDB_RELEASE_DATE_FIELDS},cover.url,url,platforms.name,genres.id,genres.name,genres.slug,'
+        f'fields id,name,slug,category,game_type,first_release_date,summary,rating,rating_count,aggregated_rating,'
+        f'aggregated_rating_count,{IGDB_RELEASE_DATE_FIELDS},cover.url,url,platforms.id,platforms.name,genres.id,genres.name,genres.slug,'
         f'involved_companies.developer,involved_companies.company.id,involved_companies.company.name,'
         f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height,'
         f'websites.id,websites.url,websites.category; '
@@ -505,8 +596,8 @@ def query_igdb_game_by_slug(slug: str) -> Optional[dict[str, Any]]:
     wrapper = get_igdb_wrapper()
     safe_slug = (slug or '').replace('\\', '\\\\').replace('"', '\\"')
     body = (
-        f'fields id,name,slug,category,first_release_date,summary,rating,rating_count,aggregated_rating,'
-        f'aggregated_rating_count,{IGDB_RELEASE_DATE_FIELDS},cover.url,url,platforms.name,genres.id,genres.name,genres.slug,'
+        f'fields id,name,slug,category,game_type,first_release_date,summary,rating,rating_count,aggregated_rating,'
+        f'aggregated_rating_count,{IGDB_RELEASE_DATE_FIELDS},cover.url,url,platforms.id,platforms.name,genres.id,genres.name,genres.slug,'
         f'involved_companies.developer,involved_companies.company.id,involved_companies.company.name,'
         f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height,'
         f'websites.id,websites.url,websites.category; '

@@ -19,9 +19,11 @@ from games.integrations.hltb import (
     build_hltb_response_from_hours,
 )
 from games.integrations.igdb import (
+    IGDB_GAME_TYPE_IDS,
     get_game_search_results,
     get_igdb_game_new_fields,
     query_igdb_game_by_slug,
+    query_igdb_platforms,
     resolve_igdb_game_details,
     update_game_beat_times_from_igdb,
     update_game_developers_from_igdb,
@@ -44,6 +46,9 @@ from utils.celery import enqueue_background_task
 from utils.constants import IGDB_UNAVAILABLE, ERROR, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, GAME_NOT_FOUND
 from utils.functions import get_page_size, update_fields_if_needed_async
 
+IGDB_PLATFORMS_CACHE_KEY = 'igdb:platforms'
+IGDB_PLATFORMS_CACHE_TIMEOUT = 24 * 60 * 60
+
 
 class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
     serializer_class = GameSerializer
@@ -55,6 +60,8 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
             openapi.Parameter('query', openapi.IN_QUERY, type=openapi.TYPE_STRING),
             openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, default=DEFAULT_PAGE_NUMBER),
             openapi.Parameter('page_size', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, default=DEFAULT_PAGE_SIZE),
+            openapi.Parameter('game_types', openapi.IN_QUERY, type=openapi.TYPE_STRING),
+            openapi.Parameter('platforms', openapi.IN_QUERY, type=openapi.TYPE_STRING),
         ],
         responses={
             200: openapi.Response('OK'),
@@ -66,13 +73,68 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
         query = request.GET.get('query', '')
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
         page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
+        game_types_value = request.GET.get('game_types')
+        platforms_value = request.GET.get('platforms')
+
+        game_types = None
+        if game_types_value is not None:
+            if game_types_value == 'none':
+                game_types = []
+            else:
+                try:
+                    game_types = sorted(set(
+                        int(value)
+                        for value in game_types_value.split(',')
+                        if value.strip()
+                    ))
+                except ValueError:
+                    return Response({ERROR: 'Invalid game_types value.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if any(game_type not in IGDB_GAME_TYPE_IDS for game_type in game_types):
+                return Response({ERROR: 'Invalid game_types value.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        platform_ids = None
+        if platforms_value is not None:
+            if platforms_value == 'none':
+                platform_ids = []
+            else:
+                try:
+                    platform_ids = sorted(set(
+                        int(value)
+                        for value in platforms_value.split(',')
+                        if value.strip()
+                    ))
+                except ValueError:
+                    return Response({ERROR: 'Invalid platforms value.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if any(platform_id <= 0 for platform_id in platform_ids):
+                return Response({ERROR: 'Invalid platforms value.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            results = get_game_search_results(query, page, page_size)
+            results = get_game_search_results(query, page, page_size, game_types, platform_ids)
         except Exception:
             return Response(IGDB_UNAVAILABLE, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         return Response(results)
+
+    @swagger_auto_schema(
+        operation_description="List platforms available in IGDB.",
+        responses={
+            200: openapi.Response('OK'),
+            503: openapi.Response('Service Unavailable'),
+        }
+    )
+    @action(detail=False, methods=['get'])
+    def platforms(self, request):
+        platforms = cache.get(IGDB_PLATFORMS_CACHE_KEY)
+        if platforms is None:
+            try:
+                platforms = query_igdb_platforms()
+            except Exception:
+                return Response(IGDB_UNAVAILABLE, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            cache.set(IGDB_PLATFORMS_CACHE_KEY, platforms, IGDB_PLATFORMS_CACHE_TIMEOUT)
+
+        return Response(platforms)
 
     @swagger_auto_schema(
         operation_description="List all games that match a search query, with pagination.",

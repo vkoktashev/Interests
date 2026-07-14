@@ -1,23 +1,7 @@
 import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_PERSON, ROUTE_SHOW} from '../../index';
-import {IGameSearchItem, IPersonSearchItem, ISearchCardData, ITmdbMediaItem} from './searchTypes';
+import {GAME_TYPE_LABELS, IGameSearchItem, IPersonSearchItem, ISearchCardData, ITmdbMediaItem} from './searchTypes';
 
 const DETAILS_LIMIT = 6;
-const GAME_CATEGORY_LABELS: Record<number, string> = {
-	0: 'Игра',
-	1: 'DLC',
-	2: 'Дополнение',
-	3: 'Сборник',
-	4: 'Standalone',
-	5: 'Мод',
-	6: 'Эпизод',
-	7: 'Сезон',
-	8: 'Ремейк',
-	9: 'Ремастер',
-	10: 'Expanded',
-	11: 'Порт',
-	12: 'Fork',
-	13: 'Пак',
-};
 
 export function formatDate(value?: string): string {
 	if (!value || !value.includes('-')) {
@@ -43,10 +27,12 @@ export function joinNames<T>(items: T[] | undefined, getName: (item: T) => strin
 }
 
 export function mapGameToCard(game: IGameSearchItem): ISearchCardData {
+	const gameType = game.game_type ?? game.category;
+
 	return {
 		id: game.id,
 		name: game.name,
-		kindLabel: typeof game.category === 'number' ? (GAME_CATEGORY_LABELS[game.category] || 'Игра') : undefined,
+		kindLabel: typeof gameType === 'number' ? (GAME_TYPE_LABELS[gameType] || 'Игра') : undefined,
 		poster: game.background_image ? `url(${game.background_image})` : undefined,
 		layoutVariant: 'media',
 		releaseDate: game.released_display || formatDate(game.released),

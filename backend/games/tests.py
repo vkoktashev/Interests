@@ -43,3 +43,45 @@ class GameSearchPaginationTests(SimpleTestCase):
 
         self.assertEqual(len(response['results']), 12)
         self.assertFalse(response['has_next'])
+
+    @patch('games.integrations.igdb.get_igdb_wrapper')
+    def test_game_types_are_filtered_before_pagination(self, get_igdb_wrapper_mock):
+        wrapper = Mock()
+        wrapper.api_request.return_value = json.dumps(self._build_games(12)).encode('utf-8')
+        get_igdb_wrapper_mock.return_value = wrapper
+
+        get_game_search_results('The Witcher 3', page=1, page_size=12, game_types=[0, 2, 4])
+
+        request_body = wrapper.api_request.call_args.args[1]
+        self.assertIn('where game_type = (0,2,4);', request_body)
+
+    @patch('games.integrations.igdb.get_igdb_wrapper')
+    def test_platforms_are_combined_with_game_types_before_pagination(self, get_igdb_wrapper_mock):
+        wrapper = Mock()
+        wrapper.api_request.return_value = json.dumps(self._build_games(12)).encode('utf-8')
+        get_igdb_wrapper_mock.return_value = wrapper
+
+        get_game_search_results(
+            'The Witcher 3',
+            page=1,
+            page_size=12,
+            game_types=[0, 2, 4],
+            platform_ids=[6, 48],
+        )
+
+        request_body = wrapper.api_request.call_args.args[1]
+        self.assertIn('where game_type = (0,2,4) & platforms = (6,48);', request_body)
+
+    @patch('games.integrations.igdb.get_igdb_wrapper')
+    def test_empty_game_types_skip_igdb_request(self, get_igdb_wrapper_mock):
+        response = get_game_search_results('The Witcher 3', page=1, page_size=12, game_types=[])
+
+        get_igdb_wrapper_mock.assert_not_called()
+        self.assertEqual(response, {'results': [], 'has_next': False})
+
+    @patch('games.integrations.igdb.get_igdb_wrapper')
+    def test_empty_platforms_skip_igdb_request(self, get_igdb_wrapper_mock):
+        response = get_game_search_results('The Witcher 3', page=1, page_size=12, platform_ids=[])
+
+        get_igdb_wrapper_mock.assert_not_called()
+        self.assertEqual(response, {'results': [], 'has_next': False})
