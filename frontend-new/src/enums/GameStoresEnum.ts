@@ -27,6 +27,21 @@ export class GameStoresEnum {
 
     static ITCH_IO = 'itch';
 
+    static PRIORITY = [
+        GameStoresEnum.STEAM,
+        GameStoresEnum.EGS,
+        GameStoresEnum.GOG,
+        GameStoresEnum.PS_STORE,
+        GameStoresEnum.XBOX,
+        GameStoresEnum.XBOX360,
+        GameStoresEnum.ESHOP,
+        GameStoresEnum.APPSTORE,
+        GameStoresEnum.GOOGLE_PLAY,
+        GameStoresEnum.ITCH_IO,
+        GameStoresEnum.IGM,
+        GameStoresEnum.PLATI,
+    ];
+
     static getIcon(id: string) {
         switch (id) {
             case this.STEAM:

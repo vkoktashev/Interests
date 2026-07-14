@@ -11,13 +11,30 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from movies.models import Movie
+from movies.models import Movie, UserMovie
 from movies.serializers import MovieSerializer
 from proxy.functions import get_proxy_url
 from utils.constants import LANGUAGE, CACHE_TIMEOUT, \
     TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, DEFAULT_PAGE_SIZE
 from utils.functions import get_page_size
 from utils.openapi_params import DEFAULT_PAGE_NUMBER
+
+
+def _attach_movies_user_status(request, results):
+    for result in results:
+        result['user_status'] = None
+
+    if not results or not request.user.is_authenticated:
+        return
+
+    tmdb_ids = [result.get('id', result.get('tmdb_id')) for result in results]
+    user_movies = UserMovie.objects.filter(user=request.user, movie__tmdb_id__in=tmdb_ids) \
+        .values('movie__tmdb_id', 'status')
+    user_status_by_tmdb_id = {row['movie__tmdb_id']: row['status'] for row in user_movies}
+
+    for result in results:
+        tmdb_id = result.get('id', result.get('tmdb_id'))
+        result['user_status'] = user_status_by_tmdb_id.get(tmdb_id)
 
 
 class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
@@ -49,6 +66,7 @@ class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
             result['poster_path'] = get_proxy_url(request,
                                                   TMDB_POSTER_PATH_PREFIX,
                                                   result.get('poster_path'))
+        _attach_movies_user_status(request, results['results'])
 
         return Response(results, status=status.HTTP_200_OK)
 
@@ -81,8 +99,10 @@ class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
             .order_by('-similarity', 'tmdb_name')
         paginator_page = Paginator(movies, page_size).get_page(page)
         serializer = MovieSerializer(paginator_page.object_list, many=True)
+        results = serializer.data
+        _attach_movies_user_status(request, results)
 
-        return Response(serializer.data)
+        return Response(results)
 
 
 def get_movie_search_results(query, page):

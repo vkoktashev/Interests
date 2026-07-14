@@ -4,6 +4,7 @@ import Pagination from '@steroidsjs/core/ui/list/Pagination/Pagination';
 import {useBem, useComponents} from '@steroidsjs/core/hooks';
 import CategoriesTab from '../../shared/CategoriesTab';
 import TmdbMediaCard, {ITmdbMediaCardItem} from '../../shared/TmdbMediaCard/TmdbMediaCard';
+import {getUserStatusBadge} from '../../shared/mediaStatus';
 import pluralizeRu from '../UnwatchedPage/views/pluralizeRu';
 import './community-picks-page.scss';
 
@@ -42,25 +43,6 @@ const CATEGORY_CONFIG: Record<TCategory, {url: string; itemType: 'game' | 'movie
 	Фильмы: {url: '/movies/top_rated/', itemType: 'movie'},
 	Сериалы: {url: '/shows/top_rated/', itemType: 'show'},
 };
-
-function getUserStatusBadge(type: 'game' | 'movie' | 'show', status?: string) {
-	if (!status) {
-		return null;
-	}
-	if (status === 'going') {
-		return {label: type === 'game' ? 'В планах' : 'Буду смотреть', tone: 'planned' as const};
-	}
-	if ((type === 'game' && status === 'completed') || ((type === 'movie' || type === 'show') && status === 'watched')) {
-		return {label: type === 'game' ? 'Пройдено' : 'Просмотрено', tone: 'done' as const};
-	}
-	if ((type === 'game' && status === 'playing') || (type === 'show' && status === 'watching')) {
-		return {label: type === 'game' ? 'Играю' : 'Смотрю', tone: 'progress' as const};
-	}
-	if (status === 'stopped') {
-		return {label: 'Дропнуто', tone: 'stopped' as const};
-	}
-	return null;
-}
 
 function CommunityPicksPage() {
 	const bem = useBem('community-picks-page');
