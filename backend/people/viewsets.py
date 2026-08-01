@@ -1,15 +1,17 @@
 from datetime import timedelta
 
+from django.db import transaction
 from django.utils import timezone
 from requests import ConnectionError, HTTPError, Timeout
 from rest_framework import mixins, status
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from movies.models import Movie, UserMovie
 from people.functions import fetch_and_upsert_person, get_tmdb_person_movie_credits, get_tmdb_person_tv_credits
-from people.models import Person
+from people.models import Person, PersonLog, UserPerson
 from people.tasks import refresh_person_details
 from proxy.functions import get_proxy_url
 from shows.models import Show, UserShow
@@ -95,6 +97,36 @@ class PersonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return response
 
+    @action(detail=True, methods=['put'], permission_classes=[IsAuthenticated])
+    def track(self, request, *args, **kwargs):
+        person = Person.objects.filter(id=kwargs.get('pk')).first()
+        if person is None:
+            return Response({ERROR: PERSON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+
+        is_tracked = request.data.get('is_tracked')
+        if not isinstance(is_tracked, bool):
+            return Response(
+                {ERROR: 'Поле is_tracked должно быть логическим значением.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        with transaction.atomic():
+            if is_tracked:
+                _, state_changed = UserPerson.objects.get_or_create(user=request.user, person=person)
+            else:
+                deleted_count, _ = UserPerson.objects.filter(user=request.user, person=person).delete()
+                state_changed = deleted_count > 0
+
+            if state_changed:
+                PersonLog.objects.create(
+                    user=request.user,
+                    person=person,
+                    action_type=PersonLog.ACTION_TYPE_TRACK,
+                    action_result=is_tracked,
+                )
+
+        return Response({'is_tracked': is_tracked}, status=status.HTTP_200_OK)
+
 
 def parse_person(person, request):
     movies_credits = safe_get_credits(get_tmdb_person_movie_credits, person.tmdb_id)
@@ -135,6 +167,10 @@ def parse_person(person, request):
         'biography': person.tmdb_biography,
         'place_of_birth': person.tmdb_place_of_birth,
         'profile_path': get_proxy_url(request, person.tmdb_profile_path),
+        'is_tracked': request.user.is_authenticated and UserPerson.objects.filter(
+            user=request.user,
+            person=person,
+        ).exists(),
         'movies': movies,
         'shows': shows,
     }

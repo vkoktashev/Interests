@@ -78,6 +78,7 @@ function LogsBlock(props: ILogsBlockProps) {
 								{ id: "game", label: "Игры" },
 								{ id: "movie", label: "Фильмы" },
 								{ id: "show", label: "Сериал" },
+								{ id: "person", label: "Люди" },
 								{ id: "user", label: "Пользователи" },
 							]}
 							multiple

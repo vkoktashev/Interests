@@ -10,6 +10,7 @@ import MovieBlock from './views/ItemsBlock/MovieBlock';
 import CategoriesTab from '../../shared/CategoriesTab';
 import ShowBlock from './views/ItemsBlock/ShowBlock';
 import StatisticsBlock from './views/StatisticsBlock';
+import PeopleBlock from './views/PeopleBlock';
 
 import "./user-page.scss";
 import {getRouteParams} from "@steroidsjs/core/reducers/router";
@@ -88,7 +89,7 @@ function UserPage() {
 
 					<CategoriesTab
 						className={bem.element('tabs')}
-						categories={["Лента", "Игры", "Фильмы", "Сериалы", "Статистика", "Друзья"]}
+						categories={["Лента", "Игры", "Фильмы", "Сериалы", "Люди", "Статистика", "Друзья"]}
 						activeCategory={activeCategory}
 						onChangeCategory={setActiveCategory}
 					>
@@ -116,6 +117,19 @@ function UserPage() {
 						{activeCategory === "Сериалы" && (
 							<div>
 								<ShowBlock shows={user.shows}/>
+							</div>
+						)}
+						{activeCategory === "Люди" && (
+							<div>
+								{!user.is_available && (
+									<h4>
+										<FaLock style={{marginRight: "1rem"}}/>
+										Профиль скрыт настройками приватности
+									</h4>
+								)}
+								{user.is_available && (
+									<PeopleBlock people={user.tracked_people || []}/>
+								)}
 							</div>
 						)}
 						{activeCategory === "Статистика" && (

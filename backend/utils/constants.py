@@ -12,6 +12,7 @@ TYPE_SHOW = 'show'
 TYPE_SEASON = 'season'
 TYPE_EPISODE = 'episode'
 TYPE_USER = 'user'
+TYPE_PERSON = 'person'
 
 DEFAULT_PAGE_NUMBER = 1
 DEFAULT_PAGE_SIZE = 5

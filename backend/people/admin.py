@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from utils.admin import SearchByIdAdminMixin
-from .models import Developer, Person
+from .models import Developer, Person, PersonLog, UserPerson
 
 
 @admin.register(Person)
@@ -21,6 +21,31 @@ class PersonAdmin(SearchByIdAdminMixin, admin.ModelAdmin):
     search_help_text = 'Имя, IMDb ID, внутренний ID или TMDB ID'
     list_filter = ('tmdb_birthday', 'tmdb_deathday', 'tmdb_last_update')
     ordering = ('name',)
+    list_per_page = 50
+
+
+@admin.register(UserPerson)
+class UserPersonAdmin(SearchByIdAdminMixin, admin.ModelAdmin):
+    list_display = ('user', 'person', 'created')
+    search_fields = ('user__username', 'user__email', 'person__name')
+    search_id_fields = ('pk', 'user_id', 'person_id')
+    autocomplete_fields = ('user', 'person')
+    list_select_related = ('user', 'person')
+    date_hierarchy = 'created'
+    ordering = ('-created',)
+    list_per_page = 50
+
+
+@admin.register(PersonLog)
+class PersonLogAdmin(SearchByIdAdminMixin, admin.ModelAdmin):
+    list_display = ('user', 'person', 'action_type', 'action_result', 'created')
+    list_filter = ('action_type', 'created')
+    search_fields = ('user__username', 'user__email', 'person__name')
+    search_id_fields = ('pk', 'user_id', 'person_id')
+    autocomplete_fields = ('user', 'person')
+    list_select_related = ('user', 'person')
+    date_hierarchy = 'created'
+    ordering = ('-created',)
     list_per_page = 50
 
 
