@@ -2,7 +2,7 @@ import React, {useMemo} from 'react';
 import {useBem} from '@steroidsjs/core/hooks';
 import {Link} from '@steroidsjs/core/ui/nav';
 import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW, ROUTE_SHOW_EPISODE} from '../../../index';
-import {ICalendarDay} from '../../calendarTypes';
+import {hasApproximateGameReleaseDate, ICalendarDay} from '../../calendarTypes';
 import './day-info.scss';
 
 interface IDayInfoProps {
@@ -32,13 +32,18 @@ function DayInfo({day, date, compact}: IDayInfoProps) {
 				items: day.games.map(game => ({
 					id: game.id,
 					render: (
-						<Link
-							className='day-info__link'
-							toRoute={ROUTE_GAME}
-							toRouteParams={{gameId: game.slug}}
-						>
-							{game.name}
-						</Link>
+						<span>
+							<Link
+								className='day-info__link'
+								toRoute={ROUTE_GAME}
+								toRouteParams={{gameId: game.slug}}
+							>
+								{game.name}
+							</Link>
+							{hasApproximateGameReleaseDate(game) ? (
+								<span className={bem.element('item-note')}> · {game.release_date_display}</span>
+							) : null}
+						</span>
 					),
 				})),
 			},

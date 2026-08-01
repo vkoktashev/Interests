@@ -2,6 +2,7 @@ from adrf.fields import SerializerMethodField
 from adrf.serializers import ModelSerializer
 from rest_framework import serializers
 
+from games.functions import get_game_release_date_display
 from games.models import UserGame, GameLog, Game
 from users.serializers import FollowedUserSerializer
 from utils.constants import TYPE_GAME
@@ -24,6 +25,8 @@ class GameSerializer(ModelSerializer):
     name = SerializerMethodField('get_name')
     slug = SerializerMethodField('get_slug')
     release_date = SerializerMethodField('get_release_date')
+    release_date_format = SerializerMethodField('get_release_date_format')
+    release_date_display = SerializerMethodField('get_release_date_display')
     poster_path = SerializerMethodField('get_poster_path')
     backdrop_path = SerializerMethodField('get_backdrop_path')
     platform_score = SerializerMethodField('get_platform_score')
@@ -40,6 +43,14 @@ class GameSerializer(ModelSerializer):
     @staticmethod
     def get_release_date(game):
         return game.igdb_release_date
+
+    @staticmethod
+    def get_release_date_format(game):
+        return game.igdb_release_date_format
+
+    @staticmethod
+    def get_release_date_display(game):
+        return get_game_release_date_display(game)
 
     @staticmethod
     def get_poster_path(game):
@@ -59,7 +70,18 @@ class GameSerializer(ModelSerializer):
 
     class Meta:
         model = Game
-        fields = ('id', 'name', 'slug', 'release_date', 'poster_path', 'backdrop_path', 'platform_score', 'platforms')
+        fields = (
+            'id',
+            'name',
+            'slug',
+            'release_date',
+            'release_date_format',
+            'release_date_display',
+            'poster_path',
+            'backdrop_path',
+            'platform_score',
+            'platforms',
+        )
 
 
 class GameStatsSerializer(ModelSerializer):
@@ -122,6 +144,8 @@ class TypedGameSerializer(ModelSerializer):
     name = SerializerMethodField('get_name')
     slug = SerializerMethodField('get_slug')
     release_date = SerializerMethodField('get_release_date')
+    release_date_format = SerializerMethodField('get_release_date_format')
+    release_date_display = SerializerMethodField('get_release_date_display')
     poster_path = SerializerMethodField('get_poster_path')
     backdrop_path = SerializerMethodField('get_backdrop_path')
     platform_score = SerializerMethodField('get_platform_score')
@@ -139,6 +163,14 @@ class TypedGameSerializer(ModelSerializer):
     @staticmethod
     def get_release_date(game):
         return game.igdb_release_date
+
+    @staticmethod
+    def get_release_date_format(game):
+        return game.igdb_release_date_format
+
+    @staticmethod
+    def get_release_date_display(game):
+        return get_game_release_date_display(game)
 
     @staticmethod
     def get_poster_path(game):
@@ -162,4 +194,16 @@ class TypedGameSerializer(ModelSerializer):
 
     class Meta:
         model = Game
-        fields = ('id', 'name', 'slug', 'release_date', 'poster_path', 'backdrop_path', 'platform_score', 'platforms', 'type')
+        fields = (
+            'id',
+            'name',
+            'slug',
+            'release_date',
+            'release_date_format',
+            'release_date_display',
+            'poster_path',
+            'backdrop_path',
+            'platform_score',
+            'platforms',
+            'type',
+        )

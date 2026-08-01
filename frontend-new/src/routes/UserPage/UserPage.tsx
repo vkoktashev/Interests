@@ -48,9 +48,10 @@ function UserPage() {
 	}, [fetch, userId]);
 
 	useEffect(() => {
-		document.title = user?.username
-			? "Профиль " + user.username
-			: 'Interests';
+		if (user?.username) {
+			document.title = "Профиль " + user.username;
+		}
+
 		if (user?.last_activity) {
 			let date = new Date(user?.last_activity);
 			let options = {

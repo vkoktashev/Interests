@@ -1,9 +1,12 @@
 import tmdbsimple as tmdb
 from django.core.cache import cache
+from django.db import transaction
+from django.db.models.deletion import ProtectedError
 from django.utils import timezone
 
 from people.models import Person
-from shows.models import Episode, ShowGenre, ShowPerson, SeasonPerson, EpisodePerson
+from shows.models import Episode, ShowGenre, ShowPerson, SeasonPerson, EpisodePerson, UserSeason, SeasonLog, \
+    UserEpisode, EpisodeLog
 from utils.constants import TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, TMDB_STILL_PATH_PREFIX, LANGUAGE, \
     CACHE_TIMEOUT, YOUTUBE_PREFIX
 from utils.functions import update_fields_if_needed
@@ -11,6 +14,11 @@ from utils.functions import update_fields_if_needed
 
 def get_show_new_fields(tmdb_show, tmdb_show_videos=None):
     parsed_videos = []
+    season_numbers = sorted({
+        season.get('season_number')
+        for season in (tmdb_show.get('seasons') or [])
+        if season.get('season_number') is not None
+    })
     if tmdb_show_videos is not None:
         youtube_videos = [video for video in tmdb_show_videos if video.get('site') == 'YouTube']
         parsed_videos = [{
@@ -32,6 +40,7 @@ def get_show_new_fields(tmdb_show, tmdb_show_videos=None):
         'tmdb_status': tmdb_show.get('status') or '',
         'tmdb_number_of_episodes': tmdb_show.get('number_of_episodes') or 0,
         'tmdb_number_of_seasons': tmdb_show.get('number_of_seasons') or 0,
+        'tmdb_season_numbers': season_numbers,
         'tmdb_overview': tmdb_show.get('overview') or '',
         'tmdb_score': int(tmdb_show['vote_average'] * 10) if tmdb_show.get('vote_average') is not None else None,
         'tmdb_production_companies': ', '.join(
@@ -112,67 +121,74 @@ def sync_season_episodes(season, tmdb_episodes):
     Episode.objects.filter(tmdb_season=season).exclude(id__in=new_ids).delete()
 
 
-def sync_people_links(parent_obj, tmdb_credits, relation_model, parent_field):
+def sync_people_links(parent_obj, tmdb_credits, relation_model, parent_field, extra_people_by_role=None):
     cast = (tmdb_credits.get('cast') or [])[:5]
     crew = tmdb_credits.get('crew') or []
     directors = [person for person in crew if person.get('job') == 'Director']
-
-    existing_links = relation_model.objects.filter(**{parent_field: parent_obj}).select_related('person')
     links_to_keep = []
 
-    for index, person_data in enumerate(cast):
-        person_id = person_data.get('id')
-        person_name = person_data.get('name')
-        if person_id is None or not person_name:
-            continue
+    links_to_keep.extend(sync_people_role_links(
+        parent_obj,
+        cast,
+        relation_model,
+        parent_field,
+        relation_model.ROLE_ACTOR
+    ))
+    links_to_keep.extend(sync_people_role_links(
+        parent_obj,
+        directors,
+        relation_model,
+        parent_field,
+        relation_model.ROLE_DIRECTOR
+    ))
 
-        person_obj, _ = Person.objects.get_or_create(tmdb_id=person_id, defaults={'name': person_name})
-        if person_obj.name != person_name:
-            person_obj.name = person_name
-            person_obj.save(update_fields=('name',))
-
-        relation_obj, _ = relation_model.objects.get_or_create(
-            **{
-                parent_field: parent_obj,
-                'person': person_obj,
-                'role': relation_model.ROLE_ACTOR
-            },
-            defaults={'sort_order': index}
+    for role, people in (extra_people_by_role or {}).items():
+        links_to_keep.extend(
+            sync_people_role_links(parent_obj, people, relation_model, parent_field, role)
         )
-        if relation_obj.sort_order != index:
-            relation_obj.sort_order = index
-            relation_obj.save(update_fields=('sort_order',))
-        links_to_keep.append(relation_obj.id)
-
-    for index, person_data in enumerate(directors):
-        person_id = person_data.get('id')
-        person_name = person_data.get('name')
-        if person_id is None or not person_name:
-            continue
-
-        person_obj, _ = Person.objects.get_or_create(tmdb_id=person_id, defaults={'name': person_name})
-        if person_obj.name != person_name:
-            person_obj.name = person_name
-            person_obj.save(update_fields=('name',))
-
-        relation_obj, _ = relation_model.objects.get_or_create(
-            **{
-                parent_field: parent_obj,
-                'person': person_obj,
-                'role': relation_model.ROLE_DIRECTOR
-            },
-            defaults={'sort_order': index}
-        )
-        if relation_obj.sort_order != index:
-            relation_obj.sort_order = index
-            relation_obj.save(update_fields=('sort_order',))
-        links_to_keep.append(relation_obj.id)
 
     relation_model.objects.filter(**{parent_field: parent_obj}).exclude(id__in=links_to_keep).delete()
 
 
-def sync_show_people(show, tmdb_show_credits):
-    sync_people_links(show, tmdb_show_credits, ShowPerson, 'show')
+def sync_people_role_links(parent_obj, people, relation_model, parent_field, role):
+    links_to_keep = []
+
+    for index, person_data in enumerate(people):
+        person_id = person_data.get('id')
+        person_name = person_data.get('name')
+        if person_id is None or not person_name:
+            continue
+
+        person_obj, _ = Person.objects.get_or_create(tmdb_id=person_id, defaults={'name': person_name})
+        if person_obj.name != person_name:
+            person_obj.name = person_name
+            person_obj.save(update_fields=('name',))
+
+        relation_obj, _ = relation_model.objects.get_or_create(
+            **{
+                parent_field: parent_obj,
+                'person': person_obj,
+                'role': role
+            },
+            defaults={'sort_order': index}
+        )
+        if relation_obj.sort_order != index:
+            relation_obj.sort_order = index
+            relation_obj.save(update_fields=('sort_order',))
+        links_to_keep.append(relation_obj.id)
+
+    return links_to_keep
+
+
+def sync_show_people(show, tmdb_show_credits, tmdb_show):
+    creators = (tmdb_show.get('created_by') or [])
+    sync_people_links(
+        show,
+        tmdb_show_credits,
+        ShowPerson,
+        'show',
+        {ShowPerson.ROLE_CREATOR: creators}
+    )
 
 
 def sync_season_people(season, tmdb_season_credits):
@@ -276,6 +292,61 @@ def upsert_season_from_tmdb(show, tmdb_season):
     if not created:
         update_fields_if_needed(season, defaults)
     return season
+
+
+@transaction.atomic
+def sync_show_seasons(show, tmdb_seasons):
+    if tmdb_seasons is None:
+        return {'synced': 0, 'deleted': 0, 'retained': 0}
+
+    tmdb_seasons_by_number = {
+        season.get('season_number'): season
+        for season in tmdb_seasons
+        if season.get('season_number') is not None
+    }
+    tmdb_season_numbers = set(tmdb_seasons_by_number)
+    database_seasons = list(show.season_set.all())
+    database_season_numbers = {season.tmdb_season_number for season in database_seasons}
+    stale_season_numbers = database_season_numbers - tmdb_season_numbers
+
+    for tmdb_season in tmdb_seasons_by_number.values():
+        upsert_season_from_tmdb(show, tmdb_season)
+
+    canonical_season_numbers = sorted(tmdb_season_numbers)
+    if show.tmdb_season_numbers != canonical_season_numbers:
+        show.tmdb_season_numbers = canonical_season_numbers
+        show.save(update_fields=['tmdb_season_numbers'])
+
+    deleted_count = 0
+    retained_count = 0
+    for season in database_seasons:
+        if season.tmdb_season_number not in stale_season_numbers:
+            continue
+
+        if season_has_user_data(season):
+            retained_count += 1
+            continue
+
+        try:
+            season.delete()
+            deleted_count += 1
+        except ProtectedError:
+            retained_count += 1
+
+    return {
+        'synced': len(tmdb_seasons_by_number),
+        'deleted': deleted_count,
+        'retained': retained_count,
+    }
+
+
+def season_has_user_data(season):
+    return (
+        UserSeason.objects.filter(season=season).exists() or
+        SeasonLog.objects.filter(season=season).exists() or
+        UserEpisode.objects.filter(episode__tmdb_season=season).exists() or
+        EpisodeLog.objects.filter(episode__tmdb_season=season).exists()
+    )
 
 
 def upsert_episode_from_tmdb(season, tmdb_episode):

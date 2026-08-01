@@ -6,11 +6,9 @@ from celery.schedules import crontab
 from django.core.cache import cache
 from django.db.models import Q
 from django.utils import timezone
-from howlongtobeatpy import HowLongToBeat
-from requests.exceptions import ConnectionError
 
 from config.celery import app
-from games.functions import get_hltb_game_key
+from games.functions import is_game_released
 from games.integrations.hltb import get_game_release_year, get_hltb_game, extract_hltb_hours_map
 from games.integrations.igdb import (
     get_igdb_game_new_fields,
@@ -23,10 +21,16 @@ from games.integrations.igdb import (
     update_game_stores_from_igdb,
 )
 from games.models import Game, GameBeatTime
-from utils.constants import UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE, CACHE_TIMEOUT
+from utils.constants import UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
 from utils.functions import update_fields_if_needed
 
 logger = logging.getLogger(__name__)
+
+HLTB_REFRESH_LOCK_TIMEOUT_SECONDS = 60 * 10
+
+
+def get_hltb_refresh_lock_key(game_id):
+    return f'hltb_refresh_enqueued_{game_id}'
 
 
 @app.on_after_finalize.connect
@@ -41,87 +45,202 @@ def setup_periodic_tasks(sender, **kwargs):
 def update_upcoming_games():
     today_date = datetime.today().date()
     games = Game.objects.filter(Q(igdb_release_date__gte=today_date) | Q(igdb_release_date=None))
+    candidates_count = games.count()
+    updated_count = 0
+    skipped_count = 0
+    failed_count = 0
+
+    logger.info('update_upcoming_games: start today=%s candidates=%s', today_date, candidates_count)
+
     for game in games:
-        if game.igdb_id:
-            refresh_game_details_by_igdb_id(game.igdb_id)
-        elif game.igdb_slug:
-            refresh_game_details(game.igdb_slug)
-        refresh_hltb_cache(game)
+        logger.debug(
+            'update_upcoming_games: processing game id=%s name=%s igdb_id=%s igdb_slug=%s release_date=%s',
+            game.id,
+            game.igdb_name,
+            game.igdb_id,
+            game.igdb_slug,
+            game.igdb_release_date,
+        )
+
+        status = 'skipped'
+        try:
+            if game.igdb_id:
+                status, _ = refresh_game_details_by_igdb_id_with_status(game.igdb_id)
+            elif game.igdb_slug:
+                status, _ = refresh_game_details_with_status(game.igdb_slug)
+            else:
+                logger.warning(
+                    'update_upcoming_games: skipped game id=%s name=%s reason=no_igdb_identity',
+                    game.id,
+                    game.igdb_name,
+                )
+
+            if status == 'updated':
+                updated_count += 1
+            elif status == 'failed':
+                failed_count += 1
+            else:
+                skipped_count += 1
+        except Exception:
+            failed_count += 1
+            logger.exception(
+                'update_upcoming_games: failed game id=%s name=%s igdb_id=%s igdb_slug=%s',
+                game.id,
+                game.igdb_name,
+                game.igdb_id,
+                game.igdb_slug,
+            )
+
+    logger.info(
+        'update_upcoming_games: finish candidates=%s updated=%s skipped=%s failed=%s',
+        candidates_count,
+        updated_count,
+        skipped_count,
+        failed_count,
+    )
 
 
 @app.task(ignore_result=True)
 def refresh_game_details(slug):
+    status, game_id = refresh_game_details_with_status(slug)
+    if status == 'updated':
+        return game_id
+    return None
+
+
+def refresh_game_details_with_status(slug):
+    return _refresh_game_details(slug)
+
+
+def _refresh_game_details(slug):
+    logger.debug('refresh_game_details: start igdb_slug=%s', slug)
+
     game_obj = Game.objects.filter(igdb_slug=slug).first()
     if game_obj is None:
         logger.warning('refresh_game_details: game not found by igdb_slug=%s', slug)
-        return None
+        return 'skipped', None
 
     try:
         igdb_game = resolve_igdb_game_details(game_obj, slug)
     except Exception:
-        logger.exception('refresh_game_details: failed to resolve IGDB details for slug=%s', slug)
-        return None
+        logger.exception(
+            'refresh_game_details: failed to resolve IGDB details for game id=%s name=%s igdb_slug=%s',
+            game_obj.id,
+            game_obj.igdb_name,
+            slug,
+        )
+        return 'failed', game_obj.id
 
     if not igdb_game:
-        return game_obj.id
+        logger.warning(
+            'refresh_game_details: skipped game id=%s name=%s igdb_slug=%s reason=no_igdb_result',
+            game_obj.id,
+            game_obj.igdb_name,
+            slug,
+        )
+        return 'skipped', game_obj.id
 
-    fields_to_update = {}
-    fields_to_update.update(get_igdb_game_new_fields(igdb_game))
-    update_fields_if_needed(game_obj, fields_to_update)
-    async_to_sync(update_game_genres_from_igdb)(game_obj, igdb_game)
-    async_to_sync(update_game_developers_from_igdb)(game_obj, igdb_game)
-    async_to_sync(update_game_beat_times_from_igdb)(game_obj, igdb_game)
-    async_to_sync(update_game_media_from_igdb)(game_obj, igdb_game)
-    async_to_sync(update_game_stores_from_igdb)(game_obj, igdb_game)
-    return game_obj.id
+    return _apply_igdb_game_details(game_obj, igdb_game, 'refresh_game_details')
 
 
 @app.task(ignore_result=True)
 def refresh_game_details_by_igdb_id(igdb_id):
+    status, game_id = refresh_game_details_by_igdb_id_with_status(igdb_id)
+    if status == 'updated':
+        return game_id
+    return None
+
+
+def refresh_game_details_by_igdb_id_with_status(igdb_id):
+    return _refresh_game_details_by_igdb_id(igdb_id)
+
+
+def _refresh_game_details_by_igdb_id(igdb_id):
+    logger.debug('refresh_game_details_by_igdb_id: start igdb_id=%s', igdb_id)
+
     if igdb_id is None:
         logger.warning('refresh_game_details_by_igdb_id: empty igdb_id')
-        return None
+        return 'skipped', None
 
     game_obj = Game.objects.filter(igdb_id=igdb_id).first()
     if game_obj is None:
         logger.warning('refresh_game_details_by_igdb_id: game not found by igdb_id=%s', igdb_id)
-        return None
+        return 'skipped', None
 
     try:
         igdb_game = query_igdb_game_by_id(int(igdb_id))
     except Exception:
-        logger.exception('refresh_game_details_by_igdb_id: failed to query IGDB for igdb_id=%s', igdb_id)
-        return None
+        logger.exception(
+            'refresh_game_details_by_igdb_id: failed to query IGDB for game id=%s name=%s igdb_id=%s',
+            game_obj.id,
+            game_obj.igdb_name,
+            igdb_id,
+        )
+        return 'failed', game_obj.id
 
     if not igdb_game:
-        return game_obj.id
+        logger.warning(
+            'refresh_game_details_by_igdb_id: skipped game id=%s name=%s igdb_id=%s reason=no_igdb_result',
+            game_obj.id,
+            game_obj.igdb_name,
+            igdb_id,
+        )
+        return 'skipped', game_obj.id
 
-    fields_to_update = {}
-    fields_to_update.update(get_igdb_game_new_fields(igdb_game))
-    update_fields_if_needed(game_obj, fields_to_update)
-    async_to_sync(update_game_genres_from_igdb)(game_obj, igdb_game)
-    async_to_sync(update_game_developers_from_igdb)(game_obj, igdb_game)
-    async_to_sync(update_game_beat_times_from_igdb)(game_obj, igdb_game)
-    async_to_sync(update_game_media_from_igdb)(game_obj, igdb_game)
-    async_to_sync(update_game_stores_from_igdb)(game_obj, igdb_game)
-    return game_obj.id
+    return _apply_igdb_game_details(game_obj, igdb_game, 'refresh_game_details_by_igdb_id')
 
 
-@app.task(ignore_result=True)
-def refresh_hltb_beat_times_by_game_id(game_id):
-    game_obj = Game.objects.filter(id=game_id).first()
-    if game_obj is None:
-        logger.warning('refresh_hltb_beat_times_by_game_id: game not found by id=%s', game_id)
-        return None
+def _apply_igdb_game_details(game_obj, igdb_game, source):
+    try:
+        fields_to_update = {}
+        fields_to_update.update(get_igdb_game_new_fields(igdb_game))
+        changed_fields = _get_changed_fields(game_obj, fields_to_update)
+        update_fields_if_needed(game_obj, fields_to_update)
+        async_to_sync(update_game_genres_from_igdb)(game_obj, igdb_game)
+        async_to_sync(update_game_developers_from_igdb)(game_obj, igdb_game)
+        async_to_sync(update_game_beat_times_from_igdb)(game_obj, igdb_game)
+        async_to_sync(update_game_media_from_igdb)(game_obj, igdb_game)
+        async_to_sync(update_game_stores_from_igdb)(game_obj, igdb_game)
+    except Exception:
+        logger.exception(
+            '%s: failed to apply IGDB details for game id=%s name=%s igdb_id=%s igdb_slug=%s',
+            source,
+            game_obj.id,
+            game_obj.igdb_name,
+            game_obj.igdb_id,
+            game_obj.igdb_slug,
+        )
+        return 'failed', game_obj.id
+
+    logger.debug(
+        '%s: refreshed game id=%s name=%s igdb_id=%s igdb_slug=%s changed_fields=%s',
+        source,
+        game_obj.id,
+        game_obj.igdb_name,
+        game_obj.igdb_id,
+        game_obj.igdb_slug,
+        changed_fields,
+    )
+    return 'updated', game_obj.id
+
+
+def refresh_hltb_beat_times_for_game(game_obj, now=None):
     if not game_obj.igdb_name:
-        logger.warning('refresh_hltb_beat_times_by_game_id: empty game name for id=%s', game_id)
+        logger.warning('refresh_hltb_beat_times_for_game: empty game name for id=%s', game_obj.id)
         return None
+    if not is_game_released(game_obj):
+        logger.debug('refresh_hltb_beat_times_for_game: skipped game id=%s reason=unreleased', game_obj.id)
+        return None
+
+    if now is None:
+        now = timezone.now()
+    update_fields_if_needed(game_obj, {'hltb_last_attempt': now})
 
     release_year = get_game_release_year(game_obj.igdb_release_date)
     hltb_game = get_hltb_game(game_obj.igdb_name, release_year)
     if not hltb_game:
-        logger.info('refresh_hltb_beat_times_by_game_id: no HLTB result for game id=%s', game_id)
-        return game_id
+        logger.debug('refresh_hltb_beat_times_for_game: no HLTB result for game id=%s', game_obj.id)
+        return None
 
     update_fields_if_needed(game_obj, {
         'hltb_name': hltb_game.get('game_name') or game_obj.hltb_name,
@@ -129,9 +248,12 @@ def refresh_hltb_beat_times_by_game_id(game_id):
     })
 
     hours_map = extract_hltb_hours_map(hltb_game)
+    if not hours_map:
+        logger.debug('refresh_hltb_beat_times_for_game: no valid HLTB hours for game id=%s', game_obj.id)
+        return None
+
     existing_entries = GameBeatTime.objects.filter(game=game_obj, source=GameBeatTime.SOURCE_HLTB)
     upserted_ids = []
-    now = timezone.now()
     for beat_type, hours_value in (
         (GameBeatTime.TYPE_MAIN, hours_map.get('main')),
         (GameBeatTime.TYPE_EXTRA, hours_map.get('extra')),
@@ -161,20 +283,26 @@ def refresh_hltb_beat_times_by_game_id(game_id):
     else:
         existing_entries.delete()
 
+    return hours_map
+
+
+@app.task(ignore_result=True)
+def refresh_hltb_beat_times_by_game_id(game_id):
+    game_obj = Game.objects.filter(id=game_id).first()
+    if game_obj is None:
+        logger.warning('refresh_hltb_beat_times_by_game_id: game not found by id=%s', game_id)
+        return None
+
+    try:
+        refresh_hltb_beat_times_for_game(game_obj)
+    finally:
+        cache.delete(get_hltb_refresh_lock_key(game_id))
     return game_id
 
 
-def refresh_hltb_cache(game):
-    game_name = game.igdb_name
-    if not game_name:
-        return
-
-    hltb_key = get_hltb_game_key(game_name)
-    try:
-        results = HowLongToBeat(1).search(game_name.replace('’', '\''), similarity_case_sensitive=False)
-        hltb_game = max(results, key=lambda element: element.similarity).__dict__
-        cache.set(hltb_key, hltb_game, CACHE_TIMEOUT)
-    except (ValueError, TypeError):
-        cache.set(hltb_key, None, CACHE_TIMEOUT)
-    except ConnectionError:
-        pass
+def _get_changed_fields(obj, new_fields):
+    changed_fields = []
+    for key, value in new_fields.items():
+        if str(value) != str(getattr(obj, key)):
+            changed_fields.append(key)
+    return changed_fields

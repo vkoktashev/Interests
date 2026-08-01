@@ -81,8 +81,8 @@ class AuthTests(TestCase):
         refresh_token = response.json()['refresh']
 
         response = c.post(refresh_token_url, {'refresh': refresh_token})
-        self.assertTrue('access' in response.json())
-        new_access_token = response.json()['access']
+        self.assertTrue('accessToken' in response.json())
+        new_access_token = response.json()['accessToken']
         self.assertNotEqual(access_token, new_access_token)
 
         response = c.post(login_url, {'username': username, 'password': password})

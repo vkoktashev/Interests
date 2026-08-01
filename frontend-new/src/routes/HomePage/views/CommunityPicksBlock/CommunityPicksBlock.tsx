@@ -1,6 +1,7 @@
 import React, {useMemo} from "react";
 import {useBem, useFetch} from "@steroidsjs/core/hooks";
 import TmdbMediaCard, {ITmdbMediaCardItem} from "../../../../shared/TmdbMediaCard/TmdbMediaCard";
+import {getUserStatusBadge} from '../../../../shared/mediaStatus';
 
 interface IPickItem {
 	id: string | number;
@@ -8,6 +9,7 @@ interface IPickItem {
 	poster_path?: string;
 	backdrop_path?: string;
 	release_date?: string;
+	release_date_display?: string;
 	overview?: string;
 	genres?: string;
 	platforms?: string;
@@ -15,25 +17,6 @@ interface IPickItem {
 	user_status?: string;
 	ratings_count?: number;
 	average_user_score?: number;
-}
-
-function getUserStatusBadge(type: 'game' | 'movie' | 'show', status?: string) {
-	if (!status) {
-		return null;
-	}
-	if (status === 'going') {
-		return {label: type === 'game' ? 'В планах' : 'Буду смотреть', tone: 'planned' as const};
-	}
-	if ((type === 'game' && status === 'completed') || ((type === 'movie' || type === 'show') && status === 'watched')) {
-		return {label: type === 'game' ? 'Пройдено' : 'Просмотрено', tone: 'done' as const};
-	}
-	if ((type === 'game' && status === 'playing') || (type === 'show' && status === 'watching')) {
-		return {label: type === 'game' ? 'Играю' : 'Смотрю', tone: 'progress' as const};
-	}
-	if (status === 'stopped') {
-		return {label: 'Дропнуто', tone: 'stopped' as const};
-	}
-	return null;
 }
 
 function CommunityPicksBlock() {
@@ -58,6 +41,7 @@ function CommunityPicksBlock() {
 			poster_path: item.poster_path,
 			backdrop_path: item.backdrop_path,
 			release_date: item.release_date,
+			release_date_display: item.release_date_display,
 			vote_average: item.average_user_score,
 			vote_count: item.ratings_count,
 			overview: item.overview,

@@ -6,7 +6,7 @@ import {openModal} from '@steroidsjs/core/actions/modal';
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
 import _uniq from 'lodash/uniq';
-import {FaTwitch, FaYoutube, FaPencilAlt} from 'react-icons/fa';
+import {FaPencilAlt, FaTwitch, FaYoutube} from 'react-icons/fa';
 import {SiIgdb} from 'react-icons/si';
 import {GiTigerHead} from 'react-icons/gi';
 import {Loader} from '@steroidsjs/core/ui/layout'
@@ -24,6 +24,13 @@ import {IGamePricesResponse} from '../../interfaces/IGamePrice';
 import "./game-page.scss";
 import {Button, TextField} from '@steroidsjs/core/ui/form';
 
+const HLTB_REFRESH_POLL_INTERVAL_MS = 3000;
+const HLTB_REFRESH_MAX_POLLS = 20;
+
+function HltbIcon(props: {className?: string}) {
+	return <span className={props.className} aria-hidden='true' />;
+}
+
 export function GamePage() {
 	const bem = useBem('game-page');
 	const user = useSelector(getUser);
@@ -37,6 +44,10 @@ export function GamePage() {
 	const [userRate, setUserRate] = useState(0);
 	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
 	const [shouldLoadHltb, setShouldLoadHltb] = useState(false);
+	const [hltbFetchGameId, setHltbFetchGameId] = useState<any>();
+	const [hltbRefreshPolls, setHltbRefreshPolls] = useState(0);
+	const [isGameTimeRequestStarted, setGameTimeRequestStarted] = useState(false);
+	const [visibleGameTime, setVisibleGameTime] = useState<{gameId: any; data: any}>();
 	const [isMobileViewport, setIsMobileViewport] = useState(false);
 
 	const gameFetchConfig = useMemo(() => gameId && ({
@@ -45,11 +56,20 @@ export function GamePage() {
 	}), [gameId]);
 	const {data: game, isLoading} = useFetch(gameFetchConfig);
 
-	const gameTimeFetchConfig = useMemo(() => gameId && shouldLoadHltb && ({
+	const isCurrentGameReleased = game?.slug === gameId && game?.is_released;
+	const shouldFetchCurrentGameTime = isCurrentGameReleased && shouldLoadHltb && hltbFetchGameId === gameId;
+	const gameTimeFetchConfig = useMemo(() => gameId && shouldFetchCurrentGameTime && ({
 		url: `/games/game/${gameId}/hltb/`,
 		method: 'get',
-	}), [gameId, shouldLoadHltb]);
-	const {data: gameTime} = useFetch(gameTimeFetchConfig);
+	}), [gameId, shouldFetchCurrentGameTime]);
+	const {data: gameTime, isLoading: isGameTimeLoading, fetch: fetchGameTime} = useFetch(gameTimeFetchConfig);
+	const cachedGameTime = visibleGameTime?.gameId === gameId ? visibleGameTime.data : undefined;
+	const displayedGameTime = shouldFetchCurrentGameTime ? cachedGameTime : undefined;
+	const gameTimeHasMetrics = useMemo(() => hasTimeToBeatMetrics(displayedGameTime), [displayedGameTime]);
+	const shouldShowGameTimeLoading = (
+		(isGameTimeLoading && !gameTimeHasMetrics)
+		|| Boolean(displayedGameTime?.refreshing && !gameTimeHasMetrics)
+	);
 
 	const gamePricesFetchConfig = useMemo(() => gameId && game && ({
 		url: `/games/game/${gameId}/prices/`,
@@ -88,8 +108,10 @@ export function GamePage() {
 	);
 
 	useEffect(() => {
-		document.title = game?.name || 'Interests';
-	}, [game]);
+		if (game?.name) {
+			document.title = game.name;
+		}
+	}, [game?.name]);
 
 	useEffect(() => {
 		setOverviewExpanded(false);
@@ -97,19 +119,64 @@ export function GamePage() {
 
 	useEffect(() => {
 		setShouldLoadHltb(false);
+		setHltbFetchGameId(undefined);
+		setHltbRefreshPolls(0);
+		setGameTimeRequestStarted(false);
+		setVisibleGameTime(undefined);
 	}, [gameId]);
 
 	useEffect(() => {
-		if (!gameId || !game) {
+		if (shouldFetchCurrentGameTime && isGameTimeLoading) {
+			setGameTimeRequestStarted(true);
+		}
+	}, [isGameTimeLoading, shouldFetchCurrentGameTime]);
+
+	useEffect(() => {
+		if (
+			!shouldFetchCurrentGameTime
+			|| !isGameTimeRequestStarted
+			|| isGameTimeLoading
+			|| gameTime === undefined
+		) {
+			return;
+		}
+
+		setVisibleGameTime({
+			gameId,
+			data: gameTime,
+		});
+	}, [gameId, gameTime, isGameTimeLoading, isGameTimeRequestStarted, shouldFetchCurrentGameTime]);
+
+	useEffect(() => {
+		if (!gameId || !isCurrentGameReleased) {
 			return;
 		}
 
 		const timeoutId = window.setTimeout(() => {
+			setHltbFetchGameId(gameId);
 			setShouldLoadHltb(true);
 		}, 400);
 
 		return () => window.clearTimeout(timeoutId);
-	}, [gameId, game]);
+	}, [gameId, isCurrentGameReleased]);
+
+	useEffect(() => {
+		if (
+			!displayedGameTime?.refreshing
+			|| !fetchGameTime
+			|| isGameTimeLoading
+			|| hltbRefreshPolls >= HLTB_REFRESH_MAX_POLLS
+		) {
+			return;
+		}
+
+		const timeoutId = window.setTimeout(() => {
+			setHltbRefreshPolls(value => value + 1);
+			fetchGameTime();
+		}, HLTB_REFRESH_POLL_INTERVAL_MS);
+
+		return () => window.clearTimeout(timeoutId);
+	}, [displayedGameTime?.refreshing, fetchGameTime, gameId, hltbRefreshPolls, isGameTimeLoading]);
 
 	useEffect(() => {
 		const updateViewport = () => {
@@ -159,6 +226,14 @@ export function GamePage() {
 		}
 	}
 
+	function hasTimeToBeatMetrics(hltbInfo) {
+		return (
+			Number(hltbInfo?.gameplay_main) > 0
+			|| Number(hltbInfo?.gameplay_main_extra) > 0
+			|| Number(hltbInfo?.gameplay_completionist) > 0
+		);
+	}
+
 	function hltbToDatalist(hltbInfo) {
 		let newData = [];
 		if (!(!hltbInfo || hltbInfo === "0 часов" || Number(hltbInfo?.gameplay_main) <= 0)) {
@@ -180,6 +255,7 @@ export function GamePage() {
 	const mediaLinks = useMemo(() => {
 		const gameName = (game?.name || '').trim();
 		const gameSlug = (game?.slug || '').trim();
+		const hltbId = game?.hltb_id || displayedGameTime?.hltb_id;
 		if (!gameName) {
 			return [];
 		}
@@ -205,6 +281,15 @@ export function GamePage() {
 			},
 		];
 
+		if (hltbId) {
+			links.push({
+				id: 'hltb',
+				title: 'HowLongToBeat',
+				href: `https://howlongtobeat.com/game/${encodeURIComponent(hltbId)}`,
+				Icon: HltbIcon,
+			});
+		}
+
 		if (game?.red_tigerino_playlist_url) {
 			links.push({
 				id: 'redTigerino',
@@ -215,7 +300,13 @@ export function GamePage() {
 		}
 
 			return links.filter(item => Boolean(item.href));
-		}, [game?.name, game?.slug, game?.red_tigerino_playlist_url]);
+		}, [
+			displayedGameTime?.hltb_id,
+			game?.hltb_id,
+			game?.name,
+			game?.slug,
+			game?.red_tigerino_playlist_url,
+		]);
 
 	const canEditRedTigerinoPlaylist = useMemo(
 		() => Boolean(user?.permissions?.includes('games.change_game')),
@@ -227,13 +318,14 @@ export function GamePage() {
 		}
 		return `https://django-admin.your-interests.ru/admin/games/game/${game.id}/change/`;
 	}, [game?.id]);
+	const releaseDateText = game?.release_date_display || game?.release_date;
 
 	const infoRows = useMemo(() => ([
 		{label: 'Разработчики', value: game?.developers},
-		{label: 'Дата релиза', value: game?.release_date},
+		{label: 'Дата релиза', value: releaseDateText},
 		{label: 'Жанр', value: game?.genres},
 		{label: 'Платформы', value: game?.platforms},
-	]).filter(item => Boolean(item.value)), [game?.developers, game?.release_date, game?.genres, game?.platforms]);
+	]).filter(item => Boolean(item.value)), [game?.developers, releaseDateText, game?.genres, game?.platforms]);
 
 	const overviewPlainText = useMemo(
 		() => String(game?.overview || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
@@ -244,6 +336,10 @@ export function GamePage() {
 	const hasMedia = useMemo(
 		() => Boolean(game?.trailers?.length || game?.screenshots?.length),
 		[game?.trailers?.length, game?.screenshots?.length],
+	);
+	const hasStores = useMemo(
+		() => Boolean(game?.stores?.length),
+		[game?.stores?.length],
 	);
 
 	if (!game) {
@@ -294,15 +390,21 @@ export function GamePage() {
 									))}
 								</div>
 
-									<TimeToBeat hltbInfo={gameTime} className={bem.element('time-to-beat')} />
+								<TimeToBeat
+									hltbInfo={displayedGameTime}
+									isLoading={shouldShowGameTimeLoading}
+									className={bem.element('time-to-beat')}
+								/>
 
 								<div className={bem.element('resources')}>
 									<div className={bem.element('resources-grid')}>
 										<div className={bem.element('resource-column')}>
-											<div className={bem.element('resource-group')}>
-												<div className={bem.element('resource-group-label')}>Магазины</div>
-												<GameStores stores={game.stores} showLabel={false} className={bem.element('stores')} />
-											</div>
+											{hasStores && (
+												<div className={bem.element('resource-group')}>
+													<div className={bem.element('resource-group-label')}>Магазины</div>
+													<GameStores stores={game.stores} showLabel={false} className={bem.element('stores')} />
+												</div>
+											)}
 											<GamePrices prices={gamePrices} isLoading={isPricesLoading} />
 										</div>
 
@@ -424,7 +526,7 @@ export function GamePage() {
 													min={0}
 													max={100000}
 													onChange={(value) => setSpentTime(value as any)}
-													dataList={hltbToDatalist(gameTime || (game as any).hltb)}
+													dataList={hltbToDatalist(displayedGameTime || (game as any).hltb)}
 												/>
 											</div>
 											<Button

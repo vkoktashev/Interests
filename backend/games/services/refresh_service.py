@@ -4,6 +4,7 @@ import logging
 from django.core.cache import cache
 
 from games.tasks import refresh_game_details, refresh_game_details_by_igdb_id
+from utils.celery import enqueue_background_task
 
 GAME_DETAILS_REFRESH_INTERVAL = timedelta(days=1)
 GAME_DETAILS_REFRESH_ENQUEUE_DEBOUNCE_SECS = 60 * 30
@@ -32,11 +33,21 @@ def enqueue_game_refresh(slug=None, igdb_id=None, refresh_version=None):
 
     try:
         if igdb_id is not None:
-            refresh_game_details_by_igdb_id.delay(igdb_id)
-            logger.info('enqueue_game_refresh queued by igdb_id=%s', igdb_id)
+            is_queued = enqueue_background_task(
+                refresh_game_details_by_igdb_id,
+                args=(igdb_id,),
+                task_name='refresh_game_details_by_igdb_id'
+            )
+            if is_queued:
+                logger.info('enqueue_game_refresh queued by igdb_id=%s', igdb_id)
         else:
-            refresh_game_details.delay(slug)
-            logger.info('enqueue_game_refresh queued by slug=%s', slug)
+            is_queued = enqueue_background_task(
+                refresh_game_details,
+                args=(slug,),
+                task_name='refresh_game_details'
+            )
+            if is_queued:
+                logger.info('enqueue_game_refresh queued by slug=%s', slug)
     except Exception:
         cache.set(broker_backoff_key, True, GAME_DETAILS_REFRESH_BROKER_BACKOFF_SECS)
         logger.exception('enqueue_game_refresh failed to dispatch: identity=%s', identity)

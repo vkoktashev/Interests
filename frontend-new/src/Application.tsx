@@ -3,7 +3,7 @@ import LocaleComponent from '@steroidsjs/core/components/LocaleComponent';
 import customIcons from 'icons/index';
 
 import 'style/index.scss';
-import JwtHttpComponent from '@steroidsjs/core/components/JwtHttpComponent';
+import SafeJwtHttpComponent from 'components/SafeJwtHttpComponent';
 
 export const config = {
     reducers: require('reducers').default,
@@ -13,14 +13,18 @@ export const config = {
     components: {
         locale: LocaleComponent,
         http: {
-            http: JwtHttpComponent,
-            className: JwtHttpComponent,
+            http: SafeJwtHttpComponent,
+            className: SafeJwtHttpComponent,
             apiUrl: process.env.APP_BACKEND_URL,
             clientStorageName: 'local',
             refreshTokenRequest: {
                 url: '/users/auth/refresh-token/',
                 method: 'post',
             },
+            refreshTokenIgnoredUrls: [
+                '/users/auth/login/',
+                '/users/auth/google_login/',
+            ],
         },
     },
     onInit: ({ui}) => {

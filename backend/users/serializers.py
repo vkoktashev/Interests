@@ -133,9 +133,10 @@ class SettingsSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('receive_games_releases', 'receive_movies_releases', 'receive_movies_digital_releases',
+        fields = ('email', 'receive_games_releases', 'receive_movies_releases', 'receive_movies_digital_releases',
                   'receive_episodes_releases', 'backdrop_path', 'privacy', 'gender',
                   'use_image_proxy', 'steam_account_region')
+        read_only_fields = ('email',)
 
 
 class UserInfoSerializer(ModelSerializer):
@@ -148,6 +149,11 @@ class UserInfoSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'gender', 'last_activity', 'backdrop_path', 'permissions', 'is_staff')
+
+
+class CurrentUserInfoSerializer(UserInfoSerializer):
+    class Meta(UserInfoSerializer.Meta):
+        fields = UserInfoSerializer.Meta.fields + ('email',)
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):

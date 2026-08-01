@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { CSVLink } from "react-csv";
 import { FaAngleDown, FaAngleUp, FaStar, FaClock, FaArrowsAltV } from "react-icons/fa";
 import { LuLetterText } from "react-icons/lu";
@@ -15,6 +15,12 @@ import {formChange} from '@steroidsjs/core/actions/form';
 function ItemBlock({ items, statuses, fields, name, formId }) {
 	const dispatch = useDispatch();
 	const bem = useBem('item-block');
+	const rowsRef = useRef<HTMLDivElement | null>(null);
+	const previousListSettingsRef = useRef({
+		pageSize: 25,
+		query: '',
+		statusFilters: '[]',
+	});
 	const [formValues, setFormValues] = useState<any>({
 		page: 1,
 		pageSize: 25,
@@ -23,6 +29,7 @@ function ItemBlock({ items, statuses, fields, name, formId }) {
 	const [filteredItems, setFilteredItems] = useState([]);
 	const [collapse, setCollapse] = useState(true);
 	const { width } = useWindowDimensions();
+	const statusFilters = JSON.stringify(formValues.statusFilters || []);
 
 	const toggleCollapse = () => {
 		setCollapse(!collapse);
@@ -55,6 +62,22 @@ function ItemBlock({ items, statuses, fields, name, formId }) {
 		// eslint-disable-next-line
 		[items, formValues]
 	);
+
+	useEffect(() => {
+		const previousListSettings = previousListSettingsRef.current;
+		const listSettingsChanged = previousListSettings.pageSize !== formValues.pageSize
+			|| previousListSettings.query !== formValues.query
+			|| previousListSettings.statusFilters !== statusFilters;
+
+		previousListSettingsRef.current = {
+			pageSize: formValues.pageSize,
+			query: formValues.query,
+			statusFilters,
+		};
+
+		if (listSettingsChanged && formValues.page !== 1)
+			dispatch(formChange(formId, 'page', 1));
+	}, [dispatch, formId, formValues.page, formValues.pageSize, formValues.query, statusFilters]);
 
 	return (
 		<div className={bem.block()}>
@@ -136,7 +159,7 @@ function ItemBlock({ items, statuses, fields, name, formId }) {
 					</div>
 				</div>
 			</Form>
-			<div className="item-block__rows">
+			<div ref={rowsRef} className="item-block__rows">
 				{
 					filteredItems?.slice(
 						(formValues.page - 1) * formValues.pageSize,
@@ -157,6 +180,10 @@ function ItemBlock({ items, statuses, fields, name, formId }) {
 					}}
 					onChange={page => {
 						dispatch(formChange(formId, 'page', page));
+						rowsRef.current?.scrollIntoView({
+							behavior: 'smooth',
+							block: 'start',
+						});
 					}}
 				/>
 				<CSVLink

@@ -3,6 +3,7 @@ import classnames from 'classnames';
 import {useBem, useDispatch} from '@steroidsjs/core/hooks';
 import {goToRoute} from '@steroidsjs/core/actions/router';
 import {getDefaultAvatarUrl} from '../../../avatar';
+import formatHours from '../../../formatHours';
 import {ROUTE_USER} from '../../../../routes';
 import './friend-activity.scss';
 
@@ -92,7 +93,7 @@ export function FriendActivity({info, className}: IFriendActivityProps) {
 					)}
 					{hasSpentTime && (
 						<div className={bem.element('spent-time')}>
-							{info.spent_time} {intToHours(Number(info.spent_time) || 0)}
+							{formatHours(info.spent_time, {fractionDigits: 1})}
 						</div>
 					)}
 				</div>
@@ -107,13 +108,6 @@ export function FriendActivity({info, className}: IFriendActivityProps) {
 			</div>
 		</div>
 	);
-}
-
-function intToHours(number) {
-	if (11 <= number && number <= 14) return "часов";
-	else if (number % 10 === 1) return "час";
-	else if (2 <= number % 10 && number % 10 <= 4) return "часа";
-	else return "часов";
 }
 
 function formatDate(value?: string) {

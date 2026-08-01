@@ -13,6 +13,20 @@ interface IGameStoresProps {
 function GameStores(props: IGameStoresProps) {
     const bem = useBem('GameStores');
     const showLabel = props.showLabel !== false;
+    const stores = React.useMemo(() => [...(props.stores || [])].sort((firstStore, secondStore) => {
+        const firstPriority = GameStoresEnum.PRIORITY.indexOf(firstStore.store.slug);
+        const secondPriority = GameStoresEnum.PRIORITY.indexOf(secondStore.store.slug);
+        if (firstPriority >= 0 && secondPriority >= 0) {
+            return firstPriority - secondPriority;
+        }
+        if (firstPriority >= 0) {
+            return -1;
+        }
+        if (secondPriority >= 0) {
+            return 1;
+        }
+        return firstStore.store.name.localeCompare(secondStore.store.name);
+    }), [props.stores]);
 
     const renderStoreName = (props: {name: string}) => (
         <span className={bem.element('store-fallback')}>
@@ -39,7 +53,7 @@ function GameStores(props: IGameStoresProps) {
         );
     };
 
-    if (!props.stores || !(props.stores.length > 0)) {
+    if (stores.length === 0) {
         return null;
     }
 
@@ -51,7 +65,7 @@ function GameStores(props: IGameStoresProps) {
                 </p>
             )}
             <div className={bem.element('list')}>
-                {props.stores?.map(renderStore)}
+                {stores.map(renderStore)}
             </div>
         </div>
     );

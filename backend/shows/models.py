@@ -36,6 +36,7 @@ class Show(models.Model):
     tmdb_status = models.CharField(max_length=30, blank=True, choices=TMDB_STATUS_CHOICES)
     tmdb_number_of_episodes = models.IntegerField(default=0)
     tmdb_number_of_seasons = models.IntegerField(default=0)
+    tmdb_season_numbers = models.JSONField(default=list, blank=True)
     tmdb_last_air_date = models.DateField(null=True)
     tmdb_overview = models.TextField(blank=True)
     tmdb_score = models.IntegerField(null=True)
@@ -181,9 +182,11 @@ class ShowGenre(models.Model):
 class ShowPerson(models.Model):
     ROLE_ACTOR = 'actor'
     ROLE_DIRECTOR = 'director'
+    ROLE_CREATOR = 'creator'
     ROLE_CHOICES = (
         (ROLE_ACTOR, 'Actor'),
         (ROLE_DIRECTOR, 'Director'),
+        (ROLE_CREATOR, 'Creator'),
     )
 
     show = models.ForeignKey(Show, on_delete=models.CASCADE)

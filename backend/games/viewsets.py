@@ -3,6 +3,7 @@ from adrf.viewsets import GenericViewSet
 from asgiref.sync import sync_to_async
 from datetime import timedelta
 from django.contrib.postgres.search import TrigramSimilarity
+from django.core.cache import cache
 from django.db.models import F, Q, Value
 from django.db.models.functions import Coalesce, Greatest, NullIf
 from django.core.paginator import Paginator
@@ -13,16 +14,16 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from games.functions import is_game_released
 from games.integrations.hltb import (
     build_hltb_response_from_hours,
-    extract_hltb_hours_map,
-    get_game_release_year,
-    get_hltb_game,
 )
 from games.integrations.igdb import (
+    IGDB_GAME_TYPE_IDS,
     get_game_search_results,
     get_igdb_game_new_fields,
     query_igdb_game_by_slug,
+    query_igdb_platforms,
     resolve_igdb_game_details,
     update_game_beat_times_from_igdb,
     update_game_developers_from_igdb,
@@ -33,12 +34,63 @@ from games.integrations.igdb import (
 from games.models import Game, GameBeatTime, UserGame
 from games.services.parser_service import parse_game_from_db, parse_game_prices_from_db
 from games.services.refresh_service import GAME_DETAILS_REFRESH_INTERVAL, enqueue_game_refresh
-from games.tasks import refresh_hltb_beat_times_by_game_id
+from games.tasks import (
+    HLTB_REFRESH_LOCK_TIMEOUT_SECONDS,
+    get_hltb_refresh_lock_key,
+    refresh_hltb_beat_times_by_game_id,
+)
 from games.serializers import UserGameSerializer, FollowedUserGameSerializer, GameSerializer
 from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
+from utils.celery import enqueue_background_task
 from utils.constants import IGDB_UNAVAILABLE, ERROR, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE, GAME_NOT_FOUND
 from utils.functions import get_page_size, update_fields_if_needed_async
+
+IGDB_PLATFORMS_CACHE_KEY = 'igdb:platforms'
+IGDB_PLATFORMS_CACHE_TIMEOUT = 24 * 60 * 60
+
+
+def _attach_games_user_status(request, results, ids_are_internal=False):
+    for result in results:
+        result['user_status'] = None
+
+    if not results or not request.user.is_authenticated:
+        return
+
+    if ids_are_internal:
+        game_ids = [result.get('id') for result in results if result.get('id') is not None]
+        user_games = UserGame.objects.filter(user=request.user, game_id__in=game_ids) \
+            .values('game_id', 'status')
+        user_status_by_game_id = {row['game_id']: row['status'] for row in user_games}
+
+        for result in results:
+            result['user_status'] = user_status_by_game_id.get(result.get('id'))
+        return
+
+    igdb_ids = [result.get('id') for result in results if result.get('id') is not None]
+    slugs = [result.get('slug') for result in results if result.get('slug')]
+    user_games = UserGame.objects.filter(user=request.user) \
+        .filter(
+            Q(game__igdb_id__in=igdb_ids) |
+            Q(game__igdb_slug__in=slugs) |
+            Q(game__rawg_slug__in=slugs)
+        ) \
+        .values('game__igdb_id', 'game__igdb_slug', 'game__rawg_slug', 'status')
+    user_status_by_igdb_id = {
+        row['game__igdb_id']: row['status']
+        for row in user_games
+        if row['game__igdb_id'] is not None
+    }
+    user_status_by_slug = {}
+    for row in user_games:
+        if row['game__igdb_slug']:
+            user_status_by_slug[row['game__igdb_slug']] = row['status']
+        if row['game__rawg_slug']:
+            user_status_by_slug[row['game__rawg_slug']] = row['status']
+
+    for result in results:
+        result['user_status'] = user_status_by_igdb_id.get(result.get('id')) \
+            or user_status_by_slug.get(result.get('slug'))
 
 
 class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
@@ -51,6 +103,8 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
             openapi.Parameter('query', openapi.IN_QUERY, type=openapi.TYPE_STRING),
             openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, default=DEFAULT_PAGE_NUMBER),
             openapi.Parameter('page_size', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, default=DEFAULT_PAGE_SIZE),
+            openapi.Parameter('game_types', openapi.IN_QUERY, type=openapi.TYPE_STRING),
+            openapi.Parameter('platforms', openapi.IN_QUERY, type=openapi.TYPE_STRING),
         ],
         responses={
             200: openapi.Response('OK'),
@@ -62,13 +116,70 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
         query = request.GET.get('query', '')
         page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
         page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
+        game_types_value = request.GET.get('game_types')
+        platforms_value = request.GET.get('platforms')
+
+        game_types = None
+        if game_types_value is not None:
+            if game_types_value == 'none':
+                game_types = []
+            else:
+                try:
+                    game_types = sorted(set(
+                        int(value)
+                        for value in game_types_value.split(',')
+                        if value.strip()
+                    ))
+                except ValueError:
+                    return Response({ERROR: 'Invalid game_types value.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if any(game_type not in IGDB_GAME_TYPE_IDS for game_type in game_types):
+                return Response({ERROR: 'Invalid game_types value.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        platform_ids = None
+        if platforms_value is not None:
+            if platforms_value == 'none':
+                platform_ids = []
+            else:
+                try:
+                    platform_ids = sorted(set(
+                        int(value)
+                        for value in platforms_value.split(',')
+                        if value.strip()
+                    ))
+                except ValueError:
+                    return Response({ERROR: 'Invalid platforms value.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if any(platform_id <= 0 for platform_id in platform_ids):
+                return Response({ERROR: 'Invalid platforms value.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            results = get_game_search_results(query, page, page_size)
+            results = get_game_search_results(query, page, page_size, game_types, platform_ids)
         except Exception:
             return Response(IGDB_UNAVAILABLE, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
+        await sync_to_async(_attach_games_user_status)(request, results.get('results') or [])
+
         return Response(results)
+
+    @swagger_auto_schema(
+        operation_description="List platforms available in IGDB.",
+        responses={
+            200: openapi.Response('OK'),
+            503: openapi.Response('Service Unavailable'),
+        }
+    )
+    @action(detail=False, methods=['get'])
+    def platforms(self, request):
+        platforms = cache.get(IGDB_PLATFORMS_CACHE_KEY)
+        if platforms is None:
+            try:
+                platforms = query_igdb_platforms()
+            except Exception:
+                return Response(IGDB_UNAVAILABLE, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            cache.set(IGDB_PLATFORMS_CACHE_KEY, platforms, IGDB_PLATFORMS_CACHE_TIMEOUT)
+
+        return Response(platforms)
 
     @swagger_auto_schema(
         operation_description="List all games that match a search query, with pagination.",
@@ -118,19 +229,70 @@ class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
         paginator = Paginator(games, page_size)
         paginator_page = paginator.get_page(page)
         serializer = GameSerializer(paginator_page.object_list, many=True)
+        results = serializer.data
+        _attach_games_user_status(request, results, ids_are_internal=True)
 
-        return Response(serializer.data)
+        return Response(results)
 
 
 class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     queryset = UserGame.objects.all()
     serializer_class = UserGameSerializer
     lookup_field = 'slug'
-    HLTB_REFRESH_INTERVAL = timedelta(days=7)
+    HLTB_REFRESH_INTERVAL = timedelta(days=1)
 
     @staticmethod
     async def _get_game_by_public_slug(slug):
         return await Game.objects.filter(igdb_slug=slug).afirst()
+
+    @staticmethod
+    def _build_hours_map(entries):
+        hours_map = {}
+        for entry in entries:
+            if entry.type == GameBeatTime.TYPE_MAIN:
+                hours_map['main'] = entry.hours
+            elif entry.type == GameBeatTime.TYPE_EXTRA:
+                hours_map['extra'] = entry.hours
+            elif entry.type == GameBeatTime.TYPE_COMPLETE:
+                hours_map['complete'] = entry.hours
+        return hours_map
+
+    @staticmethod
+    def _get_latest_entry_update(entries):
+        last_update_values = [entry.last_update for entry in entries if entry.last_update]
+        return max(last_update_values) if last_update_values else None
+
+    def _should_queue_hltb_refresh(self, game, hltb_entries, now):
+        if not game.igdb_name:
+            return False
+
+        latest_hltb_update = self._get_latest_entry_update(hltb_entries)
+        if latest_hltb_update and latest_hltb_update > now - self.HLTB_REFRESH_INTERVAL:
+            return False
+
+        return not game.hltb_last_attempt or game.hltb_last_attempt <= now - self.HLTB_REFRESH_INTERVAL
+
+    @staticmethod
+    async def _is_hltb_refresh_active(game_id):
+        return bool(await sync_to_async(cache.get)(get_hltb_refresh_lock_key(game_id)))
+
+    @staticmethod
+    async def _enqueue_hltb_refresh(game):
+        lock_key = get_hltb_refresh_lock_key(game.id)
+        is_lock_acquired = await sync_to_async(cache.add)(lock_key, True, HLTB_REFRESH_LOCK_TIMEOUT_SECONDS)
+        if not is_lock_acquired:
+            return True
+
+        is_queued = await sync_to_async(enqueue_background_task)(
+            refresh_hltb_beat_times_by_game_id,
+            args=(game.id,),
+            task_name='refresh_hltb_beat_times_by_game_id'
+        )
+        if not is_queued:
+            await sync_to_async(cache.delete)(lock_key)
+            return False
+
+        return True
 
     @swagger_auto_schema(
         operation_description="Retrieve details for a specific game by its slug.",
@@ -269,6 +431,9 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             await update_game_beat_times_from_igdb(game, igdb_game)
             await update_game_stores_from_igdb(game, igdb_game)
 
+        if not is_game_released(game, timezone.now().date()):
+            return Response({})
+
         hltb_entries = []
         igdb_entries = []
         entries_qs = GameBeatTime.objects.filter(game=game)
@@ -278,83 +443,32 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             elif entry.source == GameBeatTime.SOURCE_IGDB:
                 igdb_entries.append(entry)
 
+        now = timezone.now()
+        is_hltb_refreshing = await self._is_hltb_refresh_active(game.id)
+        if not is_hltb_refreshing and self._should_queue_hltb_refresh(game, hltb_entries, now):
+            is_hltb_refreshing = await self._enqueue_hltb_refresh(game)
+
         if hltb_entries or igdb_entries:
             preferred_source = GameBeatTime.SOURCE_HLTB if hltb_entries else GameBeatTime.SOURCE_IGDB
             preferred_entries = hltb_entries if hltb_entries else igdb_entries
-
-            hours_map = {}
-            for entry in preferred_entries:
-                if entry.type == GameBeatTime.TYPE_MAIN:
-                    hours_map['main'] = entry.hours
-                elif entry.type == GameBeatTime.TYPE_EXTRA:
-                    hours_map['extra'] = entry.hours
-                elif entry.type == GameBeatTime.TYPE_COMPLETE:
-                    hours_map['complete'] = entry.hours
-
-            if preferred_source == GameBeatTime.SOURCE_HLTB:
-                last_update_values = [entry.last_update for entry in hltb_entries if entry.last_update]
-                is_stale = (not last_update_values) or (
-                    max(last_update_values) <= timezone.now() - self.HLTB_REFRESH_INTERVAL
-                )
-                if is_stale:
-                    refresh_hltb_beat_times_by_game_id.delay(game.id)
-            elif not hltb_entries:
-                # We can show IGDB time immediately, and warm up HLTB if timing data is stale.
-                last_update_values = [entry.last_update for entry in igdb_entries if entry.last_update]
-                is_stale = (not last_update_values) or (
-                    max(last_update_values) <= timezone.now() - self.HLTB_REFRESH_INTERVAL
-                )
-                if is_stale:
-                    refresh_hltb_beat_times_by_game_id.delay(game.id)
-
+            hours_map = self._build_hours_map(preferred_entries)
             payload = build_hltb_response_from_hours(hours_map)
             payload['source'] = preferred_source
+            if game.hltb_id:
+                payload['hltb_id'] = game.hltb_id
+            payload['refreshing'] = is_hltb_refreshing
             return Response(payload)
 
-        release_year = get_game_release_year(game.igdb_release_date)
-        hltb_game = get_hltb_game(game.igdb_name, release_year)
-        if hltb_game is not None:
-            hltb_name = hltb_game.get('game_name')
-            hltb_id = hltb_game.get('game_id')
-            await update_fields_if_needed_async(game, {'hltb_name': hltb_name, 'hltb_id': hltb_id})
-            hours_map = extract_hltb_hours_map(hltb_game)
-            now = timezone.now()
-            existing_entries = GameBeatTime.objects.filter(game=game, source=GameBeatTime.SOURCE_HLTB)
-            upserted_ids = []
-            for beat_type, hours_value in (
-                (GameBeatTime.TYPE_MAIN, hours_map.get('main')),
-                (GameBeatTime.TYPE_EXTRA, hours_map.get('extra')),
-                (GameBeatTime.TYPE_COMPLETE, hours_map.get('complete')),
-            ):
-                if hours_value is None:
-                    continue
-                beat_time = await GameBeatTime.objects.filter(
-                    game=game,
-                    source=GameBeatTime.SOURCE_HLTB,
-                    type=beat_type,
-                ).afirst()
-                if beat_time is None:
-                    beat_time = await GameBeatTime.objects.acreate(
-                        game=game,
-                        source=GameBeatTime.SOURCE_HLTB,
-                        type=beat_type,
-                        hours=hours_value,
-                        last_update=now,
-                    )
-                else:
-                    await update_fields_if_needed_async(beat_time, {'hours': hours_value, 'last_update': now})
-                upserted_ids.append(beat_time.id)
-
-            if upserted_ids:
-                await existing_entries.exclude(id__in=upserted_ids).adelete()
-            else:
-                await existing_entries.adelete()
-
-            payload = build_hltb_response_from_hours(hours_map)
-            payload['source'] = GameBeatTime.SOURCE_HLTB
+        if is_hltb_refreshing:
+            payload = {'refreshing': True}
+            if game.hltb_id:
+                payload['hltb_id'] = game.hltb_id
             return Response(payload)
-        else:
-            return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+
+        if game.hltb_id:
+            return Response({'hltb_id': game.hltb_id})
+
+        return Response({})
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserGameSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])

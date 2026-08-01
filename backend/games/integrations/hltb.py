@@ -7,7 +7,6 @@ from requests.exceptions import ConnectionError
 
 from games.functions import get_hltb_game_key
 from utils.constants import CACHE_TIMEOUT
-from utils.functions import float_to_hours
 
 
 def get_game_release_year(value):
@@ -23,13 +22,21 @@ def get_game_release_year(value):
     return None
 
 
-def translate_hltb_time(hltb_game, time_key, new_time_key, time_unit):
-    if hltb_game is None or hltb_game.get(time_key) == -1:
+def add_hltb_gameplay_fields(hltb_game):
+    if hltb_game is None:
         return
 
-    gameplay_time = hltb_game.get(time_key)
-    gameplay_unit = float_to_hours(gameplay_time)
-    hltb_game.update({new_time_key: gameplay_time, time_unit: gameplay_unit})
+    field_map = {
+        'main_story': 'gameplay_main',
+        'main_extra': 'gameplay_main_extra',
+        'completionist': 'gameplay_completionist',
+    }
+    for source_key, target_key in field_map.items():
+        gameplay_time = hltb_game.get(source_key)
+        if gameplay_time == -1:
+            continue
+
+        hltb_game.update({target_key: gameplay_time})
 
 
 def get_hltb_game(game_name: str, release_year: int):
@@ -54,9 +61,7 @@ def get_hltb_game(game_name: str, release_year: int):
         except (ConnectionError, AttributeError):
             hltb_game = None
 
-    translate_hltb_time(hltb_game, 'main_story', 'gameplay_main', 'gameplay_main_unit')
-    translate_hltb_time(hltb_game, 'main_extra', 'gameplay_main_extra', 'gameplay_main_extra_unit')
-    translate_hltb_time(hltb_game, 'completionist', 'gameplay_completionist', 'gameplay_completionist_unit')
+    add_hltb_gameplay_fields(hltb_game)
 
     return hltb_game
 
@@ -87,24 +92,18 @@ def extract_hltb_hours_map(hltb_game):
 def build_hltb_response_from_hours(hours_map):
     response = {
         'gameplay_main': -1,
-        'gameplay_main_unit': 'часов',
         'gameplay_main_extra': -1,
-        'gameplay_main_extra_unit': 'часов',
         'gameplay_completionist': -1,
-        'gameplay_completionist_unit': 'часов',
     }
 
     if hours_map.get('main') is not None:
         value = float(hours_map['main'])
         response['gameplay_main'] = value
-        response['gameplay_main_unit'] = float_to_hours(value)
     if hours_map.get('extra') is not None:
         value = float(hours_map['extra'])
         response['gameplay_main_extra'] = value
-        response['gameplay_main_extra_unit'] = float_to_hours(value)
     if hours_map.get('complete') is not None:
         value = float(hours_map['complete'])
         response['gameplay_completionist'] = value
-        response['gameplay_completionist_unit'] = float_to_hours(value)
 
     return response

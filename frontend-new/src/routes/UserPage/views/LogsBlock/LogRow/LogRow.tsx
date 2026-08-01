@@ -1,6 +1,7 @@
 import React from "react";
 import {useBem, useSelector} from '@steroidsjs/core/hooks';
 import Rating from '../../../../../shared/Rating';
+import formatHours from '../../../../../shared/formatHours';
 import "./log-row.scss";
 import {Link} from '@steroidsjs/core/ui/nav';
 import {
@@ -36,12 +37,24 @@ function LogRow({ log, showUsername, onDeleteLog, className }) {
 		<div className={bem(bem.block(), className)}>
 			<div className={bem.element('time')}>{timeText}</div>
 			<div className={bem.element('content')}>
-				{userNode && <span className={bem.element('user')}>{userNode}</span>}
+				{userNode && (
+					<>
+						<span className={bem.element('user')}>{userNode}</span>{' '}
+					</>
+				)}
 				<span className={bem.element('action')}>{actionText}</span>
-				{typeText && <span className={bem.element('type')}>{typeText}</span>}
-				<span className={bem.element('target')}>{targetNode}</span>
+				{typeText && (
+					<>
+						{' '}<span className={bem.element('type')}>{typeText}</span>
+					</>
+				)}
+				{' '}<span className={bem.element('target')}>{targetNode}</span>
 				{showSeparator && <span className={bem.element('separator')}>:</span>}
-				{resultNode && <span className={bem.element('result')}>{resultNode}</span>}
+				{resultNode && (
+					<>
+						{' '}<span className={bem.element('result')}>{resultNode}</span>
+					</>
+				)}
 			</div>
 			<button
 				className={bem.element('delete-button', {hidden: !isOwnLog})}
@@ -52,13 +65,6 @@ function LogRow({ log, showUsername, onDeleteLog, className }) {
 			</button>
 		</div>
 	);
-}
-
-function intToHours(number) {
-	if (11 <= number && number <= 14) return "часов";
-	else if (number % 10 === 1) return "час";
-	else if (2 <= number % 10 && number % 10 <= 4) return "часа";
-	else return "часов";
 }
 
 function intToSeries(number) {
@@ -252,7 +258,9 @@ function nameToLink(name, type, id, bem) {
 						className={bem.element('link')}>
 						{name.name}
 					</Link>
+					{' '}
 					<span className={bem.element('muted')}>сериала</span>
+					{' '}
 					<Link
 						toRoute={ROUTE_SHOW}
 						toRouteParams={{
@@ -276,7 +284,9 @@ function nameToLink(name, type, id, bem) {
 						className={bem.element('link')}>
 						{intToEpisodeInLogContext(id.episode_number)} {id.season_number} {intToSeasonsInEpisodeContext(id.season_number)}
 					</Link>
+					{' '}
 					<span className={bem.element('muted')}>сериала</span>
+					{' '}
 					<Link
 						toRoute={ROUTE_SHOW}
 						toRouteParams={{
@@ -329,7 +339,7 @@ function actionResultToStr(actionType, actionResult, target) {
 		case "review":
 			return `"${actionResult}"`;
 		case "spent_time":
-			return `${actionResultNumber} ${intToHours(actionResultNumber)}`;
+			return formatHours(actionResultNumber);
 		case "episodes":
 			return "";
 		case "is_following":

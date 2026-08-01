@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import UntypedToken
 
-from users.serializers import UserInfoSerializer
+from users.serializers import CurrentUserInfoSerializer
 
 
 class InvalidBearerTokenError(Exception):
@@ -15,7 +15,7 @@ class InvalidBearerTokenError(Exception):
 
 
 class GeneralViewSet(GenericViewSet):
-    serializer_class = UserInfoSerializer
+    serializer_class = CurrentUserInfoSerializer
 
     @staticmethod
     def _resolve_user_from_bearer(request):
@@ -56,5 +56,5 @@ class GeneralViewSet(GenericViewSet):
             return Response({'detail': 'Invalid token.'}, status=status.HTTP_401_UNAUTHORIZED)
 
         if user:
-            result["user"] = UserInfoSerializer(user).data
+            result["user"] = CurrentUserInfoSerializer(user).data
         return Response(result, status=status.HTTP_200_OK)

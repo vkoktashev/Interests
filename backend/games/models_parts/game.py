@@ -2,6 +2,15 @@ from django.db import models
 
 
 class Game(models.Model):
+    IGDB_RELEASE_DATE_FORMAT_EXACT = 0
+    IGDB_RELEASE_DATE_FORMAT_MONTH = 1
+    IGDB_RELEASE_DATE_FORMAT_YEAR = 2
+    IGDB_RELEASE_DATE_FORMAT_Q1 = 3
+    IGDB_RELEASE_DATE_FORMAT_Q2 = 4
+    IGDB_RELEASE_DATE_FORMAT_Q3 = 5
+    IGDB_RELEASE_DATE_FORMAT_Q4 = 6
+    IGDB_RELEASE_DATE_FORMAT_TBD = 7
+
     # rawg.io
     rawg_slug = models.CharField(max_length=200, unique=True, null=True, blank=True)
     rawg_id = models.IntegerField(unique=True, null=True, blank=True)
@@ -12,6 +21,8 @@ class Game(models.Model):
     igdb_slug = models.CharField(max_length=200, blank=True)
     igdb_year = models.IntegerField(null=True, blank=True)
     igdb_release_date = models.DateField(null=True, blank=True)
+    igdb_release_date_format = models.IntegerField(null=True, blank=True)
+    igdb_release_date_display = models.CharField(max_length=50, blank=True)
     igdb_summary = models.TextField(blank=True)
     igdb_rating = models.FloatField(null=True, blank=True)
     igdb_rating_count = models.IntegerField(null=True, blank=True)
@@ -26,6 +37,7 @@ class Game(models.Model):
     # howlongtobeat
     hltb_name = models.CharField(max_length=200, blank=True)
     hltb_id = models.IntegerField(null=True, blank=True)
+    hltb_last_attempt = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.igdb_name or self.hltb_name or self.igdb_slug or f'Game #{self.pk}'

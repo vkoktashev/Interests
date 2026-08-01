@@ -68,8 +68,10 @@ export function MoviePage() {
 		},[user]);
 
 	useEffect(() => {
-		document.title = movie?.name || 'Interests';
-	}, [movie]);
+		if (movie?.name) {
+			document.title = movie.name;
+		}
+	}, [movie?.name]);
 
 	useEffect(() => {
 		setOverviewExpanded(false);
