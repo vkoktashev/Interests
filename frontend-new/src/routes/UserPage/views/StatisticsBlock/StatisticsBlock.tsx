@@ -57,7 +57,7 @@ function StatisticsBlock({ userId }: IStatisticsBlockProps) {
 							<BacklogStats data={safeStats?.backlog}/>
 						</div>
 						<div className={bem.element('panel-card')}>
-							<h4 className={bem.element('chart-title')}>Активность по времени</h4>
+							<h4 className={bem.element('chart-title')}>Активность за год</h4>
 							<ActivityStats data={safeStats?.activity}/>
 						</div>
 						<div className={bem.element('panel-card')}>

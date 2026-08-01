@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class Person(models.Model):
@@ -21,6 +22,39 @@ class Person(models.Model):
 
     def __str__(self):
         return self.name or f'Person #{self.tmdb_id}'
+
+
+class UserPerson(models.Model):
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='tracked_people')
+    person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='tracked_by_users')
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'people_user_person'
+        ordering = ('-created',)
+        unique_together = (('user', 'person'),)
+        verbose_name = 'отслеживаемый человек'
+        verbose_name_plural = 'отслеживаемые люди'
+
+    def __str__(self):
+        return f'{self.user} — {self.person}'
+
+
+class PersonLog(models.Model):
+    ACTION_TYPE_TRACK = 'is_tracking'
+    ACTION_TYPE_CHOICES = (
+        (ACTION_TYPE_TRACK, 'Tracking status changed'),
+    )
+
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE)
+    person = models.ForeignKey(Person, on_delete=models.PROTECT)
+    created = models.DateTimeField(default=timezone.now)
+    action_result = models.CharField(max_length=5)
+    action_type = models.CharField(max_length=30, choices=ACTION_TYPE_CHOICES)
+
+    class Meta:
+        verbose_name = 'лог отслеживания человека'
+        verbose_name_plural = 'логи отслеживания людей'
 
 
 class Developer(models.Model):

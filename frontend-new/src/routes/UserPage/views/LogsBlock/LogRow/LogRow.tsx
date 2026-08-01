@@ -7,6 +7,7 @@ import {Link} from '@steroidsjs/core/ui/nav';
 import {
 	ROUTE_GAME,
 	ROUTE_MOVIE,
+	ROUTE_PERSON,
 	ROUTE_SHOW,
 	ROUTE_SHOW_EPISODE,
 	ROUTE_SHOW_SEASON,
@@ -27,6 +28,7 @@ function LogRow({ log, showUsername, onDeleteLog, className }) {
 	const resultNode = actionResultToStr(log.action_type, log.action_result, log.type);
 	const showSeparator = !(
 		(log.type === "user")
+		|| (log.type === "person")
 		|| (log.action_type === "status")
 		|| (log.action_type === "episodes")
 		|| (log.action_result === "0")
@@ -172,6 +174,11 @@ function translateActionType(action, actionResult, logType, gender) {
 				return getGenderText(gender, {male: 'подписался на', female: 'подписалась на'});
 			}
 			return getGenderText(gender, {male: 'отписался от', female: 'отписалась от'});
+		case "is_tracking":
+			if (actionResult === "True") {
+				return getGenderText(gender, {male: 'начал отслеживать', female: 'начала отслеживать'});
+			}
+			return getGenderText(gender, {male: 'перестал отслеживать', female: 'перестала отслеживать'});
 		default:
 			return action;
 	}
@@ -206,6 +213,8 @@ function translateType(type, actionType, actionResult) {
 			return "";
 		case "user":
 			return "пользователя";
+		case "person":
+			return "";
 		default:
 			return type;
 	}
@@ -308,6 +317,17 @@ function nameToLink(name, type, id, bem) {
 					{name}
 				</Link>
 			);
+		case "person":
+			return (
+				<Link
+					toRoute={ROUTE_PERSON}
+					toRouteParams={{
+						personId: id,
+					}}
+					className={bem.element('link')}>
+					{name}
+				</Link>
+			);
 		default:
 			return name;
 	}
@@ -343,6 +363,7 @@ function actionResultToStr(actionType, actionResult, target) {
 		case "episodes":
 			return "";
 		case "is_following":
+		case "is_tracking":
 			return "";
 		default:
 			return actionResult;
