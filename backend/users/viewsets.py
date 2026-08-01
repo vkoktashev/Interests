@@ -927,35 +927,47 @@ def calculate_time_distribution_last_year(user: User) -> dict:
 
 def calculate_activity_stats(user: User, user_timezone=None) -> dict:
     effective_timezone = user_timezone or timezone.get_current_timezone()
-    heatmap = [[0 for _ in range(24)] for _ in range(7)]
-    active_dates = set()
-    total_events = 0
-    active_minutes_by_cell = collections.defaultdict(set)
+    today = timezone.localdate(timezone=effective_timezone)
+    period_start = today - timedelta(days=364)
+    period_end_exclusive = today + timedelta(days=1)
+    period_start_dt = timezone.make_aware(
+        datetime.combine(period_start, datetime.min.time()),
+        timezone=effective_timezone,
+    )
+    period_end_dt = timezone.make_aware(
+        datetime.combine(period_end_exclusive, datetime.min.time()),
+        timezone=effective_timezone,
+    )
+    events_by_date = collections.Counter()
 
     log_datetimes = chain(
-        GameLog.objects.filter(user=user).values_list('created', flat=True),
-        MovieLog.objects.filter(user=user).values_list('created', flat=True),
-        ShowLog.objects.filter(user=user).values_list('created', flat=True),
-        SeasonLog.objects.filter(user=user).values_list('created', flat=True),
-        EpisodeLog.objects.filter(user=user).values_list('created', flat=True),
-        UserLog.objects.filter(user=user).values_list('created', flat=True),
+        GameLog.objects.filter(
+            user=user, created__gte=period_start_dt, created__lt=period_end_dt,
+        ).values_list('created', flat=True),
+        MovieLog.objects.filter(
+            user=user, created__gte=period_start_dt, created__lt=period_end_dt,
+        ).values_list('created', flat=True),
+        ShowLog.objects.filter(
+            user=user, created__gte=period_start_dt, created__lt=period_end_dt,
+        ).values_list('created', flat=True),
+        SeasonLog.objects.filter(
+            user=user, created__gte=period_start_dt, created__lt=period_end_dt,
+        ).values_list('created', flat=True),
+        EpisodeLog.objects.filter(
+            user=user, created__gte=period_start_dt, created__lt=period_end_dt,
+        ).values_list('created', flat=True),
+        UserLog.objects.filter(
+            user=user, created__gte=period_start_dt, created__lt=period_end_dt,
+        ).values_list('created', flat=True),
     )
 
     for dt in log_datetimes:
         if dt is None:
             continue
         local_dt = timezone.localtime(dt, timezone=effective_timezone)
-        day_index = local_dt.weekday()  # Monday=0 ... Sunday=6
-        hour_index = local_dt.hour
-        active_minutes_by_cell[(day_index, hour_index)].add(local_dt.minute)
-        active_dates.add(local_dt.date())
-        total_events += 1
+        events_by_date[local_dt.date()] += 1
 
-    for day_index in range(7):
-        for hour_index in range(24):
-            # Burst protection: count unique active minutes, not raw event count.
-            heatmap[day_index][hour_index] = len(active_minutes_by_cell[(day_index, hour_index)])
-
+    active_dates = set(events_by_date)
     sorted_dates = sorted(active_dates)
     longest_streak = 0
     previous_date = None
@@ -969,25 +981,28 @@ def calculate_activity_stats(user: User, user_timezone=None) -> dict:
         previous_date = current_date
 
     current_streak = 0
-    day_cursor = timezone.localdate(timezone=effective_timezone)
+    day_cursor = today
     while day_cursor in active_dates:
         current_streak += 1
         day_cursor -= timedelta(days=1)
 
-    days = [
-        {'key': 'mon', 'label': 'Пн', 'hours': heatmap[0]},
-        {'key': 'tue', 'label': 'Вт', 'hours': heatmap[1]},
-        {'key': 'wed', 'label': 'Ср', 'hours': heatmap[2]},
-        {'key': 'thu', 'label': 'Чт', 'hours': heatmap[3]},
-        {'key': 'fri', 'label': 'Пт', 'hours': heatmap[4]},
-        {'key': 'sat', 'label': 'Сб', 'hours': heatmap[5]},
-        {'key': 'sun', 'label': 'Вс', 'hours': heatmap[6]},
-    ]
+    days = []
+    day_cursor = period_start
+    while day_cursor <= today:
+        days.append({
+            'date': day_cursor.isoformat(),
+            'count': events_by_date.get(day_cursor, 0),
+        })
+        day_cursor += timedelta(days=1)
 
     return {
         'activity': {
             'days': days,
-            'total_events': total_events,
+            'period': {
+                'start': period_start.isoformat(),
+                'end': today.isoformat(),
+            },
+            'total_events': sum(events_by_date.values()),
             'active_days': len(active_dates),
             'streak': {
                 'current': current_streak,

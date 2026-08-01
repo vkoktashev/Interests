@@ -318,8 +318,64 @@
         font-weight: 600;
     }
 
-    &__activity-heatmap {
-        height: 240px;
+    &__activity-calendar {
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 10px;
+        background: rgba($newBackground1, 0.36);
+        padding: 10px;
+    }
+
+    &__activity-calendar-scroll {
+        overflow: visible;
+        overscroll-behavior-inline: contain;
+        scrollbar-color: rgba($newText2, 0.4) transparent;
+        scrollbar-width: thin;
+
+        &::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            border-radius: 10px;
+            background: rgba($newText2, 0.32);
+        }
+    }
+
+    &__activity-calendar-chart {
+        width: 100%;
+        min-width: 720px;
+        min-height: 120px;
+        aspect-ratio: 6.7 / 1;
+
+        svg {
+            display: block;
+        }
+    }
+
+    &__activity-legend {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+        margin-top: 2px;
+        color: $newText2;
+        font-size: 0.68rem;
+    }
+
+    &__activity-legend-swatch {
+        display: block;
+        width: 11px;
+        height: 11px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-radius: 2px;
+
+        &_empty {
+            background: rgba($newText2, 0.08);
+        }
     }
 
     &__chart-title {
@@ -360,6 +416,11 @@
         padding: 8px 10px;
         box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32);
         backdrop-filter: blur(2px);
+
+        &_activity {
+            min-width: max-content;
+            white-space: nowrap;
+        }
     }
 
     @media (max-width: 1200px) {
@@ -408,6 +469,11 @@
 
     @media (max-width: $mobile-width) {
         gap: 12px;
+
+        &__activity-calendar-scroll {
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
 
         &__overview,
         &__section {
