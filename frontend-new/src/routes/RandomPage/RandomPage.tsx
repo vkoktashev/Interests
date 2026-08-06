@@ -60,7 +60,8 @@ function RandomPage() {
     const spinOffsetRef = useRef(0);
 
     const onSubmit = useCallback((values: any) => {
-        if (!values.games && !values.movies && !values.shows) {
+        if (!values?.games && !values?.movies && !values?.shows) {
+            dispatch(showNotification('Выберите хотя бы одну категорию', 'warning', {timeOut: 3000}));
             return false;
         }
         if (user) {
@@ -75,9 +76,10 @@ function RandomPage() {
             if (reelTrackRef.current) {
                 reelTrackRef.current.style.transform = 'translate3d(0, 0, 0)';
             }
+            const skipAnimation = !!values.skipAnimation;
             const params = {
                 categories: Object.entries(values)
-                    .filter(([key, value]) => key !== 'endedOnly' && key !== 'allFromDb' && value)
+                    .filter(([key, value]) => key !== 'endedOnly' && key !== 'allFromDb' && key !== 'skipAnimation' && value)
                     .map(([key]) => key),
                 endedOnly: values.endedOnly,
                 allFromDb: values.allFromDb,
@@ -103,7 +105,13 @@ function RandomPage() {
                     setCandidates(list);
                     setWinner(list[0] || null);
                     setRevealKey((value) => value + 1);
-                    setReelPhase('spinning');
+                    if (skipAnimation) {
+                        setImageLoaded(true);
+                        setReelPhase('done');
+                        setLoading(false);
+                    } else {
+                        setReelPhase('spinning');
+                    }
                 })
                 .catch(e => {
                     dispatch(showNotification(`Ошибка сервера ${e.response.data?.error}`, 'danger'));
@@ -241,29 +249,43 @@ function RandomPage() {
                     <div className={bem.element('pill')}>Персональные подборки</div>
                 </div>
                 <div className={bem.element('panel')}>
-                    <div className={bem.element('label')}>
-                        Категории
+                    <div className={bem.element('group')}>
+                        <div className={bem.element('label')}>
+                            Категории
+                        </div>
+                        <div className={bem.element('checkbox-grid')}>
+                            {
+                                categoriesEnum.map((category: any) => (
+                                    <CheckboxField
+                                        attribute={category.id}
+                                        label={category.label}
+                                        key={category.id}
+                                        className={bem.element('checkbox', {category: true})}
+                                    />
+                                ))
+                            }
+                        </div>
                     </div>
-                    <div className={bem.element('checkbox-grid')}>
-                        {
-                            categoriesEnum.map((category: any) => (
-                                <CheckboxField
-                                    attribute={category.id}
-                                    label={category.label}
-                                    key={category.id}
-                                    className={bem.element('checkbox')}
-                                />
-                            ))
-                        }
+                    <div className={bem.element('divider')} />
+                    <div className={bem.element('group')}>
+                        <div className={bem.element('label')}>
+                            Параметры поиска
+                        </div>
+                        <CheckboxField
+                            attribute='endedOnly'
+                            label={__('Только завершенные сериалы')}
+                            className={bem.element('checkbox')}
+                        />
+                        <CheckboxField
+                            attribute='allFromDb'
+                            label={__('Искать по всей базе (неигранные/непросмотренные)')}
+                            className={bem.element('checkbox')}
+                        />
                     </div>
+                    <div className={bem.element('divider')} />
                     <CheckboxField
-                        attribute='endedOnly'
-                        label={__('Только завершенные сериалы')}
-                        className={bem.element('checkbox')}
-                    />
-                    <CheckboxField
-                        attribute='allFromDb'
-                        label={__('Искать по всей базе (неигранные/непросмотренные)')}
+                        attribute='skipAnimation'
+                        label={__('Пропустить анимацию')}
                         className={bem.element('checkbox')}
                     />
                     <Button
