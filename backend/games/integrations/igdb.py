@@ -651,6 +651,7 @@ def get_igdb_game_new_fields(igdb_game: dict[str, Any]) -> dict[str, Any]:
         'igdb_id': igdb_game.get('id'),
         'igdb_name': igdb_game.get('name') or '',
         'igdb_slug': igdb_game.get('slug') or '',
+        'igdb_game_type': _get_igdb_game_type(igdb_game),
         'igdb_year': release_year,
         'igdb_release_date': first_release_date,
         'igdb_release_date_format': release_info['date_format'],
