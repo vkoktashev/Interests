@@ -20,14 +20,18 @@ from games.models import UserGame, GameLog, Game, GameDeveloper, GameBeatTime
 from games.serializers import GameStatsSerializer, GameLogSerializer, GameSerializer, TypedGameSerializer
 from movies.models import UserMovie, MovieLog, Movie, MoviePerson
 from movies.serializers import MovieLogSerializer, MovieStatsSerializer, MovieSerializer, TypedMovieSerializer
-from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, Show, Episode, ShowPerson
+from people.models import PersonLog, UserPerson
+from people.serializers import PersonLogSerializer
+from proxy.functions import get_proxy_url
+from shows.models import UserShow, UserEpisode, ShowLog, EpisodeLog, SeasonLog, Show, Episode, ShowPerson, \
+    SeasonPerson, EpisodePerson
 from shows.serializers import ShowStatsSerializer, ShowLogSerializer, SeasonLogSerializer, EpisodeLogSerializer, \
     EpisodeShowSerializer, TypedShowSerializer
 from users.serializers import UserFollowSerializer, UserLogSerializer, \
     UserInfoSerializer, SettingsSerializer, UserSerializer, MyTokenRefreshSerializer
 from utils.constants import ERROR, ID_VALUE_ERROR, \
     USER_NOT_FOUND, MINUTES_IN_HOUR, TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, \
-    TYPE_SEASON, TYPE_EPISODE, TYPE_USER, CANNOT_DELETE_ANOTHER_USER_LOG, WRONG_LOG_TYPE, LOG_NOT_FOUND
+    TYPE_SEASON, TYPE_EPISODE, TYPE_USER, TYPE_PERSON, CANNOT_DELETE_ANOTHER_USER_LOG, WRONG_LOG_TYPE, LOG_NOT_FOUND
 from utils.functions import get_page_size
 from utils.models import Round
 from .functions import is_user_available
@@ -94,6 +98,97 @@ def order_game_calendar_releases(games: QuerySet) -> QuerySet:
     ).order_by('release_date', 'calendar_release_precision', 'igdb_name', 'id')
 
 
+def format_person_life_years(person):
+    birth_year = person.tmdb_birthday.year if person.tmdb_birthday else None
+    death_year = person.tmdb_deathday.year if person.tmdb_deathday else None
+
+    if birth_year:
+        return f'{birth_year}–{death_year or "н.в."}'
+    if death_year:
+        return str(death_year)
+    return ''
+
+
+def get_tracked_people(request, user, user_movies, user_shows):
+    tracked_people = list(UserPerson.objects.select_related('person').filter(user=user))
+    if not tracked_people:
+        return []
+
+    person_ids = [user_person.person_id for user_person in tracked_people]
+    marked_movies = {
+        user_movie.movie_id: {
+            'type': TYPE_MOVIE,
+            'id': user_movie.movie.tmdb_id,
+            'name': user_movie.movie.tmdb_name or user_movie.movie.tmdb_original_name or 'Без названия',
+            'year': user_movie.movie.tmdb_release_date.year if user_movie.movie.tmdb_release_date else None,
+            '_updated_at': user_movie.updated_at,
+        }
+        for user_movie in user_movies
+    }
+    marked_shows = {
+        user_show.show_id: {
+            'type': TYPE_SHOW,
+            'id': user_show.show.tmdb_id,
+            'name': user_show.show.tmdb_name or user_show.show.tmdb_original_name or 'Без названия',
+            'year': user_show.show.tmdb_release_date.year if user_show.show.tmdb_release_date else None,
+            '_updated_at': user_show.updated_at,
+        }
+        for user_show in user_shows
+    }
+
+    project_keys_by_person = collections.defaultdict(set)
+
+    for person_id, movie_id in MoviePerson.objects.filter(
+            person_id__in=person_ids,
+            movie_id__in=marked_movies,
+    ).values_list('person_id', 'movie_id'):
+        project_keys_by_person[person_id].add((TYPE_MOVIE, movie_id))
+
+    show_person_pairs = chain(
+        ShowPerson.objects.filter(
+            person_id__in=person_ids,
+            show_id__in=marked_shows,
+        ).values_list('person_id', 'show_id'),
+        SeasonPerson.objects.filter(
+            person_id__in=person_ids,
+            season__tmdb_show_id__in=marked_shows,
+        ).values_list('person_id', 'season__tmdb_show_id'),
+        EpisodePerson.objects.filter(
+            person_id__in=person_ids,
+            episode__tmdb_season__tmdb_show_id__in=marked_shows,
+        ).values_list('person_id', 'episode__tmdb_season__tmdb_show_id'),
+    )
+    for person_id, show_id in show_person_pairs:
+        project_keys_by_person[person_id].add((TYPE_SHOW, show_id))
+
+    projects_by_key = {
+        **{(TYPE_MOVIE, movie_id): project for movie_id, project in marked_movies.items()},
+        **{(TYPE_SHOW, show_id): project for show_id, project in marked_shows.items()},
+    }
+    result = []
+
+    for user_person in tracked_people:
+        person = user_person.person
+        projects = sorted(
+            (projects_by_key[key] for key in project_keys_by_person[person.id]),
+            key=lambda project: project['_updated_at'],
+            reverse=True,
+        )
+        result.append({
+            'id': person.id,
+            'tmdb_id': person.tmdb_id,
+            'name': person.name,
+            'profile_path': get_proxy_url(request, person.tmdb_profile_path),
+            'life_years': format_person_life_years(person),
+            'projects': [
+                {key: value for key, value in project.items() if key != '_updated_at'}
+                for project in projects
+            ],
+        })
+
+    return result
+
+
 class MyTokenRefreshView(TokenRefreshView):
     permission_classes = [AllowAny]
     serializer_class = MyTokenRefreshSerializer
@@ -130,7 +225,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             results, count = get_logs((user,), request.GET.get('page_size'), request.GET.get('page'),
                                       request.GET.get('query', ''),
                                       request.query_params.getlist('filters[]',
-                                                                   (TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, TYPE_USER)))
+                                                                   (TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, TYPE_USER,
+                                                                    TYPE_PERSON)))
 
             return Response({'log': results, 'count': count})
 
@@ -153,6 +249,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 Model = EpisodeLog
             elif log_type == TYPE_USER:
                 Model = UserLog
+            elif log_type == TYPE_PERSON:
+                Model = PersonLog
             else:
                 return Response({ERROR: WRONG_LOG_TYPE}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -171,7 +269,8 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         results, count = get_logs(user_follow_query, request.GET.get('page_size'), request.GET.get('page'),
                                   request.GET.get('query', ''),
                                   request.query_params.getlist('filters[]',
-                                                               (TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, TYPE_USER)))
+                                                               (TYPE_GAME, TYPE_MOVIE, TYPE_SHOW, TYPE_USER,
+                                                                TYPE_PERSON)))
 
         return Response({'log': results, 'count': count})
 
@@ -344,8 +443,10 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             id__in=UserFollow.objects.filter(user=user, is_following=True).values('followed_user')) \
             .values('id', 'username', 'gender')
 
+        tracked_people = get_tracked_people(request, user, user_movies, user_shows)
+
         response_data = {'is_available': is_available, 'is_followed': user_is_followed,
-                         'followed_users': followed_users,
+                         'followed_users': followed_users, 'tracked_people': tracked_people,
                          'games': games, 'movies': movies, 'shows': shows}
 
         serializer = UserInfoSerializer(user)
@@ -950,35 +1051,50 @@ def calculate_time_distribution_last_year(user: User) -> dict:
 
 def calculate_activity_stats(user: User, user_timezone=None) -> dict:
     effective_timezone = user_timezone or timezone.get_current_timezone()
-    heatmap = [[0 for _ in range(24)] for _ in range(7)]
-    active_dates = set()
-    total_events = 0
-    active_minutes_by_cell = collections.defaultdict(set)
+    today = timezone.localdate(timezone=effective_timezone)
+    period_start = today - timedelta(days=364)
+    period_end_exclusive = today + timedelta(days=1)
+    period_start_dt = timezone.make_aware(
+        datetime.combine(period_start, datetime.min.time()),
+        timezone=effective_timezone,
+    )
+    period_end_dt = timezone.make_aware(
+        datetime.combine(period_end_exclusive, datetime.min.time()),
+        timezone=effective_timezone,
+    )
+    events_by_date = collections.Counter()
 
     log_datetimes = chain(
-        GameLog.objects.filter(user=user).values_list('created', flat=True),
-        MovieLog.objects.filter(user=user).values_list('created', flat=True),
-        ShowLog.objects.filter(user=user).values_list('created', flat=True),
-        SeasonLog.objects.filter(user=user).values_list('created', flat=True),
-        EpisodeLog.objects.filter(user=user).values_list('created', flat=True),
-        UserLog.objects.filter(user=user).values_list('created', flat=True),
+        GameLog.objects.filter(
+            user=user, created__gte=period_start_dt, created__lt=period_end_dt,
+        ).values_list('created', flat=True),
+        MovieLog.objects.filter(
+            user=user, created__gte=period_start_dt, created__lt=period_end_dt,
+        ).values_list('created', flat=True),
+        ShowLog.objects.filter(
+            user=user, created__gte=period_start_dt, created__lt=period_end_dt,
+        ).values_list('created', flat=True),
+        SeasonLog.objects.filter(
+            user=user, created__gte=period_start_dt, created__lt=period_end_dt,
+        ).values_list('created', flat=True),
+        EpisodeLog.objects.filter(
+            user=user, created__gte=period_start_dt, created__lt=period_end_dt,
+        ).values_list('created', flat=True),
+        UserLog.objects.filter(
+            user=user, created__gte=period_start_dt, created__lt=period_end_dt,
+        ).values_list('created', flat=True),
+        PersonLog.objects.filter(
+            user=user, created__gte=period_start_dt, created__lt=period_end_dt,
+        ).values_list('created', flat=True),
     )
 
     for dt in log_datetimes:
         if dt is None:
             continue
         local_dt = timezone.localtime(dt, timezone=effective_timezone)
-        day_index = local_dt.weekday()  # Monday=0 ... Sunday=6
-        hour_index = local_dt.hour
-        active_minutes_by_cell[(day_index, hour_index)].add(local_dt.minute)
-        active_dates.add(local_dt.date())
-        total_events += 1
+        events_by_date[local_dt.date()] += 1
 
-    for day_index in range(7):
-        for hour_index in range(24):
-            # Burst protection: count unique active minutes, not raw event count.
-            heatmap[day_index][hour_index] = len(active_minutes_by_cell[(day_index, hour_index)])
-
+    active_dates = set(events_by_date)
     sorted_dates = sorted(active_dates)
     longest_streak = 0
     previous_date = None
@@ -992,25 +1108,28 @@ def calculate_activity_stats(user: User, user_timezone=None) -> dict:
         previous_date = current_date
 
     current_streak = 0
-    day_cursor = timezone.localdate(timezone=effective_timezone)
+    day_cursor = today
     while day_cursor in active_dates:
         current_streak += 1
         day_cursor -= timedelta(days=1)
 
-    days = [
-        {'key': 'mon', 'label': 'Пн', 'hours': heatmap[0]},
-        {'key': 'tue', 'label': 'Вт', 'hours': heatmap[1]},
-        {'key': 'wed', 'label': 'Ср', 'hours': heatmap[2]},
-        {'key': 'thu', 'label': 'Чт', 'hours': heatmap[3]},
-        {'key': 'fri', 'label': 'Пт', 'hours': heatmap[4]},
-        {'key': 'sat', 'label': 'Сб', 'hours': heatmap[5]},
-        {'key': 'sun', 'label': 'Вс', 'hours': heatmap[6]},
-    ]
+    days = []
+    day_cursor = period_start
+    while day_cursor <= today:
+        days.append({
+            'date': day_cursor.isoformat(),
+            'count': events_by_date.get(day_cursor, 0),
+        })
+        day_cursor += timedelta(days=1)
 
     return {
         'activity': {
             'days': days,
-            'total_events': total_events,
+            'period': {
+                'start': period_start.isoformat(),
+                'end': today.isoformat(),
+            },
+            'total_events': sum(events_by_date.values()),
             'active_days': len(active_dates),
             'streak': {
                 'current': current_streak,
@@ -1033,6 +1152,8 @@ def serialize_logs(logs):
             serializer = SeasonLogSerializer(entry)
         elif isinstance(entry, EpisodeLog):
             serializer = EpisodeLogSerializer(entry)
+        elif isinstance(entry, PersonLog):
+            serializer = PersonLogSerializer(entry)
         else:
             serializer = UserLogSerializer(entry)
         results.append(serializer.data)
@@ -1043,7 +1164,7 @@ def get_logs(user_query, page_size, page_number, search_query, filters):
     page_size = get_page_size(page_size)
     page = page_number
 
-    game_logs = movie_logs = show_logs = season_logs = episode_logs = user_logs = []
+    game_logs = movie_logs = show_logs = season_logs = episode_logs = user_logs = person_logs = []
 
     for user_filter in filters:
         if user_filter == TYPE_GAME:
@@ -1070,8 +1191,13 @@ def get_logs(user_query, page_size, page_number, search_query, filters):
         elif user_filter == TYPE_USER:
             user_logs = UserLog.objects.select_related('user', 'followed_user').filter(user__in=user_query) \
                 .filter(followed_user__username__icontains=search_query)
+        elif user_filter == TYPE_PERSON:
+            person_logs = PersonLog.objects.select_related('user', 'person').filter(user__in=user_query) \
+                .filter(person__name__icontains=search_query)
 
-    union_logs = sorted(chain(game_logs, movie_logs, show_logs, season_logs, episode_logs, user_logs),
+    union_logs = sorted(chain(
+        game_logs, movie_logs, show_logs, season_logs, episode_logs, user_logs, person_logs,
+    ),
                         key=lambda obj: obj.created, reverse=True)
 
     paginator = Paginator(union_logs, page_size)

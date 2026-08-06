@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useState} from 'react';
 
 import './person-page.scss';
-import {useBem, useSelector, useFetch} from '@steroidsjs/core/hooks';
+import {useBem, useComponents, useSelector, useFetch} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getRouteParam} from '@steroidsjs/core/reducers/router';
 import {Loader} from '@steroidsjs/core/ui/layout';
@@ -91,11 +91,14 @@ function getEmptyWorksText(
 
 export function PersonPage() {
 	const bem = useBem('person-page');
+	const {http} = useComponents();
 	const user = useSelector(getUser);
 	const personId = useSelector(state => getRouteParam(state, 'personId'));
 	const isAuthorized = Boolean(user?.id);
 	const [isOnlyMine, setIsOnlyMine] = useState(false);
 	const [isPrimaryOnly, setIsPrimaryOnly] = useState(false);
+	const [isTracked, setIsTracked] = useState(false);
+	const [isTrackUpdating, setIsTrackUpdating] = useState(false);
 
 	const fetchConfig = useMemo(() => personId && ({
 		url: `/people/person/${personId}/`,
@@ -115,6 +118,30 @@ export function PersonPage() {
 			setIsOnlyMine(false);
 		}
 	}, [isAuthorized]);
+
+	useEffect(() => {
+		setIsTracked(Boolean(person?.is_tracked));
+	}, [person?.id, person?.is_tracked]);
+
+	const toggleTracked = async () => {
+		if (!person?.id || isTrackUpdating) {
+			return;
+		}
+
+		const nextIsTracked = !isTracked;
+		setIsTracked(nextIsTracked);
+		setIsTrackUpdating(true);
+
+		try {
+			await http.send('PUT', `/people/person/${person.id}/track/`, {
+				is_tracked: nextIsTracked,
+			});
+		} catch (error) {
+			setIsTracked(!nextIsTracked);
+		} finally {
+			setIsTrackUpdating(false);
+		}
+	};
 
 	const alsoKnownAs = Array.isArray(person?.also_known_as) ? person.also_known_as : [];
 	const movies = Array.isArray(person?.movies) ? person.movies as TPersonMovie[] : [];
@@ -164,6 +191,17 @@ export function PersonPage() {
 					<div className={bem.element('main')}>
 						<div className={bem.element('title-row')}>
 							<h1 className={bem.element('title')}>{person.name}</h1>
+							{isAuthorized && (
+								<button
+									type='button'
+									className={bem.element('track-button', {active: isTracked})}
+									aria-pressed={isTracked}
+									disabled={isTrackUpdating}
+									onClick={toggleTracked}
+								>
+									{isTracked ? 'Не отслеживать' : 'Отслеживать'}
+								</button>
+							)}
 						</div>
 						<div className={bem.element('info-list')}>
 							{infoRows.map(item => (

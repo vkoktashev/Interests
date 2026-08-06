@@ -59,13 +59,16 @@ export interface ITimeDistribution {
 }
 
 export interface IActivityDay {
-	key: string;
-	label: string;
-	hours: number[];
+	date: string;
+	count: number;
 }
 
 export interface IActivityStats {
 	days: IActivityDay[];
+	period: {
+		start: string;
+		end: string;
+	};
 	total_events: number;
 	active_days: number;
 	streak: {

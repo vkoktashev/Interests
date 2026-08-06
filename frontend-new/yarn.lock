@@ -1667,6 +1667,24 @@
     d3-shape "^3.2.0"
     lodash "^4.17.21"
 
+"@nivo/calendar@^0.99.0":
+  version "0.99.0"
+  resolved "https://registry.yarnpkg.com/@nivo/calendar/-/calendar-0.99.0.tgz#43f3a1d6c352a0ea6a50c0b1b94bb171cb502c65"
+  integrity sha512-8Y6rIjAMt4hMWpkIUmb7skr8boAdoE7Bb4liAFSkkyRgsK4iFnFbaf1x5wLk7YmyY4v8LZ4PjNyGOYPBJU2wtw==
+  dependencies:
+    "@nivo/core" "0.99.0"
+    "@nivo/legends" "0.99.0"
+    "@nivo/text" "0.99.0"
+    "@nivo/theming" "0.99.0"
+    "@nivo/tooltip" "0.99.0"
+    "@types/d3-scale" "^4.0.8"
+    "@types/d3-time" "^1.0.10"
+    "@types/d3-time-format" "^3.0.0"
+    d3-scale "^4.0.2"
+    d3-time "^1.0.10"
+    d3-time-format "^3.0.0"
+    lodash "^4.17.21"
+
 "@nivo/canvas@0.99.0":
   version "0.99.0"
   resolved "https://registry.yarnpkg.com/@nivo/canvas/-/canvas-0.99.0.tgz#63174f599fe825c58608b63c6d627977dead2b91"
@@ -1706,25 +1724,6 @@
     lodash "^4.17.21"
     react-virtualized-auto-sizer "^1.0.26"
     use-debounce "^10.0.4"
-
-"@nivo/heatmap@^0.99.0":
-  version "0.99.0"
-  resolved "https://registry.yarnpkg.com/@nivo/heatmap/-/heatmap-0.99.0.tgz#108228b220636c45dd8a8d07e909933742cae3fb"
-  integrity sha512-cnd5V6XYLvHtQ8GObUyYyEgmAUa5/ERYVmNXR1znA+yzmB+tGthJsOeGar+ntCb43pIL5HbhEaD3YpsYzBxOhQ==
-  dependencies:
-    "@nivo/annotations" "0.99.0"
-    "@nivo/axes" "0.99.0"
-    "@nivo/colors" "0.99.0"
-    "@nivo/core" "0.99.0"
-    "@nivo/legends" "0.99.0"
-    "@nivo/scales" "0.99.0"
-    "@nivo/text" "0.99.0"
-    "@nivo/theming" "0.99.0"
-    "@nivo/tooltip" "0.99.0"
-    "@react-spring/core" "9.4.5 || ^9.7.2 || ^10.0"
-    "@react-spring/web" "9.4.5 || ^9.7.2 || ^10.0"
-    "@types/d3-scale" "^4.0.8"
-    d3-scale "^4.0.2"
 
 "@nivo/legends@0.99.0":
   version "0.99.0"
@@ -2005,15 +2004,14 @@
   resolved "https://registry.yarnpkg.com/@splidejs/splide/-/splide-4.1.4.tgz#02d029360569e7d75d28357a9727fc48322015a3"
   integrity sha512-5I30evTJcAJQXt6vJ26g2xEkG+l1nXcpEw4xpKh0/FWQ8ozmAeTbtniVtVmz2sH1Es3vgfC4SS8B2X4o5JMptA==
 
-"@steroidsjs/bootstrap@^3.0.44":
-  version "3.0.44"
-  resolved "https://registry.yarnpkg.com/@steroidsjs/bootstrap/-/bootstrap-3.0.44.tgz#3c248491a46e9d8027b5725ac913064054fcc843"
-  integrity sha512-/HGJR6gkuj5Jqh4PGxFa+n5pnvLGSvzGQ0WMKHppmeRpN3nUXSbIiCgGbn5GSe0DWloHx7/PUiwgVbdQOMSPrg==
+"@steroidsjs/bootstrap@^3.1.4":
+  version "3.1.4"
+  resolved "https://registry.yarnpkg.com/@steroidsjs/bootstrap/-/bootstrap-3.1.4.tgz#a1b3c1a8d62d9ed8949dde7d92ae7a1f650f6a6f"
+  integrity sha512-HKOihuqluy7gUf8a000p2QphqOw6Gd6WmQK8jfyrQ41vioDP0dPFR5joddnnZXp4kH7EU1puntA5FC5VQGWCYg==
   dependencies:
     "@splidejs/react-splide" "^0.7.12"
     date-fns "^2.29.3"
-    lodash "^4.17.20"
-    lodash-es "^4.17.20"
+    lodash-es "^4.17.23"
     normalize.css "^8.0.1"
     rc-slider "^9.7.4"
     react "^18.2.0"
@@ -2026,10 +2024,10 @@
     react-transition-group "^2.9.0"
     react-use "^17.4.0"
 
-"@steroidsjs/core@^3.0.93":
-  version "3.0.93"
-  resolved "https://registry.yarnpkg.com/@steroidsjs/core/-/core-3.0.93.tgz#02485fdc1a82c54274aa0566046c98a139a0044d"
-  integrity sha512-aGVFAMBa+j6tBZu1Ejj8j2MjNLCQO4oL0bA4yeiAUctDe7lDJtjjxXJ/9SJw4bST7wfrzVT7qiB/4dcgQ93UuQ==
+"@steroidsjs/core@^3.1.5":
+  version "3.1.5"
+  resolved "https://registry.yarnpkg.com/@steroidsjs/core/-/core-3.1.5.tgz#26f4e77df91143dca2dcf6227089b072e7c03074"
+  integrity sha512-DSGh0E3tl0vWGXFy4smOmTUt5I6mPzZ5gW5AlDTGzYQoWe+GMdMp0xdjWSrRrmNHVeVTAvNFgl7+quftohYOYA==
   dependencies:
     "@maskito/core" "2.3.1"
     "@maskito/kit" "2.3.1"
@@ -2045,10 +2043,9 @@
     intl-messageformat "^10.1.4"
     js-cookie "^2.2.1"
     load-js "^3.0.3"
-    lodash "^4.17.21"
-    lodash-es "^4.17.21"
-    path-to-regexp "^1.7.0"
-    qs "^6.14.1"
+    lodash-es "^4.17.23"
+    path-to-regexp "1.9.0"
+    qs "^6.15.0"
     react "^18.2.0"
     react-click-outside "^3.0.1"
     react-day-picker "^8.7.1"
@@ -2078,10 +2075,10 @@
     eslint-plugin-react "^7.32.2"
     eslint-plugin-react-hooks "^4.6.0"
 
-"@steroidsjs/webpack@^4.1.0":
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/@steroidsjs/webpack/-/webpack-4.1.0.tgz#38bd02b778fc85dbdb42af815bd05729e5cd154a"
-  integrity sha512-gkrjQOb51rWByuBHECcKwk7DU+9Zrkb935suXhRLXEStJmVdhTlJyb9Dsv6Ns/+GQyiRlX96Vd1CpBkIa9YOfw==
+"@steroidsjs/webpack@^4.1.2":
+  version "4.1.2"
+  resolved "https://registry.yarnpkg.com/@steroidsjs/webpack/-/webpack-4.1.2.tgz#48389aa39715da1f8035c77117a59d46a1176e3b"
+  integrity sha512-T9nmImoC1MvtSl7UppXNQzuZ4PTNaR2U+kIQcqgVznJXN95WzoWQZu/JaNBxrE0McPHx96mT25ZCKsEwcXytQA==
   dependencies:
     "@babel/core" "^7.24.0"
     "@babel/eslint-parser" "^7.23.10"
@@ -2234,7 +2231,7 @@
   resolved "https://registry.yarnpkg.com/@types/d3-time/-/d3-time-3.0.4.tgz#8472feecd639691450dd8000eb33edd444e1323f"
   integrity sha512-yuzZug1nkAAaBlBBikKZTgzCeA+k1uy4ZFwWANOfKw5z5LRhV0gNA7gNkKm7HoK+HRN0wX3EkxGk0fpbWhmB7g==
 
-"@types/d3-time@^1.1.1":
+"@types/d3-time@^1.0.10", "@types/d3-time@^1.1.1":
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/@types/d3-time/-/d3-time-1.1.4.tgz#20da4b75c537a940e7319b75717c67a2e499515a"
   integrity sha512-JIvy2HjRInE+TXOmIGN5LCmeO0hkFZx5f9FZ7kiN+D+YTcc8pptsiLiuHsvwxwC7VVKmJ2ExHUgNlAiV7vQM9g==
@@ -4115,14 +4112,14 @@ d3-time-format@^3.0.0:
   dependencies:
     d3-array "2"
 
-"d3-time@1 - 3", "d3-time@2.1.1 - 3":
+"d3-time@1 - 3", "d3-time@2.1.1 - 3", d3-time@3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/d3-time/-/d3-time-3.1.0.tgz#9310db56e992e3c0175e1ef385e545e48a9bb5c7"
   integrity sha512-VqKjzBLejbSMT4IgbmVgDjpkYrNWUYJnbCGo874u7MMKIWsILRX+OpX/gTk8MqjpT1A/c6HY2dCA77ZN0lkQ2Q==
   dependencies:
     d3-array "2 - 3"
 
-d3-time@^1.0.11:
+d3-time@^1.0.10, d3-time@^1.0.11:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/d3-time/-/d3-time-1.1.0.tgz#b1e19d307dae9c900b7e5b25ffc5dcc249a8a0f1"
   integrity sha512-Xh0isrZ5rPYYdqhAVk8VLnMEidhz5aP7htAADH6MfzgmmicPkTo8LhkLxci61/lCB7n7UmE3bN0leRt+qvkLxA==
@@ -6479,10 +6476,15 @@ locate-path@^7.1.0:
   dependencies:
     p-locate "^6.0.0"
 
-lodash-es@^4.17.20, lodash-es@^4.17.21:
+lodash-es@^4.17.21:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash-es/-/lodash-es-4.17.21.tgz#43e626c46e6591b7750beb2b50117390c609e3ee"
   integrity sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==
+
+lodash-es@^4.17.23:
+  version "4.18.1"
+  resolved "https://registry.yarnpkg.com/lodash-es/-/lodash-es-4.18.1.tgz#b962eeb80d9d983a900bf342961fb7418ca10b1d"
+  integrity sha512-J8xewKD/Gk22OZbhpOVSwcs60zhd95ESDwezOFuA3/099925PdHJ7OFHNTGtajL3AlZkykD32HykiMo+BIBI8A==
 
 lodash.debounce@^4.0.8:
   version "4.0.8"
@@ -6931,7 +6933,7 @@ object-inspect@^1.13.1:
   resolved "https://registry.yarnpkg.com/object-inspect/-/object-inspect-1.13.1.tgz#b96c6109324ccfef6b12216a956ca4dc2ff94bc2"
   integrity sha512-5qoj1RUiKOMsCCNLV1CBiPYE10sziTsnmNxkAI/rZhiD63CF7IqdFGC/XzjWjpSgLf0LxXX3bDFIh0E18f6UhQ==
 
-object-inspect@^1.13.3:
+object-inspect@^1.13.3, object-inspect@^1.13.4:
   version "1.13.4"
   resolved "https://registry.yarnpkg.com/object-inspect/-/object-inspect-1.13.4.tgz#8375265e21bc20d0fa582c22e1b13485d6e00213"
   integrity sha512-W67iLl4J2EXEGTbfeHCffrjDfitvLANg0UlX3wFUUSTx92KXRFegMHUVgSqE+wvhAbi4WqjGg9czysTV2Epbew==
@@ -7214,6 +7216,13 @@ path-to-regexp@0.1.7:
   version "0.1.7"
   resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-0.1.7.tgz#df604178005f522f15eb4490e7247a1bfaa67f8c"
   integrity sha512-5DFkuoqlv1uYQKxy8omFBeJPQcdoE07Kv2sferDCrAq1ohOU+MSDswDIbnx3YAM60qIOnYa53wBhXW0EbMonrQ==
+
+path-to-regexp@1.9.0:
+  version "1.9.0"
+  resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-1.9.0.tgz#5dc0753acbf8521ca2e0f137b4578b917b10cf24"
+  integrity sha512-xIp7/apCFJuUHdDLWe8O1HIkb0kQrOMb/0u6FXQjemHn/ii5LrIzU6bdECnsiTF/GjZkMEKg1xdiZwNqDYlZ6g==
+  dependencies:
+    isarray "0.0.1"
 
 path-to-regexp@^1.7.0:
   version "1.8.0"
@@ -7613,12 +7622,13 @@ qs@^6.11.2:
   dependencies:
     side-channel "^1.0.4"
 
-qs@^6.14.1:
-  version "6.15.0"
-  resolved "https://registry.yarnpkg.com/qs/-/qs-6.15.0.tgz#db8fd5d1b1d2d6b5b33adaf87429805f1909e7b3"
-  integrity sha512-mAZTtNCeetKMH+pSjrb76NAM8V9a05I9aBZOHztWy/UqcJdQYNsf59vrRKWnojAT9Y+GbIvoTBC++CPHqpDBhQ==
+qs@^6.15.0:
+  version "6.15.3"
+  resolved "https://registry.yarnpkg.com/qs/-/qs-6.15.3.tgz#76852132a58ed5c7c0ef67e4441b9bb5d6061b3b"
+  integrity sha512-O9gl3zCl5h5blw1KGUzQKhA5oUXSl8rwUIM5o0S3nCXMliSvy5Dzx7/DJcI+SwgICv+IneSZwhBh1oSyEHA71A==
   dependencies:
-    side-channel "^1.1.0"
+    es-define-property "^1.0.1"
+    side-channel "^1.1.1"
 
 query-string@^4.1.0:
   version "4.3.4"
@@ -8543,13 +8553,13 @@ shell-quote@^1.8.1:
   resolved "https://registry.npmjs.org/shell-quote/-/shell-quote-1.8.1.tgz#6dbf4db75515ad5bac63b4f1894c3a154c766680"
   integrity sha512-6j1W9l1iAs/4xYBI1SYOVZyFcCis9b4KCLQ8fgAGG07QvzaRLVVRQvAy85yNmmZSjYjg4MWh4gNvlPujU/5LpA==
 
-side-channel-list@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/side-channel-list/-/side-channel-list-1.0.0.tgz#10cb5984263115d3b7a0e336591e290a830af8ad"
-  integrity sha512-FCLHtRD/gnpCiCHEiJLOwdmFP+wzCmDEkc9y7NsYxeF4u7Btsn1ZuwgwJGxImImHicJArLP4R0yX4c2KCrMrTA==
+side-channel-list@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/side-channel-list/-/side-channel-list-1.0.1.tgz#c2e0b5a14a540aebee3bbc6c3f8666cc9b509127"
+  integrity sha512-mjn/0bi/oUURjc5Xl7IaWi/OJJJumuoJFQJfDDyO46+hBWsfaVM65TBHq2eoZBhzl9EchxOijpkbRC8SVBQU0w==
   dependencies:
     es-errors "^1.3.0"
-    object-inspect "^1.13.3"
+    object-inspect "^1.13.4"
 
 side-channel-map@^1.0.1:
   version "1.0.1"
@@ -8582,14 +8592,14 @@ side-channel@^1.0.4, side-channel@^1.0.6:
     get-intrinsic "^1.2.4"
     object-inspect "^1.13.1"
 
-side-channel@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/side-channel/-/side-channel-1.1.0.tgz#c3fcff9c4da932784873335ec9765fa94ff66bc9"
-  integrity sha512-ZX99e6tRweoUXqR+VBrslhda51Nh5MTQwou5tnUDgbtyM0dBgmhEDtWGP/xbKn6hqfPRHujUNwz5fy/wbbhnpw==
+side-channel@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/side-channel/-/side-channel-1.1.1.tgz#ea02c62e05dc4bea67d4442f0fb71ee192f8e0ab"
+  integrity sha512-6x6dK6zJdpTzF4sQeNYxwtvBzf6Eg4GtlesS94HOvTudUeyK2WXAaIfmDgsyslYrRBeFIlsi54AYsFGUuhmvrQ==
   dependencies:
     es-errors "^1.3.0"
-    object-inspect "^1.13.3"
-    side-channel-list "^1.0.0"
+    object-inspect "^1.13.4"
+    side-channel-list "^1.0.1"
     side-channel-map "^1.0.1"
     side-channel-weakmap "^1.0.2"
 
