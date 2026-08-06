@@ -867,6 +867,9 @@ async def update_game_stores_from_igdb(game: Game, igdb_game: dict[str, Any]) ->
         await GameStore.objects.filter(id__in=to_delete_ids).adelete()
 
 
+_MAX_BEAT_TIME_HOURS = Decimal('999999.99')
+
+
 def _seconds_to_hours(value: Any) -> Decimal | None:
     if value is None:
         return None
@@ -876,7 +879,8 @@ def _seconds_to_hours(value: Any) -> Decimal | None:
         return None
     if seconds <= 0:
         return None
-    return (Decimal(seconds) / Decimal(3600)).quantize(Decimal('0.01'))
+    hours = (Decimal(seconds) / Decimal(3600)).quantize(Decimal('0.01'))
+    return min(hours, _MAX_BEAT_TIME_HOURS)
 
 
 def query_igdb_game_time_to_beat(igdb_game_id: int) -> Optional[dict[str, Any]]:

@@ -78,7 +78,7 @@ class GameBeatTime(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     type = models.CharField(max_length=16, choices=TYPE_CHOICES)
     source = models.CharField(max_length=16, choices=SOURCE_CHOICES)
-    hours = models.DecimalField(max_digits=6, decimal_places=2)
+    hours = models.DecimalField(max_digits=8, decimal_places=2)
     last_update = models.DateTimeField(null=True, blank=True)
 
     class Meta:
