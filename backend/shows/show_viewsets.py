@@ -662,7 +662,6 @@ def parse_show(show, request):
         'season_number': season.tmdb_season_number,
     } for season in show.season_set.filter(
         tmdb_season_number__in=show.tmdb_season_numbers,
-        episode__isnull=False,
     ).order_by('tmdb_season_number').distinct()]
 
     return {
