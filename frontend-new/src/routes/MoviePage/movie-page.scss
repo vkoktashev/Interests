@@ -99,6 +99,57 @@
     font-weight: 700;
   }
 
+  &__resource-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  &__resource-group-label {
+    color: $newText2;
+    font-size: 0.86rem;
+    line-height: 1.2;
+  }
+
+  &__media-links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__media-link {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    color: $newText2;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      color: $newText3;
+      border-color: rgba($calendarMoviesColor, 0.55);
+      background: rgba($calendarMoviesColor, 0.18);
+    }
+  }
+
+  &__media-link-icon {
+    font-size: 20px;
+  }
+
+  &__media-link-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+  }
+
   &__info-subheader {
     color: $newText2;
     font-size: 0.95rem;

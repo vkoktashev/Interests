@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
+import {SiThemoviedatabase} from 'react-icons/si';
 
 import StatusButtonGroup from '../../shared/StatusButtonGroup';
 import FriendsActivity from '../../shared/FriendsActivity';
@@ -168,6 +169,36 @@ export function MoviePage() {
 										</div>
 									))}
 								</div>
+
+								{!!movie?.id && (
+									<div className={bem.element('resource-group')}>
+										<div className={bem.element('resource-group-label')}>Контент</div>
+										<div className={bem.element('media-links')}>
+											<a
+												className={bem.element('media-link', {tmdb: true})}
+												href={`https://www.themoviedb.org/movie/${movie.id}`}
+												target='_blank'
+												rel='noreferrer'
+												title='TMDB'
+												aria-label='Открыть на TMDB'
+											>
+												<SiThemoviedatabase className={bem.element('media-link-icon')} />
+											</a>
+											{!!movie?.imdb_id && (
+												<a
+													className={bem.element('media-link', {imdb: true})}
+													href={`https://www.imdb.com/title/${movie.imdb_id}/`}
+													target='_blank'
+													rel='noreferrer'
+													title='IMDb'
+													aria-label='Открыть на IMDb'
+												>
+													<span className={bem.element('media-link-label')}>IMDb</span>
+												</a>
+											)}
+										</div>
+									</div>
+								)}
 							</div>
 
 							<div className={bem.element('actions')}>

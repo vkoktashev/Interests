@@ -9,11 +9,12 @@ from shows.models import Episode, ShowGenre, ShowPerson, SeasonPerson, EpisodePe
     UserEpisode, EpisodeLog
 from utils.constants import TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, TMDB_STILL_PATH_PREFIX, LANGUAGE, \
     CACHE_TIMEOUT, YOUTUBE_PREFIX
-from utils.functions import update_fields_if_needed
+from utils.functions import update_fields_if_needed, get_english_translation_data
 
 
 def get_show_new_fields(tmdb_show, tmdb_show_videos=None):
     parsed_videos = []
+    english_translation = get_english_translation_data(tmdb_show)
     season_numbers = sorted({
         season.get('season_number')
         for season in (tmdb_show.get('seasons') or [])
@@ -30,6 +31,8 @@ def get_show_new_fields(tmdb_show, tmdb_show_videos=None):
         'imdb_id': tmdb_show.get('imdb_id') if tmdb_show.get('imdb_id') is not None else '',
         'tmdb_original_name': tmdb_show.get('original_name') or '',
         'tmdb_name': tmdb_show.get('name') or '',
+        'tmdb_name_en': english_translation.get('name') or '',
+        'tmdb_original_language': tmdb_show.get('original_language') or '',
         'tmdb_episode_runtime': tmdb_show.get('episode_run_time', [0])[0] if len(tmdb_show.get('episode_run_time', [])) > 0 else 0,
         'tmdb_backdrop_path': TMDB_BACKDROP_PATH_PREFIX + tmdb_show['backdrop_path']
         if tmdb_show.get('backdrop_path') else '',
@@ -42,6 +45,7 @@ def get_show_new_fields(tmdb_show, tmdb_show_videos=None):
         'tmdb_number_of_seasons': tmdb_show.get('number_of_seasons') or 0,
         'tmdb_season_numbers': season_numbers,
         'tmdb_overview': tmdb_show.get('overview') or '',
+        'tmdb_overview_en': english_translation.get('overview') or '',
         'tmdb_score': int(tmdb_show['vote_average'] * 10) if tmdb_show.get('vote_average') is not None else None,
         'tmdb_production_companies': ', '.join(
             company.get('name', '') for company in (tmdb_show.get('production_companies') or []) if company.get('name')
@@ -203,7 +207,7 @@ def get_tmdb_show(tmdb_id):
     key = get_tmdb_show_key(tmdb_id)
     tmdb_show = cache.get(key, None)
     if tmdb_show is None:
-        tmdb_show = tmdb.TV(tmdb_id).info(language=LANGUAGE)
+        tmdb_show = tmdb.TV(tmdb_id).info(language=LANGUAGE, append_to_response='translations')
         cache.set(key, tmdb_show, CACHE_TIMEOUT)
     return tmdb_show
 

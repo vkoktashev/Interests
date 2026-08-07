@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
+import {SiThemoviedatabase} from 'react-icons/si';
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {Loader} from '@steroidsjs/core/ui/layout';
@@ -180,6 +181,36 @@ function ShowPage(props) {
                                         </div>
                                     ))}
                                 </div>
+
+								{!!show?.id && (
+									<div className={bem.element('resource-group')}>
+										<div className={bem.element('resource-group-label')}>Контент</div>
+										<div className={bem.element('media-links')}>
+											<a
+												className={bem.element('media-link', {tmdb: true})}
+												href={`https://www.themoviedb.org/tv/${show.id}`}
+												target='_blank'
+												rel='noreferrer'
+												title='TMDB'
+												aria-label='Открыть на TMDB'
+											>
+												<SiThemoviedatabase className={bem.element('media-link-icon')} />
+											</a>
+											{!!show?.imdb_id && (
+												<a
+													className={bem.element('media-link', {imdb: true})}
+													href={`https://www.imdb.com/title/${show.imdb_id}/`}
+													target='_blank'
+													rel='noreferrer'
+													title='IMDb'
+													aria-label='Открыть на IMDb'
+												>
+													<span className={bem.element('media-link-label')}>IMDb</span>
+												</a>
+											)}
+										</div>
+									</div>
+								)}
 							</div>
 
 							<div className={bem.element('actions')}>

@@ -20,7 +20,7 @@ from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
 from utils.celery import enqueue_background_task
 from utils.constants import ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, TMDB_POSTER_PATH_PREFIX, TMDB_BACKDROP_PATH_PREFIX
-from utils.functions import update_fields_if_needed
+from utils.functions import update_fields_if_needed, resolve_display_name
 
 MOVIE_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
 
@@ -269,9 +269,12 @@ def parse_movie(movie, request):
     director_names = [item['name'] for item in directors_people]
     new_movie = {
         'id': movie.tmdb_id,
-        'name': movie.tmdb_name,
+        'imdb_id': movie.imdb_id,
+        'name': resolve_display_name(
+            movie.tmdb_name, movie.tmdb_original_name, movie.tmdb_name_en, movie.tmdb_original_language,
+        ),
         'original_name': movie.tmdb_original_name,
-        'overview': movie.tmdb_overview,
+        'overview': movie.tmdb_overview or movie.tmdb_overview_en,
         'runtime': movie.tmdb_runtime,
         'release_date': format_date(movie.tmdb_release_date),
         'digital_release_date': format_date(movie.tmdb_digital_release_date),

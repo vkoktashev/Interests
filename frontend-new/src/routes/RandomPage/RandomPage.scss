@@ -79,30 +79,73 @@
     padding: 1.6rem;
     border: 1px solid var(--rp-line);
     display: grid;
-    gap: 1.2rem;
+    gap: 1rem;
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
     min-width: 0;
+
+    // Neutralize default steroids field margin — vertical rhythm is driven by grid gaps
+    .FieldLayoutView {
+      margin-bottom: 0;
+    }
 
     @media(max-width: 480px) {
       border-radius: 18px;
       padding: 1rem;
-      gap: 0.9rem;
+      gap: 0.8rem;
     }
   }
 
+  &__group {
+    display: grid;
+    gap: 0.55rem;
+  }
+
   &__label {
-    @include subtitle2;
+    @include overline;
     color: var(--rp-muted);
+    letter-spacing: 0.08em;
+  }
+
+  &__divider {
+    height: 1px;
+    background: var(--rp-line);
   }
 
   &__checkbox-grid {
     display: grid;
-    gap: 0.6rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+
+    @media(max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
   }
 
   &__checkbox {
     .CheckboxFieldView__label-text {
       color: var(--rp-ink) !important;
+    }
+  }
+
+  &__checkbox_category {
+    display: flex;
+    width: 100%;
+
+    // Move the tile visual onto the label so the whole chip is a click target
+    .AppCheckboxFieldView__label {
+      flex: 1;
+      width: 100%;
+      border: 1px solid var(--rp-line);
+      border-radius: 14px;
+      padding: 0.6rem 0.7rem;
+      background: rgba(255, 255, 255, 0.02);
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+
+      &:hover {
+        border-color: rgba(101, 31, 255, 0.5);
+        background: rgba(101, 31, 255, 0.08);
+      }
     }
   }
 

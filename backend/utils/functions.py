@@ -73,3 +73,20 @@ async def update_fields_if_needed_async(obj, new_fields, need_save=True):
 
 def objects_to_str(objects):
     return ', '.join(obj['name'] for obj in objects)
+
+
+def get_english_translation_data(tmdb_data):
+    translations = (tmdb_data.get('translations') or {}).get('translations') or []
+    for translation in translations:
+        if translation.get('iso_639_1') == 'en':
+            return translation.get('data') or {}
+    return {}
+
+
+def resolve_display_name(localized_name, original_name, english_name, original_language):
+    has_russian = original_language == 'ru' or bool(localized_name and localized_name != original_name)
+    if has_russian:
+        return localized_name
+    if english_name:
+        return english_name
+    return localized_name or original_name
