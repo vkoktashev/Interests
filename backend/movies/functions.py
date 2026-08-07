@@ -7,6 +7,7 @@ import tmdbsimple as tmdb
 from movies.models import Genre, MovieGenre, MoviePerson
 from people.models import Person
 from utils.constants import TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, LANGUAGE, CACHE_TIMEOUT, YOUTUBE_PREFIX
+from utils.functions import get_english_translation_data
 
 
 TMDB_DIGITAL_RELEASE_TYPE = 4
@@ -31,6 +32,7 @@ def get_digital_release_date(tmdb_release_dates):
 
 def get_movie_new_fields(tmdb_movie, tmdb_movie_videos=None, tmdb_release_dates=None):
     parsed_videos = []
+    english_translation = get_english_translation_data(tmdb_movie)
     if tmdb_movie_videos is not None:
         youtube_videos = [video for video in tmdb_movie_videos if video.get('site') == 'YouTube']
         parsed_videos = [{
@@ -42,6 +44,8 @@ def get_movie_new_fields(tmdb_movie, tmdb_movie_videos=None, tmdb_release_dates=
         'imdb_id': tmdb_movie.get('imdb_id') if tmdb_movie.get('imdb_id') is not None else '',
         'tmdb_original_name': tmdb_movie.get('original_title'),
         'tmdb_name': tmdb_movie.get('title'),
+        'tmdb_name_en': english_translation.get('title') or '',
+        'tmdb_original_language': tmdb_movie.get('original_language') or '',
         'tmdb_runtime': tmdb_movie.get('runtime') if tmdb_movie.get('runtime') is not None else 0,
         'tmdb_release_date': tmdb_movie.get('release_date') if tmdb_movie.get('release_date') != "" else None,
         'tmdb_digital_release_date': get_digital_release_date(tmdb_release_dates),
@@ -50,6 +54,7 @@ def get_movie_new_fields(tmdb_movie, tmdb_movie_videos=None, tmdb_release_dates=
         'tmdb_poster_path': TMDB_POSTER_PATH_PREFIX + tmdb_movie['poster_path']
         if tmdb_movie.get('poster_path') is not None else '',
         'tmdb_overview': tmdb_movie.get('overview') or '',
+        'tmdb_overview_en': english_translation.get('overview') or '',
         'tmdb_score': int(tmdb_movie['vote_average'] * 10) if tmdb_movie.get('vote_average') else None,
         'tmdb_tagline': tmdb_movie.get('tagline') or '',
         'tmdb_production_companies': ', '.join(company.get('name', '') for company in (tmdb_movie.get('production_companies') or []) if company.get('name')),
@@ -78,7 +83,7 @@ def get_tmdb_movie(tmdb_id):
     key = get_tmdb_movie_key(tmdb_id)
     tmdb_movie = cache.get(key, None)
     if tmdb_movie is None:
-        tmdb_movie = tmdb.Movies(tmdb_id).info(language=LANGUAGE, append_to_response='videos,credits')
+        tmdb_movie = tmdb.Movies(tmdb_id).info(language=LANGUAGE, append_to_response='videos,credits,translations')
         cache.set(key, tmdb_movie, CACHE_TIMEOUT)
     return tmdb_movie
 

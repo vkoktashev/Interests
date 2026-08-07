@@ -22,7 +22,7 @@ from users.models import UserFollow
 from utils.celery import enqueue_background_task
 from utils.constants import ERROR, SHOW_NOT_FOUND, TMDB_UNAVAILABLE, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE, \
     TMDB_POSTER_PATH_PREFIX, TMDB_BACKDROP_PATH_PREFIX
-from utils.functions import update_fields_if_needed
+from utils.functions import update_fields_if_needed, resolve_display_name
 
 SHOW_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
 
@@ -666,9 +666,12 @@ def parse_show(show, request):
 
     return {
         'id': show.tmdb_id,
-        'name': show.tmdb_name,
+        'imdb_id': show.imdb_id,
+        'name': resolve_display_name(
+            show.tmdb_name, show.tmdb_original_name, show.tmdb_name_en, show.tmdb_original_language,
+        ),
         'original_name': show.tmdb_original_name,
-        'overview': show.tmdb_overview,
+        'overview': show.tmdb_overview or show.tmdb_overview_en,
         'episode_run_time': show.tmdb_episode_runtime,
         'seasons_count': show.tmdb_number_of_seasons,
         'episodes_count': show.tmdb_number_of_episodes,
