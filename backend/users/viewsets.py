@@ -110,8 +110,8 @@ def format_person_life_years(person):
     return ''
 
 
-def get_tracked_people(request, user, user_movies, user_shows):
-    tracked_people = list(UserPerson.objects.select_related('person').filter(user=user))
+def get_tracked_people(request, profile_user, viewer_movies, viewer_shows):
+    tracked_people = list(UserPerson.objects.select_related('person').filter(user=profile_user))
     if not tracked_people:
         return []
 
@@ -124,7 +124,7 @@ def get_tracked_people(request, user, user_movies, user_shows):
             'year': user_movie.movie.tmdb_release_date.year if user_movie.movie.tmdb_release_date else None,
             '_updated_at': user_movie.updated_at,
         }
-        for user_movie in user_movies
+        for user_movie in viewer_movies
     }
     marked_shows = {
         user_show.show_id: {
@@ -134,7 +134,7 @@ def get_tracked_people(request, user, user_movies, user_shows):
             'year': user_show.show.tmdb_release_date.year if user_show.show.tmdb_release_date else None,
             '_updated_at': user_show.updated_at,
         }
-        for user_show in user_shows
+        for user_show in viewer_shows
     }
 
     project_keys_by_person = collections.defaultdict(set)
@@ -444,7 +444,23 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             id__in=UserFollow.objects.filter(user=user, is_following=True).values('followed_user')) \
             .values('id', 'username', 'gender')
 
-        tracked_people = get_tracked_people(request, user, user_movies, user_shows)
+        viewer_movies = []
+        viewer_shows = []
+        if request.user.is_authenticated:
+            if request.user == user:
+                viewer_movies = user_movies
+                viewer_shows = user_shows
+            else:
+                viewer_movies = UserMovie.objects.select_related('movie') \
+                    .exclude(status=UserMovie.STATUS_NOT_WATCHED) \
+                    .filter(user=request.user) \
+                    .order_by('-updated_at')
+                viewer_shows = UserShow.objects.select_related('show') \
+                    .exclude(status=UserShow.STATUS_NOT_WATCHED) \
+                    .filter(user=request.user) \
+                    .order_by('-updated_at')
+
+        tracked_people = get_tracked_people(request, user, viewer_movies, viewer_shows)
 
         response_data = {'is_available': is_available, 'is_followed': user_is_followed,
                          'followed_users': followed_users, 'tracked_people': tracked_people,

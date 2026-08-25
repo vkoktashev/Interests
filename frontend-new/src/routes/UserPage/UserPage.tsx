@@ -128,7 +128,10 @@ function UserPage() {
 									</h4>
 								)}
 								{user.is_available && (
-									<PeopleBlock people={user.tracked_people || []}/>
+									<PeopleBlock
+										people={user.tracked_people || []}
+										showKnownFor={Boolean(currentUser?.id)}
+									/>
 								)}
 							</div>
 						)}
