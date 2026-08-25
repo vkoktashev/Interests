@@ -183,6 +183,9 @@ def update_movie_people(movie, tmdb_cast_crew):
         if person_id is None or not person_name:
             continue
 
+        tmdb_order = person_data.get('order')
+        sort_order = tmdb_order if isinstance(tmdb_order, int) and tmdb_order >= 0 else index
+
         profile_path = (
             TMDB_POSTER_PATH_PREFIX + person_data.get('profile_path')
             if person_data.get('profile_path')
@@ -208,7 +211,7 @@ def update_movie_people(movie, tmdb_cast_crew):
             role=MoviePerson.ROLE_ACTOR,
             defaults={
                 'character': person_data.get('character') or '',
-                'sort_order': index,
+                'sort_order': sort_order,
             }
         )
         relation_fields_to_update = []
@@ -216,8 +219,8 @@ def update_movie_people(movie, tmdb_cast_crew):
         if movie_person.character != character:
             movie_person.character = character
             relation_fields_to_update.append('character')
-        if movie_person.sort_order != index:
-            movie_person.sort_order = index
+        if movie_person.sort_order != sort_order:
+            movie_person.sort_order = sort_order
             relation_fields_to_update.append('sort_order')
         if relation_fields_to_update:
             movie_person.save(update_fields=relation_fields_to_update)
