@@ -6,12 +6,11 @@ from django.db.models import Q
 from requests import HTTPError, ConnectionError, Timeout
 
 from config.celery import app
-from movies.functions import clear_tmdb_movie_cache, get_movie_new_fields, get_tmdb_movie, get_cast_crew, get_tmdb_movie_videos, \
+from movies.functions import clear_tmdb_movie_cache, get_movie_new_fields, get_tmdb_movie, get_cast_crew, \
     get_tmdb_movie_release_dates, update_movie_genres, update_movie_people
-from movies.models import Movie, MovieVideo
+from movies.models import Movie
 from utils.constants import UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
 from utils.functions import update_fields_if_needed
-from videos.functions import sync_tmdb_videos
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +92,6 @@ def update_movie_details(tmdb_id, movie_obj=None):
     try:
         tmdb_movie = get_tmdb_movie(tmdb_id)
         tmdb_cast_crew = get_cast_crew(tmdb_id)
-        tmdb_movie_videos = get_tmdb_movie_videos(tmdb_id)
         tmdb_release_dates = get_tmdb_movie_release_dates(tmdb_id)
     except (HTTPError, ConnectionError, Timeout):
         logger.exception('update_movie_details: failed to fetch TMDB details for tmdb_id=%s', tmdb_id)
@@ -111,7 +109,6 @@ def update_movie_details(tmdb_id, movie_obj=None):
             changed_fields = _get_changed_fields(movie_obj, new_fields)
             update_fields_if_needed(movie_obj, new_fields)
 
-        sync_tmdb_videos(movie_obj, MovieVideo, tmdb_movie_videos)
         update_movie_genres(movie_obj, tmdb_movie)
         update_movie_people(movie_obj, tmdb_cast_crew)
     except Exception:

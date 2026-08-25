@@ -13,7 +13,7 @@ import SeasonsBlock from './views/SeasonsBlock';
 import ScoreBlock from '../../shared/ScoreBlock';
 import TmdbReviewsBlock from '../../shared/TmdbReviewsBlock/TmdbReviewsBlock';
 import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
-import MediaGalleryBlock from '../../shared/MediaGalleryBlock';
+import LazyTrailersBlock from '../../shared/LazyTrailersBlock';
 import PersonLink from '../../shared/PersonLink';
 
 import "./show-page.scss";
@@ -260,9 +260,9 @@ function ShowPage(props) {
 						</div>
 					</div>
 
-                    <MediaGalleryBlock
+                    <LazyTrailersBlock
                         className={bem.element('media-card')}
-                        trailers={show?.videos}
+                        endpoint={`/shows/show/${showId}/trailers/`}
                         isMobileViewport={isMobileViewport}
                     />
 

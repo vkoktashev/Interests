@@ -24,7 +24,6 @@ from utils.constants import ERROR, SHOW_NOT_FOUND, TMDB_UNAVAILABLE, EPISODE_NOT
     TMDB_POSTER_PATH_PREFIX, TMDB_BACKDROP_PATH_PREFIX
 from utils.functions import update_fields_if_needed, resolve_display_name
 from videos.functions import serialize_videos, sync_tmdb_videos
-from videos.models import Video
 
 SHOW_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
 
@@ -56,22 +55,15 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             bool(expected_season_numbers) and
             bool(expected_season_numbers - database_season_numbers)
         )
-        has_legacy_tmdb_videos = show is not None and ShowVideo.objects.filter(
-            show=show,
-            video__source=Video.SOURCE_TMDB,
-            video__external_id='',
-        ).exists()
         should_fetch_from_tmdb = (
             show is None or
             show.tmdb_last_update is None or
-            has_missing_seasons or
-            has_legacy_tmdb_videos
+            has_missing_seasons
         )
 
         if should_fetch_from_tmdb:
             try:
                 tmdb_show = get_tmdb_show(tmdb_id)
-                tmdb_show_videos = get_tmdb_show_videos(tmdb_id)
                 tmdb_show_credits = get_tmdb_show_credits(tmdb_id)
             except HTTPError as e:
                 error_code = int(e.args[0].split(' ', 1)[0])
@@ -88,7 +80,6 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 if not created:
                     update_fields_if_needed(show, new_fields)
 
-                sync_tmdb_videos(show, ShowVideo, tmdb_show_videos)
                 sync_show_genres(show, tmdb_show)
                 sync_show_people(show, tmdb_show_credits, tmdb_show)
 
@@ -101,6 +92,32 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             response.add_post_render_callback(lambda _: enqueue_show_refresh(show_id))
 
         return response
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('OK'),
+            404: openapi.Response('Show not found'),
+            503: openapi.Response('TMDB unavailable'),
+        }
+    )
+    @action(detail=True, methods=['get'])
+    def trailers(self, request, *args, **kwargs):
+        tmdb_id = kwargs.get('tmdb_id')
+        try:
+            show = Show.objects.get(tmdb_id=tmdb_id)
+            tmdb_videos = get_tmdb_show_videos(tmdb_id)
+        except Show.DoesNotExist:
+            return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+        except HTTPError as e:
+            error_code = int(e.args[0].split(' ', 1)[0])
+            if error_code == 404:
+                return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except (ConnectionError, Timeout):
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        sync_tmdb_videos(show, ShowVideo, tmdb_videos)
+        return Response(serialize_videos(show, ShowVideo))
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -696,7 +713,6 @@ def parse_show(show, request):
         'status': translate_tmdb_status(show.tmdb_status),
         'first_air_date': format_date(show.tmdb_release_date),
         'last_air_date': format_date(show.tmdb_last_air_date),
-        'videos': serialize_videos(show, ShowVideo),
         'seasons': seasons,
         'cast': ', '.join(cast_names),
         'directors': ', '.join(director_names),
