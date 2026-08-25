@@ -1043,25 +1043,52 @@ def calculate_scores_stats(user: User) -> dict:
 
 def calculate_backlog_metrics(user: User) -> dict:
     now = timezone.now()
+    today = timezone.localdate(now)
 
-    planned_games = UserGame.objects.filter(user=user, status=UserGame.STATUS_GOING)
-    planned_movies = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_GOING)
-    planned_shows = UserShow.objects.filter(user=user, status=UserShow.STATUS_GOING)
-    eligible_shows = UserShow.objects.filter(user=user).exclude(
+    planned_games = UserGame.objects.filter(
+        user=user,
+        status=UserGame.STATUS_GOING,
+        game__igdb_release_date__lte=today,
+    )
+    planned_movies = UserMovie.objects.filter(
+        user=user,
+        status=UserMovie.STATUS_GOING,
+        movie__tmdb_release_date__lte=today,
+    )
+    planned_shows = UserShow.objects.filter(
+        user=user,
+        status=UserShow.STATUS_GOING,
+        show__tmdb_release_date__lte=today,
+    )
+    eligible_shows = UserShow.objects.filter(
+        user=user,
+        show__tmdb_release_date__lte=today,
+    ).exclude(
         status__in=[UserShow.STATUS_NOT_WATCHED, UserShow.STATUS_STOPPED]
     )
 
     def average_age_days(values):
-        datetimes = [item for item in values if item is not None]
-        if not datetimes:
-            return 0
-        age_seconds = sum((now - dt).total_seconds() for dt in datetimes)
-        return round(age_seconds / len(datetimes) / 86400, 1)
+        age_seconds = []
+        for added_at, release_date in values:
+            if added_at is None or release_date is None:
+                continue
 
-    games_updated = list(planned_games.values_list('updated_at', flat=True))
-    movies_updated = list(planned_movies.values_list('updated_at', flat=True))
-    shows_updated = list(planned_shows.values_list('updated_at', flat=True))
-    all_updated = games_updated + movies_updated + shows_updated
+            release_datetime = timezone.make_aware(
+                datetime.combine(release_date, datetime.min.time()),
+                timezone.get_current_timezone(),
+            )
+            # min(time since addition, time since release) starts at the later timestamp.
+            age_started_at = max(added_at, release_datetime)
+            age_seconds.append(max(0, (now - age_started_at).total_seconds()))
+
+        if not age_seconds:
+            return 0
+        return round(sum(age_seconds) / len(age_seconds) / 86400, 1)
+
+    games_age_values = list(planned_games.values_list('updated_at', 'game__igdb_release_date'))
+    movies_age_values = list(planned_movies.values_list('updated_at', 'movie__tmdb_release_date'))
+    shows_age_values = list(planned_shows.values_list('updated_at', 'show__tmdb_release_date'))
+    all_age_values = games_age_values + movies_age_values + shows_age_values
 
     movies_minutes = planned_movies.aggregate(total=Sum('movie__tmdb_runtime')).get('total') or 0
 
@@ -1096,6 +1123,7 @@ def calculate_backlog_metrics(user: User) -> dict:
     eligible_episodes = Episode.objects.filter(
         tmdb_season__tmdb_show_id__in=eligible_show_ids,
         tmdb_season__tmdb_season_number__gt=0,
+        tmdb_release_date__lte=today,
     )
 
     watched_episode_ids = set(
@@ -1130,10 +1158,10 @@ def calculate_backlog_metrics(user: User) -> dict:
                 'total': counts['games'] + counts['movies'] + counts['shows'],
             },
             'average_age_days': {
-                'games': average_age_days(games_updated),
-                'movies': average_age_days(movies_updated),
-                'shows': average_age_days(shows_updated),
-                'overall': average_age_days(all_updated),
+                'games': average_age_days(games_age_values),
+                'movies': average_age_days(movies_age_values),
+                'shows': average_age_days(shows_age_values),
+                'overall': average_age_days(all_age_values),
             },
             'estimated_hours_to_close': {
                 'games': games_hours,
