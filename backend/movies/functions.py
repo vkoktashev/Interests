@@ -169,7 +169,7 @@ def update_movie_genres(movie, tmdb_movie):
 
 
 def update_movie_people(movie, tmdb_cast_crew):
-    cast = (tmdb_cast_crew.get('cast') or [])[:5]
+    cast = tmdb_cast_crew.get('cast') or []
     crew = tmdb_cast_crew.get('crew') or []
     directors = [person for person in crew if person.get('job') == 'Director']
 
@@ -183,21 +183,44 @@ def update_movie_people(movie, tmdb_cast_crew):
         if person_id is None or not person_name:
             continue
 
-        person_obj, _ = Person.objects.get_or_create(tmdb_id=person_id,
-                                                     defaults={'name': person_name})
+        profile_path = (
+            TMDB_POSTER_PATH_PREFIX + person_data.get('profile_path')
+            if person_data.get('profile_path')
+            else ''
+        )
+        person_obj, _ = Person.objects.get_or_create(
+            tmdb_id=person_id,
+            defaults={'name': person_name, 'tmdb_profile_path': profile_path},
+        )
+        person_fields_to_update = []
         if person_obj.name != person_name:
             person_obj.name = person_name
-            person_obj.save(update_fields=('name',))
+            person_fields_to_update.append('name')
+        if profile_path and person_obj.tmdb_profile_path != profile_path:
+            person_obj.tmdb_profile_path = profile_path
+            person_fields_to_update.append('tmdb_profile_path')
+        if person_fields_to_update:
+            person_obj.save(update_fields=person_fields_to_update)
 
         movie_person, _ = MoviePerson.objects.get_or_create(
             movie=movie,
             person=person_obj,
             role=MoviePerson.ROLE_ACTOR,
-            defaults={'sort_order': index}
+            defaults={
+                'character': person_data.get('character') or '',
+                'sort_order': index,
+            }
         )
+        relation_fields_to_update = []
+        character = person_data.get('character') or ''
+        if movie_person.character != character:
+            movie_person.character = character
+            relation_fields_to_update.append('character')
         if movie_person.sort_order != index:
             movie_person.sort_order = index
-            movie_person.save(update_fields=('sort_order',))
+            relation_fields_to_update.append('sort_order')
+        if relation_fields_to_update:
+            movie_person.save(update_fields=relation_fields_to_update)
         new_links.append(movie_person)
 
     for index, person_data in enumerate(directors):
@@ -206,11 +229,24 @@ def update_movie_people(movie, tmdb_cast_crew):
         if person_id is None or not person_name:
             continue
 
-        person_obj, _ = Person.objects.get_or_create(tmdb_id=person_id,
-                                                     defaults={'name': person_name})
+        profile_path = (
+            TMDB_POSTER_PATH_PREFIX + person_data.get('profile_path')
+            if person_data.get('profile_path')
+            else ''
+        )
+        person_obj, _ = Person.objects.get_or_create(
+            tmdb_id=person_id,
+            defaults={'name': person_name, 'tmdb_profile_path': profile_path},
+        )
+        person_fields_to_update = []
         if person_obj.name != person_name:
             person_obj.name = person_name
-            person_obj.save(update_fields=('name',))
+            person_fields_to_update.append('name')
+        if profile_path and person_obj.tmdb_profile_path != profile_path:
+            person_obj.tmdb_profile_path = profile_path
+            person_fields_to_update.append('tmdb_profile_path')
+        if person_fields_to_update:
+            person_obj.save(update_fields=person_fields_to_update)
 
         movie_person, _ = MoviePerson.objects.get_or_create(
             movie=movie,

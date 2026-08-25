@@ -23,7 +23,7 @@ from utils.constants import ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, TMDB_POSTE
 from utils.functions import update_fields_if_needed, resolve_display_name
 from videos.functions import serialize_videos, sync_tmdb_videos
 
-MOVIE_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
+MOVIE_DETAILS_REFRESH_INTERVAL = timedelta(days=7)
 
 
 class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -227,12 +227,15 @@ def parse_movie(movie, request):
         'id': movie_person.person.id,
         'tmdb_id': movie_person.person.tmdb_id,
         'name': movie_person.person.name,
+        'profile_path': get_proxy_url(request, movie_person.person.tmdb_profile_path),
+        'character': movie_person.character,
     } for movie_person in movie.movieperson_set.select_related('person')
     .filter(role=MoviePerson.ROLE_ACTOR).order_by('sort_order')]
     directors_people = [{
         'id': movie_person.person.id,
         'tmdb_id': movie_person.person.tmdb_id,
         'name': movie_person.person.name,
+        'profile_path': get_proxy_url(request, movie_person.person.tmdb_profile_path),
     } for movie_person in movie.movieperson_set.select_related('person')
     .filter(role=MoviePerson.ROLE_DIRECTOR).order_by('sort_order')]
     cast_names = [item['name'] for item in cast_people]
