@@ -6,7 +6,8 @@ import tmdbsimple as tmdb
 
 from movies.models import Genre, MovieGenre, MoviePerson
 from people.models import Person
-from utils.constants import TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, LANGUAGE, CACHE_TIMEOUT, YOUTUBE_PREFIX
+from utils.constants import TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, LANGUAGE, CACHE_TIMEOUT, \
+    TMDB_TRAILER_TYPE, TMDB_VIDEO_LANGUAGES
 from utils.functions import get_english_translation_data
 
 
@@ -30,15 +31,8 @@ def get_digital_release_date(tmdb_release_dates):
     return min(digital_release_dates, default=None)
 
 
-def get_movie_new_fields(tmdb_movie, tmdb_movie_videos=None, tmdb_release_dates=None):
-    parsed_videos = []
+def get_movie_new_fields(tmdb_movie, tmdb_release_dates=None):
     english_translation = get_english_translation_data(tmdb_movie)
-    if tmdb_movie_videos is not None:
-        youtube_videos = [video for video in tmdb_movie_videos if video.get('site') == 'YouTube']
-        parsed_videos = [{
-            'name': video.get('name'),
-            'url': YOUTUBE_PREFIX + video.get('key', '')
-        } for video in youtube_videos if video.get('key')]
 
     result = {
         'imdb_id': tmdb_movie.get('imdb_id') if tmdb_movie.get('imdb_id') is not None else '',
@@ -58,7 +52,6 @@ def get_movie_new_fields(tmdb_movie, tmdb_movie_videos=None, tmdb_release_dates=
         'tmdb_score': int(tmdb_movie['vote_average'] * 10) if tmdb_movie.get('vote_average') else None,
         'tmdb_tagline': tmdb_movie.get('tagline') or '',
         'tmdb_production_companies': ', '.join(company.get('name', '') for company in (tmdb_movie.get('production_companies') or []) if company.get('name')),
-        'tmdb_videos': parsed_videos,
         'tmdb_last_update': timezone.now()
     }
 
@@ -73,7 +66,11 @@ def get_tmdb_movie_key(tmdb_id):
 def clear_tmdb_movie_cache(tmdb_id):
     cache.delete_many((
         get_tmdb_movie_key(tmdb_id),
+        f'movie_{tmdb_id}_details_{TMDB_VIDEO_LANGUAGES.replace(",", "_")}',
         f'movie_{tmdb_id}_videos',
+        f'movie_{tmdb_id}_videos_{TMDB_VIDEO_LANGUAGES.replace(",", "_")}',
+        f'movie_{tmdb_id}_videos_{TMDB_VIDEO_LANGUAGES.replace(",", "_")}_v2',
+        f'movie_{tmdb_id}_trailers_{TMDB_VIDEO_LANGUAGES.replace(",", "_")}',
         f'movie_{tmdb_id}_release_dates',
         f'movie_{tmdb_id}_cast_crew',
     ))
@@ -89,17 +86,33 @@ def get_tmdb_movie(tmdb_id):
 
 
 def get_tmdb_movie_videos(tmdb_id):
-    cached_movie = cache.get(get_tmdb_movie_key(tmdb_id), None)
-    if cached_movie is not None:
-        videos = (cached_movie.get('videos') or {}).get('results')
-        if videos is not None:
-            return videos
-
-    key = f'movie_{tmdb_id}_videos'
+    key = f'movie_{tmdb_id}_trailers_{TMDB_VIDEO_LANGUAGES.replace(",", "_")}'
     tmdb_movie_videos = cache.get(key, None)
-    if tmdb_movie_videos is None:
-        tmdb_movie_videos = tmdb.Movies(tmdb_id).videos(language=LANGUAGE)['results']
-        cache.set(key, tmdb_movie_videos, CACHE_TIMEOUT)
+    if tmdb_movie_videos is not None:
+        return tmdb_movie_videos
+
+    cached_movie = cache.get(get_tmdb_movie_key(tmdb_id), None)
+    cached_russian_videos = None
+    if cached_movie is not None:
+        cached_russian_videos = (cached_movie.get('videos') or {}).get('results')
+
+    tmdb_movie_videos = []
+    video_keys = set()
+    for language in TMDB_VIDEO_LANGUAGES.split(','):
+        language_videos = cached_russian_videos if language == LANGUAGE else None
+        if language_videos is None:
+            language_videos = tmdb.Movies(tmdb_id).videos(language=language)['results']
+
+        for video in language_videos:
+            if video.get('type') != TMDB_TRAILER_TYPE:
+                continue
+            video_key = (video.get('site'), video.get('key'))
+            if video_key in video_keys:
+                continue
+            video_keys.add(video_key)
+            tmdb_movie_videos.append(video)
+
+    cache.set(key, tmdb_movie_videos, CACHE_TIMEOUT)
     return tmdb_movie_videos
 
 
@@ -123,23 +136,6 @@ def get_cast_crew(tmdb_id):
         tmdb_cast_crew = tmdb.Movies(tmdb_id).credits(language=LANGUAGE)
         cache.set(key, tmdb_cast_crew, CACHE_TIMEOUT)
     return tmdb_cast_crew
-
-
-def get_tmdb_movie_reviews(tmdb_id, page=1):
-    cached_movie = cache.get(get_tmdb_movie_key(tmdb_id), None)
-    if page == 1 and cached_movie is not None:
-        reviews_payload = cached_movie.get('reviews') or {}
-        results = reviews_payload.get('results')
-        if results is not None:
-            return reviews_payload
-
-    key = f'movie_{tmdb_id}_reviews_en_US_{page}'
-    tmdb_reviews = cache.get(key, None)
-    if tmdb_reviews is None:
-        tmdb_reviews = tmdb.Movies(tmdb_id).reviews(language='en-US', page=page)
-        cache.set(key, tmdb_reviews, CACHE_TIMEOUT)
-
-    return tmdb_reviews or {'page': page, 'total_pages': 1, 'total_results': 0, 'results': []}
 
 
 def get_tmdb_movie_recommendations(tmdb_id, page=1):

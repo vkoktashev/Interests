@@ -7,7 +7,7 @@ from requests import HTTPError, ConnectionError
 
 from config.celery import app
 from shows.functions import clear_tmdb_episode_cache, clear_tmdb_season_cache, clear_tmdb_show_cache, \
-    get_show_new_fields, get_tmdb_show, get_tmdb_show_videos, sync_show_genres, \
+    get_show_new_fields, get_tmdb_show, sync_show_genres, \
     get_tmdb_show_credits, sync_show_people, sync_show_seasons, upsert_season_from_tmdb, get_tmdb_season, \
     sync_season_episodes, \
     get_tmdb_season_credits, sync_season_people, get_tmdb_episode, get_episode_new_fields, get_tmdb_episode_credits, \
@@ -84,7 +84,6 @@ def update_show_details(show_tmdb_id):
 
     try:
         tmdb_show = get_tmdb_show(show_tmdb_id)
-        tmdb_show_videos = get_tmdb_show_videos(show_tmdb_id)
         tmdb_show_credits = get_tmdb_show_credits(show_tmdb_id)
     except (HTTPError, ConnectionError):
         logger.exception('update_show_details: failed to fetch TMDB show details for tmdb_id=%s', show_tmdb_id)
@@ -92,7 +91,7 @@ def update_show_details(show_tmdb_id):
 
     show = None
     try:
-        new_fields = get_show_new_fields(tmdb_show, tmdb_show_videos)
+        new_fields = get_show_new_fields(tmdb_show)
         show, created = Show.objects.get_or_create(tmdb_id=show_tmdb_id, defaults=new_fields)
         changed_fields = list(new_fields.keys()) if created else _get_changed_fields(show, new_fields)
         if not created:

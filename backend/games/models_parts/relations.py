@@ -34,16 +34,16 @@ class GameDeveloper(models.Model):
         return f'{self.game} — {self.developer}'
 
 
-class GameTrailer(models.Model):
+class GameVideo(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    igdb_id = models.IntegerField(null=True, blank=True)
-    igdb_video_id = models.CharField(max_length=100, blank=True)
-    name = models.CharField(max_length=255, blank=True)
-    url = models.URLField(max_length=500, blank=True)
+    video = models.ForeignKey('videos.Video', on_delete=models.CASCADE)
     sort_order = models.PositiveIntegerField(default=0)
 
     class Meta:
+        unique_together = (('game', 'video'),)
         ordering = ('sort_order', 'id')
+        verbose_name = 'видео игры'
+        verbose_name_plural = 'видео игр'
 
 
 class GameScreenshot(models.Model):

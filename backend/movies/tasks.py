@@ -6,7 +6,7 @@ from django.db.models import Q
 from requests import HTTPError, ConnectionError, Timeout
 
 from config.celery import app
-from movies.functions import clear_tmdb_movie_cache, get_movie_new_fields, get_tmdb_movie, get_cast_crew, get_tmdb_movie_videos, \
+from movies.functions import clear_tmdb_movie_cache, get_movie_new_fields, get_tmdb_movie, get_cast_crew, \
     get_tmdb_movie_release_dates, update_movie_genres, update_movie_people
 from movies.models import Movie
 from utils.constants import UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
@@ -92,14 +92,13 @@ def update_movie_details(tmdb_id, movie_obj=None):
     try:
         tmdb_movie = get_tmdb_movie(tmdb_id)
         tmdb_cast_crew = get_cast_crew(tmdb_id)
-        tmdb_movie_videos = get_tmdb_movie_videos(tmdb_id)
         tmdb_release_dates = get_tmdb_movie_release_dates(tmdb_id)
     except (HTTPError, ConnectionError, Timeout):
         logger.exception('update_movie_details: failed to fetch TMDB details for tmdb_id=%s', tmdb_id)
         return
 
     try:
-        new_fields = get_movie_new_fields(tmdb_movie, tmdb_movie_videos, tmdb_release_dates)
+        new_fields = get_movie_new_fields(tmdb_movie, tmdb_release_dates)
         if movie_obj is None:
             movie_obj, created = Movie.objects.get_or_create(tmdb_id=tmdb_id, defaults=new_fields)
             changed_fields = list(new_fields.keys()) if created else _get_changed_fields(movie_obj, new_fields)

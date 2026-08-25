@@ -10,6 +10,7 @@ import {openModal} from '@steroidsjs/core/actions/modal';
 import Rating from '../../shared/Rating';
 import FriendsActivity from '../../shared/FriendsActivity';
 import ScoreBlock from '../../shared/ScoreBlock';
+import LazyTrailersBlock from '../../shared/LazyTrailersBlock';
 import {ROUTE_SHOW, ROUTE_SHOW_SEASON} from '../index';
 import LoginForm from '../../modals/LoginForm';
 import "./episode-page.scss";
@@ -197,6 +198,10 @@ function EpisodePage() {
 							</div>
 						</div>
 					</div>
+
+					<LazyTrailersBlock
+						endpoint={`/shows/show/${showId}/season/${showSeasonId}/episode/${showEpisodeId}/trailers/`}
+					/>
 
 					<div className={bem.element('overview')}>
 						<div className={bem.element('content-grid')}>

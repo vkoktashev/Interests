@@ -10,9 +10,9 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from movies.functions import get_movie_new_fields, update_movie_genres, get_tmdb_movie, get_tmdb_movie_videos, \
-    get_cast_crew, get_tmdb_movie_release_dates, update_movie_people, get_tmdb_movie_reviews, \
+    get_cast_crew, get_tmdb_movie_release_dates, update_movie_people, \
     get_tmdb_movie_recommendations
-from movies.models import UserMovie, Movie, MoviePerson
+from movies.models import UserMovie, Movie, MoviePerson, MovieVideo
 from movies.serializers import UserMovieReadSerializer, FollowedUserMovieSerializer, UserMovieWriteSerializer
 from movies.tasks import refresh_movie_details
 from proxy.functions import get_proxy_url
@@ -21,6 +21,7 @@ from users.models import UserFollow
 from utils.celery import enqueue_background_task
 from utils.constants import ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, TMDB_POSTER_PATH_PREFIX, TMDB_BACKDROP_PATH_PREFIX
 from utils.functions import update_fields_if_needed, resolve_display_name
+from videos.functions import serialize_videos, sync_tmdb_videos
 
 MOVIE_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
 
@@ -47,7 +48,6 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             try:
                 tmdb_movie = get_tmdb_movie(tmdb_id)
                 tmdb_cast_crew = get_cast_crew(tmdb_id)
-                tmdb_movie_videos = get_tmdb_movie_videos(tmdb_id)
                 tmdb_release_dates = get_tmdb_movie_release_dates(tmdb_id)
             except HTTPError as e:
                 error_code = int(e.args[0].split(' ', 1)[0])
@@ -57,7 +57,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             except (ConnectionError, Timeout):
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-            new_fields = get_movie_new_fields(tmdb_movie, tmdb_movie_videos, tmdb_release_dates)
+            new_fields = get_movie_new_fields(tmdb_movie, tmdb_release_dates)
 
             movie, created = Movie.objects.filter().get_or_create(tmdb_id=tmdb_movie.get('id'),
                                                                   defaults=new_fields)
@@ -74,6 +74,32 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             response.add_post_render_callback(lambda _: enqueue_movie_refresh(movie_id))
 
         return response
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('OK'),
+            404: openapi.Response('Movie not found'),
+            503: openapi.Response('TMDB unavailable'),
+        }
+    )
+    @action(detail=True, methods=['get'])
+    def trailers(self, request, *args, **kwargs):
+        tmdb_id = kwargs.get('tmdb_id')
+        try:
+            movie = Movie.objects.get(tmdb_id=tmdb_id)
+            tmdb_videos = get_tmdb_movie_videos(tmdb_id)
+        except Movie.DoesNotExist:
+            return Response({ERROR: MOVIE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+        except HTTPError as e:
+            error_code = int(e.args[0].split(' ', 1)[0])
+            if error_code == 404:
+                return Response({ERROR: MOVIE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except (ConnectionError, Timeout):
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        sync_tmdb_videos(movie, MovieVideo, tmdb_videos)
+        return Response(serialize_videos(movie, MovieVideo))
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserMovieSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
@@ -107,62 +133,6 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             users_info = ()
 
         return Response({'user_info': user_info, 'friends_info': friends_info, 'users_info': users_info})
-
-    @swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, required=False),
-        ],
-        responses={
-            200: openapi.Response('OK'),
-            404: openapi.Response('Movie not found'),
-            503: openapi.Response('TMDB unavailable'),
-        }
-    )
-    @action(detail=True, methods=['get'])
-    def tmdb_reviews(self, request, *args, **kwargs):
-        tmdb_id = kwargs.get('tmdb_id')
-        try:
-            page = int(request.query_params.get('page', 1) or 1)
-        except (TypeError, ValueError):
-            page = 1
-        page = max(page, 1)
-
-        try:
-            payload = get_tmdb_movie_reviews(tmdb_id, page=page)
-        except HTTPError as e:
-            error_code = int(e.args[0].split(' ', 1)[0])
-            if error_code == 404:
-                return Response({ERROR: MOVIE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-        except (ConnectionError, Timeout, ValueError):
-            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        reviews = []
-        for item in (payload.get('results') or []):
-            author_details = item.get('author_details') or {}
-            avatar_path = author_details.get('avatar_path') or ''
-            # TMDB may return "/https://..." for external avatars.
-            if isinstance(avatar_path, str) and avatar_path.startswith('/http'):
-                avatar_path = avatar_path[1:]
-
-            reviews.append({
-                'id': item.get('id'),
-                'author': item.get('author') or author_details.get('username') or 'TMDB user',
-                'username': author_details.get('username') or '',
-                'rating': author_details.get('rating'),
-                'avatar_path': avatar_path,
-                'content': item.get('content') or '',
-                'created_at': item.get('created_at'),
-                'updated_at': item.get('updated_at'),
-                'url': item.get('url') or '',
-            })
-
-        return Response({
-            'page': payload.get('page') or page,
-            'total_pages': payload.get('total_pages') or 1,
-            'total_results': payload.get('total_results') or len(reviews),
-            'results': reviews,
-        })
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -288,7 +258,6 @@ def parse_movie(movie, request):
         'directors': ', '.join(director_names),
         'cast_people': cast_people,
         'directors_people': directors_people,
-        'videos': movie.tmdb_videos
     }
 
     return new_movie

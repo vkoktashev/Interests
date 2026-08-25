@@ -5,6 +5,8 @@ import tmdbsimple as tmdb
 tmdb.API_KEY = os.environ['TMDB_API_KEY']
 tmdb.REQUESTS_TIMEOUT = 8
 LANGUAGE = 'ru'
+TMDB_VIDEO_LANGUAGES = f'{LANGUAGE},en'
+TMDB_TRAILER_TYPE = 'Trailer'
 
 TYPE_GAME = 'game'
 TYPE_MOVIE = 'movie'

@@ -11,9 +11,8 @@ import StatusButtonGroup from '../../shared/StatusButtonGroup';
 import FriendsActivity from '../../shared/FriendsActivity';
 import SeasonsBlock from './views/SeasonsBlock';
 import ScoreBlock from '../../shared/ScoreBlock';
-import TmdbReviewsBlock from '../../shared/TmdbReviewsBlock/TmdbReviewsBlock';
 import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
-import MediaGalleryBlock from '../../shared/MediaGalleryBlock';
+import LazyTrailersBlock from '../../shared/LazyTrailersBlock';
 import PersonLink from '../../shared/PersonLink';
 
 import "./show-page.scss";
@@ -260,9 +259,9 @@ function ShowPage(props) {
 						</div>
 					</div>
 
-                    <MediaGalleryBlock
+                    <LazyTrailersBlock
                         className={bem.element('media-card')}
-                        trailers={show?.videos}
+                        endpoint={`/shows/show/${showId}/trailers/`}
                         isMobileViewport={isMobileViewport}
                     />
 
@@ -363,10 +362,6 @@ function ShowPage(props) {
                                     )}
                                 </section>
 
-                                <TmdbReviewsBlock
-                                    className={bem.element('content-card', {tmdbReviews: true})}
-                                    endpoint={`/shows/show/${showId}/tmdb_reviews/`}
-                                />
                             </div>
                         </div>
 					</div>

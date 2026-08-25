@@ -13,9 +13,10 @@ from igdb.wrapper import IGDBWrapper
 from django.utils import timezone
 
 from games.functions import format_game_release_date
-from games.models import Game, GameBeatTime, GameDeveloper, GameGenre, GameScreenshot, GameStore, GameTrailer, Genre, Store
+from games.models import Game, GameBeatTime, GameDeveloper, GameGenre, GameScreenshot, GameStore, GameVideo, Genre, Store
 from people.models import Developer
 from utils.functions import objects_to_str, update_fields_if_needed_async
+from videos.models import Video
 
 TWITCH_TOKEN_URL = 'https://id.twitch.tv/oauth2/token'
 IGDB_API_TIMEOUT = 8
@@ -749,7 +750,10 @@ async def update_game_media_from_igdb(game: Game, igdb_game: dict[str, Any]) -> 
     videos = igdb_game.get('videos') or []
     screenshots = igdb_game.get('screenshots') or []
 
-    existing_trailers = GameTrailer.objects.filter(game=game)
+    existing_trailers = GameVideo.objects.filter(
+        game=game,
+        video__source=Video.SOURCE_IGDB,
+    ).select_related('video')
     new_trailers = []
     trailers_to_delete = []
     for index, video in enumerate(videos):
@@ -758,29 +762,40 @@ async def update_game_media_from_igdb(game: Game, igdb_game: dict[str, Any]) -> 
         if not video_id:
             continue
         trailer_url = f'https://www.youtube.com/watch?v={video_id}'
-        trailer = await GameTrailer.objects.filter(game=game, igdb_video_id=video_id).afirst()
+        trailer = await Video.objects.filter(
+            source=Video.SOURCE_IGDB,
+            url=trailer_url,
+        ).afirst()
         if trailer is None:
-            trailer = await GameTrailer.objects.acreate(
-                game=game,
+            trailer = await Video.objects.acreate(
                 url=trailer_url,
-                sort_order=index,
-                igdb_id=video_item_id,
-                igdb_video_id=video_id,
+                source=Video.SOURCE_IGDB,
+                platform='YouTube',
+                type=Video.TYPE_TRAILER,
             )
         await update_fields_if_needed_async(trailer, {
+            'external_id': str(video_item_id or ''),
             'name': video.get('name') or '',
             'url': trailer_url,
-            'sort_order': index,
-            'igdb_id': video_item_id,
-            'igdb_video_id': video_id,
+            'source': Video.SOURCE_IGDB,
+            'platform': 'YouTube',
+            'type': Video.TYPE_TRAILER,
         })
-        new_trailers.append(trailer)
+        game_video, _ = await GameVideo.objects.aget_or_create(
+            game=game,
+            video=trailer,
+            defaults={'sort_order': index},
+        )
+        if game_video.sort_order != index:
+            game_video.sort_order = index
+            await game_video.asave(update_fields=('sort_order',))
+        new_trailers.append(game_video)
 
     async for existing_trailer in existing_trailers:
         if existing_trailer not in new_trailers:
             trailers_to_delete.append(existing_trailer.id)
     if trailers_to_delete:
-        await GameTrailer.objects.filter(id__in=trailers_to_delete).adelete()
+        await GameVideo.objects.filter(id__in=trailers_to_delete).adelete()
 
     existing_screenshots = GameScreenshot.objects.filter(game=game)
     new_screenshots = []

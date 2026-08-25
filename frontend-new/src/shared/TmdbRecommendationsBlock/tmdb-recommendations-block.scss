@@ -3,12 +3,45 @@
 .tmdb-recommendations-block {
   min-width: 0;
 
-  &__title {
-    margin: 0 0 10px;
+  &__toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 0;
+    background: transparent;
+    padding: 0;
     font-weight: 500;
     font-size: 1.1rem;
     line-height: 1.2;
     color: $newText3;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    color: $newText2;
+    transition: transform 0.2s ease, color 0.2s ease;
+
+    &_open {
+      transform: rotate(180deg);
+      color: $newText3;
+    }
+  }
+
+  &__content {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    animation: tmdb-recommendations-expand 0.25s ease forwards;
+  }
+
+  &__content-inner {
+    min-height: 0;
+    overflow: hidden;
+    padding-top: 10px;
   }
 
   &__grid {
@@ -36,5 +69,12 @@
     &__grid {
       grid-template-columns: 1fr;
     }
+  }
+}
+
+@keyframes tmdb-recommendations-expand {
+  to {
+    grid-template-rows: 1fr;
+    opacity: 1;
   }
 }

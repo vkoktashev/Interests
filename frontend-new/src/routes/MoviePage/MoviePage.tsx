@@ -6,9 +6,8 @@ import StatusButtonGroup from '../../shared/StatusButtonGroup';
 import FriendsActivity from '../../shared/FriendsActivity';
 import ScoreBlock from '../../shared/ScoreBlock';
 import Rating from '../../shared/Rating';
-import TmdbReviewsBlock from '../../shared/TmdbReviewsBlock/TmdbReviewsBlock';
 import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
-import MediaGalleryBlock from '../../shared/MediaGalleryBlock';
+import LazyTrailersBlock from '../../shared/LazyTrailersBlock';
 import PersonLink from '../../shared/PersonLink';
 
 import "./movie-page.scss";
@@ -240,9 +239,9 @@ export function MoviePage() {
 						</div>
 					</div>
 
-					<MediaGalleryBlock
+					<LazyTrailersBlock
 						className={bem.element('media-card')}
-						trailers={movie?.videos}
+						endpoint={`/movies/movie/${movieId}/trailers/`}
 						isMobileViewport={isMobileViewport}
 					/>
 
@@ -327,10 +326,6 @@ export function MoviePage() {
 								)}
 							</section>
 
-							<TmdbReviewsBlock
-									className={bem.element('content-card', {tmdbReviews: true})}
-									endpoint={`/movies/movie/${movieId}/tmdb_reviews/`}
-								/>
 							</div>
 						</div>
 					</div>

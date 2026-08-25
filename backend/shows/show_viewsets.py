@@ -12,8 +12,8 @@ from rest_framework.viewsets import GenericViewSet
 
 from proxy.functions import get_proxy_url
 from shows.functions import get_show_new_fields, get_tmdb_show, get_tmdb_show_videos, get_tmdb_show_credits, \
-    sync_show_genres, sync_show_people, sync_show_seasons, get_tmdb_show_reviews, get_tmdb_show_recommendations
-from shows.models import Show, UserShow, Episode, UserEpisode, EpisodeLog, ShowLog, ShowPerson
+    sync_show_genres, sync_show_people, sync_show_seasons, get_tmdb_show_recommendations
+from shows.models import Show, UserShow, Episode, UserEpisode, EpisodeLog, ShowLog, ShowPerson, ShowVideo
 from shows.serializers import ShowSerializer, UserShowReadSerializer, FollowedUserShowSerializer, UserEpisodeSerializer, \
     SeasonSerializer, EpisodeSerializer, UserShowWriteSerializer
 from shows.tasks import update_shows, update_all_shows_task, refresh_show_details
@@ -23,6 +23,7 @@ from utils.celery import enqueue_background_task
 from utils.constants import ERROR, SHOW_NOT_FOUND, TMDB_UNAVAILABLE, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE, \
     TMDB_POSTER_PATH_PREFIX, TMDB_BACKDROP_PATH_PREFIX
 from utils.functions import update_fields_if_needed, resolve_display_name
+from videos.functions import serialize_videos, sync_tmdb_videos
 
 SHOW_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
 
@@ -54,12 +55,15 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             bool(expected_season_numbers) and
             bool(expected_season_numbers - database_season_numbers)
         )
-        should_fetch_from_tmdb = show is None or show.tmdb_last_update is None or has_missing_seasons
+        should_fetch_from_tmdb = (
+            show is None or
+            show.tmdb_last_update is None or
+            has_missing_seasons
+        )
 
         if should_fetch_from_tmdb:
             try:
                 tmdb_show = get_tmdb_show(tmdb_id)
-                tmdb_show_videos = get_tmdb_show_videos(tmdb_id)
                 tmdb_show_credits = get_tmdb_show_credits(tmdb_id)
             except HTTPError as e:
                 error_code = int(e.args[0].split(' ', 1)[0])
@@ -71,7 +75,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 if show is None:
                     return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
             else:
-                new_fields = get_show_new_fields(tmdb_show, tmdb_show_videos)
+                new_fields = get_show_new_fields(tmdb_show)
                 show, created = Show.objects.filter().get_or_create(tmdb_id=tmdb_show.get('id'), defaults=new_fields)
                 if not created:
                     update_fields_if_needed(show, new_fields)
@@ -88,6 +92,32 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             response.add_post_render_callback(lambda _: enqueue_show_refresh(show_id))
 
         return response
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('OK'),
+            404: openapi.Response('Show not found'),
+            503: openapi.Response('TMDB unavailable'),
+        }
+    )
+    @action(detail=True, methods=['get'])
+    def trailers(self, request, *args, **kwargs):
+        tmdb_id = kwargs.get('tmdb_id')
+        try:
+            show = Show.objects.get(tmdb_id=tmdb_id)
+            tmdb_videos = get_tmdb_show_videos(tmdb_id)
+        except Show.DoesNotExist:
+            return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+        except HTTPError as e:
+            error_code = int(e.args[0].split(' ', 1)[0])
+            if error_code == 404:
+                return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except (ConnectionError, Timeout):
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        sync_tmdb_videos(show, ShowVideo, tmdb_videos)
+        return Response(serialize_videos(show, ShowVideo))
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -163,61 +193,6 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             users_info = ()
 
         return Response({'user_info': user_info, 'friends_info': friends_info, 'users_info': users_info})
-
-    @swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, required=False),
-        ],
-        responses={
-            200: openapi.Response('OK'),
-            404: openapi.Response('Show not found'),
-            503: openapi.Response('TMDB unavailable'),
-        }
-    )
-    @action(detail=True, methods=['get'])
-    def tmdb_reviews(self, request, *args, **kwargs):
-        tmdb_id = kwargs.get('tmdb_id')
-        try:
-            page = int(request.query_params.get('page', 1) or 1)
-        except (TypeError, ValueError):
-            page = 1
-        page = max(page, 1)
-
-        try:
-            payload = get_tmdb_show_reviews(tmdb_id, page=page)
-        except HTTPError as e:
-            error_code = int(e.args[0].split(' ', 1)[0])
-            if error_code == 404:
-                return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-        except (ConnectionError, Timeout, ValueError):
-            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        reviews = []
-        for item in (payload.get('results') or []):
-            author_details = item.get('author_details') or {}
-            avatar_path = author_details.get('avatar_path') or ''
-            if isinstance(avatar_path, str) and avatar_path.startswith('/http'):
-                avatar_path = avatar_path[1:]
-
-            reviews.append({
-                'id': item.get('id'),
-                'author': item.get('author') or author_details.get('username') or 'TMDB user',
-                'username': author_details.get('username') or '',
-                'rating': author_details.get('rating'),
-                'avatar_path': avatar_path,
-                'content': item.get('content') or '',
-                'created_at': item.get('created_at'),
-                'updated_at': item.get('updated_at'),
-                'url': item.get('url') or '',
-            })
-
-        return Response({
-            'page': payload.get('page') or page,
-            'total_pages': payload.get('total_pages') or 1,
-            'total_results': payload.get('total_results') or len(reviews),
-            'results': reviews,
-        })
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -683,7 +658,6 @@ def parse_show(show, request):
         'status': translate_tmdb_status(show.tmdb_status),
         'first_air_date': format_date(show.tmdb_release_date),
         'last_air_date': format_date(show.tmdb_last_air_date),
-        'videos': show.tmdb_videos,
         'seasons': seasons,
         'cast': ', '.join(cast_names),
         'directors': ', '.join(director_names),

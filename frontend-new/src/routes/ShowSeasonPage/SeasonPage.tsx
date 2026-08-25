@@ -11,6 +11,7 @@ import {Link} from '@steroidsjs/core/ui/nav';
 import Rating from '../../shared/Rating';
 import FriendsActivity from '../../shared/FriendsActivity';
 import DetailEpisodeRow from '../../shared/DetailEpisodeRow';
+import LazyTrailersBlock from '../../shared/LazyTrailersBlock';
 import {ROUTE_SHOW} from '../index';
 import LoginForm from '../../modals/LoginForm';
 import './season-page.scss';
@@ -264,6 +265,10 @@ function SeasonPage() {
 							</div>
 						</div>
 					</div>
+
+					<LazyTrailersBlock
+						endpoint={`/shows/show/${showId}/season/${showSeasonId}/trailers/`}
+					/>
 
 					<div className={bem.element('overview')}>
 						<div className={bem.element('content-grid')}>

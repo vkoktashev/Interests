@@ -4,7 +4,7 @@ from games.functions import format_game_release_date, get_game_release_date_disp
 from games.integrations.igm import get_igm_store_info, get_igm_store_price
 from games.integrations.plati import get_plati_store_info, get_plati_store_price
 from games.integrations.steam import get_steam_region_label, get_steam_store_price
-from games.models import Game, GameDeveloper, GameGenre, GameScreenshot, GameStore, GameTrailer
+from games.models import Game, GameDeveloper, GameGenre, GameScreenshot, GameStore, GameVideo
 from games.integrations.hltb import add_hltb_gameplay_fields
 from utils.functions import objects_to_str
 
@@ -70,12 +70,17 @@ async def parse_game_from_db(game: Game, hltb_game=None):
         })
 
     trailers = []
-    game_trailers = GameTrailer.objects.filter(game=game).order_by('sort_order', 'id')
-    async for game_trailer in game_trailers:
+    game_videos = GameVideo.objects.filter(game=game).select_related('video').order_by('sort_order', 'id')
+    async for game_video in game_videos:
+        video = game_video.video
+        external_id = video.external_id
         trailers.append({
-            'id': game_trailer.igdb_id,
-            'name': game_trailer.name,
-            'url': game_trailer.url,
+            'id': int(external_id) if external_id.isdigit() else external_id or video.id,
+            'name': video.name,
+            'url': video.url,
+            'source': video.source,
+            'platform': video.platform,
+            'type': video.type,
         })
 
     screenshots = []
