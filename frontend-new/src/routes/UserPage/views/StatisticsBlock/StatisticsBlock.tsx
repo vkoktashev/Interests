@@ -1,6 +1,8 @@
 import React, {useMemo} from "react";
-import {useBem, useFetch} from '@steroidsjs/core/hooks';
+import {useBem, useDispatch, useFetch} from '@steroidsjs/core/hooks';
+import {openModal} from '@steroidsjs/core/actions/modal';
 import {Loader} from '@steroidsjs/core/ui/layout';
+import PersonalityTopModal from '../../../../modals/PersonalityTopModal';
 import GenresChart from "./GenresChart/GenresChart";
 import YearsChart from "./YearsChart/YearsChart";
 import ChartBlock from "./ChartBlock/ChartBlock";
@@ -18,6 +20,7 @@ interface IStatisticsBlockProps {
 
 function StatisticsBlock({ userId }: IStatisticsBlockProps) {
 	const bem = useBem('stats-block');
+	const dispatch = useDispatch();
 	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 	const statsFetchConfig = useMemo(() => userId && ({
 		url: `/users/user/${userId}/stats/?tz=${encodeURIComponent(userTimezone)}`,
@@ -70,26 +73,46 @@ function StatisticsBlock({ userId }: IStatisticsBlockProps) {
 						</div>
 						<div className={bem.element('top-personalities')}>
 							<div className={bem.element('panel-card')}>
-								<h4 className={bem.element('chart-title')}>Toп актеры</h4>
+								<h4 className={bem.element('chart-title')}>Топ актёров</h4>
 								<TopPersonalities
 									chartData={safeStats?.top_actors || []}
-									emptyLabel="Нет данных по актерам"
+									emptyLabel="Нет данных по актёрам"
 									withPersonLinks
+									onOpenFull={() => dispatch(openModal(PersonalityTopModal, {
+										userId,
+										topType: 'actors',
+										title: 'Полный топ актёров',
+										emptyLabel: 'Нет данных по актёрам',
+										withPersonLinks: true,
+									}))}
 								/>
 							</div>
 							<div className={bem.element('panel-card')}>
-								<h4 className={bem.element('chart-title')}>Toп режиссеры</h4>
+								<h4 className={bem.element('chart-title')}>Топ режиссёров</h4>
 								<TopPersonalities
 									chartData={safeStats?.top_directors || []}
-									emptyLabel="Нет данных по режиссерам"
+									emptyLabel="Нет данных по режиссёрам"
 									withPersonLinks
+									onOpenFull={() => dispatch(openModal(PersonalityTopModal, {
+										userId,
+										topType: 'directors',
+										title: 'Полный топ режиссёров',
+										emptyLabel: 'Нет данных по режиссёрам',
+										withPersonLinks: true,
+									}))}
 								/>
 							</div>
 							<div className={bem.element('panel-card')}>
-								<h4 className={bem.element('chart-title')}>Toп разработчики</h4>
+								<h4 className={bem.element('chart-title')}>Топ студий</h4>
 								<TopPersonalities
 									chartData={safeStats?.top_developers || []}
-									emptyLabel="Нет данных по разработчикам"
+									emptyLabel="Нет данных по студиям"
+									onOpenFull={() => dispatch(openModal(PersonalityTopModal, {
+										userId,
+										topType: 'studios',
+										title: 'Полный топ студий',
+										emptyLabel: 'Нет данных по студиям',
+									}))}
 								/>
 							</div>
 						</div>

@@ -6,7 +6,8 @@ from typing import Optional
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.core.paginator import Paginator
-from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, QuerySet, Case, When, IntegerField
+from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, QuerySet, Case, When, IntegerField, \
+    FloatField, Value
 from django.db.models.functions import ExtractYear, Coalesce
 from django.utils import timezone
 from rest_framework import status, mixins
@@ -481,6 +482,33 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         return Response(stats, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['get'], url_path='top-personalities')
+    def top_personalities(self, request, **kwargs):
+        try:
+            user = get_user_by_id(kwargs.get('pk'), request.user)
+        except ValueError:
+            return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+
+        if not is_user_available(request.user, user):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        top_type = request.query_params.get('type')
+        calculators = {
+            'actors': calculate_top_actor_points,
+            'directors': calculate_top_director_points,
+            'studios': calculate_top_developer_points,
+        }
+        calculator = calculators.get(top_type)
+        if calculator is None:
+            return Response(
+                {ERROR: 'Type must be one of: actors, directors, studios.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response({'results': calculator(user)}, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=['put'])
     def follow(self, request, **kwargs):
         try:
@@ -767,28 +795,133 @@ def calculate_shows_stats(user: User) -> dict:
     return result
 
 
-def calculate_top_personality_points(user: User) -> dict:
+def calculate_top_actor_points(user: User, limit: Optional[int] = None) -> list:
     actors_points = {}
-    directors_points = {}
-    developers_points = collections.defaultdict(int)
 
-    movies_persons = MoviePerson.objects \
+    movie_actor_weight = Case(
+        When(sort_order__lte=2, then=Value(1.0)),
+        When(sort_order__lte=5, then=Value(0.9)),
+        When(sort_order__lte=9, then=Value(0.8)),
+        When(sort_order__lte=14, then=Value(0.65)),
+        When(sort_order__lte=19, then=Value(0.5)),
+        When(sort_order__lte=29, then=Value(0.25)),
+        default=Value(0.0),
+        output_field=FloatField(),
+    )
+    weighted_movie_score = ExpressionWrapper(
+        F('movie__usermovie__score') * movie_actor_weight,
+        output_field=FloatField(),
+    )
+
+    movies_actors = MoviePerson.objects \
         .filter(movie__usermovie__user=user,
                 movie__usermovie__status__in=[UserMovie.STATUS_WATCHED, UserMovie.STATUS_STOPPED],
-                movie__usermovie__score__gt=0) \
-        .values('person__id', 'person__tmdb_id', 'person__name', 'role') \
-        .annotate(points=Sum('movie__usermovie__score'))
+                movie__usermovie__score__gt=0,
+                role=MoviePerson.ROLE_ACTOR,
+                sort_order__lt=30) \
+        .exclude(character__icontains='uncredited') \
+        .values('person__id', 'person__tmdb_id', 'person__name') \
+        .annotate(points=Sum(weighted_movie_score))
 
-    shows_persons = ShowPerson.objects \
+    shows_actors = ShowPerson.objects \
         .filter(show__usershow__user=user,
                 show__usershow__score__gt=0,
+                role=ShowPerson.ROLE_ACTOR,
                 show__usershow__status__in=[
                     UserShow.STATUS_WATCHING,
                     UserShow.STATUS_WATCHED,
                     UserShow.STATUS_STOPPED,
                 ]) \
-        .values('person__id', 'person__tmdb_id', 'person__name', 'role') \
+        .values('person__id', 'person__tmdb_id', 'person__name') \
         .annotate(points=Sum('show__usershow__score'))
+
+    for item in movies_actors:
+        person_tmdb_id = item.get('person__tmdb_id')
+        person_id = item.get('person__id')
+        name = item.get('person__name')
+        points = float(item.get('points') or 0)
+        if person_tmdb_id is None or person_id is None or not name:
+            continue
+
+        actors_points[person_tmdb_id] = {'id': person_id, 'name': name, 'points': points}
+
+    for item in shows_actors:
+        person_tmdb_id = item.get('person__tmdb_id')
+        person_id = item.get('person__id')
+        name = item.get('person__name')
+        points = int(item.get('points') or 0)
+        if person_tmdb_id is None or person_id is None or not name:
+            continue
+
+        current = actors_points.get(person_tmdb_id)
+        if current is None:
+            actors_points[person_tmdb_id] = {'id': person_id, 'name': name, 'points': points}
+        else:
+            current['points'] += points
+
+    top_actors_by_points = sorted(
+        actors_points.values(),
+        key=lambda entry: (-entry['points'], entry['name']),
+    )
+    if limit is not None:
+        top_actors_by_points = top_actors_by_points[:limit]
+
+    return [
+        {'id': item['id'], 'name': item['name'], 'points': round(item['points'], 1)}
+        for item in top_actors_by_points
+    ]
+
+
+def calculate_top_director_points(user: User, limit: Optional[int] = None) -> list:
+    directors_points = {}
+
+    movies_directors = MoviePerson.objects \
+        .filter(movie__usermovie__user=user,
+                movie__usermovie__status__in=[UserMovie.STATUS_WATCHED, UserMovie.STATUS_STOPPED],
+                movie__usermovie__score__gt=0,
+                role=MoviePerson.ROLE_DIRECTOR) \
+        .values('person__id', 'person__tmdb_id', 'person__name') \
+        .annotate(points=Sum('movie__usermovie__score'))
+
+    shows_directors = ShowPerson.objects \
+        .filter(show__usershow__user=user,
+                show__usershow__score__gt=0,
+                role=ShowPerson.ROLE_DIRECTOR,
+                show__usershow__status__in=[
+                    UserShow.STATUS_WATCHING,
+                    UserShow.STATUS_WATCHED,
+                    UserShow.STATUS_STOPPED,
+                ]) \
+        .values('person__id', 'person__tmdb_id', 'person__name') \
+        .annotate(points=Sum('show__usershow__score'))
+
+    for item in chain(movies_directors, shows_directors):
+        person_tmdb_id = item.get('person__tmdb_id')
+        person_id = item.get('person__id')
+        name = item.get('person__name')
+        points = int(item.get('points') or 0)
+        if person_tmdb_id is None or person_id is None or not name:
+            continue
+
+        current = directors_points.get(person_tmdb_id)
+        if current is None:
+            directors_points[person_tmdb_id] = {'id': person_id, 'name': name, 'points': points}
+        else:
+            current['points'] += points
+
+    top_directors = [
+        {'id': item['id'], 'name': item['name'], 'points': item['points']}
+        for item in directors_points.values()
+    ]
+    top_directors.sort(key=lambda entry: (-entry['points'], entry['name']))
+    if limit is not None:
+        top_directors = top_directors[:limit]
+
+    return top_directors
+
+
+def calculate_top_developer_points(user: User, limit: Optional[int] = None) -> list:
+    developers_points = collections.defaultdict(int)
 
     games_developers = GameDeveloper.objects \
         .filter(game__usergame__user=user,
@@ -802,28 +935,6 @@ def calculate_top_personality_points(user: User) -> dict:
         .values('developer__igdb_id', 'developer__name') \
         .annotate(points=Sum('game__usergame__score'))
 
-    for item in chain(movies_persons, shows_persons):
-        person_tmdb_id = item.get('person__tmdb_id')
-        person_id = item.get('person__id')
-        name = item.get('person__name')
-        role = item.get('role')
-        points = int(item.get('points') or 0)
-        if person_tmdb_id is None or person_id is None or not name:
-            continue
-
-        if role == MoviePerson.ROLE_ACTOR:
-            current = actors_points.get(person_tmdb_id)
-            if current is None:
-                actors_points[person_tmdb_id] = {'id': person_id, 'name': name, 'points': points}
-            else:
-                current['points'] += points
-        elif role == MoviePerson.ROLE_DIRECTOR:
-            current = directors_points.get(person_tmdb_id)
-            if current is None:
-                directors_points[person_tmdb_id] = {'id': person_id, 'name': name, 'points': points}
-            else:
-                current['points'] += points
-
     for item in games_developers:
         name = item.get('developer__name')
         points = int(item.get('points') or 0)
@@ -831,17 +942,18 @@ def calculate_top_personality_points(user: User) -> dict:
             continue
         developers_points[name] += points
 
-    top_actors = [{'id': item['id'], 'name': item['name'], 'points': item['points']} for item in actors_points.values()]
-    top_actors.sort(key=lambda entry: (-entry['points'], entry['name']))
-    top_actors = top_actors[:10]
-
-    top_directors = [{'id': item['id'], 'name': item['name'], 'points': item['points']} for item in directors_points.values()]
-    top_directors.sort(key=lambda entry: (-entry['points'], entry['name']))
-    top_directors = top_directors[:10]
-
     top_developers = [{'name': name, 'points': points} for name, points in developers_points.items()]
     top_developers.sort(key=lambda entry: (-entry['points'], entry['name']))
-    top_developers = top_developers[:10]
+    if limit is not None:
+        top_developers = top_developers[:limit]
+
+    return top_developers
+
+
+def calculate_top_personality_points(user: User) -> dict:
+    top_actors = calculate_top_actor_points(user, limit=10)
+    top_directors = calculate_top_director_points(user, limit=10)
+    top_developers = calculate_top_developer_points(user, limit=10)
 
     return {'top_actors': top_actors, 'top_directors': top_directors, 'top_developers': top_developers}
 
