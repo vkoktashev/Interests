@@ -6,7 +6,8 @@ from typing import Optional
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.core.paginator import Paginator
-from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, QuerySet, Case, When, IntegerField
+from django.db.models import Sum, F, Count, Q, ExpressionWrapper, DecimalField, QuerySet, Case, When, IntegerField, \
+    FloatField, Value
 from django.db.models.functions import ExtractYear, Coalesce
 from django.utils import timezone
 from rest_framework import status, mixins
@@ -772,10 +773,36 @@ def calculate_top_personality_points(user: User) -> dict:
     directors_points = {}
     developers_points = collections.defaultdict(int)
 
-    movies_persons = MoviePerson.objects \
+    movie_actor_weight = Case(
+        When(sort_order__lte=2, then=Value(1.0)),
+        When(sort_order__lte=5, then=Value(0.9)),
+        When(sort_order__lte=9, then=Value(0.8)),
+        When(sort_order__lte=14, then=Value(0.65)),
+        When(sort_order__lte=19, then=Value(0.5)),
+        When(sort_order__lte=29, then=Value(0.25)),
+        default=Value(0.0),
+        output_field=FloatField(),
+    )
+    weighted_movie_score = ExpressionWrapper(
+        F('movie__usermovie__score') * movie_actor_weight,
+        output_field=FloatField(),
+    )
+
+    movies_actors = MoviePerson.objects \
         .filter(movie__usermovie__user=user,
                 movie__usermovie__status__in=[UserMovie.STATUS_WATCHED, UserMovie.STATUS_STOPPED],
-                movie__usermovie__score__gt=0) \
+                movie__usermovie__score__gt=0,
+                role=MoviePerson.ROLE_ACTOR,
+                sort_order__lt=30) \
+        .exclude(character__icontains='uncredited') \
+        .values('person__id', 'person__tmdb_id', 'person__name') \
+        .annotate(points=Sum(weighted_movie_score))
+
+    movies_directors = MoviePerson.objects \
+        .filter(movie__usermovie__user=user,
+                movie__usermovie__status__in=[UserMovie.STATUS_WATCHED, UserMovie.STATUS_STOPPED],
+                movie__usermovie__score__gt=0,
+                role=MoviePerson.ROLE_DIRECTOR) \
         .values('person__id', 'person__tmdb_id', 'person__name', 'role') \
         .annotate(points=Sum('movie__usermovie__score'))
 
@@ -802,7 +829,17 @@ def calculate_top_personality_points(user: User) -> dict:
         .values('developer__igdb_id', 'developer__name') \
         .annotate(points=Sum('game__usergame__score'))
 
-    for item in chain(movies_persons, shows_persons):
+    for item in movies_actors:
+        person_tmdb_id = item.get('person__tmdb_id')
+        person_id = item.get('person__id')
+        name = item.get('person__name')
+        points = float(item.get('points') or 0)
+        if person_tmdb_id is None or person_id is None or not name:
+            continue
+
+        actors_points[person_tmdb_id] = {'id': person_id, 'name': name, 'points': points}
+
+    for item in chain(movies_directors, shows_persons):
         person_tmdb_id = item.get('person__tmdb_id')
         person_id = item.get('person__id')
         name = item.get('person__name')
@@ -831,9 +868,14 @@ def calculate_top_personality_points(user: User) -> dict:
             continue
         developers_points[name] += points
 
-    top_actors = [{'id': item['id'], 'name': item['name'], 'points': item['points']} for item in actors_points.values()]
-    top_actors.sort(key=lambda entry: (-entry['points'], entry['name']))
-    top_actors = top_actors[:10]
+    top_actors_by_points = sorted(
+        actors_points.values(),
+        key=lambda entry: (-entry['points'], entry['name']),
+    )[:10]
+    top_actors = [
+        {'id': item['id'], 'name': item['name'], 'points': round(item['points'], 1)}
+        for item in top_actors_by_points
+    ]
 
     top_directors = [{'id': item['id'], 'name': item['name'], 'points': item['points']} for item in directors_points.values()]
     top_directors.sort(key=lambda entry: (-entry['points'], entry['name']))
