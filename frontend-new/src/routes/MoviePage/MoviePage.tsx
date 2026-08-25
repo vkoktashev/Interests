@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {SiThemoviedatabase} from 'react-icons/si';
 
@@ -8,7 +8,8 @@ import ScoreBlock from '../../shared/ScoreBlock';
 import Rating from '../../shared/Rating';
 import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
 import LazyTrailersBlock from '../../shared/LazyTrailersBlock';
-import PersonLink from '../../shared/PersonLink';
+import MoviePersonCard, {IMoviePerson} from './views/MoviePersonCard';
+import MovieCastModal from '../../modals/MovieCastModal';
 
 import "./movie-page.scss";
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
@@ -22,6 +23,7 @@ import {Button, TextField} from '@steroidsjs/core/ui/form';
 
 export function MoviePage() {
 	const bem = useBem('movie-page');
+	const pageRef = useRef<HTMLDivElement>(null);
 	const user = useSelector(getUser);
 	const dispatch = useDispatch();
 	const {http} = useComponents();
@@ -113,17 +115,13 @@ export function MoviePage() {
 		{label: 'Жанр', value: movie?.genres},
 		{label: 'Компания', value: movie?.production_companies},
 		{label: 'Слоган', value: movie?.tagline},
-		{label: 'В ролях', content: renderPersonLinks(movie?.cast_people)},
-		{label: 'Режиссер', content: renderPersonLinks(movie?.directors_people)},
-	]).filter(item => Boolean(item.value || item.content)), [
+	]).filter(item => Boolean(item.value)), [
 		movie?.release_date,
 		movie?.digital_release_date,
 		movie?.runtime,
 		movie?.genres,
 		movie?.production_companies,
 		movie?.tagline,
-		movie?.cast_people,
-		movie?.directors_people,
 	]);
 
 	const overviewPlainText = useMemo(
@@ -131,13 +129,18 @@ export function MoviePage() {
 		[movie?.overview]
 	);
 	const canCollapseOverview = overviewPlainText.length > 420;
+	const castPeople = (movie?.cast_people || []) as IMoviePerson[];
+	const directorsPeople = (movie?.directors_people || []) as IMoviePerson[];
+	const peopleLimit = 6;
+	const visibleDirectors = directorsPeople.slice(0, peopleLimit);
+	const visibleCast = castPeople.slice(0, Math.max(0, peopleLimit - visibleDirectors.length));
 
 	if (!movie) {
 		return <Loader />;
 	}
 
 	return (
-		<div className={bem.block()}>
+		<div ref={pageRef} className={bem.block()}>
 			<div
 				className={bem.element('background')}
 				style={{ backgroundImage: `url(${movie?.backdrop_path})` }}
@@ -164,7 +167,7 @@ export function MoviePage() {
 									{infoRows.map(item => (
 										<div key={item.label} className={bem.element('info-row')}>
 											<span className={bem.element('info-row-label')}>{item.label}</span>
-											<span className={bem.element('info-row-value')}>{item.content || item.value}</span>
+											<span className={bem.element('info-row-value')}>{item.value}</span>
 										</div>
 									))}
 								</div>
@@ -238,6 +241,63 @@ export function MoviePage() {
 							</div>
 						</div>
 					</div>
+
+					{(castPeople.length > 0 || directorsPeople.length > 0) && (
+						<section className={bem.element('people')}>
+							<div className={bem.element('people-head')}>
+								<div className={bem.element('people-title')}>Команда фильма</div>
+								{castPeople.length > visibleCast.length && (
+									<button
+										type='button'
+										className={bem.element('people-all')}
+										onClick={() => dispatch(openModal(MovieCastModal, {
+											people: castPeople,
+											movieName: movie?.name,
+											pageWidth: pageRef.current?.getBoundingClientRect().width,
+										}))}
+									>
+										Все актёры
+										<span className={bem.element('people-count')}>{castPeople.length}</span>
+									</button>
+								)}
+							</div>
+
+							<div className={bem.element('people-line')}>
+								{visibleDirectors.length > 0 && (
+									<div
+										className={bem.element('people-group', {directors: true})}
+										style={{'--people-count': visibleDirectors.length} as React.CSSProperties}
+									>
+										<div className={bem.element('people-group-title')}>Режиссёры</div>
+										<div className={bem.element('people-group-list')}>
+											{visibleDirectors.map(person => (
+												<MoviePersonCard
+													key={person.id}
+													person={person}
+													subtitle='Режиссёр'
+													compact
+												/>
+											))}
+										</div>
+									</div>
+								)}
+
+								{visibleCast.length > 0 && (
+									<div
+										className={bem.element('people-group', {cast: true})}
+										style={{'--people-count': visibleCast.length} as React.CSSProperties}
+									>
+										<div className={bem.element('people-group-title')}>Актёры</div>
+										<div className={bem.element('people-group-list')}>
+											{visibleCast.map(person => (
+												<MoviePersonCard key={person.id} person={person} compact />
+											))}
+										</div>
+									</div>
+								)}
+							</div>
+						</section>
+					)}
 
 					<LazyTrailersBlock
 						className={bem.element('media-card')}
@@ -332,22 +392,5 @@ export function MoviePage() {
 				</div>
 			</LoadingOverlay>
 		</div>
-	);
-}
-
-function renderPersonLinks(people?: Array<{id: number; name: string}>) {
-	if (!people?.length) {
-		return '';
-	}
-
-	return (
-		<span>
-			{people.map((person, index) => (
-				<React.Fragment key={person.id}>
-					{index > 0 && ', '}
-					<PersonLink id={person.id} name={person.name} />
-				</React.Fragment>
-			))}
-		</span>
 	);
 }

@@ -100,6 +100,7 @@ class MoviePerson(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     person = models.ForeignKey('people.Person', on_delete=models.CASCADE)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    character = models.CharField(max_length=500, blank=True)
     sort_order = models.PositiveIntegerField(default=0)
 
     class Meta:
