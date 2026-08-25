@@ -1176,11 +1176,36 @@ def calculate_backlog_metrics(user: User) -> dict:
 def calculate_time_distribution_last_year(user: User) -> dict:
     cutoff = timezone.now() - timedelta(days=365)
 
-    games_time = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED) \
-        .filter(user=user, updated_at__gte=cutoff) \
+    completed_game_statuses = (
+        UserGame.STATUS_COMPLETED,
+        dict(UserGame.STATUS_CHOICES)[UserGame.STATUS_COMPLETED],
+    )
+    completed_game_ids_last_year = GameLog.objects.filter(
+        user=user,
+        action_type=GameLog.ACTION_TYPE_STATUS,
+        action_result__in=completed_game_statuses,
+        created__gte=cutoff,
+    ).values_list('game_id', flat=True).distinct()
+    games_time = UserGame.objects.filter(
+        user=user,
+        game_id__in=completed_game_ids_last_year,
+    ) \
         .aggregate(total_spent_time=Sum('spent_time'))['total_spent_time'] or 0
 
-    movies_minutes = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_WATCHED, updated_at__gte=cutoff) \
+    watched_movie_statuses = (
+        UserMovie.STATUS_WATCHED,
+        dict(UserMovie.STATUS_CHOICES)[UserMovie.STATUS_WATCHED],
+    )
+    watched_movie_ids_last_year = MovieLog.objects.filter(
+        user=user,
+        action_type=MovieLog.ACTION_TYPE_STATUS,
+        action_result__in=watched_movie_statuses,
+        created__gte=cutoff,
+    ).values_list('movie_id', flat=True).distinct()
+    movies_minutes = UserMovie.objects.filter(
+        user=user,
+        movie_id__in=watched_movie_ids_last_year,
+    ) \
         .aggregate(total_time_spent=Sum('movie__tmdb_runtime')) \
         .get('total_time_spent') or 0
 
@@ -1195,6 +1220,22 @@ def calculate_time_distribution_last_year(user: User) -> dict:
         .aggregate(total_spent_time=Sum(
         Case(When(episode__tmdb_runtime=0, then='episode__tmdb_season__tmdb_show__tmdb_episode_runtime'),
              default='episode__tmdb_runtime')))['total_spent_time'] or 0
+
+    bulk_episodes_minutes = 0
+    bulk_episode_logs = ShowLog.objects.filter(
+        user=user,
+        action_type=ShowLog.ACTION_TYPE_EPISODES,
+        created__gte=cutoff,
+    ).values_list('action_result', 'show__tmdb_episode_runtime')
+    for episodes_count_value, episode_runtime in bulk_episode_logs:
+        try:
+            episodes_count = int(episodes_count_value)
+        except (TypeError, ValueError):
+            continue
+        if episodes_count > 0:
+            bulk_episodes_minutes += episodes_count * max(episode_runtime or 0, 0)
+
+    episodes_minutes += bulk_episodes_minutes
 
     return {
         'time_distribution_last_year': {
