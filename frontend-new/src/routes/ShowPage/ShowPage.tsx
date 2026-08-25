@@ -11,7 +11,6 @@ import StatusButtonGroup from '../../shared/StatusButtonGroup';
 import FriendsActivity from '../../shared/FriendsActivity';
 import SeasonsBlock from './views/SeasonsBlock';
 import ScoreBlock from '../../shared/ScoreBlock';
-import TmdbReviewsBlock from '../../shared/TmdbReviewsBlock/TmdbReviewsBlock';
 import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
 import LazyTrailersBlock from '../../shared/LazyTrailersBlock';
 import PersonLink from '../../shared/PersonLink';
@@ -363,10 +362,6 @@ function ShowPage(props) {
                                     )}
                                 </section>
 
-                                <TmdbReviewsBlock
-                                    className={bem.element('content-card', {tmdbReviews: true})}
-                                    endpoint={`/shows/show/${showId}/tmdb_reviews/`}
-                                />
                             </div>
                         </div>
 					</div>
