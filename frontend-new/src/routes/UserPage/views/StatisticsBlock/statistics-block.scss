@@ -120,6 +120,25 @@
         gap: 8px;
     }
 
+    &__personalities-all {
+        width: 100%;
+        margin-top: 9px;
+        border: 0;
+        border-radius: 8px;
+        background: rgba($newAccent2, 0.11);
+        padding: 8px 10px;
+        color: $newText2;
+        font: inherit;
+        font-size: 0.86rem;
+        cursor: pointer;
+        transition: background-color 0.16s ease, color 0.16s ease;
+
+        &:hover {
+            background: rgba($newAccent2, 0.2);
+            color: $newText3;
+        }
+    }
+
     &__person-row {
         display: flex;
         justify-content: space-between;

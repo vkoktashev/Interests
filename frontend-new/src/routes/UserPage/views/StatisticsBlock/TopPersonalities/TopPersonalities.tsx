@@ -7,9 +7,10 @@ interface ITopPersonalitiesProps {
 	chartData: IPersonalityScoreStat[];
 	emptyLabel: string;
 	withPersonLinks?: boolean;
+	onOpenFull?: () => void;
 }
 
-function TopPersonalities({ chartData, emptyLabel, withPersonLinks }: ITopPersonalitiesProps) {
+function TopPersonalities({ chartData, emptyLabel, withPersonLinks, onOpenFull }: ITopPersonalitiesProps) {
 	const bem = useBem('stats-block');
 
 	const data = useMemo(() => {
@@ -28,20 +29,27 @@ function TopPersonalities({ chartData, emptyLabel, withPersonLinks }: ITopPerson
 	}
 
 	return (
-		<div className={bem.element('personalities')}>
-			{data.map((item, index) => (
-				<div className={bem.element('person-row')} key={`${item.name}-${index}`}>
-					<div className={bem.element('person-main')}>
-						{withPersonLinks && item.id ? (
-							<PersonLink id={item.id} name={item.name} className={bem.element('person-name')} />
-						) : (
-							<span className={bem.element('person-name')}>{item.name}</span>
-						)}
+		<>
+			<div className={bem.element('personalities')}>
+				{data.map((item, index) => (
+					<div className={bem.element('person-row')} key={`${item.name}-${index}`}>
+						<div className={bem.element('person-main')}>
+							{withPersonLinks && item.id ? (
+								<PersonLink id={item.id} name={item.name} className={bem.element('person-name')} />
+							) : (
+								<span className={bem.element('person-name')}>{item.name}</span>
+							)}
+						</div>
+						<div className={bem.element('person-count')}>{item.points} баллов</div>
 					</div>
-					<div className={bem.element('person-count')}>{item.points} баллов</div>
-				</div>
-			))}
-		</div>
+				))}
+			</div>
+			{onOpenFull && (
+				<button type='button' className={bem.element('personalities-all')} onClick={onOpenFull}>
+					Открыть полный топ
+				</button>
+			)}
+		</>
 	);
 }
 

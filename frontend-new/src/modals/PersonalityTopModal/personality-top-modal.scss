@@ -1,0 +1,108 @@
+@import "style/colors";
+
+.personality-top-modal {
+  width: min(680px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
+  background: rgba($newBackground2, 0.99);
+  color: $newText3;
+
+  &__body {
+    min-height: 180px;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    max-height: min(70vh, 720px);
+    overflow-y: auto;
+    padding-right: 5px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba($newAccent2, 0.42) rgba(255, 255, 255, 0.035);
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 7px 10px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.035);
+    transition: background-color 0.16s ease;
+
+    &:hover {
+      background: rgba($newAccent2, 0.13);
+    }
+  }
+
+  &__position {
+    color: $newText2;
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  &__name {
+    min-width: 0;
+    overflow: hidden;
+    color: $newText3;
+    font-size: 0.92rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    a {
+      display: block;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+
+  &__points {
+    color: $newText2;
+    font-size: 0.86rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  &__state {
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $newText2;
+    text-align: center;
+  }
+
+  @media (max-width: 560px) {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    border-radius: 14px;
+
+    &__list {
+      max-height: 68vh;
+    }
+
+    &__row {
+      grid-template-columns: 26px minmax(0, 1fr) auto;
+      gap: 7px;
+      padding: 7px 8px;
+    }
+
+    &__points {
+      font-size: 0.8rem;
+    }
+  }
+}
+
+@media (max-width: 560px) {
+  .ModalView_overlay:has(.personality-top-modal) {
+    padding: 12px;
+  }
+}
