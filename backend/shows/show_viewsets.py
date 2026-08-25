@@ -13,7 +13,7 @@ from rest_framework.viewsets import GenericViewSet
 from proxy.functions import get_proxy_url
 from shows.functions import get_show_new_fields, get_tmdb_show, get_tmdb_show_videos, get_tmdb_show_credits, \
     sync_show_genres, sync_show_people, sync_show_seasons, get_tmdb_show_reviews, get_tmdb_show_recommendations
-from shows.models import Show, UserShow, Episode, UserEpisode, EpisodeLog, ShowLog, ShowPerson
+from shows.models import Show, UserShow, Episode, UserEpisode, EpisodeLog, ShowLog, ShowPerson, ShowVideo
 from shows.serializers import ShowSerializer, UserShowReadSerializer, FollowedUserShowSerializer, UserEpisodeSerializer, \
     SeasonSerializer, EpisodeSerializer, UserShowWriteSerializer
 from shows.tasks import update_shows, update_all_shows_task, refresh_show_details
@@ -23,6 +23,8 @@ from utils.celery import enqueue_background_task
 from utils.constants import ERROR, SHOW_NOT_FOUND, TMDB_UNAVAILABLE, EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE, \
     TMDB_POSTER_PATH_PREFIX, TMDB_BACKDROP_PATH_PREFIX
 from utils.functions import update_fields_if_needed, resolve_display_name
+from videos.functions import serialize_videos, sync_tmdb_videos
+from videos.models import Video
 
 SHOW_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
 
@@ -54,7 +56,17 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             bool(expected_season_numbers) and
             bool(expected_season_numbers - database_season_numbers)
         )
-        should_fetch_from_tmdb = show is None or show.tmdb_last_update is None or has_missing_seasons
+        has_legacy_tmdb_videos = show is not None and ShowVideo.objects.filter(
+            show=show,
+            video__source=Video.SOURCE_TMDB,
+            video__external_id='',
+        ).exists()
+        should_fetch_from_tmdb = (
+            show is None or
+            show.tmdb_last_update is None or
+            has_missing_seasons or
+            has_legacy_tmdb_videos
+        )
 
         if should_fetch_from_tmdb:
             try:
@@ -71,11 +83,12 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 if show is None:
                     return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
             else:
-                new_fields = get_show_new_fields(tmdb_show, tmdb_show_videos)
+                new_fields = get_show_new_fields(tmdb_show)
                 show, created = Show.objects.filter().get_or_create(tmdb_id=tmdb_show.get('id'), defaults=new_fields)
                 if not created:
                     update_fields_if_needed(show, new_fields)
 
+                sync_tmdb_videos(show, ShowVideo, tmdb_show_videos)
                 sync_show_genres(show, tmdb_show)
                 sync_show_people(show, tmdb_show_credits, tmdb_show)
 
@@ -683,7 +696,7 @@ def parse_show(show, request):
         'status': translate_tmdb_status(show.tmdb_status),
         'first_air_date': format_date(show.tmdb_release_date),
         'last_air_date': format_date(show.tmdb_last_air_date),
-        'videos': show.tmdb_videos,
+        'videos': serialize_videos(show, ShowVideo),
         'seasons': seasons,
         'cast': ', '.join(cast_names),
         'directors': ', '.join(director_names),

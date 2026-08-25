@@ -22,8 +22,8 @@ class Movie(models.Model):
     tmdb_score = models.IntegerField(null=True)
     tmdb_tagline = models.TextField(blank=True)
     tmdb_production_companies = models.TextField(blank=True)
-    tmdb_videos = models.JSONField(default=list, blank=True)
     tmdb_last_update = models.DateTimeField(null=True)
+    videos = models.ManyToManyField('videos.Video', through='MovieVideo', related_name='movies')
 
     def __str__(self):
         return self.tmdb_name or self.tmdb_original_name or f'Movie #{self.tmdb_id}'
@@ -75,6 +75,18 @@ class MovieGenre(models.Model):
 
     class Meta:
         unique_together = (("movie", "genre"),)
+
+
+class MovieVideo(models.Model):
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    video = models.ForeignKey('videos.Video', on_delete=models.CASCADE)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = (('movie', 'video'),)
+        ordering = ('sort_order', 'id')
+        verbose_name = 'видео фильма'
+        verbose_name_plural = 'видео фильмов'
 
 
 class MoviePerson(models.Model):

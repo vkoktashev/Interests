@@ -12,7 +12,7 @@ from rest_framework.viewsets import GenericViewSet
 from movies.functions import get_movie_new_fields, update_movie_genres, get_tmdb_movie, get_tmdb_movie_videos, \
     get_cast_crew, get_tmdb_movie_release_dates, update_movie_people, get_tmdb_movie_reviews, \
     get_tmdb_movie_recommendations
-from movies.models import UserMovie, Movie, MoviePerson
+from movies.models import UserMovie, Movie, MoviePerson, MovieVideo
 from movies.serializers import UserMovieReadSerializer, FollowedUserMovieSerializer, UserMovieWriteSerializer
 from movies.tasks import refresh_movie_details
 from proxy.functions import get_proxy_url
@@ -21,6 +21,8 @@ from users.models import UserFollow
 from utils.celery import enqueue_background_task
 from utils.constants import ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE, TMDB_POSTER_PATH_PREFIX, TMDB_BACKDROP_PATH_PREFIX
 from utils.functions import update_fields_if_needed, resolve_display_name
+from videos.functions import serialize_videos, sync_tmdb_videos
+from videos.models import Video
 
 MOVIE_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
 
@@ -41,7 +43,12 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         tmdb_id = kwargs.get('tmdb_id')
         movie = Movie.objects.filter(tmdb_id=tmdb_id).first()
 
-        should_fetch_from_tmdb = movie is None or movie.tmdb_last_update is None
+        has_legacy_tmdb_videos = movie is not None and MovieVideo.objects.filter(
+            movie=movie,
+            video__source=Video.SOURCE_TMDB,
+            video__external_id='',
+        ).exists()
+        should_fetch_from_tmdb = movie is None or movie.tmdb_last_update is None or has_legacy_tmdb_videos
 
         if should_fetch_from_tmdb:
             try:
@@ -57,13 +64,14 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             except (ConnectionError, Timeout):
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-            new_fields = get_movie_new_fields(tmdb_movie, tmdb_movie_videos, tmdb_release_dates)
+            new_fields = get_movie_new_fields(tmdb_movie, tmdb_release_dates)
 
             movie, created = Movie.objects.filter().get_or_create(tmdb_id=tmdb_movie.get('id'),
                                                                   defaults=new_fields)
             if not created:
                 update_fields_if_needed(movie, new_fields)
 
+            sync_tmdb_videos(movie, MovieVideo, tmdb_movie_videos)
             update_movie_genres(movie, tmdb_movie)
             update_movie_people(movie, tmdb_cast_crew)
 
@@ -288,7 +296,7 @@ def parse_movie(movie, request):
         'directors': ', '.join(director_names),
         'cast_people': cast_people,
         'directors_people': directors_people,
-        'videos': movie.tmdb_videos
+        'videos': serialize_videos(movie, MovieVideo)
     }
 
     return new_movie

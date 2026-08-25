@@ -8,25 +8,17 @@ from people.models import Person
 from shows.models import Episode, ShowGenre, ShowPerson, SeasonPerson, EpisodePerson, UserSeason, SeasonLog, \
     UserEpisode, EpisodeLog
 from utils.constants import TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, TMDB_STILL_PATH_PREFIX, LANGUAGE, \
-    CACHE_TIMEOUT, YOUTUBE_PREFIX
+    CACHE_TIMEOUT, TMDB_TRAILER_TYPE, TMDB_VIDEO_LANGUAGES
 from utils.functions import update_fields_if_needed, get_english_translation_data
 
 
-def get_show_new_fields(tmdb_show, tmdb_show_videos=None):
-    parsed_videos = []
+def get_show_new_fields(tmdb_show):
     english_translation = get_english_translation_data(tmdb_show)
     season_numbers = sorted({
         season.get('season_number')
         for season in (tmdb_show.get('seasons') or [])
         if season.get('season_number') is not None
     })
-    if tmdb_show_videos is not None:
-        youtube_videos = [video for video in tmdb_show_videos if video.get('site') == 'YouTube']
-        parsed_videos = [{
-            'name': video.get('name'),
-            'url': YOUTUBE_PREFIX + video.get('key', '')
-        } for video in youtube_videos if video.get('key')]
-
     return {
         'imdb_id': tmdb_show.get('imdb_id') if tmdb_show.get('imdb_id') is not None else '',
         'tmdb_original_name': tmdb_show.get('original_name') or '',
@@ -50,7 +42,6 @@ def get_show_new_fields(tmdb_show, tmdb_show_videos=None):
         'tmdb_production_companies': ', '.join(
             company.get('name', '') for company in (tmdb_show.get('production_companies') or []) if company.get('name')
         ),
-        'tmdb_videos': parsed_videos,
         'tmdb_last_update': timezone.now()
     }
 
@@ -213,10 +204,17 @@ def get_tmdb_show(tmdb_id):
 
 
 def get_tmdb_show_videos(tmdb_id):
-    key = f'show_{tmdb_id}_videos'
+    key = f'show_{tmdb_id}_trailers_{TMDB_VIDEO_LANGUAGES.replace(",", "_")}'
     tmdb_show_videos = cache.get(key, None)
     if tmdb_show_videos is None:
-        tmdb_show_videos = tmdb.TV(tmdb_id).videos(language=LANGUAGE)['results']
+        tmdb_show_videos = tmdb.TV(tmdb_id).videos(
+            language=LANGUAGE,
+            include_video_language=TMDB_VIDEO_LANGUAGES,
+        )['results']
+        tmdb_show_videos = [
+            video for video in tmdb_show_videos
+            if video.get('type') == TMDB_TRAILER_TYPE
+        ]
         cache.set(key, tmdb_show_videos, CACHE_TIMEOUT)
     return tmdb_show_videos
 
@@ -382,6 +380,8 @@ def clear_tmdb_show_cache(tmdb_id):
     cache.delete_many((
         get_tmdb_show_key(tmdb_id),
         f'show_{tmdb_id}_videos',
+        f'show_{tmdb_id}_videos_{TMDB_VIDEO_LANGUAGES.replace(",", "_")}',
+        f'show_{tmdb_id}_trailers_{TMDB_VIDEO_LANGUAGES.replace(",", "_")}',
         f'show_{tmdb_id}_credits',
     ))
 

@@ -12,9 +12,10 @@ from shows.functions import clear_tmdb_episode_cache, clear_tmdb_season_cache, c
     sync_season_episodes, \
     get_tmdb_season_credits, sync_season_people, get_tmdb_episode, get_episode_new_fields, get_tmdb_episode_credits, \
     sync_episode_people
-from shows.models import Show, UserShow, Season, Episode
+from shows.models import Show, UserShow, Season, Episode, ShowVideo
 from utils.constants import UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
 from utils.functions import update_fields_if_needed
+from videos.functions import sync_tmdb_videos
 
 logger = logging.getLogger(__name__)
 
@@ -92,12 +93,13 @@ def update_show_details(show_tmdb_id):
 
     show = None
     try:
-        new_fields = get_show_new_fields(tmdb_show, tmdb_show_videos)
+        new_fields = get_show_new_fields(tmdb_show)
         show, created = Show.objects.get_or_create(tmdb_id=show_tmdb_id, defaults=new_fields)
         changed_fields = list(new_fields.keys()) if created else _get_changed_fields(show, new_fields)
         if not created:
             update_fields_if_needed(show, new_fields)
 
+        sync_tmdb_videos(show, ShowVideo, tmdb_show_videos)
         sync_show_genres(show, tmdb_show)
         sync_show_people(show, tmdb_show_credits, tmdb_show)
 

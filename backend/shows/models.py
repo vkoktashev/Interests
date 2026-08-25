@@ -44,8 +44,8 @@ class Show(models.Model):
     tmdb_overview_en = models.TextField(blank=True, default='')
     tmdb_score = models.IntegerField(null=True)
     tmdb_production_companies = models.TextField(blank=True)
-    tmdb_videos = models.JSONField(default=list, blank=True)
     tmdb_last_update = models.DateTimeField(null=True)
+    videos = models.ManyToManyField('videos.Video', through='ShowVideo', related_name='shows')
 
     def __str__(self):
         return self.tmdb_name or self.tmdb_original_name or f'Show #{self.tmdb_id}'
@@ -64,6 +64,7 @@ class Season(models.Model):
     tmdb_poster_path = models.CharField(max_length=200, blank=True)
     tmdb_air_date = models.DateField(null=True)
     tmdb_last_update = models.DateTimeField(null=True)
+    videos = models.ManyToManyField('videos.Video', through='SeasonVideo', related_name='seasons')
 
     class Meta:
         unique_together = (("tmdb_season_number", "tmdb_show"),)
@@ -86,6 +87,7 @@ class Episode(models.Model):
     tmdb_score = models.IntegerField(null=True)
     tmdb_still_path = models.CharField(max_length=200, blank=True)
     tmdb_last_update = models.DateTimeField(null=True)
+    videos = models.ManyToManyField('videos.Video', through='EpisodeVideo', related_name='episodes')
 
     class Meta:
         verbose_name = 'серия'
@@ -101,6 +103,42 @@ class Episode(models.Model):
             f'{self.tmdb_season.tmdb_show} — '
             f'S{self.tmdb_season.tmdb_season_number}E{self.tmdb_episode_number} {self.tmdb_name}'
         )
+
+
+class ShowVideo(models.Model):
+    show = models.ForeignKey(Show, on_delete=models.CASCADE)
+    video = models.ForeignKey('videos.Video', on_delete=models.CASCADE)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = (('show', 'video'),)
+        ordering = ('sort_order', 'id')
+        verbose_name = 'видео сериала'
+        verbose_name_plural = 'видео сериалов'
+
+
+class SeasonVideo(models.Model):
+    season = models.ForeignKey(Season, on_delete=models.CASCADE)
+    video = models.ForeignKey('videos.Video', on_delete=models.CASCADE)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = (('season', 'video'),)
+        ordering = ('sort_order', 'id')
+        verbose_name = 'видео сезона'
+        verbose_name_plural = 'видео сезонов'
+
+
+class EpisodeVideo(models.Model):
+    episode = models.ForeignKey(Episode, on_delete=models.CASCADE)
+    video = models.ForeignKey('videos.Video', on_delete=models.CASCADE)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = (('episode', 'video'),)
+        ordering = ('sort_order', 'id')
+        verbose_name = 'видео серии'
+        verbose_name_plural = 'видео серий'
 
 
 class UserShow(UserScore):

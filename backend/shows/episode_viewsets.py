@@ -15,7 +15,7 @@ from shows.functions import get_tmdb_episode, get_episode_new_fields, get_tmdb_e
     get_tmdb_show, get_tmdb_show_videos, get_tmdb_show_credits, get_show_new_fields, sync_show_genres, \
     sync_show_people, get_tmdb_season, get_season_new_fields, sync_season_episodes, get_tmdb_season_credits, \
     sync_season_people
-from shows.models import UserEpisode, Show, Season, Episode, UserShow, EpisodePerson
+from shows.models import UserEpisode, Show, Season, Episode, UserShow, EpisodePerson, ShowVideo, EpisodeVideo
 from shows.serializers import UserEpisodeSerializer, FollowedUserEpisodeSerializer, ShowSerializer
 from shows.show_viewsets import user_watched_show
 from shows.tasks import refresh_episode_details
@@ -24,6 +24,7 @@ from users.models import UserFollow
 from utils.celery import enqueue_background_task
 from utils.constants import ERROR, EPISODE_NOT_FOUND, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, EPISODE_NOT_WATCHED_SCORE
 from utils.functions import update_fields_if_needed
+from videos.functions import serialize_videos, sync_tmdb_videos
 
 EPISODE_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
 
@@ -52,10 +53,11 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             except (ConnectionError, Timeout):
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-            show_fields = get_show_new_fields(tmdb_show, tmdb_show_videos)
+            show_fields = get_show_new_fields(tmdb_show)
             show, created = Show.objects.get_or_create(tmdb_id=show_tmdb_id, defaults=show_fields)
             if not created:
                 update_fields_if_needed(show, show_fields)
+            sync_tmdb_videos(show, ShowVideo, tmdb_show_videos)
             sync_show_genres(show, tmdb_show)
             sync_show_people(show, tmdb_show_credits, tmdb_show)
 
@@ -203,6 +205,7 @@ def parse_episode(episode, request):
         'show': ShowSerializer(episode.tmdb_season.tmdb_show, context={'request': request}).data,
         'cast': ', '.join(cast_names),
         'directors': ', '.join(director_names),
+        'videos': serialize_videos(episode, EpisodeVideo),
     }
 
 
