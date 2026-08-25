@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.db.models import F
 from django.utils import timezone
-from utils.swagger import swagger_auto_schema
+from utils.swagger import openapi, swagger_auto_schema
 from requests import HTTPError, ConnectionError, Timeout
 from rest_framework import mixins, status
 from rest_framework.decorators import action
@@ -11,7 +11,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from proxy.functions import get_proxy_url
-from shows.functions import get_tmdb_episode, get_episode_new_fields, get_tmdb_episode_credits, sync_episode_people, \
+from shows.functions import get_tmdb_episode, get_episode_new_fields, get_tmdb_episode_credits, \
+    get_tmdb_episode_videos, sync_episode_people, \
     get_tmdb_show, get_tmdb_show_credits, get_show_new_fields, sync_show_genres, \
     sync_show_people, get_tmdb_season, get_season_new_fields, sync_season_episodes, get_tmdb_season_credits, \
     sync_season_people
@@ -24,7 +25,7 @@ from users.models import UserFollow
 from utils.celery import enqueue_background_task
 from utils.constants import ERROR, EPISODE_NOT_FOUND, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, EPISODE_NOT_WATCHED_SCORE
 from utils.functions import update_fields_if_needed
-from videos.functions import serialize_videos
+from videos.functions import serialize_videos, sync_tmdb_videos
 
 EPISODE_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
 
@@ -133,6 +134,38 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             )
         return response
 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('OK'),
+            404: openapi.Response('Episode not found'),
+            503: openapi.Response('TMDB unavailable'),
+        }
+    )
+    @action(detail=True, methods=['get'])
+    def trailers(self, request, *args, **kwargs):
+        show_tmdb_id = kwargs.get('show_tmdb_id')
+        season_number = kwargs.get('season_number')
+        episode_number = kwargs.get('number')
+        try:
+            episode = Episode.objects.get(
+                tmdb_season__tmdb_show__tmdb_id=show_tmdb_id,
+                tmdb_season__tmdb_season_number=season_number,
+                tmdb_episode_number=episode_number,
+            )
+            tmdb_videos = get_tmdb_episode_videos(show_tmdb_id, season_number, episode_number)
+        except Episode.DoesNotExist:
+            return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+        except HTTPError as e:
+            error_code = int(e.args[0].split(' ', 1)[0])
+            if error_code == 404:
+                return Response({ERROR: EPISODE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except (ConnectionError, Timeout):
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        sync_tmdb_videos(episode, EpisodeVideo, tmdb_videos)
+        return Response(serialize_videos(episode, EpisodeVideo))
+
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserEpisodeSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def user_info(self, request, **kwargs):
@@ -203,7 +236,6 @@ def parse_episode(episode, request):
         'show': ShowSerializer(episode.tmdb_season.tmdb_show, context={'request': request}).data,
         'cast': ', '.join(cast_names),
         'directors': ', '.join(director_names),
-        'videos': serialize_videos(episode, EpisodeVideo),
     }
 
 

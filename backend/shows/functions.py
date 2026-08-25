@@ -247,6 +247,25 @@ def get_tmdb_season(show_tmdb_id, season_number):
     return tmdb_season
 
 
+def get_tmdb_season_videos(show_tmdb_id, season_number):
+    key = (
+        f'show_{show_tmdb_id}_season_{season_number}_trailers_'
+        f'{TMDB_VIDEO_LANGUAGES.replace(",", "_")}'
+    )
+    tmdb_season_videos = cache.get(key, None)
+    if tmdb_season_videos is None:
+        payload = tmdb.TV_Seasons(show_tmdb_id, season_number).videos(
+            language=LANGUAGE,
+            include_video_language=TMDB_VIDEO_LANGUAGES,
+        )
+        tmdb_season_videos = [
+            video for video in (payload.get('results') or [])
+            if video.get('type') == TMDB_TRAILER_TYPE
+        ]
+        cache.set(key, tmdb_season_videos, CACHE_TIMEOUT)
+    return tmdb_season_videos
+
+
 def get_tmdb_season_credits(show_tmdb_id, season_number):
     key = f'show_{show_tmdb_id}_season_{season_number}_credits'
     tmdb_season_credits = cache.get(key, None)
@@ -263,6 +282,25 @@ def get_tmdb_episode(show_tmdb_id, season_number, episode_number):
         tmdb_episode = tmdb.TV_Episodes(show_tmdb_id, season_number, episode_number).info(language=LANGUAGE)
         cache.set(key, tmdb_episode, CACHE_TIMEOUT)
     return tmdb_episode
+
+
+def get_tmdb_episode_videos(show_tmdb_id, season_number, episode_number):
+    key = (
+        f'show_{show_tmdb_id}_season_{season_number}_episode_{episode_number}_trailers_'
+        f'{TMDB_VIDEO_LANGUAGES.replace(",", "_")}'
+    )
+    tmdb_episode_videos = cache.get(key, None)
+    if tmdb_episode_videos is None:
+        payload = tmdb.TV_Episodes(show_tmdb_id, season_number, episode_number).videos(
+            language=LANGUAGE,
+            include_video_language=TMDB_VIDEO_LANGUAGES,
+        )
+        tmdb_episode_videos = [
+            video for video in (payload.get('results') or [])
+            if video.get('type') == TMDB_TRAILER_TYPE
+        ]
+        cache.set(key, tmdb_episode_videos, CACHE_TIMEOUT)
+    return tmdb_episode_videos
 
 
 def get_tmdb_episode_credits(show_tmdb_id, season_number, episode_number):

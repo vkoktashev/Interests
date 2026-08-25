@@ -12,7 +12,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from proxy.functions import get_proxy_url
 from shows.functions import get_tmdb_season, get_season_new_fields, sync_season_episodes, \
-    get_tmdb_season_credits, sync_season_people, get_tmdb_show, get_tmdb_show_credits, \
+    get_tmdb_season_credits, get_tmdb_season_videos, sync_season_people, get_tmdb_show, get_tmdb_show_credits, \
     get_show_new_fields, sync_show_genres, sync_show_people
 from shows.models import UserSeason, Show, Season, Episode, UserShow, UserEpisode, SeasonPerson, SeasonVideo
 from shows.serializers import UserSeasonSerializer, FollowedUserSeasonSerializer, UserEpisodeInSeasonSerializer, \
@@ -24,7 +24,7 @@ from users.models import UserFollow
 from utils.celery import enqueue_background_task
 from utils.constants import ERROR, SEASON_NOT_FOUND, TMDB_UNAVAILABLE, SHOW_NOT_FOUND
 from utils.functions import update_fields_if_needed
-from videos.functions import serialize_videos
+from videos.functions import serialize_videos, sync_tmdb_videos
 
 SEASON_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
 
@@ -92,6 +92,36 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 lambda _: enqueue_season_refresh(show.tmdb_id, season.tmdb_season_number)
             )
         return response
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('OK'),
+            404: openapi.Response('Season not found'),
+            503: openapi.Response('TMDB unavailable'),
+        }
+    )
+    @action(detail=True, methods=['get'])
+    def trailers(self, request, *args, **kwargs):
+        show_tmdb_id = kwargs.get('show_tmdb_id')
+        season_number = kwargs.get('number')
+        try:
+            season = Season.objects.get(
+                tmdb_show__tmdb_id=show_tmdb_id,
+                tmdb_season_number=season_number,
+            )
+            tmdb_videos = get_tmdb_season_videos(show_tmdb_id, season_number)
+        except Season.DoesNotExist:
+            return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+        except HTTPError as e:
+            error_code = int(e.args[0].split(' ', 1)[0])
+            if error_code == 404:
+                return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except (ConnectionError, Timeout):
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        sync_tmdb_videos(season, SeasonVideo, tmdb_videos)
+        return Response(serialize_videos(season, SeasonVideo))
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -218,7 +248,6 @@ def parse_season(season, request):
         'episodes': episodes,
         'cast': ', '.join(cast_names),
         'directors': ', '.join(director_names),
-        'videos': serialize_videos(season, SeasonVideo),
     }
 
 
