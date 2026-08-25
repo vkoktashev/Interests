@@ -22,6 +22,7 @@ interface ITrackedPerson {
 
 interface IPeopleBlockProps {
 	people: ITrackedPerson[];
+	showKnownFor: boolean;
 }
 
 const VISIBLE_PROJECTS_COUNT = 3;
@@ -48,7 +49,7 @@ function getProjectsCountLabel(count: number): string {
 	return `${count} проектов`;
 }
 
-function PeopleBlock({people}: IPeopleBlockProps) {
+function PeopleBlock({people, showKnownFor}: IPeopleBlockProps) {
 	const bem = useBem('profile-people');
 	const [expandedPeople, setExpandedPeople] = useState<Set<number>>(new Set());
 
@@ -112,53 +113,55 @@ function PeopleBlock({people}: IPeopleBlockProps) {
 								</div>
 							</div>
 
-							<div className={bem.element('known-for')}>
-								<div className={bem.element('known-for-header')}>
-									<div className={bem.element('known-for-title')}>Известен вам по</div>
-									{projects.length > 0 && (
-										<div className={bem.element('projects-count')}>
-											{getProjectsCountLabel(projects.length)}
+							{showKnownFor && (
+								<div className={bem.element('known-for')}>
+									<div className={bem.element('known-for-header')}>
+										<div className={bem.element('known-for-title')}>Известен вам по</div>
+										{projects.length > 0 && (
+											<div className={bem.element('projects-count')}>
+												{getProjectsCountLabel(projects.length)}
+											</div>
+										)}
+									</div>
+									{visibleProjects.length ? (
+										<div className={bem.element('projects')}>
+											{visibleProjects.map(project => (
+												<Link
+													key={`${project.type}-${project.id}`}
+													toRoute={project.type}
+													toRouteParams={getProjectRouteParams(project)}
+													className={bem.element('project')}
+													title={project.name}
+												>
+													{project.name}{project.year ? ` (${project.year})` : ''}
+												</Link>
+											))}
+											{hiddenProjectsCount > 0 && (
+												<button
+													type='button'
+													className={bem.element('more')}
+													onClick={toggleProjects}
+												>
+													и ещё {hiddenProjectsCount}
+												</button>
+											)}
+											{isExpanded && projects.length > VISIBLE_PROJECTS_COUNT && (
+												<button
+													type='button'
+													className={bem.element('more')}
+													onClick={toggleProjects}
+												>
+													Свернуть
+												</button>
+											)}
+										</div>
+									) : (
+										<div className={bem.element('no-projects')}>
+											Нет отмеченных проектов с этим человеком
 										</div>
 									)}
 								</div>
-								{visibleProjects.length ? (
-									<div className={bem.element('projects')}>
-										{visibleProjects.map(project => (
-											<Link
-												key={`${project.type}-${project.id}`}
-												toRoute={project.type}
-												toRouteParams={getProjectRouteParams(project)}
-												className={bem.element('project')}
-												title={project.name}
-											>
-												{project.name}{project.year ? ` (${project.year})` : ''}
-											</Link>
-										))}
-										{hiddenProjectsCount > 0 && (
-											<button
-												type='button'
-												className={bem.element('more')}
-												onClick={toggleProjects}
-											>
-												и ещё {hiddenProjectsCount}
-											</button>
-										)}
-										{isExpanded && projects.length > VISIBLE_PROJECTS_COUNT && (
-											<button
-												type='button'
-												className={bem.element('more')}
-												onClick={toggleProjects}
-											>
-												Свернуть
-											</button>
-										)}
-									</div>
-								) : (
-									<div className={bem.element('no-projects')}>
-										Нет отмеченных проектов с этим человеком
-									</div>
-								)}
-							</div>
+							)}
 						</div>
 					</article>
 				);

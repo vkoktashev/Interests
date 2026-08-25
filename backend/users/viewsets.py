@@ -110,8 +110,8 @@ def format_person_life_years(person):
     return ''
 
 
-def get_tracked_people(request, user, user_movies, user_shows):
-    tracked_people = list(UserPerson.objects.select_related('person').filter(user=user))
+def get_tracked_people(request, profile_user, viewer_movies, viewer_shows):
+    tracked_people = list(UserPerson.objects.select_related('person').filter(user=profile_user))
     if not tracked_people:
         return []
 
@@ -124,7 +124,7 @@ def get_tracked_people(request, user, user_movies, user_shows):
             'year': user_movie.movie.tmdb_release_date.year if user_movie.movie.tmdb_release_date else None,
             '_updated_at': user_movie.updated_at,
         }
-        for user_movie in user_movies
+        for user_movie in viewer_movies
     }
     marked_shows = {
         user_show.show_id: {
@@ -134,7 +134,7 @@ def get_tracked_people(request, user, user_movies, user_shows):
             'year': user_show.show.tmdb_release_date.year if user_show.show.tmdb_release_date else None,
             '_updated_at': user_show.updated_at,
         }
-        for user_show in user_shows
+        for user_show in viewer_shows
     }
 
     project_keys_by_person = collections.defaultdict(set)
@@ -444,7 +444,23 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             id__in=UserFollow.objects.filter(user=user, is_following=True).values('followed_user')) \
             .values('id', 'username', 'gender')
 
-        tracked_people = get_tracked_people(request, user, user_movies, user_shows)
+        viewer_movies = []
+        viewer_shows = []
+        if request.user.is_authenticated:
+            if request.user == user:
+                viewer_movies = user_movies
+                viewer_shows = user_shows
+            else:
+                viewer_movies = UserMovie.objects.select_related('movie') \
+                    .exclude(status=UserMovie.STATUS_NOT_WATCHED) \
+                    .filter(user=request.user) \
+                    .order_by('-updated_at')
+                viewer_shows = UserShow.objects.select_related('show') \
+                    .exclude(status=UserShow.STATUS_NOT_WATCHED) \
+                    .filter(user=request.user) \
+                    .order_by('-updated_at')
+
+        tracked_people = get_tracked_people(request, user, viewer_movies, viewer_shows)
 
         response_data = {'is_available': is_available, 'is_followed': user_is_followed,
                          'followed_users': followed_users, 'tracked_people': tracked_people,
@@ -1027,25 +1043,52 @@ def calculate_scores_stats(user: User) -> dict:
 
 def calculate_backlog_metrics(user: User) -> dict:
     now = timezone.now()
+    today = timezone.localdate(now)
 
-    planned_games = UserGame.objects.filter(user=user, status=UserGame.STATUS_GOING)
-    planned_movies = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_GOING)
-    planned_shows = UserShow.objects.filter(user=user, status=UserShow.STATUS_GOING)
-    eligible_shows = UserShow.objects.filter(user=user).exclude(
+    planned_games = UserGame.objects.filter(
+        user=user,
+        status=UserGame.STATUS_GOING,
+        game__igdb_release_date__lte=today,
+    )
+    planned_movies = UserMovie.objects.filter(
+        user=user,
+        status=UserMovie.STATUS_GOING,
+        movie__tmdb_release_date__lte=today,
+    )
+    planned_shows = UserShow.objects.filter(
+        user=user,
+        status=UserShow.STATUS_GOING,
+        show__tmdb_release_date__lte=today,
+    )
+    eligible_shows = UserShow.objects.filter(
+        user=user,
+        show__tmdb_release_date__lte=today,
+    ).exclude(
         status__in=[UserShow.STATUS_NOT_WATCHED, UserShow.STATUS_STOPPED]
     )
 
     def average_age_days(values):
-        datetimes = [item for item in values if item is not None]
-        if not datetimes:
-            return 0
-        age_seconds = sum((now - dt).total_seconds() for dt in datetimes)
-        return round(age_seconds / len(datetimes) / 86400, 1)
+        age_seconds = []
+        for added_at, release_date in values:
+            if added_at is None or release_date is None:
+                continue
 
-    games_updated = list(planned_games.values_list('updated_at', flat=True))
-    movies_updated = list(planned_movies.values_list('updated_at', flat=True))
-    shows_updated = list(planned_shows.values_list('updated_at', flat=True))
-    all_updated = games_updated + movies_updated + shows_updated
+            release_datetime = timezone.make_aware(
+                datetime.combine(release_date, datetime.min.time()),
+                timezone.get_current_timezone(),
+            )
+            # min(time since addition, time since release) starts at the later timestamp.
+            age_started_at = max(added_at, release_datetime)
+            age_seconds.append(max(0, (now - age_started_at).total_seconds()))
+
+        if not age_seconds:
+            return 0
+        return round(sum(age_seconds) / len(age_seconds) / 86400, 1)
+
+    games_age_values = list(planned_games.values_list('updated_at', 'game__igdb_release_date'))
+    movies_age_values = list(planned_movies.values_list('updated_at', 'movie__tmdb_release_date'))
+    shows_age_values = list(planned_shows.values_list('updated_at', 'show__tmdb_release_date'))
+    all_age_values = games_age_values + movies_age_values + shows_age_values
 
     movies_minutes = planned_movies.aggregate(total=Sum('movie__tmdb_runtime')).get('total') or 0
 
@@ -1080,6 +1123,7 @@ def calculate_backlog_metrics(user: User) -> dict:
     eligible_episodes = Episode.objects.filter(
         tmdb_season__tmdb_show_id__in=eligible_show_ids,
         tmdb_season__tmdb_season_number__gt=0,
+        tmdb_release_date__lte=today,
     )
 
     watched_episode_ids = set(
@@ -1114,10 +1158,10 @@ def calculate_backlog_metrics(user: User) -> dict:
                 'total': counts['games'] + counts['movies'] + counts['shows'],
             },
             'average_age_days': {
-                'games': average_age_days(games_updated),
-                'movies': average_age_days(movies_updated),
-                'shows': average_age_days(shows_updated),
-                'overall': average_age_days(all_updated),
+                'games': average_age_days(games_age_values),
+                'movies': average_age_days(movies_age_values),
+                'shows': average_age_days(shows_age_values),
+                'overall': average_age_days(all_age_values),
             },
             'estimated_hours_to_close': {
                 'games': games_hours,
@@ -1132,11 +1176,36 @@ def calculate_backlog_metrics(user: User) -> dict:
 def calculate_time_distribution_last_year(user: User) -> dict:
     cutoff = timezone.now() - timedelta(days=365)
 
-    games_time = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED) \
-        .filter(user=user, updated_at__gte=cutoff) \
+    completed_game_statuses = (
+        UserGame.STATUS_COMPLETED,
+        dict(UserGame.STATUS_CHOICES)[UserGame.STATUS_COMPLETED],
+    )
+    completed_game_ids_last_year = GameLog.objects.filter(
+        user=user,
+        action_type=GameLog.ACTION_TYPE_STATUS,
+        action_result__in=completed_game_statuses,
+        created__gte=cutoff,
+    ).values_list('game_id', flat=True).distinct()
+    games_time = UserGame.objects.filter(
+        user=user,
+        game_id__in=completed_game_ids_last_year,
+    ) \
         .aggregate(total_spent_time=Sum('spent_time'))['total_spent_time'] or 0
 
-    movies_minutes = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_WATCHED, updated_at__gte=cutoff) \
+    watched_movie_statuses = (
+        UserMovie.STATUS_WATCHED,
+        dict(UserMovie.STATUS_CHOICES)[UserMovie.STATUS_WATCHED],
+    )
+    watched_movie_ids_last_year = MovieLog.objects.filter(
+        user=user,
+        action_type=MovieLog.ACTION_TYPE_STATUS,
+        action_result__in=watched_movie_statuses,
+        created__gte=cutoff,
+    ).values_list('movie_id', flat=True).distinct()
+    movies_minutes = UserMovie.objects.filter(
+        user=user,
+        movie_id__in=watched_movie_ids_last_year,
+    ) \
         .aggregate(total_time_spent=Sum('movie__tmdb_runtime')) \
         .get('total_time_spent') or 0
 
@@ -1151,6 +1220,22 @@ def calculate_time_distribution_last_year(user: User) -> dict:
         .aggregate(total_spent_time=Sum(
         Case(When(episode__tmdb_runtime=0, then='episode__tmdb_season__tmdb_show__tmdb_episode_runtime'),
              default='episode__tmdb_runtime')))['total_spent_time'] or 0
+
+    bulk_episodes_minutes = 0
+    bulk_episode_logs = ShowLog.objects.filter(
+        user=user,
+        action_type=ShowLog.ACTION_TYPE_EPISODES,
+        created__gte=cutoff,
+    ).values_list('action_result', 'show__tmdb_episode_runtime')
+    for episodes_count_value, episode_runtime in bulk_episode_logs:
+        try:
+            episodes_count = int(episodes_count_value)
+        except (TypeError, ValueError):
+            continue
+        if episodes_count > 0:
+            bulk_episodes_minutes += episodes_count * max(episode_runtime or 0, 0)
+
+    episodes_minutes += bulk_episodes_minutes
 
     return {
         'time_distribution_last_year': {
