@@ -116,10 +116,21 @@ def sync_season_episodes(season, tmdb_episodes):
     Episode.objects.filter(tmdb_season=season).exclude(id__in=new_ids).delete()
 
 
-def sync_people_links(parent_obj, tmdb_credits, relation_model, parent_field, extra_people_by_role=None):
-    cast = (tmdb_credits.get('cast') or [])[:5]
+def sync_people_links(
+        parent_obj,
+        tmdb_credits,
+        relation_model,
+        parent_field,
+        extra_people_by_role=None,
+        cast_limit=5,
+        sync_profile_paths=False,
+        sync_cast_details=False,
+):
+    cast = tmdb_credits.get('cast') or []
+    if cast_limit is not None:
+        cast = cast[:cast_limit]
     crew = tmdb_credits.get('crew') or []
-    directors = [person for person in crew if person.get('job') == 'Director']
+    directors = [person for person in crew if is_director_credit(person)]
     links_to_keep = []
 
     links_to_keep.extend(sync_people_role_links(
@@ -127,25 +138,45 @@ def sync_people_links(parent_obj, tmdb_credits, relation_model, parent_field, ex
         cast,
         relation_model,
         parent_field,
-        relation_model.ROLE_ACTOR
+        relation_model.ROLE_ACTOR,
+        sync_profile_path=sync_profile_paths,
+        sync_cast_details=sync_cast_details,
+        use_tmdb_order=sync_cast_details,
     ))
     links_to_keep.extend(sync_people_role_links(
         parent_obj,
         directors,
         relation_model,
         parent_field,
-        relation_model.ROLE_DIRECTOR
+        relation_model.ROLE_DIRECTOR,
+        sync_profile_path=sync_profile_paths,
     ))
 
     for role, people in (extra_people_by_role or {}).items():
         links_to_keep.extend(
-            sync_people_role_links(parent_obj, people, relation_model, parent_field, role)
+            sync_people_role_links(
+                parent_obj,
+                people,
+                relation_model,
+                parent_field,
+                role,
+                sync_profile_path=sync_profile_paths,
+            )
         )
 
     relation_model.objects.filter(**{parent_field: parent_obj}).exclude(id__in=links_to_keep).delete()
 
 
-def sync_people_role_links(parent_obj, people, relation_model, parent_field, role):
+def sync_people_role_links(
+        parent_obj,
+        people,
+        relation_model,
+        parent_field,
+        role,
+        sync_profile_path=False,
+        sync_cast_details=False,
+        use_tmdb_order=False,
+):
     links_to_keep = []
 
     for index, person_data in enumerate(people):
@@ -154,10 +185,30 @@ def sync_people_role_links(parent_obj, people, relation_model, parent_field, rol
         if person_id is None or not person_name:
             continue
 
-        person_obj, _ = Person.objects.get_or_create(tmdb_id=person_id, defaults={'name': person_name})
+        profile_path = get_person_profile_path(person_data) if sync_profile_path else ''
+        person_obj, _ = Person.objects.get_or_create(
+            tmdb_id=person_id,
+            defaults={'name': person_name, 'tmdb_profile_path': profile_path},
+        )
+        person_fields_to_update = []
         if person_obj.name != person_name:
             person_obj.name = person_name
-            person_obj.save(update_fields=('name',))
+            person_fields_to_update.append('name')
+        if profile_path and person_obj.tmdb_profile_path != profile_path:
+            person_obj.tmdb_profile_path = profile_path
+            person_fields_to_update.append('tmdb_profile_path')
+        if person_fields_to_update:
+            person_obj.save(update_fields=person_fields_to_update)
+
+        tmdb_order = person_data.get('order')
+        sort_order = tmdb_order if use_tmdb_order and isinstance(tmdb_order, int) and tmdb_order >= 0 else index
+        relation_defaults = {'sort_order': sort_order}
+        if sync_cast_details:
+            character, episode_count = get_aggregate_cast_details(person_data)
+            relation_defaults.update({
+                'character': character,
+                'episode_count': episode_count,
+            })
 
         relation_obj, _ = relation_model.objects.get_or_create(
             **{
@@ -165,14 +216,58 @@ def sync_people_role_links(parent_obj, people, relation_model, parent_field, rol
                 'person': person_obj,
                 'role': role
             },
-            defaults={'sort_order': index}
+            defaults=relation_defaults,
         )
-        if relation_obj.sort_order != index:
-            relation_obj.sort_order = index
-            relation_obj.save(update_fields=('sort_order',))
+        relation_fields_to_update = []
+        if relation_obj.sort_order != sort_order:
+            relation_obj.sort_order = sort_order
+            relation_fields_to_update.append('sort_order')
+        if sync_cast_details:
+            if relation_obj.character != character:
+                relation_obj.character = character
+                relation_fields_to_update.append('character')
+            if relation_obj.episode_count != episode_count:
+                relation_obj.episode_count = episode_count
+                relation_fields_to_update.append('episode_count')
+        if relation_fields_to_update:
+            relation_obj.save(update_fields=relation_fields_to_update)
         links_to_keep.append(relation_obj.id)
 
     return links_to_keep
+
+
+def get_person_profile_path(person_data):
+    if not person_data.get('profile_path'):
+        return ''
+    return TMDB_POSTER_PATH_PREFIX + person_data['profile_path']
+
+
+def get_aggregate_cast_details(person_data):
+    roles = person_data.get('roles') or []
+    characters = []
+    for role in roles:
+        character = role.get('character')
+        if character and character not in characters:
+            characters.append(character)
+
+    if not characters and person_data.get('character'):
+        characters.append(person_data['character'])
+
+    episode_count = person_data.get('total_episode_count')
+    if not isinstance(episode_count, int) or episode_count < 0:
+        episode_count = sum(
+            role.get('episode_count')
+            for role in roles
+            if isinstance(role.get('episode_count'), int) and role.get('episode_count') >= 0
+        )
+
+    return ', '.join(characters)[:500], episode_count
+
+
+def is_director_credit(person_data):
+    if person_data.get('job') == 'Director':
+        return True
+    return any(job.get('job') == 'Director' for job in (person_data.get('jobs') or []))
 
 
 def sync_show_people(show, tmdb_show_credits, tmdb_show):
@@ -182,7 +277,10 @@ def sync_show_people(show, tmdb_show_credits, tmdb_show):
         tmdb_show_credits,
         ShowPerson,
         'show',
-        {ShowPerson.ROLE_CREATOR: creators}
+        {ShowPerson.ROLE_CREATOR: creators},
+        cast_limit=None,
+        sync_profile_paths=True,
+        sync_cast_details=True,
     )
 
 
@@ -220,10 +318,13 @@ def get_tmdb_show_videos(tmdb_id):
 
 
 def get_tmdb_show_credits(tmdb_id):
-    key = f'show_{tmdb_id}_credits'
+    key = f'show_{tmdb_id}_aggregate_credits'
     tmdb_show_credits = cache.get(key, None)
     if tmdb_show_credits is None:
-        tmdb_show_credits = tmdb.TV(tmdb_id).credits(language=LANGUAGE)
+        tmdb_show_credits = tmdb.TV(tmdb_id)._GET(
+            f'/tv/{tmdb_id}/aggregate_credits',
+            {'language': LANGUAGE},
+        )
         cache.set(key, tmdb_show_credits, CACHE_TIMEOUT)
     return tmdb_show_credits
 
@@ -411,6 +512,7 @@ def clear_tmdb_show_cache(tmdb_id):
         f'show_{tmdb_id}_videos_{TMDB_VIDEO_LANGUAGES.replace(",", "_")}',
         f'show_{tmdb_id}_trailers_{TMDB_VIDEO_LANGUAGES.replace(",", "_")}',
         f'show_{tmdb_id}_credits',
+        f'show_{tmdb_id}_aggregate_credits',
     ))
 
 

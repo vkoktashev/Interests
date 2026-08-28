@@ -233,6 +233,8 @@ class ShowPerson(models.Model):
     show = models.ForeignKey(Show, on_delete=models.CASCADE)
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    character = models.CharField(max_length=500, blank=True)
+    episode_count = models.PositiveIntegerField(default=0)
     sort_order = models.PositiveIntegerField(default=0)
 
     class Meta:

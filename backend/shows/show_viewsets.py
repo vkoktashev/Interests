@@ -622,9 +622,9 @@ def get_show_info(show_id, request):
 
 def parse_show(show, request):
     genres = [show_genre.genre.tmdb_name for show_genre in show.showgenre_set.select_related('genre').all()]
-    cast_people = get_show_people(show, ShowPerson.ROLE_ACTOR)
-    directors_people = get_show_people(show, ShowPerson.ROLE_DIRECTOR)
-    creators_people = get_show_people(show, ShowPerson.ROLE_CREATOR)
+    cast_people = get_show_people(show, ShowPerson.ROLE_ACTOR, request)
+    directors_people = get_show_people(show, ShowPerson.ROLE_DIRECTOR, request)
+    creators_people = get_show_people(show, ShowPerson.ROLE_CREATOR, request)
     cast_names = [item['name'] for item in cast_people]
     director_names = [item['name'] for item in directors_people]
     creator_names = [item['name'] for item in creators_people]
@@ -669,7 +669,7 @@ def parse_show(show, request):
     }
 
 
-def get_show_people(show, role):
+def get_show_people(show, role, request):
     show_people = (
         show.showperson_set
         .select_related('person')
@@ -677,11 +677,22 @@ def get_show_people(show, role):
         .order_by('sort_order')
     )
 
-    return [{
-        'id': show_person.person.id,
-        'tmdb_id': show_person.person.tmdb_id,
-        'name': show_person.person.name,
-    } for show_person in show_people]
+    result = []
+    for show_person in show_people:
+        person_data = {
+            'id': show_person.person.id,
+            'tmdb_id': show_person.person.tmdb_id,
+            'name': show_person.person.name,
+            'profile_path': get_proxy_url(request, show_person.person.tmdb_profile_path),
+        }
+        if role == ShowPerson.ROLE_ACTOR:
+            person_data.update({
+                'character': show_person.character,
+                'episode_count': show_person.episode_count,
+            })
+        result.append(person_data)
+
+    return result
 
 
 def translate_tmdb_status(tmdb_status):

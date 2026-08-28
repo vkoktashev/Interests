@@ -3,20 +3,20 @@ import Modal from '@steroidsjs/core/ui/modal/Modal';
 import {IModalProps} from '@steroidsjs/core/ui/modal/Modal/Modal';
 import {useBem} from '@steroidsjs/core/hooks';
 
-import MoviePersonCard, {IMoviePerson} from '../../routes/MoviePage/views/MoviePersonCard';
+import PersonCard, {IPersonCardItem} from '../../shared/PersonCard';
 
-import './movie-cast-modal.scss';
+import './cast-modal.scss';
 
-interface IMovieCastModalProps extends IModalProps {
-	people: IMoviePerson[];
-	movieName?: string;
+interface ICastModalProps extends IModalProps {
+	people: IPersonCardItem[];
+	mediaName?: string;
 	pageWidth?: number;
 }
 
 const MODAL_HORIZONTAL_INSETS = 50;
 
-export default function MovieCastModal(props: IMovieCastModalProps) {
-	const bem = useBem('movie-cast-modal');
+export default function CastModal(props: ICastModalProps) {
+	const bem = useBem('cast-modal');
 	const people = props.people || [];
 	const contentWidth = props.pageWidth
 		? Math.max(0, props.pageWidth - MODAL_HORIZONTAL_INSETS)
@@ -49,8 +49,8 @@ export default function MovieCastModal(props: IMovieCastModalProps) {
 			>
 				<div className={bem.element('summary')}>
 					<div className={bem.element('summary-info')}>
-						{props.movieName && (
-							<div className={bem.element('movie-name')}>{props.movieName}</div>
+						{props.mediaName && (
+							<div className={bem.element('media-name')}>{props.mediaName}</div>
 						)}
 						<div className={bem.element('count')}>
 							{search.trim()
@@ -72,7 +72,7 @@ export default function MovieCastModal(props: IMovieCastModalProps) {
 				{filteredPeople.length > 0 ? (
 					<div className={bem.element('grid')}>
 						{filteredPeople.map(person => (
-							<MoviePersonCard
+							<PersonCard
 								key={person.id}
 								person={person}
 								className={bem.element('card')}

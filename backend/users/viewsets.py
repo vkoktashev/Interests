@@ -1,4 +1,5 @@
 import collections
+import math
 import random
 from datetime import datetime, timedelta
 from itertools import chain
@@ -814,6 +815,18 @@ def calculate_shows_stats(user: User) -> dict:
 def calculate_top_actor_points(user: User, limit: Optional[int] = None) -> list:
     actors_points = {}
 
+    watched_episode_counts = {
+        item['episode__tmdb_season__tmdb_show_id']: item['count']
+        for item in UserEpisode.objects
+        .filter(
+            user=user,
+            score__gt=-1,
+            episode__tmdb_season__tmdb_season_number__gt=0,
+        )
+        .values('episode__tmdb_season__tmdb_show_id')
+        .annotate(count=Count('id'))
+    }
+
     movie_actor_weight = Case(
         When(sort_order__lte=2, then=Value(1.0)),
         When(sort_order__lte=5, then=Value(0.9)),
@@ -843,13 +856,24 @@ def calculate_top_actor_points(user: User, limit: Optional[int] = None) -> list:
         .filter(show__usershow__user=user,
                 show__usershow__score__gt=0,
                 role=ShowPerson.ROLE_ACTOR,
+                sort_order__lt=50,
                 show__usershow__status__in=[
                     UserShow.STATUS_WATCHING,
                     UserShow.STATUS_WATCHED,
                     UserShow.STATUS_STOPPED,
                 ]) \
-        .values('person__id', 'person__tmdb_id', 'person__name') \
-        .annotate(points=Sum('show__usershow__score'))
+        .exclude(character__icontains='uncredited') \
+        .values(
+            'person__id',
+            'person__tmdb_id',
+            'person__name',
+            'show_id',
+            'show__usershow__score',
+            'show__usershow__status',
+            'show__tmdb_number_of_episodes',
+            'episode_count',
+            'sort_order',
+        )
 
     for item in movies_actors:
         person_tmdb_id = item.get('person__tmdb_id')
@@ -865,9 +889,50 @@ def calculate_top_actor_points(user: User, limit: Optional[int] = None) -> list:
         person_tmdb_id = item.get('person__tmdb_id')
         person_id = item.get('person__id')
         name = item.get('person__name')
-        points = int(item.get('points') or 0)
         if person_tmdb_id is None or person_id is None or not name:
             continue
+
+        score = float(item.get('show__usershow__score') or 0)
+        show_id = item.get('show_id')
+        show_status = item.get('show__usershow__status')
+        episode_count = int(item.get('episode_count') or 0)
+        total_episode_count = int(item.get('show__tmdb_number_of_episodes') or 0)
+        sort_order = int(item.get('sort_order') or 0)
+
+        if sort_order <= 4:
+            cast_weight = 1.0
+        elif sort_order <= 9:
+            cast_weight = 0.9
+        elif sort_order <= 19:
+            cast_weight = 0.75
+        elif sort_order <= 29:
+            cast_weight = 0.6
+        elif sort_order <= 39:
+            cast_weight = 0.4
+        else:
+            cast_weight = 0.25
+
+        coverage = 1.0
+        if episode_count > 0 and total_episode_count > 0:
+            coverage = math.sqrt(min(1.0, episode_count / total_episode_count))
+
+        if show_status == UserShow.STATUS_WATCHED:
+            watch_progress = 1.0
+        elif total_episode_count > 0:
+            watched_episode_count = watched_episode_counts.get(show_id, 0)
+            watch_progress = min(1.0, watched_episode_count / total_episode_count)
+        else:
+            watch_progress = 1.0
+
+        watched_actor_episode_count = episode_count * watch_progress
+        volume_bonus = 1.0
+        if watched_actor_episode_count > 3:
+            volume_bonus += 4 * (
+                math.sqrt(watched_actor_episode_count) - math.sqrt(3)
+            ) / (math.sqrt(200) - math.sqrt(3))
+            volume_bonus = min(5.0, volume_bonus)
+
+        points = score * cast_weight * coverage * math.sqrt(watch_progress) * volume_bonus
 
         current = actors_points.get(person_tmdb_id)
         if current is None:

@@ -3,6 +3,7 @@ from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.template.response import TemplateResponse
 from django.utils import timezone
 
+from .celery import app as celery_app
 from .models import ScheduledTask
 from .task_registry import enqueue_task, get_task_definition
 
@@ -13,11 +14,22 @@ class ScheduledTaskAdmin(admin.ModelAdmin):
         'task_name',
         'task_description',
         'task_schedule',
+        'task_status',
+        'task_progress',
+        'task_result_summary',
         'last_manual_run_at',
         'last_manual_run_by',
         'last_task_id',
     )
-    readonly_fields = ('code', 'last_manual_run_at', 'last_manual_run_by', 'last_task_id')
+    readonly_fields = (
+        'code',
+        'task_status',
+        'task_progress',
+        'task_result_summary',
+        'last_manual_run_at',
+        'last_manual_run_by',
+        'last_task_id',
+    )
     actions = ('run_selected_tasks',)
     list_select_related = ('last_manual_run_by',)
     ordering = ('code',)
@@ -33,6 +45,95 @@ class ScheduledTaskAdmin(admin.ModelAdmin):
     @admin.display(description='Расписание')
     def task_schedule(self, obj):
         return get_task_definition(obj.code).get('schedule', '')
+
+    @admin.display(description='Статус последнего запуска')
+    def task_status(self, obj):
+        if not obj.last_task_id:
+            return 'Не запускалась'
+
+        meta = self.get_last_task_meta(obj)
+        status = meta.get('status')
+        result = meta.get('result')
+
+        if status == 'SUCCESS' and isinstance(result, dict) and result.get('errors'):
+            return 'Завершено с ошибками'
+
+        return {
+            'PENDING': 'В очереди / статус недоступен',
+            'RECEIVED': 'Получена worker-ом',
+            'STARTED': 'Запущена',
+            'PROGRESS': 'Выполняется',
+            'SUCCESS': 'Завершена',
+            'FAILURE': 'Ошибка',
+            'RETRY': 'Повторная попытка',
+            'REVOKED': 'Отменена',
+            'BACKEND_UNAVAILABLE': 'Статус недоступен',
+        }.get(status, status or 'Неизвестно')
+
+    @admin.display(description='Прогресс')
+    def task_progress(self, obj):
+        if not obj.last_task_id:
+            return '—'
+
+        meta = self.get_last_task_meta(obj)
+        result = meta.get('result')
+        if not isinstance(result, dict):
+            return '—'
+
+        current = result.get('current')
+        total = result.get('total')
+        if not isinstance(current, int) or not isinstance(total, int):
+            return '—'
+
+        percent = round(current * 100 / total) if total else 100
+        progress = f'{current} / {total} ({percent}%)'
+        current_show = result.get('current_show')
+        if meta.get('status') == 'PROGRESS' and current_show:
+            progress = f'{progress} — {current_show}'
+        return progress
+
+    @admin.display(description='Результат')
+    def task_result_summary(self, obj):
+        if not obj.last_task_id:
+            return '—'
+
+        meta = self.get_last_task_meta(obj)
+        result = meta.get('result')
+        status = meta.get('status')
+        if status == 'BACKEND_UNAVAILABLE':
+            return str(result)
+        if status == 'FAILURE':
+            return f'Ошибка: {result}'
+        if not isinstance(result, dict):
+            return '—'
+
+        updated = result.get('updated')
+        errors = result.get('errors')
+        parts = []
+        if isinstance(updated, int):
+            parts.append(f'обновлено: {updated}')
+        if isinstance(errors, int):
+            parts.append(f'ошибок: {errors}')
+
+        duration = result.get('duration_seconds')
+        if isinstance(duration, (int, float)):
+            parts.append(f'время: {duration:.1f} с')
+        return ', '.join(parts) or '—'
+
+    def get_last_task_meta(self, obj):
+        cached_meta = getattr(obj, '_last_task_meta', None)
+        if cached_meta is not None:
+            return cached_meta
+
+        try:
+            meta = celery_app.backend.get_task_meta(obj.last_task_id)
+        except Exception as error:
+            meta = {
+                'status': 'BACKEND_UNAVAILABLE',
+                'result': f'Не удалось получить состояние Celery: {error}',
+            }
+        obj._last_task_meta = meta
+        return meta
 
     def has_add_permission(self, request):
         return False

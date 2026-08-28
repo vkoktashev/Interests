@@ -304,7 +304,7 @@
     grid-template-columns: repeat(var(--people-count), minmax(0, 1fr));
     gap: 8px;
 
-    .movie-person-card {
+    .person-card {
       width: 100%;
     }
   }
@@ -542,7 +542,7 @@
     &__people-group-list {
       display: flex;
 
-      .movie-person-card {
+      .person-card {
         width: 185px;
       }
     }

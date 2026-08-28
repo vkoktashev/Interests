@@ -1,6 +1,6 @@
 @import "style/colors";
 
-.movie-person-card {
+.person-card {
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -20,7 +20,7 @@
     box-shadow: 0 14px 28px rgba(0, 0, 0, 0.24);
     color: $newText3;
 
-    .movie-person-card__avatar {
+    .person-card__avatar {
       transform: scale(1.035);
     }
   }
@@ -82,26 +82,26 @@
     display: grid;
     grid-template-columns: 44% minmax(0, 1fr);
 
-    .movie-person-card__portrait {
+    .person-card__portrait {
       width: 100%;
       height: auto;
       min-height: 0;
       aspect-ratio: 2 / 3;
     }
 
-    .movie-person-card__info {
+    .person-card__info {
       align-content: center;
       padding: 10px 11px;
     }
 
-    .movie-person-card__name {
+    .person-card__name {
       font-size: 0.9rem;
     }
 
-    .movie-person-card__subtitle {
+    .person-card__subtitle {
       font-size: 0.78rem;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }

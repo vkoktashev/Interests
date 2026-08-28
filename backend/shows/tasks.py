@@ -13,10 +13,38 @@ from shows.functions import clear_tmdb_episode_cache, clear_tmdb_season_cache, c
     get_tmdb_season_credits, sync_season_people, get_tmdb_episode, get_episode_new_fields, get_tmdb_episode_credits, \
     sync_episode_people
 from shows.models import Show, UserShow, Season, Episode
+from shows.services.cast_sync import run_show_cast_sync
 from utils.constants import UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
 from utils.functions import update_fields_if_needed
 
 logger = logging.getLogger(__name__)
+
+
+@app.task(bind=True, track_started=True)
+def sync_show_cast(self):
+    logger.info('sync_show_cast: start')
+
+    def report_progress(progress):
+        try:
+            self.update_state(state='PROGRESS', meta=progress)
+        except Exception:
+            logger.exception('sync_show_cast: failed to report progress')
+
+    def log_output(level, message):
+        log_method = logger.error if level == 'error' else logger.info
+        log_method('sync_show_cast: %s', message)
+
+    try:
+        summary = run_show_cast_sync(
+            progress_callback=report_progress,
+            output_callback=log_output,
+        )
+    except Exception:
+        logger.exception('sync_show_cast: failed')
+        raise
+
+    logger.info('sync_show_cast: finish summary=%s', summary)
+    return summary
 
 
 @app.on_after_finalize.connect
