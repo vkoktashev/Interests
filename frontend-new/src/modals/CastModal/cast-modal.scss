@@ -1,6 +1,6 @@
 @import "style/colors";
 
-.movie-cast-modal {
+.cast-modal {
   background: rgba(#121317, 0.99);
   color: $newText3;
   border: 1px solid rgba(255, 255, 255, 0.09);
@@ -28,7 +28,7 @@
     gap: 10px;
   }
 
-  &__movie-name {
+  &__media-name {
     min-width: 0;
     color: $newText3;
     font-size: 1rem;
@@ -139,7 +139,7 @@
 }
 
 @media (max-width: 760px) {
-  .ModalView_overlay:has(.movie-cast-modal) {
+  .ModalView_overlay:has(.cast-modal) {
     padding: 12px;
   }
 }

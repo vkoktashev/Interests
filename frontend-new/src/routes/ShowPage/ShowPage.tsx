@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {SiThemoviedatabase} from 'react-icons/si';
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
@@ -13,8 +13,9 @@ import SeasonsBlock from './views/SeasonsBlock';
 import ScoreBlock from '../../shared/ScoreBlock';
 import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
 import LazyTrailersBlock from '../../shared/LazyTrailersBlock';
-import PersonLink from '../../shared/PersonLink';
 import AddToCollectionButton from '../../shared/AddToCollectionButton';
+import PersonCard, {IPersonCardItem} from '../../shared/PersonCard';
+import CastModal from '../../modals/CastModal';
 
 import "./show-page.scss";
 import LoginForm from '../../modals/LoginForm';
@@ -26,6 +27,7 @@ import {Button, TextField} from '@steroidsjs/core/ui/form';
  */
 function ShowPage(props) {
 	const bem = useBem('show-page');
+	const pageRef = useRef<HTMLDivElement>(null);
     const dispatch = useDispatch();
     const {http} = useComponents();
 	const user = useSelector(getUser);
@@ -102,15 +104,13 @@ function ShowPage(props) {
     const infoRows = useMemo(() => ([
         {label: 'Жанр', value: show?.genres},
         {label: 'Компания', value: show?.production_companies},
-        {label: 'В ролях', content: renderPersonLinks(show?.cast_people)},
-        {label: 'Создатели', content: renderPersonLinks(show?.creators_people)},
         {label: 'Первая серия', value: show?.first_air_date},
         {label: 'Последняя серия', value: show?.last_air_date},
         {label: 'Длительность серии', value: show?.episode_run_time ? `${show.episode_run_time} мин` : ''},
         {label: 'Количество сезонов', value: show?.seasons_count},
         {label: 'Количество серий', value: show?.episodes_count},
         {label: 'Статус', value: show?.status},
-    ]).filter(item => Boolean(item.value || item.content)), [
+    ]).filter(item => Boolean(item.value)), [
         show?.genres,
         show?.production_companies,
         show?.first_air_date,
@@ -119,8 +119,6 @@ function ShowPage(props) {
         show?.seasons_count,
         show?.episodes_count,
         show?.status,
-        show?.cast_people,
-        show?.creators_people,
     ]);
 
     const overviewPlainText = useMemo(
@@ -128,13 +126,18 @@ function ShowPage(props) {
         [show?.overview]
     );
     const canCollapseOverview = overviewPlainText.length > 420;
+    const castPeople = (show?.cast_people || []) as IPersonCardItem[];
+    const creatorsPeople = (show?.creators_people || []) as IPersonCardItem[];
+    const peopleLimit = 6;
+    const visibleCreators = creatorsPeople;
+    const visibleCast = castPeople.slice(0, peopleLimit);
 
     if (!show) {
         return <Loader />;
     }
 
 	return (
-		<div className={bem.block()}>
+		<div ref={pageRef} className={bem.block()}>
 			<div
                 className={bem.element('background')}
                 style={{ backgroundImage: `url(${show?.backdrop_path})` }}
@@ -184,7 +187,7 @@ function ShowPage(props) {
                                     {infoRows.map(item => (
                                         <div key={String(item.label)} className={bem.element('info-row')}>
                                             <span className={bem.element('info-row-label')}>{item.label}</span>
-                                            <span className={bem.element('info-row-value')}>{item.content || item.value}</span>
+                                            <span className={bem.element('info-row-value')}>{item.value}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -267,7 +270,64 @@ function ShowPage(props) {
 						</div>
 					</div>
 
-                    <LazyTrailersBlock
+                    {(castPeople.length > 0 || creatorsPeople.length > 0) && (
+                        <section className={bem.element('people')}>
+                            <div className={bem.element('people-head')}>
+                                <div className={bem.element('people-title')}>Команда сериала</div>
+                                {castPeople.length > visibleCast.length && (
+                                    <button
+                                        type='button'
+                                        className={bem.element('people-all')}
+                                        onClick={() => dispatch(openModal(CastModal, {
+                                            people: castPeople,
+                                            mediaName: show?.name,
+                                            pageWidth: pageRef.current?.getBoundingClientRect().width,
+                                        }))}
+                                    >
+                                        Все актёры
+                                        <span className={bem.element('people-count')}>{castPeople.length}</span>
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className={bem.element('people-line')}>
+                                {visibleCreators.length > 0 && (
+                                    <div
+                                        className={bem.element('people-group', {creators: true})}
+                                        style={{'--people-count': visibleCreators.length} as React.CSSProperties}
+                                    >
+                                        <div className={bem.element('people-group-title')}>Создатели</div>
+                                        <div className={bem.element('people-group-list')}>
+                                            {visibleCreators.map(person => (
+                                                <PersonCard
+                                                    key={person.id}
+                                                    person={person}
+                                                    subtitle='Создатель'
+                                                    compact
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {visibleCast.length > 0 && (
+                                    <div
+                                        className={bem.element('people-group', {cast: true})}
+                                        style={{'--people-count': visibleCast.length} as React.CSSProperties}
+                                    >
+                                        <div className={bem.element('people-group-title')}>Актёры</div>
+                                        <div className={bem.element('people-group-list')}>
+                                            {visibleCast.map(person => (
+                                                <PersonCard key={person.id} person={person} compact />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+                    )}
+
+					<LazyTrailersBlock
                         className={bem.element('media-card')}
                         endpoint={`/shows/show/${showId}/trailers/`}
                         isMobileViewport={isMobileViewport}
@@ -376,23 +436,6 @@ function ShowPage(props) {
 				</div>
 			</LoadingOverlay>
 		</div>
-	);
-}
-
-function renderPersonLinks(people?: Array<{id: number; name: string}>) {
-	if (!people?.length) {
-		return '';
-	}
-
-	return (
-		<span>
-			{people.map((person, index) => (
-				<React.Fragment key={person.id}>
-					{index > 0 && ', '}
-					<PersonLink id={person.id} name={person.name} />
-				</React.Fragment>
-			))}
-		</span>
 	);
 }
 

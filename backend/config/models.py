@@ -6,12 +6,14 @@ class ScheduledTask(models.Model):
     UPDATE_UPCOMING_GAMES = 'update_upcoming_games'
     UPDATE_UPCOMING_MOVIES = 'update_upcoming_movies'
     UPDATE_SHOWS = 'update_shows'
+    SYNC_SHOW_CAST = 'sync_show_cast'
     SEND_RELEASE_EMAILS = 'send_release_emails'
 
     TASK_CHOICES = (
         (UPDATE_UPCOMING_GAMES, 'Обновление будущих игр'),
         (UPDATE_UPCOMING_MOVIES, 'Обновление будущих фильмов'),
         (UPDATE_SHOWS, 'Обновление сериалов'),
+        (SYNC_SHOW_CAST, 'Синхронизация актеров сериалов'),
         (SEND_RELEASE_EMAILS, 'Рассылка уведомлений о релизах'),
     )
 

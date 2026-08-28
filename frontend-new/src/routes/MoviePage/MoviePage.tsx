@@ -8,8 +8,8 @@ import ScoreBlock from '../../shared/ScoreBlock';
 import Rating from '../../shared/Rating';
 import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
 import LazyTrailersBlock from '../../shared/LazyTrailersBlock';
-import MoviePersonCard, {IMoviePerson} from './views/MoviePersonCard';
-import MovieCastModal from '../../modals/MovieCastModal';
+import PersonCard, {IPersonCardItem} from '../../shared/PersonCard';
+import CastModal from '../../modals/CastModal';
 import AddToCollectionButton from '../../shared/AddToCollectionButton';
 
 import "./movie-page.scss";
@@ -130,8 +130,8 @@ export function MoviePage() {
 		[movie?.overview]
 	);
 	const canCollapseOverview = overviewPlainText.length > 420;
-	const castPeople = (movie?.cast_people || []) as IMoviePerson[];
-	const directorsPeople = (movie?.directors_people || []) as IMoviePerson[];
+	const castPeople = (movie?.cast_people || []) as IPersonCardItem[];
+	const directorsPeople = (movie?.directors_people || []) as IPersonCardItem[];
 	const peopleLimit = 6;
 	const visibleDirectors = directorsPeople.slice(0, peopleLimit);
 	const visibleCast = castPeople.slice(0, Math.max(0, peopleLimit - visibleDirectors.length));
@@ -258,9 +258,9 @@ export function MoviePage() {
 									<button
 										type='button'
 										className={bem.element('people-all')}
-										onClick={() => dispatch(openModal(MovieCastModal, {
-											people: castPeople,
-											movieName: movie?.name,
+									onClick={() => dispatch(openModal(CastModal, {
+										people: castPeople,
+										mediaName: movie?.name,
 											pageWidth: pageRef.current?.getBoundingClientRect().width,
 										}))}
 									>
@@ -279,7 +279,7 @@ export function MoviePage() {
 										<div className={bem.element('people-group-title')}>Режиссёры</div>
 										<div className={bem.element('people-group-list')}>
 											{visibleDirectors.map(person => (
-												<MoviePersonCard
+												<PersonCard
 													key={person.id}
 													person={person}
 													subtitle='Режиссёр'
@@ -298,7 +298,7 @@ export function MoviePage() {
 										<div className={bem.element('people-group-title')}>Актёры</div>
 										<div className={bem.element('people-group-list')}>
 											{visibleCast.map(person => (
-												<MoviePersonCard key={person.id} person={person} compact />
+												<PersonCard key={person.id} person={person} compact />
 											))}
 										</div>
 									</div>

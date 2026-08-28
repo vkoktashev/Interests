@@ -22,6 +22,12 @@ TASK_DEFINITIONS = {
         'schedule': f'Ежедневно в {UPDATE_DATES_HOUR:02d}:{UPDATE_DATES_MINUTE:02d} UTC',
         'task_path': 'shows.tasks.update_shows',
     },
+    'sync_show_cast': {
+        'name': 'Синхронизация актеров сериалов',
+        'description': 'Загружает из TMDB полный актерский состав и создателей для всех сериалов.',
+        'schedule': 'Только вручную',
+        'task_path': 'shows.tasks.sync_show_cast',
+    },
     'send_release_emails': {
         'name': 'Рассылка уведомлений о релизах',
         'description': 'Отправляет подписчикам письма о сегодняшних релизах. Повторный запуск повторит рассылку.',
