@@ -321,9 +321,8 @@ def get_tmdb_show_credits(tmdb_id):
     key = f'show_{tmdb_id}_aggregate_credits'
     tmdb_show_credits = cache.get(key, None)
     if tmdb_show_credits is None:
-        tmdb_show_credits = tmdb.TV(tmdb_id)._GET(
-            f'/tv/{tmdb_id}/aggregate_credits',
-            {'language': LANGUAGE},
+        tmdb_show_credits = tmdb.TV(tmdb_id).aggregate_credits(
+            language=LANGUAGE,
         )
         cache.set(key, tmdb_show_credits, CACHE_TIMEOUT)
     return tmdb_show_credits
