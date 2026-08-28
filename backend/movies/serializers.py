@@ -91,6 +91,7 @@ class MovieLogSerializer(serializers.ModelSerializer):
 
 
 class MovieSerializer(serializers.ModelSerializer):
+    object_id = serializers.ReadOnlyField(source='pk')
     tmdb_backdrop_path = serializers.SerializerMethodField('get_backdrop_path')
     tmdb_poster_path = serializers.SerializerMethodField('get_poster_path')
 
@@ -109,6 +110,7 @@ class MovieSerializer(serializers.ModelSerializer):
     class Meta:
         model = Movie
         fields = (
+            'object_id',
             'imdb_id',
             'tmdb_id',
             'tmdb_original_name',

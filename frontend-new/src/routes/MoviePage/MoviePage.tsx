@@ -10,6 +10,7 @@ import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/Tmdb
 import LazyTrailersBlock from '../../shared/LazyTrailersBlock';
 import MoviePersonCard, {IMoviePerson} from './views/MoviePersonCard';
 import MovieCastModal from '../../modals/MovieCastModal';
+import AddToCollectionButton from '../../shared/AddToCollectionButton';
 
 import "./movie-page.scss";
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
@@ -159,7 +160,14 @@ export function MoviePage() {
 										<div className={bem.element('info-subheader')}>{movie?.original_name}</div>
 									)}
 								</div>
-								<ScoreBlock score={movie?.score} text='TMDB score' className={bem.element('info-score')} />
+								<div className={bem.element('title-actions')}>
+									<AddToCollectionButton
+										mediaType='movie'
+										objectId={movie.object_id}
+										mediaName={movie.name}
+									/>
+									<ScoreBlock score={movie?.score} text='TMDB score' className={bem.element('info-score')} />
+								</div>
 							</div>
 
 							<div className={bem.element('info-panel')}>

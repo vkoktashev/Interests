@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'movies',
     'shows',
     'videos',
+    'content_collections',
 ]
 
 try:

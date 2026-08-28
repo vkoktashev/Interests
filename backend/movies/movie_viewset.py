@@ -242,6 +242,7 @@ def parse_movie(movie, request):
     director_names = [item['name'] for item in directors_people]
     new_movie = {
         'id': movie.tmdb_id,
+        'object_id': movie.pk,
         'imdb_id': movie.imdb_id,
         'name': resolve_display_name(
             movie.tmdb_name, movie.tmdb_original_name, movie.tmdb_name_en, movie.tmdb_original_language,

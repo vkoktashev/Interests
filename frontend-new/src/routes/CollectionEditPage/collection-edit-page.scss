@@ -1,0 +1,261 @@
+@import "style/colors";
+@import "style/project-fonts";
+@import "style/mixins";
+@import "style/breakpoints";
+
+.collection-edit-page {
+    @include default-page;
+
+    &__body {
+        width: 100%;
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 1rem 0;
+    }
+
+    &__header {
+        margin-bottom: 1.5rem;
+    }
+
+    &__eyebrow {
+        @include subtitle2;
+        margin-bottom: 0.4rem;
+        color: $newAccent2;
+    }
+
+    &__title {
+        @include headline5;
+        margin: 0;
+        color: $newText3;
+    }
+
+    &__form {
+        padding: 1.25rem;
+        border: 1px solid rgba($newBackground3, 0.7);
+        border-radius: 1rem;
+        background-color: $newBackground2;
+    }
+
+    &__fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+
+    &__field {
+        width: 100%;
+    }
+
+    &__wide-field {
+        min-width: 0;
+        grid-column: 1 / -1;
+    }
+
+    &__order-section {
+        margin-top: 1.75rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid rgba($newBackground3, 0.55);
+    }
+
+    &__section-title {
+        @include headline6;
+        margin: 0 0 0.9rem;
+        color: $newText3;
+    }
+
+    &__content-search {
+        margin-bottom: 1.25rem;
+    }
+
+    &__items {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+
+    &__groups {
+        display: flex;
+        flex-direction: column;
+        gap: 1.4rem;
+    }
+
+    &__group-title {
+        @include subtitle1;
+        margin: 0 0 0.6rem;
+        color: $newText3;
+    }
+
+    &__item {
+        display: grid;
+        grid-template-columns: 42px 46px minmax(0, 1fr) 42px;
+        align-items: center;
+        gap: 0.7rem;
+        min-height: 64px;
+        padding: 0.5rem 0.7rem 0.5rem 0.35rem;
+        border: 1px solid rgba($newBackground3, 0.65);
+        border-radius: 0.7rem;
+        background-color: $newBackground1;
+
+        &_dragging {
+            border-color: rgba($newAccent2, 0.75);
+            box-shadow: 0 8px 24px rgba($newBackground1, 0.4);
+        }
+    }
+
+    &__drag-handle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        border: 0;
+        border-radius: 0.55rem;
+        background: transparent;
+        color: $newText2;
+        cursor: grab;
+        touch-action: none;
+
+        &:hover,
+        &:focus-visible {
+            background-color: rgba($newBackground3, 0.5);
+            color: $newText3;
+        }
+
+        &:active {
+            cursor: grabbing;
+        }
+    }
+
+    &__remove-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        border: 0;
+        border-radius: 0.55rem;
+        background: transparent;
+        color: $newText2;
+        cursor: pointer;
+
+        &:hover,
+        &:focus-visible {
+            background-color: rgba($newAccent1, 0.16);
+            color: $newAccent1;
+        }
+
+        &:disabled {
+            cursor: default;
+            opacity: 0.5;
+        }
+    }
+
+    &__item-cover {
+        width: 46px;
+        height: 54px;
+        overflow: hidden;
+        border-radius: 0.45rem;
+        background-color: $newBackground3;
+
+        img,
+        .collection-edit-page__item-placeholder {
+            width: 100%;
+            height: 100%;
+        }
+
+        img {
+            display: block;
+            object-fit: cover;
+        }
+    }
+
+    &__item-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $newText2;
+    }
+
+    &__item-body {
+        min-width: 0;
+    }
+
+    &__item-type {
+        @include caption;
+        color: $newAccent2;
+    }
+
+    &__item-name {
+        @include body1;
+        overflow-wrap: anywhere;
+        color: $newText3;
+    }
+
+    &__empty,
+    &__state {
+        min-height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        border: 1px dashed rgba($newBackground3, 0.75);
+        border-radius: 0.75rem;
+        color: $newText2;
+        text-align: center;
+    }
+
+    &__error {
+        @include body2;
+        margin-top: 1rem;
+        padding: 0.75rem;
+        border: 1px solid rgba($newAccent1, 0.5);
+        border-radius: 0.75rem;
+        background-color: rgba($newAccent3, 0.55);
+        color: $newText3;
+    }
+
+    &__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    &__cancel-button,
+    &__submit-button {
+        min-width: 150px;
+    }
+
+    @media (max-width: $mobile-width) {
+        &__body {
+            padding: 0.5rem 0;
+        }
+
+        &__form {
+            padding: 1rem;
+        }
+
+        &__fields {
+            grid-template-columns: 1fr;
+        }
+
+        &__section-title {
+            margin-bottom: 0.75rem;
+        }
+
+        &__content-search {
+            margin-bottom: 1rem;
+        }
+
+        &__actions {
+            flex-direction: column-reverse;
+        }
+
+        &__cancel-button,
+        &__submit-button {
+            width: 100%;
+        }
+    }
+}

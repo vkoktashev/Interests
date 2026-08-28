@@ -92,6 +92,13 @@
     gap: 4px;
   }
 
+  &__title-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
   &__info-header {
     margin: 0;
     font-size: clamp(1.5rem, 2vw, 2.15rem);

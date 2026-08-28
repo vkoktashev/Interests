@@ -218,6 +218,7 @@ class FollowedUserEpisodeSerializer(UserEpisodeSerializer):
 
 
 class ShowSerializer(serializers.ModelSerializer):
+    object_id = serializers.ReadOnlyField(source='pk')
     tmdb_backdrop_path = serializers.SerializerMethodField('get_backdrop_path')
     tmdb_poster_path = serializers.SerializerMethodField('get_poster_path')
 
@@ -236,6 +237,7 @@ class ShowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Show
         fields = (
+            'object_id',
             'imdb_id',
             'tmdb_id',
             'tmdb_original_name',
