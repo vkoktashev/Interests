@@ -1,4 +1,4 @@
-git+https://github.com/Kononkov1998/tmdbsimple.git@master
+tmdbsimple==2.9.8
 celery>=5.6,<5.7
 Django>=6.0,<6.1
 django-cors-headers>=4.9,<5
