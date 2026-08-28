@@ -14,6 +14,7 @@ import ScoreBlock from '../../shared/ScoreBlock';
 import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
 import LazyTrailersBlock from '../../shared/LazyTrailersBlock';
 import PersonLink from '../../shared/PersonLink';
+import AddToCollectionButton from '../../shared/AddToCollectionButton';
 
 import "./show-page.scss";
 import LoginForm from '../../modals/LoginForm';
@@ -164,11 +165,18 @@ function ShowPage(props) {
 									    </div>
                                     )}
 								</div>
-								<ScoreBlock
-									score={show?.score}
-									text='TMDB score'
-									className={bem.element('info-score')}
-								/>
+								<div className={bem.element('title-actions')}>
+									<AddToCollectionButton
+										mediaType='show'
+										objectId={show.object_id}
+										mediaName={show.name}
+									/>
+									<ScoreBlock
+										score={show?.score}
+										text='TMDB score'
+										className={bem.element('info-score')}
+									/>
+								</div>
 							</div>
 
 							<div className={bem.element('info-panel')}>

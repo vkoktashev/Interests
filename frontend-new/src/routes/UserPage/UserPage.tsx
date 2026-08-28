@@ -11,6 +11,7 @@ import CategoriesTab from '../../shared/CategoriesTab';
 import ShowBlock from './views/ItemsBlock/ShowBlock';
 import StatisticsBlock from './views/StatisticsBlock';
 import PeopleBlock from './views/PeopleBlock';
+import CollectionsBlock from './views/CollectionsBlock';
 
 import "./user-page.scss";
 import {getRouteParams} from "@steroidsjs/core/reducers/router";
@@ -89,7 +90,7 @@ function UserPage() {
 
 					<CategoriesTab
 						className={bem.element('tabs')}
-						categories={["Лента", "Игры", "Фильмы", "Сериалы", "Люди", "Статистика", "Друзья"]}
+						categories={["Лента", "Игры", "Фильмы", "Сериалы", "Подборки", "Люди", "Статистика", "Друзья"]}
 						activeCategory={activeCategory}
 						onChangeCategory={setActiveCategory}
 					>
@@ -118,6 +119,13 @@ function UserPage() {
 							<div>
 								<ShowBlock shows={user.shows}/>
 							</div>
+						)}
+						{activeCategory === "Подборки" && (
+							<CollectionsBlock
+								userId={userId}
+								isCurrentUser={isCurrentUser}
+								isAvailable={user.is_available}
+							/>
 						)}
 						{activeCategory === "Люди" && (
 							<div>

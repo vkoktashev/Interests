@@ -1,0 +1,102 @@
+@import "style/colors";
+@import "style/project-fonts";
+@import "style/breakpoints";
+
+.add-to-collection-modal {
+    width: min(520px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+    box-sizing: border-box;
+    border: 1px solid rgba($newBackground3, 0.7);
+    border-radius: 1rem;
+    background-color: $newBackground2;
+    color: $newText3;
+
+    &__body {
+        min-height: 180px;
+    }
+
+    &__media-name {
+        @include subtitle2;
+        margin-bottom: 1rem;
+        color: $newText2;
+    }
+
+    &__list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-height: min(55vh, 480px);
+        overflow-y: auto;
+    }
+
+    &__row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-height: 3.25rem;
+        padding: 0.5rem 0.6rem 0.5rem 0.9rem;
+        border: 1px solid rgba($newBackground3, 0.5);
+        border-radius: 0.75rem;
+        background-color: rgba($newBackground1, 0.45);
+    }
+
+    &__collection-title {
+        @include body1;
+        min-width: 0;
+        overflow: hidden;
+        color: $newText3;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    &__add-button {
+        flex-shrink: 0;
+        min-width: 105px;
+    }
+
+    &__state {
+        @include body1;
+        min-height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $newText2;
+        text-align: center;
+    }
+
+    &__error {
+        @include body2;
+        margin-bottom: 0.75rem;
+        padding: 0.75rem;
+        border: 1px solid rgba($newAccent1, 0.5);
+        border-radius: 0.75rem;
+        background-color: rgba($newAccent3, 0.55);
+        color: $newText3;
+    }
+
+    &__footer {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba($newBackground3, 0.45);
+    }
+
+    &__create-button {
+        width: 100%;
+    }
+
+    @media (max-width: $mobile-width) {
+        width: calc(100vw - 24px);
+        max-width: calc(100vw - 24px);
+
+        &__row {
+            align-items: stretch;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        &__add-button {
+            width: 100%;
+        }
+    }
+}

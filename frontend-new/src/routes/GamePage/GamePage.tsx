@@ -20,6 +20,7 @@ import GameStores from "../../shared/GameStores";
 import LoginForm from '../../modals/LoginForm';
 import MediaGalleryBlock from '../../shared/MediaGalleryBlock';
 import GamePrices from './views/GamePrices';
+import AddToCollectionButton from '../../shared/AddToCollectionButton';
 import {GAME_TYPE_LABELS} from '../SearchPage/views/searchTypes';
 import {IGamePricesResponse} from '../../interfaces/IGamePrice';
 import "./game-page.scss";
@@ -375,6 +376,11 @@ export function GamePage() {
 									>
 										<FaPencilAlt />
 									</a>
+									<AddToCollectionButton
+										mediaType='game'
+										objectId={game.id}
+										mediaName={game.name}
+									/>
 									<ScoreBlock
 										score={game.metacritic}
 										text='Metascore'

@@ -13,6 +13,7 @@ urlpatterns = [
     path('movies/', include('movies.urls')),
     path('shows/', include('shows.urls')),
     path('people/', include('people.urls')),
+    path('collections/', include('content_collections.urls')),
     path('', include('proxy.urls')),
     path('', include('general.urls')),
 ]

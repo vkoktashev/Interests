@@ -17,6 +17,9 @@ import ShowSeasonPage from './ShowSeasonPage';
 import FAQPage from './FAQPage';
 import CommunityPicksPage from './CommunityPicksPage';
 import PersonPage from './PersonPage';
+import CollectionCreatePage from './CollectionCreatePage';
+import CollectionPage from './CollectionPage';
+import CollectionEditPage from './CollectionEditPage';
 
 export const ROUTE_ROOT = 'root';
 
@@ -37,6 +40,9 @@ export const ROUTE_SETTINGS = 'settings';
 export const ROUTE_CALENDAR = 'calendar';
 export const ROUTE_FAQ = 'faq';
 export const ROUTE_COMMUNITY_PICKS = 'community_picks';
+export const ROUTE_COLLECTION_CREATE = 'collection_create';
+export const ROUTE_COLLECTION = 'collection';
+export const ROUTE_COLLECTION_EDIT = 'collection_edit';
 
 export const ROUTE_EMAIL_CONFIRM = 'email_confirm';
 export const ROUTE_PASSWORD_CONFIRM = 'password_confirm';
@@ -100,6 +106,27 @@ export default {
             path: '/community-picks',
             component: CommunityPicksPage,
             title: __('Выбор пользователей Interests'),
+            roles,
+        },
+        [ROUTE_COLLECTION_CREATE]: {
+            exact: true,
+            path: '/collections/create',
+            component: CollectionCreatePage,
+            title: __('Создание подборки'),
+            roles,
+        },
+        [ROUTE_COLLECTION]: {
+            exact: true,
+            path: '/collections/:collectionId',
+            component: CollectionPage,
+            title: __('Подборка'),
+            roles,
+        },
+        [ROUTE_COLLECTION_EDIT]: {
+            exact: true,
+            path: '/collections/:collectionId/edit',
+            component: CollectionEditPage,
+            title: __('Редактирование подборки'),
             roles,
         },
         [ROUTE_UNWATCHED]: {

@@ -641,6 +641,7 @@ def parse_show(show, request):
 
     return {
         'id': show.tmdb_id,
+        'object_id': show.pk,
         'imdb_id': show.imdb_id,
         'name': resolve_display_name(
             show.tmdb_name, show.tmdb_original_name, show.tmdb_name_en, show.tmdb_original_language,

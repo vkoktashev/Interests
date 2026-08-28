@@ -1,0 +1,137 @@
+@import "style/colors";
+@import "style/project-fonts";
+
+.collection-content-search {
+    position: relative;
+    z-index: 4;
+
+    &__control {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    &__input {
+        @include body1;
+        width: 100%;
+        min-height: 44px;
+        padding: 0.65rem 2.6rem;
+        border: 1px solid rgba($newBackground3, 0.8);
+        border-radius: 0.65rem;
+        outline: none;
+        background-color: $newBackground1;
+        color: $newText3;
+
+        &:focus {
+            border-color: rgba($newAccent2, 0.75);
+        }
+    }
+
+    &__search-icon,
+    &__clear {
+        position: absolute;
+        z-index: 1;
+        color: $newText2;
+    }
+
+    &__search-icon {
+        left: 0.9rem;
+    }
+
+    &__clear {
+        right: 0.55rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    &__results {
+        position: absolute;
+        top: calc(100% + 0.35rem);
+        right: 0;
+        left: 0;
+        max-height: 420px;
+        overflow-y: auto;
+        padding: 0.5rem;
+        border: 1px solid rgba($newBackground3, 0.8);
+        border-radius: 0.7rem;
+        background-color: $newBackground1;
+        box-shadow: 0 12px 30px rgba($newBackground1, 0.45);
+    }
+
+    &__section + &__section {
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba($newBackground3, 0.55);
+    }
+
+    &__section-title {
+        @include caption;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.3rem 0.45rem;
+        color: $newAccent2;
+    }
+
+    &__result {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.65rem;
+        width: 100%;
+        padding: 0.4rem 0.45rem;
+        border: 0;
+        border-radius: 0.5rem;
+        background: transparent;
+        color: $newText3;
+        text-align: left;
+        cursor: pointer;
+
+        &_active,
+        &:hover {
+            background-color: rgba($newBackground3, 0.45);
+        }
+
+        &:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
+    }
+
+    &__result-cover {
+        width: 34px;
+        height: 44px;
+        overflow: hidden;
+        border-radius: 0.35rem;
+        background-color: $newBackground3;
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+
+    &__result-name {
+        @include body2;
+        overflow-wrap: anywhere;
+    }
+
+    &__result-year,
+    &__state {
+        @include caption;
+        color: $newText2;
+    }
+
+    &__state {
+        padding: 1rem;
+        text-align: center;
+    }
+}
