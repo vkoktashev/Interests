@@ -14,10 +14,10 @@ from proxy.functions import get_proxy_url
 from shows.functions import get_tmdb_season, get_season_new_fields, sync_season_episodes, \
     get_tmdb_season_credits, get_tmdb_season_videos, sync_season_people, get_tmdb_show, get_tmdb_show_credits, \
     get_show_new_fields, sync_show_genres, sync_show_people
-from shows.models import UserSeason, Show, Season, Episode, UserShow, UserEpisode, SeasonPerson, SeasonVideo
+from shows.models import UserSeason, Show, Season, UserShow, UserEpisode, SeasonPerson, SeasonVideo
 from shows.serializers import UserSeasonSerializer, FollowedUserSeasonSerializer, UserEpisodeInSeasonSerializer, \
     ShowSerializer
-from shows.show_viewsets import user_watched_show
+from shows.selectors import user_watched_show
 from shows.tasks import refresh_season_details
 from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow

@@ -1,74 +1,50 @@
-import tmdbsimple as tmdb
-from django.contrib.postgres.search import TrigramSimilarity
-from django.core.cache import cache
-from django.core.paginator import Paginator
-from django.db.models import Q
-from django.db.models.functions import Greatest
-from utils.swagger import openapi, swagger_auto_schema
-from requests import HTTPError
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from movies.models import Movie, UserMovie
+from movies.selectors import (
+    get_database_movie_search_results,
+    get_tmdb_movie_search_payload,
+)
 from movies.serializers import MovieSerializer
-from proxy.functions import get_proxy_url
-from utils.constants import LANGUAGE, CACHE_TIMEOUT, \
-    TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, DEFAULT_PAGE_SIZE
+from movies.services.discovery import TmdbUnavailableError, search_tmdb_movies
+from utils.constants import DEFAULT_PAGE_SIZE, TMDB_UNAVAILABLE
 from utils.functions import get_page_size
 from utils.openapi_params import DEFAULT_PAGE_NUMBER
-
-
-def _attach_movies_user_status(request, results):
-    for result in results:
-        result['user_status'] = None
-
-    if not results or not request.user.is_authenticated:
-        return
-
-    tmdb_ids = [result.get('id', result.get('tmdb_id')) for result in results]
-    user_movies = UserMovie.objects.filter(user=request.user, movie__tmdb_id__in=tmdb_ids) \
-        .values('movie__tmdb_id', 'status')
-    user_status_by_tmdb_id = {row['movie__tmdb_id']: row['status'] for row in user_movies}
-
-    for result in results:
-        tmdb_id = result.get('id', result.get('tmdb_id'))
-        result['user_status'] = user_status_by_tmdb_id.get(tmdb_id)
+from utils.swagger import openapi, swagger_auto_schema
 
 
 class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
     serializer_class = MovieSerializer
 
     @swagger_auto_schema(
-        operation_description="Search for movies using the TMDB API.",
+        operation_description='Search for movies using the TMDB API.',
         manual_parameters=[
             openapi.Parameter('query', openapi.IN_QUERY, type=openapi.TYPE_STRING),
             openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, default=DEFAULT_PAGE_NUMBER),
         ],
         responses={
             200: openapi.Response('OK'),
+            503: openapi.Response('TMDB unavailable'),
         }
     )
     @action(detail=False, methods=['get'])
     def tmdb(self, request, *args, **kwargs):
-        query = request.GET.get('query', '')
-        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
         try:
-            results = get_movie_search_results(query=query, page=page)
-        except HTTPError:
-            results = None
-
-        for result in results['results']:
-            result['backdrop_path'] = get_proxy_url(request,
-                                                    TMDB_BACKDROP_PATH_PREFIX,
-                                                    result.get('backdrop_path'))
-            result['poster_path'] = get_proxy_url(request,
-                                                  TMDB_POSTER_PATH_PREFIX,
-                                                  result.get('poster_path'))
-        _attach_movies_user_status(request, results['results'])
-
-        return Response(results, status=status.HTTP_200_OK)
+            payload = search_tmdb_movies(
+                request.GET.get('query', ''),
+                request.GET.get('page', DEFAULT_PAGE_NUMBER),
+            )
+        except TmdbUnavailableError:
+            return Response(
+                {'error': TMDB_UNAVAILABLE},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        return Response(
+            get_tmdb_movie_search_payload(payload, request.user, request),
+            status=status.HTTP_200_OK,
+        )
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -76,39 +52,13 @@ class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
             openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, default=DEFAULT_PAGE_NUMBER),
             openapi.Parameter('page_size', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, default=DEFAULT_PAGE_SIZE),
         ],
-        responses={
-            200: openapi.Response('OK'),
-        }
+        responses={200: openapi.Response('OK')}
     )
     def list(self, request, *args, **kwargs):
-        query = request.GET.get('query', '').strip()
-        page = request.GET.get('page', DEFAULT_PAGE_NUMBER)
-        page_size = get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE))
-
-        if not query:
-            return Response([])
-
-        movies = Movie.objects \
-            .annotate(similarity=Greatest(TrigramSimilarity('tmdb_name', query),
-                                          TrigramSimilarity('tmdb_original_name', query))) \
-            .filter(
-                Q(tmdb_name__icontains=query) |
-                Q(tmdb_original_name__icontains=query) |
-                Q(similarity__gt=0.1)
-            ) \
-            .order_by('-similarity', 'tmdb_name')
-        paginator_page = Paginator(movies, page_size).get_page(page)
-        serializer = MovieSerializer(paginator_page.object_list, many=True)
-        results = serializer.data
-        _attach_movies_user_status(request, results)
-
+        results = get_database_movie_search_results(
+            request.user,
+            request.GET.get('query', '').strip(),
+            request.GET.get('page', DEFAULT_PAGE_NUMBER),
+            get_page_size(request.GET.get('page_size', DEFAULT_PAGE_SIZE)),
+        )
         return Response(results)
-
-
-def get_movie_search_results(query, page):
-    key = f'tmdb_movie_search_{query.replace(" ", "_")}_page_{page}'
-    results = cache.get(key, None)
-    if results is None:
-        results = tmdb.Search().movie(query=query, page=page, language=LANGUAGE)
-        cache.set(key, results, CACHE_TIMEOUT)
-    return results
