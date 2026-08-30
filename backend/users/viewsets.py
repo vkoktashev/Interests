@@ -956,6 +956,18 @@ def calculate_top_actor_points(user: User, limit: Optional[int] = None) -> list:
 def calculate_top_director_points(user: User, limit: Optional[int] = None) -> list:
     directors_points = {}
 
+    watched_episode_counts = {
+        item['episode__tmdb_season__tmdb_show_id']: item['count']
+        for item in UserEpisode.objects
+        .filter(
+            user=user,
+            score__gt=-1,
+            episode__tmdb_season__tmdb_season_number__gt=0,
+        )
+        .values('episode__tmdb_season__tmdb_show_id')
+        .annotate(count=Count('id'))
+    }
+
     movies_directors = MoviePerson.objects \
         .filter(movie__usermovie__user=user,
                 movie__usermovie__status__in=[UserMovie.STATUS_WATCHED, UserMovie.STATUS_STOPPED],
@@ -973,17 +985,67 @@ def calculate_top_director_points(user: User, limit: Optional[int] = None) -> li
                     UserShow.STATUS_WATCHED,
                     UserShow.STATUS_STOPPED,
                 ]) \
-        .values('person__id', 'person__tmdb_id', 'person__name') \
-        .annotate(points=Sum('show__usershow__score'))
+        .values(
+            'person__id',
+            'person__tmdb_id',
+            'person__name',
+            'show_id',
+            'show__usershow__score',
+            'show__usershow__status',
+            'show__tmdb_number_of_episodes',
+            'episode_count',
+        )
 
-    for item in chain(movies_directors, shows_directors):
+    for item in movies_directors:
         person_tmdb_id = item.get('person__tmdb_id')
         person_id = item.get('person__id')
         name = item.get('person__name')
-        points = int(item.get('points') or 0)
+        points = float(item.get('points') or 0)
         if person_tmdb_id is None or person_id is None or not name:
             continue
 
+        directors_points[person_tmdb_id] = {'id': person_id, 'name': name, 'points': points}
+
+    shows_directors = list(shows_directors)
+    show_director_episode_totals = collections.defaultdict(int)
+    show_director_counts = collections.defaultdict(int)
+    for item in shows_directors:
+        show_id = item.get('show_id')
+        show_director_episode_totals[show_id] += int(item.get('episode_count') or 0)
+        show_director_counts[show_id] += 1
+
+    for item in shows_directors:
+        person_tmdb_id = item.get('person__tmdb_id')
+        person_id = item.get('person__id')
+        name = item.get('person__name')
+        if person_tmdb_id is None or person_id is None or not name:
+            continue
+
+        show_id = item.get('show_id')
+        score = float(item.get('show__usershow__score') or 0)
+        show_status = item.get('show__usershow__status')
+        total_episode_count = int(item.get('show__tmdb_number_of_episodes') or 0)
+        director_episode_count = int(item.get('episode_count') or 0)
+        total_director_episode_count = show_director_episode_totals[show_id]
+
+        if show_status == UserShow.STATUS_WATCHED:
+            watch_progress = 1.0
+        elif total_episode_count > 0:
+            watched_episode_count = watched_episode_counts.get(show_id, 0)
+            watch_progress = min(1.0, watched_episode_count / total_episode_count)
+        else:
+            watch_progress = 1.0
+
+        show_length_factor = 1.0
+        if total_episode_count > 0:
+            show_length_factor = min(3.0, max(1.0, math.sqrt(total_episode_count / 8)))
+
+        if total_director_episode_count > 0:
+            director_share = director_episode_count / total_director_episode_count
+        else:
+            director_share = 1 / show_director_counts[show_id]
+
+        points = score * show_length_factor * math.sqrt(watch_progress) * director_share
         current = directors_points.get(person_tmdb_id)
         if current is None:
             directors_points[person_tmdb_id] = {'id': person_id, 'name': name, 'points': points}
@@ -991,7 +1053,7 @@ def calculate_top_director_points(user: User, limit: Optional[int] = None) -> li
             current['points'] += points
 
     top_directors = [
-        {'id': item['id'], 'name': item['name'], 'points': item['points']}
+        {'id': item['id'], 'name': item['name'], 'points': round(item['points'], 1)}
         for item in directors_points.values()
     ]
     top_directors.sort(key=lambda entry: (-entry['points'], entry['name']))
