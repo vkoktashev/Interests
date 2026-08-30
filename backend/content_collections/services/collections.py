@@ -1,0 +1,176 @@
+from django.db import transaction
+from django.db.models import Max
+
+from content_collections.media import (
+    MEDIA_CONFIG,
+    get_collection_content_keys,
+    get_media_item,
+)
+from content_collections.models import CollectionItemOrder
+
+
+class CollectionInputError(Exception):
+    pass
+
+
+class CollectionItemNotFoundError(Exception):
+    pass
+
+
+@transaction.atomic
+def create_collection(serializer, author, requested_items):
+    resolved_items = _resolve_requested_content(requested_items)
+    collection = serializer.save(author=author)
+
+    relation_items = {'games': [], 'movies': [], 'shows': []}
+    for _, _, relation_name, item in resolved_items:
+        relation_items[relation_name].append(item)
+    for relation_name, items in relation_items.items():
+        if items:
+            getattr(collection, relation_name).add(*items)
+
+    CollectionItemOrder.objects.bulk_create([
+        CollectionItemOrder(
+            collection=collection,
+            media_type=media_type,
+            object_id=object_id,
+            position=position,
+        )
+        for position, (media_type, object_id, _, _) in enumerate(resolved_items)
+    ])
+    return collection
+
+
+@transaction.atomic
+def add_collection_item(collection, media_type, object_id):
+    item, relation_name, error = get_media_item(media_type, object_id)
+    if error == 'Контент не найден.':
+        raise CollectionItemNotFoundError(error)
+    if error:
+        raise CollectionInputError(error)
+
+    relation = getattr(collection, relation_name)
+    was_added = not relation.filter(pk=item.pk).exists()
+    _sync_collection_item_orders(collection)
+    if not was_added:
+        return False
+
+    relation.add(item)
+    max_position = collection.item_orders.aggregate(max_position=Max('position'))['max_position']
+    next_position = 0 if max_position is None else max_position + 1
+    CollectionItemOrder.objects.create(
+        collection=collection,
+        media_type=media_type,
+        object_id=item.pk,
+        position=next_position,
+    )
+    collection.save(update_fields=('updated_at',))
+    return True
+
+
+@transaction.atomic
+def reorder_collection_items(collection, items):
+    if not isinstance(items, list):
+        raise CollectionInputError('Порядок элементов должен быть списком.')
+
+    normalized_items = []
+    for item in items:
+        if not isinstance(item, dict) or item.get('media_type') not in MEDIA_CONFIG:
+            raise CollectionInputError('Некорректный элемент подборки.')
+        try:
+            object_id = int(item.get('object_id'))
+        except (TypeError, ValueError) as error:
+            raise CollectionInputError('Некорректный элемент подборки.') from error
+        normalized_items.append((item['media_type'], object_id))
+
+    expected_items = set(get_collection_content_keys(collection))
+    if len(normalized_items) != len(expected_items) or set(normalized_items) != expected_items:
+        raise CollectionInputError(
+            'Порядок должен содержать все элементы подборки без повторов.'
+        )
+
+    collection.item_orders.all().delete()
+    CollectionItemOrder.objects.bulk_create([
+        CollectionItemOrder(
+            collection=collection,
+            media_type=media_type,
+            object_id=object_id,
+            position=position,
+        )
+        for position, (media_type, object_id) in enumerate(normalized_items)
+    ])
+    collection.save(update_fields=('updated_at',))
+
+
+@transaction.atomic
+def remove_collection_item(collection, media_type, object_id):
+    config = MEDIA_CONFIG.get(media_type)
+    if config is None:
+        raise CollectionInputError('Неизвестный тип контента.')
+
+    try:
+        object_id = int(object_id)
+    except (TypeError, ValueError) as error:
+        raise CollectionInputError('Некорректный идентификатор контента.') from error
+
+    model, relation_name = config
+    item = model.objects.filter(pk=object_id).first()
+    relation = getattr(collection, relation_name)
+    if item is None or not relation.filter(pk=object_id).exists():
+        raise CollectionItemNotFoundError('Элемент не найден в подборке.')
+
+    relation.remove(item)
+    collection.item_orders.filter(
+        media_type=media_type,
+        object_id=object_id,
+    ).delete()
+    collection.save(update_fields=('updated_at',))
+
+
+def _resolve_requested_content(items):
+    if not isinstance(items, list):
+        raise CollectionInputError('Список контента имеет неверный формат.')
+
+    resolved_items = []
+    seen_keys = set()
+    for item_data in items:
+        if not isinstance(item_data, dict) or item_data.get('media_type') not in MEDIA_CONFIG:
+            raise CollectionInputError('Некорректный элемент подборки.')
+        try:
+            object_id = int(item_data.get('object_id'))
+        except (TypeError, ValueError) as error:
+            raise CollectionInputError('Некорректный элемент подборки.') from error
+
+        media_type = item_data['media_type']
+        item_key = (media_type, object_id)
+        if item_key in seen_keys:
+            raise CollectionInputError('Контент в подборке не должен повторяться.')
+
+        model, relation_name = MEDIA_CONFIG[media_type]
+        item = model.objects.filter(pk=object_id).first()
+        if item is None:
+            raise CollectionInputError('Один из элементов контента не найден.')
+
+        seen_keys.add(item_key)
+        resolved_items.append((media_type, object_id, relation_name, item))
+    return resolved_items
+
+
+def _sync_collection_item_orders(collection):
+    existing_keys = set(
+        collection.item_orders.values_list('media_type', 'object_id')
+    )
+    max_position = collection.item_orders.aggregate(max_position=Max('position'))['max_position']
+    next_position = 0 if max_position is None else max_position + 1
+    missing_orders = []
+    for media_type, object_id in get_collection_content_keys(collection):
+        if (media_type, object_id) not in existing_keys:
+            missing_orders.append(CollectionItemOrder(
+                collection=collection,
+                media_type=media_type,
+                object_id=object_id,
+                position=next_position,
+            ))
+            next_position += 1
+    if missing_orders:
+        CollectionItemOrder.objects.bulk_create(missing_orders)

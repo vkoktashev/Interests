@@ -18,7 +18,7 @@ from shows.functions import get_tmdb_episode, get_episode_new_fields, get_tmdb_e
     sync_season_people
 from shows.models import UserEpisode, Show, Season, Episode, UserShow, EpisodePerson, EpisodeVideo
 from shows.serializers import UserEpisodeSerializer, FollowedUserEpisodeSerializer, ShowSerializer
-from shows.show_viewsets import user_watched_show
+from shows.selectors import user_watched_show
 from shows.tasks import refresh_episode_details
 from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
@@ -219,10 +219,16 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
 
 def parse_episode(episode, request):
-    cast_names = [episode_person.person.name for episode_person in episode.episodeperson_set.select_related('person')
-                  .filter(role=EpisodePerson.ROLE_ACTOR).order_by('sort_order')]
-    director_names = [episode_person.person.name for episode_person in episode.episodeperson_set.select_related('person')
-                      .filter(role=EpisodePerson.ROLE_DIRECTOR).order_by('sort_order')]
+    cast_names = [
+        episode_person.person.name
+        for episode_person in episode.episodeperson_set.select_related('person')
+        .filter(role=EpisodePerson.ROLE_ACTOR).order_by('sort_order')
+    ]
+    director_names = [
+        episode_person.person.name
+        for episode_person in episode.episodeperson_set.select_related('person')
+        .filter(role=EpisodePerson.ROLE_DIRECTOR).order_by('sort_order')
+    ]
     return {
         'id': episode.tmdb_id,
         'name': episode.tmdb_name,
