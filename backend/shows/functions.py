@@ -150,6 +150,7 @@ def sync_people_links(
         parent_field,
         relation_model.ROLE_DIRECTOR,
         sync_profile_path=sync_profile_paths,
+        sync_director_details=sync_cast_details,
     ))
 
     for role, people in (extra_people_by_role or {}).items():
@@ -175,6 +176,7 @@ def sync_people_role_links(
         role,
         sync_profile_path=False,
         sync_cast_details=False,
+        sync_director_details=False,
         use_tmdb_order=False,
 ):
     links_to_keep = []
@@ -209,6 +211,9 @@ def sync_people_role_links(
                 'character': character,
                 'episode_count': episode_count,
             })
+        elif sync_director_details:
+            episode_count = get_aggregate_director_episode_count(person_data)
+            relation_defaults['episode_count'] = episode_count
 
         relation_obj, _ = relation_model.objects.get_or_create(
             **{
@@ -229,6 +234,9 @@ def sync_people_role_links(
             if relation_obj.episode_count != episode_count:
                 relation_obj.episode_count = episode_count
                 relation_fields_to_update.append('episode_count')
+        elif sync_director_details and relation_obj.episode_count != episode_count:
+            relation_obj.episode_count = episode_count
+            relation_fields_to_update.append('episode_count')
         if relation_fields_to_update:
             relation_obj.save(update_fields=relation_fields_to_update)
         links_to_keep.append(relation_obj.id)
@@ -262,6 +270,25 @@ def get_aggregate_cast_details(person_data):
         )
 
     return ', '.join(characters)[:500], episode_count
+
+
+def get_aggregate_director_episode_count(person_data):
+    director_episode_counts = [
+        job.get('episode_count')
+        for job in (person_data.get('jobs') or [])
+        if job.get('job') == 'Director'
+        and isinstance(job.get('episode_count'), int)
+        and job.get('episode_count') >= 0
+    ]
+    if director_episode_counts:
+        return sum(director_episode_counts)
+
+    if person_data.get('job') == 'Director':
+        episode_count = person_data.get('total_episode_count', person_data.get('episode_count', 0))
+        if isinstance(episode_count, int) and episode_count >= 0:
+            return episode_count
+
+    return 0
 
 
 def is_director_credit(person_data):
