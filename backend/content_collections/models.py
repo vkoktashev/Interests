@@ -72,6 +72,14 @@ class CollectionItemOrder(models.Model):
                 fields=('collection', 'media_type', 'object_id'),
                 name='unique_collection_item_order',
             ),
+            models.UniqueConstraint(
+                fields=('collection', 'position'),
+                name='unique_collection_item_position',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(media_type__in=('game', 'movie', 'show')),
+                name='valid_collection_item_media_type',
+            ),
         )
         verbose_name = 'порядок элемента подборки'
         verbose_name_plural = 'порядок элементов подборки'

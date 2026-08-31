@@ -1,25 +1,24 @@
-from django.db.models.signals import pre_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
-from movies.models import UserLog
-from users.models import UserFollow
-from users.serializers import UserFollowSerializer
+from users.models import UserFollow, UserLog
 
 
 @receiver(pre_save, sender=UserFollow)
-def create_log(instance, **kwargs):
-    try:
-        old_instance = UserFollow.objects.get(user=instance.user, followed_user=instance.followed_user)
-        old_fields = UserFollowSerializer(old_instance).data
-    except UserFollow.DoesNotExist:
-        old_fields = None
+def capture_previous_follow_state(instance, **kwargs):
+    instance._previous_is_following = UserFollow.objects.filter(
+        user=instance.user,
+        followed_user=instance.followed_user,
+    ).values_list('is_following', flat=True).first()
 
-    fields = UserFollowSerializer(instance).data
-    user_log_dict = dict(UserLog.ACTION_TYPE_CHOICES)
 
-    for field in fields:
-        if field in user_log_dict and (not old_fields or fields[field] != old_fields[field]):
-            action_type = field
-            action_result = fields[field]
-            UserLog.objects.create(user=instance.user, followed_user=instance.followed_user,
-                                   action_type=action_type, action_result=action_result)
+@receiver(post_save, sender=UserFollow)
+def create_follow_log(instance, created, **kwargs):
+    previous = getattr(instance, '_previous_is_following', None)
+    if created or previous != instance.is_following:
+        UserLog.objects.create(
+            user=instance.user,
+            followed_user=instance.followed_user,
+            action_type=UserLog.ACTION_TYPE_FOLLOW,
+            action_result=instance.is_following,
+        )

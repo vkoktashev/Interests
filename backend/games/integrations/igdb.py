@@ -13,7 +13,17 @@ from igdb.wrapper import IGDBWrapper
 from django.utils import timezone
 
 from games.functions import format_game_release_date
-from games.models import Game, GameBeatTime, GameDeveloper, GameGenre, GameScreenshot, GameStore, GameVideo, Genre, Store
+from games.models import (
+    Game,
+    GameBeatTime,
+    GameDeveloper,
+    GameGenre,
+    GameScreenshot,
+    GameStore,
+    GameVideo,
+    Genre,
+    Store,
+)
 from people.models import Developer
 from utils.functions import objects_to_str, update_fields_if_needed_async
 from videos.models import Video
@@ -579,7 +589,8 @@ def query_igdb_game_by_id(igdb_id: int) -> Optional[dict[str, Any]]:
     wrapper = get_igdb_wrapper()
     body = (
         f'fields id,name,slug,category,game_type,first_release_date,summary,rating,rating_count,aggregated_rating,'
-        f'aggregated_rating_count,{IGDB_RELEASE_DATE_FIELDS},cover.url,url,platforms.id,platforms.name,genres.id,genres.name,genres.slug,'
+        f'aggregated_rating_count,{IGDB_RELEASE_DATE_FIELDS},cover.url,url,'
+        f'platforms.id,platforms.name,genres.id,genres.name,genres.slug,'
         f'involved_companies.developer,involved_companies.company.id,involved_companies.company.name,'
         f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height,'
         f'websites.id,websites.url,websites.category; '
@@ -598,7 +609,8 @@ def query_igdb_game_by_slug(slug: str) -> Optional[dict[str, Any]]:
     safe_slug = (slug or '').replace('\\', '\\\\').replace('"', '\\"')
     body = (
         f'fields id,name,slug,category,game_type,first_release_date,summary,rating,rating_count,aggregated_rating,'
-        f'aggregated_rating_count,{IGDB_RELEASE_DATE_FIELDS},cover.url,url,platforms.id,platforms.name,genres.id,genres.name,genres.slug,'
+        f'aggregated_rating_count,{IGDB_RELEASE_DATE_FIELDS},cover.url,url,'
+        f'platforms.id,platforms.name,genres.id,genres.name,genres.slug,'
         f'involved_companies.developer,involved_companies.company.id,involved_companies.company.name,'
         f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height,'
         f'websites.id,websites.url,websites.category; '
@@ -762,17 +774,14 @@ async def update_game_media_from_igdb(game: Game, igdb_game: dict[str, Any]) -> 
         if not video_id:
             continue
         trailer_url = f'https://www.youtube.com/watch?v={video_id}'
-        trailer = await Video.objects.filter(
+        trailer, _ = await Video.objects.aget_or_create(
             source=Video.SOURCE_IGDB,
             url=trailer_url,
-        ).afirst()
-        if trailer is None:
-            trailer = await Video.objects.acreate(
-                url=trailer_url,
-                source=Video.SOURCE_IGDB,
-                platform='YouTube',
-                type=Video.TYPE_TRAILER,
-            )
+            defaults={
+                'platform': 'YouTube',
+                'type': Video.TYPE_TRAILER,
+            },
+        )
         await update_fields_if_needed_async(trailer, {
             'external_id': str(video_item_id or ''),
             'name': video.get('name') or '',
@@ -804,14 +813,15 @@ async def update_game_media_from_igdb(game: Game, igdb_game: dict[str, Any]) -> 
         image_url = _format_igdb_image_url(screenshot.get('url'))
         if not image_url:
             continue
-        game_screenshot = await GameScreenshot.objects.filter(game=game, image=image_url).afirst()
-        if game_screenshot is None:
-            game_screenshot = await GameScreenshot.objects.acreate(
-                game=game,
-                image=image_url,
-                sort_order=index,
-                igdb_id=screenshot.get('id'),
-            )
+        screenshot_id = screenshot.get('id')
+        lookup = {'game': game, 'igdb_id': screenshot_id} if screenshot_id is not None else {
+            'game': game,
+            'image': image_url,
+        }
+        game_screenshot, _ = await GameScreenshot.objects.aget_or_create(
+            **lookup,
+            defaults={'image': image_url, 'sort_order': index},
+        )
         await update_fields_if_needed_async(game_screenshot, {
             'igdb_id': screenshot.get('id'),
             'image': image_url,

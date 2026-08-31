@@ -29,6 +29,7 @@ class AuthServiceError(Exception):
         self.status_code = status_code
 
 
+@transaction.atomic
 def signup(data, request_scheme):
     serializer = UserSerializer(data=data)
     serializer.is_valid(raise_exception=True)
@@ -179,6 +180,7 @@ def confirm_email(uid64, token):
     return UserSerializer(instance=user).data
 
 
+@transaction.atomic
 def request_password_reset(email, request_scheme):
     try:
         user = User.objects.get(email=email)
