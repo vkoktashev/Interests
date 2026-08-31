@@ -108,10 +108,19 @@ class ScheduledTaskAdmin(admin.ModelAdmin):
             return '—'
 
         updated = result.get('updated')
+        scheduled = result.get('scheduled')
+        sent = result.get('sent')
+        skipped = result.get('skipped')
         errors = result.get('errors')
         parts = []
         if isinstance(updated, int):
             parts.append(f'обновлено: {updated}')
+        if isinstance(scheduled, int):
+            parts.append(f'поставлено в очередь: {scheduled}')
+        if isinstance(sent, int):
+            parts.append(f'отправлено: {sent}')
+        if isinstance(skipped, int):
+            parts.append(f'пропущено: {skipped}')
         if isinstance(errors, int):
             parts.append(f'ошибок: {errors}')
 

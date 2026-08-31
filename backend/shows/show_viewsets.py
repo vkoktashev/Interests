@@ -30,6 +30,7 @@ from shows.services.tracking import (
     update_user_show,
 )
 from shows.tasks import update_all_shows_task, update_shows
+from utils.celery import enqueue_background_task_once
 from utils.constants import ERROR, SHOW_NOT_FOUND, TMDB_UNAVAILABLE
 
 
@@ -225,8 +226,13 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
     def update_all_shows(self, request):
         start_index = int(request.GET.get('start_index', 0))
-        update_all_shows_task.delay(start_index)
-        return Response()
+        is_queued = enqueue_background_task_once(
+            update_all_shows_task,
+            identity=f'all:{start_index}',
+            args=(start_index,),
+            task_name='update_all_shows_task',
+        )
+        return Response({'queued': is_queued})
 
     @swagger_auto_schema(
         responses={
@@ -236,5 +242,9 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     )
     @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
     def update_shows(self, request):
-        update_shows()
-        return Response()
+        is_queued = enqueue_background_task_once(
+            update_shows,
+            identity='scheduled',
+            task_name='update_shows',
+        )
+        return Response({'queued': is_queued})

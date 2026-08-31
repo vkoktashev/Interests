@@ -1,7 +1,6 @@
 from datetime import datetime
 import logging
 
-from celery.schedules import crontab
 from django.core.mail import EmailMultiAlternatives
 from django.db.models import Q
 
@@ -11,22 +10,24 @@ from games.models import Game, UserGame
 from movies.models import Movie, UserMovie
 from shows.models import Episode, Show, UserShow
 from users.models import User
-from utils.constants import SITE_URL, UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
+from utils.celery import execute_locked_task
+from utils.constants import SITE_URL
 
 logger = logging.getLogger(__name__)
-
-
-@app.on_after_finalize.connect
-def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(
-        crontab(hour=UPDATE_DATES_HOUR + 1, minute=UPDATE_DATES_MINUTE),
-        send_release_emails.s(),
-    )
 
 
 @app.task
 def send_release_emails():
     today_date = datetime.today().date()
+    return execute_locked_task(
+        'send_release_emails',
+        today_date.isoformat(),
+        lambda: _send_release_emails(today_date),
+        timeout=60 * 60,
+    )
+
+
+def _send_release_emails(today_date):
 
     today_games = Game.objects.filter(
         igdb_release_date=today_date,
@@ -188,3 +189,9 @@ def send_release_emails():
         skipped_count,
         failed_count,
     )
+    return {
+        'candidates': candidates_count,
+        'sent': sent_count,
+        'skipped': skipped_count,
+        'errors': failed_count,
+    }
