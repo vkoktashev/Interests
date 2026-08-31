@@ -22,6 +22,10 @@ interface ICollectionCounts {
 interface ICollection {
 	id: number;
 	title: string;
+	author: {
+		id: number;
+		username: string;
+	};
 	privacy: 'public' | 'private';
 	created_at: string;
 	updated_at: string;
@@ -175,14 +179,21 @@ function CollectionsBlock(props: ICollectionsBlockProps) {
 										<span className={bem.element('privacy')}>Приватная</span>
 									)}
 								</div>
-								<div className={bem.element('summary')}>
-									{getCollectionSummary(collection.counts)}
+								<div className={bem.element('author')}>
+									Автор: {collection.author.username}
+								</div>
+								<div className={bem.element('summary-row')}>
+									<div className={bem.element('summary')}>
+										{getCollectionSummary(collection.counts)}
+									</div>
+									{!!collection.progress?.total && collection.progress.percent !== null && (
+										<span className={bem.element('progress-value')}>
+											{collection.progress.percent}%
+										</span>
+									)}
 								</div>
 								{!!collection.progress?.total && collection.progress.percent !== null && (
 									<div className={bem.element('progress')}>
-										<div className={bem.element('progress-meta')}>
-											<span>{collection.progress.percent}%</span>
-										</div>
 										<div className={bem.element('progress-track')}>
 											<div
 												className={bem.element('progress-fill')}

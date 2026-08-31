@@ -42,6 +42,34 @@ def create_collection(serializer, author, requested_items):
 
 
 @transaction.atomic
+def clone_collection(collection, author):
+    collection = _lock_collection(collection)
+    _sync_collection_item_orders(collection)
+
+    cloned_collection = Collection.objects.create(
+        author=author,
+        title=collection.title,
+        display_mode=collection.display_mode,
+        privacy=collection.privacy,
+    )
+    for relation_name in ('games', 'movies', 'shows'):
+        getattr(cloned_collection, relation_name).set(
+            getattr(collection, relation_name).all()
+        )
+
+    CollectionItemOrder.objects.bulk_create([
+        CollectionItemOrder(
+            collection=cloned_collection,
+            media_type=item_order.media_type,
+            object_id=item_order.object_id,
+            position=item_order.position,
+        )
+        for item_order in collection.item_orders.order_by('position', 'id')
+    ])
+    return cloned_collection
+
+
+@transaction.atomic
 def add_collection_item(collection, media_type, object_id):
     collection = _lock_collection(collection)
     item, relation_name, error = get_media_item(media_type, object_id)

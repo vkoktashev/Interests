@@ -64,6 +64,13 @@
         align-items: flex-end;
     }
 
+    &__owner-actions,
+    &__foreign-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
     &__setting-badge {
         @include body2;
         flex-shrink: 0;
@@ -168,6 +175,25 @@
         font-weight: 600;
     }
 
+    &__item-status {
+        @include caption;
+        position: absolute;
+        z-index: 2;
+        right: 0.5rem;
+        bottom: 0.5rem;
+        max-width: calc(100% - 1rem);
+        overflow: hidden;
+        padding: 0.3rem 0.5rem;
+        border: 1px solid rgba($newText3, 0.16);
+        border-radius: 999px;
+        background-color: rgba($newBackground1, 0.86);
+        color: $newText3;
+        box-shadow: 0 4px 12px rgba($newBackground1, 0.3);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        pointer-events: none;
+    }
+
     &__item-tooltip {
         @include body2;
         position: absolute;
@@ -259,7 +285,17 @@
             flex-direction: column;
         }
 
-        &__edit-button {
+        &__owner-actions,
+        &__foreign-actions {
+            flex-direction: column;
+        }
+
+        &__owner-actions,
+        &__foreign-actions,
+        &__edit-button,
+        &__delete-button,
+        &__clone-button,
+        &__subscribe-button {
             width: 100%;
         }
 

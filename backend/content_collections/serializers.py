@@ -1,6 +1,9 @@
 from rest_framework import serializers
 
+from games.models import UserGame
+from movies.models import UserMovie
 from proxy.functions import get_proxy_url
+from shows.models import UserShow
 from .models import Collection
 
 
@@ -38,11 +41,52 @@ def get_ordered_content(collection):
     ]
 
 
+def get_user_status_labels(content, user):
+    if user is None:
+        return {}
+
+    status_config = {
+        'game': (UserGame, 'game_id', dict(UserGame.STATUS_CHOICES), 'Не играл'),
+        'movie': (UserMovie, 'movie_id', dict(UserMovie.STATUS_CHOICES), 'Не смотрел'),
+        'show': (UserShow, 'show_id', dict(UserShow.STATUS_CHOICES), 'Не смотрел'),
+    }
+    object_ids_by_type = {
+        media_type: [
+            object_id
+            for item_media_type, object_id, _ in content
+            if item_media_type == media_type
+        ]
+        for media_type in status_config
+    }
+    labels = {}
+    for media_type, (model, object_id_field, choices, default_label) in status_config.items():
+        object_ids = object_ids_by_type[media_type]
+        labels[media_type] = {object_id: default_label for object_id in object_ids}
+        statuses = model.objects.filter(
+            user=user,
+            **{f'{object_id_field}__in': object_ids},
+        ).values_list(object_id_field, 'status')
+        labels[media_type].update({
+            object_id: choices.get(status, status)
+            for object_id, status in statuses
+        })
+    return labels
+
+
 class CollectionSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField()
     contains_item = serializers.SerializerMethodField()
     counts = serializers.SerializerMethodField()
     covers = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField()
     progress = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_author(collection):
+        return {
+            'id': collection.author_id,
+            'username': collection.author.username,
+        }
 
     def get_contains_item(self, collection):
         return collection.pk in self.context.get('contained_collection_ids', set())
@@ -72,6 +116,9 @@ class CollectionSerializer(serializers.ModelSerializer):
 
         return covers
 
+    def get_is_subscribed(self, collection):
+        return collection.pk in self.context.get('subscribed_collection_ids', set())
+
     @staticmethod
     def get_progress(collection):
         if not hasattr(collection, 'completed_games_count'):
@@ -98,6 +145,7 @@ class CollectionSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
+            'author',
             'display_mode',
             'privacy',
             'created_at',
@@ -105,38 +153,38 @@ class CollectionSerializer(serializers.ModelSerializer):
             'contains_item',
             'counts',
             'covers',
+            'is_subscribed',
             'progress',
         )
         read_only_fields = (
             'id',
+            'author',
             'created_at',
             'updated_at',
             'contains_item',
             'counts',
             'covers',
+            'is_subscribed',
             'progress',
         )
 
 
 class CollectionDetailSerializer(CollectionSerializer):
-    author = serializers.SerializerMethodField()
     items = serializers.SerializerMethodField()
     ordered_items = serializers.SerializerMethodField()
-
-    @staticmethod
-    def get_author(collection):
-        return {
-            'id': collection.author_id,
-            'username': collection.author.username,
-        }
 
     def get_serialized_items(self, collection):
         if hasattr(self, '_serialized_items'):
             return self._serialized_items
 
         request = self.context.get('request')
+        ordered_content = get_ordered_content(collection)
+        status_labels = get_user_status_labels(
+            ordered_content,
+            self.context.get('progress_user'),
+        )
         serialized_items = []
-        for media_type, object_id, item in get_ordered_content(collection):
+        for media_type, object_id, item in ordered_content:
             if media_type == 'game':
                 serialized_item = {
                     'type': 'game',
@@ -147,6 +195,7 @@ class CollectionDetailSerializer(CollectionSerializer):
                         item.igdb_release_date.year if item.igdb_release_date else None
                     ),
                     'cover_url': get_proxy_url(request, item.igdb_cover_url),
+                    'user_status': status_labels.get(media_type, {}).get(object_id),
                 }
             elif media_type == 'movie':
                 serialized_item = {
@@ -156,6 +205,7 @@ class CollectionDetailSerializer(CollectionSerializer):
                     'name': item.tmdb_name or item.tmdb_original_name,
                     'release_year': item.tmdb_release_date.year if item.tmdb_release_date else None,
                     'cover_url': get_proxy_url(request, item.tmdb_poster_path),
+                    'user_status': status_labels.get(media_type, {}).get(object_id),
                 }
             else:
                 serialized_item = {
@@ -165,6 +215,7 @@ class CollectionDetailSerializer(CollectionSerializer):
                     'name': item.tmdb_name or item.tmdb_original_name,
                     'release_year': item.tmdb_release_date.year if item.tmdb_release_date else None,
                     'cover_url': get_proxy_url(request, item.tmdb_poster_path),
+                    'user_status': status_labels.get(media_type, {}).get(object_id),
                 }
             serialized_items.append(serialized_item)
 
@@ -182,9 +233,8 @@ class CollectionDetailSerializer(CollectionSerializer):
         return self.get_serialized_items(collection)
 
     class Meta(CollectionSerializer.Meta):
-        fields = CollectionSerializer.Meta.fields + ('author', 'items', 'ordered_items')
+        fields = CollectionSerializer.Meta.fields + ('items', 'ordered_items')
         read_only_fields = CollectionSerializer.Meta.read_only_fields + (
-            'author',
             'items',
             'ordered_items',
         )

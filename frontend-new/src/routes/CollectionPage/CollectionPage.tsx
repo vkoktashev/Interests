@@ -1,12 +1,21 @@
-import React, {useMemo} from 'react';
+import React, {useCallback, useMemo, useState} from 'react';
 import {Button} from '@steroidsjs/core/ui/form';
 import {Loader} from '@steroidsjs/core/ui/layout';
 import {Link} from '@steroidsjs/core/ui/nav';
+import {goToRoute} from '@steroidsjs/core/actions/router';
+import {showNotification} from '@steroidsjs/core/actions/notifications';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getRouteParams} from '@steroidsjs/core/reducers/router';
-import {useBem, useFetch, useSelector} from '@steroidsjs/core/hooks';
+import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 
-import {ROUTE_COLLECTION_EDIT, ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW, ROUTE_USER} from '../index';
+import {
+	ROUTE_COLLECTION,
+	ROUTE_COLLECTION_EDIT,
+	ROUTE_GAME,
+	ROUTE_MOVIE,
+	ROUTE_SHOW,
+	ROUTE_USER,
+} from '../index';
 import './collection-page.scss';
 
 type TDisplayMode = 'mixed' | 'grouped';
@@ -19,6 +28,7 @@ interface ICollectionItem {
 	order_id: number;
 	name: string;
 	cover_url: string;
+	user_status?: string;
 }
 
 interface ICollectionItems {
@@ -30,6 +40,7 @@ interface ICollectionItems {
 interface ICollectionDetail {
 	id: number;
 	title: string;
+	is_subscribed: boolean;
 	display_mode: TDisplayMode;
 	privacy: TPrivacy;
 	created_at: string;
@@ -133,6 +144,11 @@ function CollectionItemCard({item}: {item: ICollectionItem}) {
 					</div>
 				)}
 			</div>
+			{!!item.user_status && (
+				<div className={bem.element('item-status')}>
+					{item.user_status}
+				</div>
+			)}
 			<div className={bem.element('item-tooltip')} role='tooltip'>
 				{item.name || 'Без названия'}
 			</div>
@@ -142,8 +158,14 @@ function CollectionItemCard({item}: {item: ICollectionItem}) {
 
 function CollectionPage() {
 	const bem = useBem('collection-page');
+	const dispatch = useDispatch();
+	const {http} = useComponents();
 	const currentUser = useSelector(getUser);
 	const {collectionId, progressUserId} = useSelector(getRouteParams);
+	const [isDeleting, setDeleting] = useState(false);
+	const [isSubscribing, setSubscribing] = useState(false);
+	const [isCloning, setCloning] = useState(false);
+	const [subscribedCollectionId, setSubscribedCollectionId] = useState<number>();
 	const effectiveProgressUserId = progressUserId || currentUser?.id;
 	const fetchConfig = useMemo(() => collectionId && ({
 		url: `/collections/${collectionId}/${effectiveProgressUserId
@@ -154,6 +176,82 @@ function CollectionPage() {
 	const {data, isLoading, axiosError} = useFetch(fetchConfig as any);
 	const collection = data as ICollectionDetail;
 	const isOwner = collection?.author?.id === currentUser?.id;
+	const isSubscribed = collection?.is_subscribed || subscribedCollectionId === collection?.id;
+	const cloneCollection = useCallback(async () => {
+		if (!collection || !currentUser?.id || isOwner || isCloning) {
+			return;
+		}
+
+		setCloning(true);
+		try {
+			const clonedCollection = await http.post(`/collections/${collection.id}/clone/`);
+			if (!clonedCollection?.id) {
+				throw new Error('Cloned collection id is missing');
+			}
+			dispatch(showNotification('Подборка склонирована', 'success'));
+			dispatch(goToRoute(ROUTE_COLLECTION, {collectionId: clonedCollection.id}));
+		} catch (requestError) {
+			const responseData = requestError?.response?.data;
+			dispatch(showNotification(
+				responseData?.error
+					|| responseData?.detail
+					|| 'Не удалось склонировать подборку',
+				'danger',
+			));
+		} finally {
+			setCloning(false);
+		}
+	}, [collection, currentUser?.id, dispatch, http, isCloning, isOwner]);
+	const subscribe = useCallback(async () => {
+		if (!collection || !currentUser?.id || isOwner || isSubscribed || isSubscribing) {
+			return;
+		}
+
+		setSubscribing(true);
+		try {
+			await http.post(`/collections/${collection.id}/subscribe/`);
+			setSubscribedCollectionId(collection.id);
+			dispatch(showNotification('Подборка добавлена в ваши подписки', 'success'));
+		} catch (requestError) {
+			const responseData = requestError?.response?.data;
+			dispatch(showNotification(
+				responseData?.error
+					|| responseData?.detail
+					|| 'Не удалось подписаться на подборку',
+				'danger',
+			));
+		} finally {
+			setSubscribing(false);
+		}
+	}, [collection, currentUser?.id, dispatch, http, isOwner, isSubscribed, isSubscribing]);
+	const deleteCollection = useCallback(async () => {
+		if (!collection || !isOwner || isDeleting) {
+			return;
+		}
+
+		if (!window.confirm(`Удалить подборку «${collection.title}»? Это действие нельзя отменить.`)) {
+			return;
+		}
+
+		setDeleting(true);
+		try {
+			await http.send('DELETE', `/collections/${collection.id}/`);
+			dispatch(showNotification('Подборка удалена', 'success'));
+			dispatch(goToRoute(ROUTE_USER, {
+				userId: currentUser.id,
+				сategory: 'Подборки',
+			}, false, true));
+		} catch (requestError) {
+			const responseData = requestError?.response?.data;
+			dispatch(showNotification(
+				responseData?.error
+					|| responseData?.detail
+					|| 'Не удалось удалить подборку',
+				'danger',
+			));
+			setDeleting(false);
+		}
+	}, [collection, currentUser?.id, dispatch, http, isDeleting, isOwner]);
 
 	if (isLoading && !collection) {
 		return <Loader />;
@@ -197,18 +295,54 @@ function CollectionPage() {
 						</div>
 					</div>
 					{isOwner && (
-						<Button
-							className={bem.element('edit-button')}
-							color='secondary'
-							toRoute={ROUTE_COLLECTION_EDIT}
-							toRouteParams={{
-								collectionId: collection.id,
-								progressUserId: effectiveProgressUserId,
-							}}
-							showQueryParams
-						>
-							Редактировать
-						</Button>
+						<div className={bem.element('owner-actions')}>
+							<Button
+								className={bem.element('edit-button')}
+								color='secondary'
+								toRoute={ROUTE_COLLECTION_EDIT}
+								toRouteParams={{
+									collectionId: collection.id,
+									progressUserId: effectiveProgressUserId,
+								}}
+								showQueryParams
+							>
+								Редактировать
+							</Button>
+							<Button
+								type='button'
+								className={bem.element('delete-button')}
+								color='danger'
+								outline
+								disabled={isDeleting}
+								onClick={deleteCollection}
+							>
+								{isDeleting ? 'Удаляем...' : 'Удалить'}
+							</Button>
+						</div>
+					)}
+					{!!currentUser?.id && !isOwner && (
+						<div className={bem.element('foreign-actions')}>
+							<Button
+								type='button'
+								className={bem.element('clone-button')}
+								color='secondary'
+								disabled={isCloning || isSubscribing}
+								onClick={cloneCollection}
+							>
+								{isCloning ? 'Клонируем...' : 'Склонировать'}
+							</Button>
+							<Button
+								type='button'
+								className={bem.element('subscribe-button')}
+								color={isSubscribed ? 'secondary' : 'primary'}
+								disabled={isSubscribed || isSubscribing || isCloning}
+								onClick={subscribe}
+							>
+								{isSubscribed
+									? 'Вы подписаны'
+									: (isSubscribing ? 'Подписываем...' : 'Подписаться')}
+							</Button>
+						</div>
 					)}
 				</div>
 			</header>
