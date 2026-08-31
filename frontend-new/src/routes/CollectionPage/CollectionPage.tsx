@@ -32,6 +32,7 @@ interface ICollectionItems {
 interface ICollectionDetail {
 	id: number;
 	title: string;
+	is_subscribed: boolean;
 	display_mode: TDisplayMode;
 	privacy: TPrivacy;
 	created_at: string;
@@ -149,6 +150,8 @@ function CollectionPage() {
 	const currentUser = useSelector(getUser);
 	const {collectionId, progressUserId} = useSelector(getRouteParams);
 	const [isDeleting, setDeleting] = useState(false);
+	const [isSubscribing, setSubscribing] = useState(false);
+	const [subscribedCollectionId, setSubscribedCollectionId] = useState<number>();
 	const effectiveProgressUserId = progressUserId || currentUser?.id;
 	const fetchConfig = useMemo(() => collectionId && ({
 		url: `/collections/${collectionId}/${effectiveProgressUserId
@@ -159,6 +162,29 @@ function CollectionPage() {
 	const {data, isLoading, axiosError} = useFetch(fetchConfig as any);
 	const collection = data as ICollectionDetail;
 	const isOwner = collection?.author?.id === currentUser?.id;
+	const isSubscribed = collection?.is_subscribed || subscribedCollectionId === collection?.id;
+	const subscribe = useCallback(async () => {
+		if (!collection || !currentUser?.id || isOwner || isSubscribed || isSubscribing) {
+			return;
+		}
+
+		setSubscribing(true);
+		try {
+			await http.post(`/collections/${collection.id}/subscribe/`);
+			setSubscribedCollectionId(collection.id);
+			dispatch(showNotification('Подборка добавлена в ваши подписки', 'success'));
+		} catch (requestError) {
+			const responseData = requestError?.response?.data;
+			dispatch(showNotification(
+				responseData?.error
+					|| responseData?.detail
+					|| 'Не удалось подписаться на подборку',
+				'danger',
+			));
+		} finally {
+			setSubscribing(false);
+		}
+	}, [collection, currentUser?.id, dispatch, http, isOwner, isSubscribed, isSubscribing]);
 	const deleteCollection = useCallback(async () => {
 		if (!collection || !isOwner || isDeleting) {
 			return;
@@ -254,6 +280,19 @@ function CollectionPage() {
 								{isDeleting ? 'Удаляем...' : 'Удалить'}
 							</Button>
 						</div>
+					)}
+					{!!currentUser?.id && !isOwner && (
+						<Button
+							type='button'
+							className={bem.element('subscribe-button')}
+							color={isSubscribed ? 'secondary' : 'primary'}
+							disabled={isSubscribed || isSubscribing}
+							onClick={subscribe}
+						>
+							{isSubscribed
+								? 'Вы подписаны'
+								: (isSubscribing ? 'Подписываем...' : 'Подписаться')}
+						</Button>
 					)}
 				</div>
 			</header>

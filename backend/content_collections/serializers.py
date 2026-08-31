@@ -39,10 +39,19 @@ def get_ordered_content(collection):
 
 
 class CollectionSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField()
     contains_item = serializers.SerializerMethodField()
     counts = serializers.SerializerMethodField()
     covers = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField()
     progress = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_author(collection):
+        return {
+            'id': collection.author_id,
+            'username': collection.author.username,
+        }
 
     def get_contains_item(self, collection):
         return collection.pk in self.context.get('contained_collection_ids', set())
@@ -72,6 +81,9 @@ class CollectionSerializer(serializers.ModelSerializer):
 
         return covers
 
+    def get_is_subscribed(self, collection):
+        return collection.pk in self.context.get('subscribed_collection_ids', set())
+
     @staticmethod
     def get_progress(collection):
         if not hasattr(collection, 'completed_games_count'):
@@ -98,6 +110,7 @@ class CollectionSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
+            'author',
             'display_mode',
             'privacy',
             'created_at',
@@ -105,30 +118,25 @@ class CollectionSerializer(serializers.ModelSerializer):
             'contains_item',
             'counts',
             'covers',
+            'is_subscribed',
             'progress',
         )
         read_only_fields = (
             'id',
+            'author',
             'created_at',
             'updated_at',
             'contains_item',
             'counts',
             'covers',
+            'is_subscribed',
             'progress',
         )
 
 
 class CollectionDetailSerializer(CollectionSerializer):
-    author = serializers.SerializerMethodField()
     items = serializers.SerializerMethodField()
     ordered_items = serializers.SerializerMethodField()
-
-    @staticmethod
-    def get_author(collection):
-        return {
-            'id': collection.author_id,
-            'username': collection.author.username,
-        }
 
     def get_serialized_items(self, collection):
         if hasattr(self, '_serialized_items'):
@@ -182,9 +190,8 @@ class CollectionDetailSerializer(CollectionSerializer):
         return self.get_serialized_items(collection)
 
     class Meta(CollectionSerializer.Meta):
-        fields = CollectionSerializer.Meta.fields + ('author', 'items', 'ordered_items')
+        fields = CollectionSerializer.Meta.fields + ('items', 'ordered_items')
         read_only_fields = CollectionSerializer.Meta.read_only_fields + (
-            'author',
             'items',
             'ordered_items',
         )

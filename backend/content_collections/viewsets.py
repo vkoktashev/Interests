@@ -119,6 +119,10 @@ class CollectionViewSet(
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
+        if self.request.user.is_authenticated:
+            context['subscribed_collection_ids'] = set(
+                self.request.user.subscribed_collections.values_list('pk', flat=True)
+            )
         item, _, error = get_media_item(
             self.request.query_params.get('media_type'),
             self.request.query_params.get('object_id'),
@@ -140,6 +144,20 @@ class CollectionViewSet(
         except (CollectionInputError, CollectionItemNotFoundError) as error:
             return self._operation_error_response(error)
         return Response({'added': was_added}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def subscribe(self, request, *args, **kwargs):
+        collection = self.get_object()
+        if collection.author_id == request.user.pk:
+            return Response(
+                {'error': 'Нельзя подписаться на собственную подборку.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not is_user_available(request.user, collection.author):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        collection.subscribers.add(request.user)
+        return Response({'subscribed': True}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'])
     def content_search(self, request, *args, **kwargs):

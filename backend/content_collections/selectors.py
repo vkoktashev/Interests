@@ -30,7 +30,7 @@ def get_collection_author(request_user, author_id):
 
 
 def get_collection_queryset(action, request_user, author=None, progress_user=None, ordering=None):
-    if action == 'retrieve':
+    if action in ('retrieve', 'subscribe'):
         queryset = (
             Collection.objects
             .select_related('author')
@@ -59,12 +59,29 @@ def get_collection_queryset(action, request_user, author=None, progress_user=Non
         ordering = '-updated_at'
     queryset = (
         Collection.objects
-        .filter(author=author)
+        .filter(Q(author=author) | Q(subscribers=author))
+        .select_related('author')
         .prefetch_related('games', 'movies', 'shows', 'item_orders')
+        .distinct()
         .order_by(ordering, '-id')
     )
-    if not request_user.is_authenticated or request_user.pk != author.pk:
+    if request_user.is_authenticated:
+        queryset = queryset.filter(
+            Q(privacy=Collection.PRIVACY_PUBLIC) | Q(author=request_user)
+        )
+        available_author_ids = User.objects.filter(
+            Q(pk=request_user.pk)
+            | Q(privacy=User.PRIVACY_ALL)
+            | Q(
+                privacy=User.PRIVACY_FOLLOWED,
+                user__followed_user=request_user,
+                user__is_following=True,
+            )
+        ).values('pk')
+    else:
         queryset = queryset.filter(privacy=Collection.PRIVACY_PUBLIC)
+        available_author_ids = User.objects.filter(privacy=User.PRIVACY_ALL).values('pk')
+    queryset = queryset.filter(author_id__in=available_author_ids)
     return _annotate_progress(queryset, progress_user) if progress_user else queryset
 
 

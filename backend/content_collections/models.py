@@ -21,6 +21,11 @@ class Collection(models.Model):
         on_delete=models.CASCADE,
         related_name='collections',
     )
+    subscribers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name='subscribed_collections',
+    )
     title = models.CharField(max_length=200)
     display_mode = models.CharField(
         max_length=16,
