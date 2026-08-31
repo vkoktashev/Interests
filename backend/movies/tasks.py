@@ -2,6 +2,7 @@ from datetime import datetime
 import logging
 
 from celery.schedules import crontab
+from django.db import transaction
 from django.db.models import Q
 from requests import HTTPError, ConnectionError, Timeout
 
@@ -98,19 +99,20 @@ def update_movie_details(tmdb_id, movie_obj=None):
         return
 
     try:
-        new_fields = get_movie_new_fields(tmdb_movie, tmdb_release_dates)
-        if movie_obj is None:
-            movie_obj, created = Movie.objects.get_or_create(tmdb_id=tmdb_id, defaults=new_fields)
-            changed_fields = list(new_fields.keys()) if created else _get_changed_fields(movie_obj, new_fields)
-            if not created:
+        with transaction.atomic():
+            new_fields = get_movie_new_fields(tmdb_movie, tmdb_release_dates)
+            if movie_obj is None:
+                movie_obj, created = Movie.objects.get_or_create(tmdb_id=tmdb_id, defaults=new_fields)
+                changed_fields = list(new_fields.keys()) if created else _get_changed_fields(movie_obj, new_fields)
+                if not created:
+                    update_fields_if_needed(movie_obj, new_fields)
+            else:
+                created = False
+                changed_fields = _get_changed_fields(movie_obj, new_fields)
                 update_fields_if_needed(movie_obj, new_fields)
-        else:
-            created = False
-            changed_fields = _get_changed_fields(movie_obj, new_fields)
-            update_fields_if_needed(movie_obj, new_fields)
 
-        update_movie_genres(movie_obj, tmdb_movie)
-        update_movie_people(movie_obj, tmdb_cast_crew)
+            update_movie_genres(movie_obj, tmdb_movie)
+            update_movie_people(movie_obj, tmdb_cast_crew)
     except Exception:
         logger.exception(
             'update_movie_details: failed to apply TMDB details for movie id=%s name=%s tmdb_id=%s',

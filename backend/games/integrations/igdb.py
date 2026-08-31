@@ -922,21 +922,34 @@ def query_igdb_game_time_to_beat(igdb_game_id: int) -> Optional[dict[str, Any]]:
     return items[0] if items else None
 
 
+def attach_igdb_game_time_to_beat(igdb_game: dict[str, Any], game: Game | None = None) -> dict[str, Any]:
+    if 'game_time_to_beat' in igdb_game:
+        return igdb_game
+
+    igdb_game_id = igdb_game.get('id') or getattr(game, 'igdb_id', None)
+    if not igdb_game_id:
+        return igdb_game
+
+    try:
+        game_time_to_beat = query_igdb_game_time_to_beat(int(igdb_game_id))
+    except Exception:
+        # An absent key tells the write phase to preserve existing beat times.
+        return igdb_game
+
+    result = dict(igdb_game)
+    result['game_time_to_beat'] = game_time_to_beat
+    return result
+
+
 async def update_game_beat_times_from_igdb(game: Game, igdb_game: dict[str, Any]) -> None:
+    if 'game_time_to_beat' not in igdb_game:
+        return
+
     game_time_to_beat = igdb_game.get('game_time_to_beat')
     if isinstance(game_time_to_beat, list):
         game_time_to_beat = game_time_to_beat[0] if game_time_to_beat else None
     if not isinstance(game_time_to_beat, dict):
         game_time_to_beat = None
-
-    if game_time_to_beat is None:
-        igdb_game_id = igdb_game.get('id') or game.igdb_id
-        if igdb_game_id:
-            try:
-                game_time_to_beat = query_igdb_game_time_to_beat(int(igdb_game_id))
-            except Exception:
-                # Do not touch existing data if IGDB beat-time query failed.
-                return
 
     type_to_value = {
         GameBeatTime.TYPE_MAIN: (game_time_to_beat or {}).get('hastily'),

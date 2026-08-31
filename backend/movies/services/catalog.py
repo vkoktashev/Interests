@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.db import transaction
 from django.utils import timezone
 from requests import ConnectionError, HTTPError, Timeout
 
@@ -47,16 +48,17 @@ def get_or_sync_movie(tmdb_id):
     except (ConnectionError, Timeout) as error:
         raise TmdbUnavailableError from error
 
-    new_fields = get_movie_new_fields(tmdb_movie, tmdb_release_dates)
-    movie, created = Movie.objects.get_or_create(
-        tmdb_id=tmdb_movie.get('id'),
-        defaults=new_fields,
-    )
-    if not created:
-        update_fields_if_needed(movie, new_fields)
+    with transaction.atomic():
+        new_fields = get_movie_new_fields(tmdb_movie, tmdb_release_dates)
+        movie, created = Movie.objects.get_or_create(
+            tmdb_id=tmdb_movie.get('id'),
+            defaults=new_fields,
+        )
+        if not created:
+            update_fields_if_needed(movie, new_fields)
 
-    update_movie_genres(movie, tmdb_movie)
-    update_movie_people(movie, tmdb_cast_crew)
+        update_movie_genres(movie, tmdb_movie)
+        update_movie_people(movie, tmdb_cast_crew)
     return movie
 
 

@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.db import transaction
 from django.utils import timezone
 from requests import ConnectionError, HTTPError, Timeout
 
@@ -50,17 +51,18 @@ def get_or_sync_show(tmdb_id):
             raise TmdbUnavailableError from error
         return show
 
-    new_fields = get_show_new_fields(tmdb_show)
-    show, created = Show.objects.get_or_create(
-        tmdb_id=tmdb_show.get('id'),
-        defaults=new_fields,
-    )
-    if not created:
-        update_fields_if_needed(show, new_fields)
+    with transaction.atomic():
+        new_fields = get_show_new_fields(tmdb_show)
+        show, created = Show.objects.get_or_create(
+            tmdb_id=tmdb_show.get('id'),
+            defaults=new_fields,
+        )
+        if not created:
+            update_fields_if_needed(show, new_fields)
 
-    sync_show_genres(show, tmdb_show)
-    sync_show_people(show, tmdb_show_credits, tmdb_show)
-    sync_show_seasons(show, tmdb_show.get('seasons'))
+        sync_show_genres(show, tmdb_show)
+        sync_show_people(show, tmdb_show_credits, tmdb_show)
+        sync_show_seasons(show, tmdb_show.get('seasons'))
     return show
 
 

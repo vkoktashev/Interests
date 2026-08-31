@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
 from utils.swagger import openapi, swagger_auto_schema
@@ -51,12 +52,13 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             except (ConnectionError, Timeout):
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-            show_fields = get_show_new_fields(tmdb_show)
-            show, created = Show.objects.get_or_create(tmdb_id=show_tmdb_id, defaults=show_fields)
-            if not created:
-                update_fields_if_needed(show, show_fields)
-            sync_show_genres(show, tmdb_show)
-            sync_show_people(show, tmdb_show_credits, tmdb_show)
+            with transaction.atomic():
+                show_fields = get_show_new_fields(tmdb_show)
+                show, created = Show.objects.get_or_create(tmdb_id=show_tmdb_id, defaults=show_fields)
+                if not created:
+                    update_fields_if_needed(show, show_fields)
+                sync_show_genres(show, tmdb_show)
+                sync_show_people(show, tmdb_show_credits, tmdb_show)
 
         season = Season.objects.filter(tmdb_show=show, tmdb_season_number=season_number).first()
         has_missing_episodes = season is not None and not season.episode_set.exists()
@@ -74,17 +76,18 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             except (ConnectionError, Timeout):
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-            defaults = get_season_new_fields(tmdb_season, show.id)
-            season, created = Season.objects.get_or_create(
-                tmdb_show=show,
-                tmdb_season_number=tmdb_season.get('season_number'),
-                defaults=defaults
-            )
-            if not created:
-                update_fields_if_needed(season, defaults)
+            with transaction.atomic():
+                defaults = get_season_new_fields(tmdb_season, show.id)
+                season, created = Season.objects.get_or_create(
+                    tmdb_show=show,
+                    tmdb_season_number=tmdb_season.get('season_number'),
+                    defaults=defaults
+                )
+                if not created:
+                    update_fields_if_needed(season, defaults)
 
-            sync_season_episodes(season, tmdb_season.get('episodes') or [])
-            sync_season_people(season, tmdb_season_credits)
+                sync_season_episodes(season, tmdb_season.get('episodes') or [])
+                sync_season_people(season, tmdb_season_credits)
 
         response = Response(parse_season(season, request))
         if season.tmdb_last_update and season.tmdb_last_update <= timezone.now() - SEASON_DETAILS_REFRESH_INTERVAL:
@@ -137,6 +140,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             404: openapi.Response('Show or Season Not Found'),
         }
     )
+    @transaction.atomic
     def update(self, request, *args, **kwargs):
         try:
             show = Show.objects.get(tmdb_id=kwargs.get('show_tmdb_id'))

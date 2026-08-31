@@ -2,6 +2,7 @@ from datetime import datetime
 import logging
 
 from celery.schedules import crontab
+from django.db import transaction
 from django.db.models import Q
 from requests import HTTPError, ConnectionError
 
@@ -119,16 +120,17 @@ def update_show_details(show_tmdb_id):
 
     show = None
     try:
-        new_fields = get_show_new_fields(tmdb_show)
-        show, created = Show.objects.get_or_create(tmdb_id=show_tmdb_id, defaults=new_fields)
-        changed_fields = list(new_fields.keys()) if created else _get_changed_fields(show, new_fields)
-        if not created:
-            update_fields_if_needed(show, new_fields)
+        with transaction.atomic():
+            new_fields = get_show_new_fields(tmdb_show)
+            show, created = Show.objects.get_or_create(tmdb_id=show_tmdb_id, defaults=new_fields)
+            changed_fields = list(new_fields.keys()) if created else _get_changed_fields(show, new_fields)
+            if not created:
+                update_fields_if_needed(show, new_fields)
 
-        sync_show_genres(show, tmdb_show)
-        sync_show_people(show, tmdb_show_credits, tmdb_show)
+            sync_show_genres(show, tmdb_show)
+            sync_show_people(show, tmdb_show_credits, tmdb_show)
 
-        season_sync_result = sync_show_seasons(show, tmdb_show.get('seasons'))
+            season_sync_result = sync_show_seasons(show, tmdb_show.get('seasons'))
     except Exception:
         logger.exception(
             'update_show_details: failed to apply TMDB show details for show id=%s name=%s tmdb_id=%s',
@@ -182,20 +184,21 @@ def update_season_details(show_tmdb_id, season_number):
         return None
 
     try:
-        season = upsert_season_from_tmdb(show, tmdb_season)
-        if season is None:
-            logger.warning(
-                'update_season_details: skipped show id=%s name=%s tmdb_id=%s season_number=%s reason=no_season_payload',
-                show.id,
-                show.tmdb_name,
-                show_tmdb_id,
-                season_number,
-            )
-            return None
+        with transaction.atomic():
+            season = upsert_season_from_tmdb(show, tmdb_season)
+            if season is None:
+                logger.warning(
+                    'update_season_details: skipped show id=%s name=%s tmdb_id=%s season_number=%s reason=no_season_payload',
+                    show.id,
+                    show.tmdb_name,
+                    show_tmdb_id,
+                    season_number,
+                )
+                return None
 
-        episodes_count = len(tmdb_season.get('episodes') or [])
-        sync_season_episodes(season, tmdb_season.get('episodes') or [])
-        sync_season_people(season, tmdb_season_credits)
+            episodes_count = len(tmdb_season.get('episodes') or [])
+            sync_season_episodes(season, tmdb_season.get('episodes') or [])
+            sync_season_people(season, tmdb_season_credits)
     except Exception:
         logger.exception(
             'update_season_details: failed to apply TMDB season details for show id=%s name=%s tmdb_id=%s season_number=%s',
@@ -262,17 +265,18 @@ def update_episode_details(show_tmdb_id, season_number, episode_number):
 
     episode = None
     try:
-        defaults = get_episode_new_fields(tmdb_episode, season.id)
-        episode, created = Episode.objects.get_or_create(
-            tmdb_season=season,
-            tmdb_episode_number=episode_number,
-            defaults=defaults
-        )
-        changed_fields = list(defaults.keys()) if created else _get_changed_fields(episode, defaults)
-        if not created:
-            update_fields_if_needed(episode, defaults)
+        with transaction.atomic():
+            defaults = get_episode_new_fields(tmdb_episode, season.id)
+            episode, created = Episode.objects.get_or_create(
+                tmdb_season=season,
+                tmdb_episode_number=episode_number,
+                defaults=defaults
+            )
+            changed_fields = list(defaults.keys()) if created else _get_changed_fields(episode, defaults)
+            if not created:
+                update_fields_if_needed(episode, defaults)
 
-        sync_episode_people(episode, tmdb_episode_credits)
+            sync_episode_people(episode, tmdb_episode_credits)
     except Exception:
         logger.exception(
             'update_episode_details: failed to apply TMDB episode details for episode id=%s show_tmdb_id=%s season_number=%s episode_number=%s',

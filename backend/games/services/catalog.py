@@ -1,8 +1,10 @@
-from asgiref.sync import sync_to_async
+from asgiref.sync import async_to_sync, sync_to_async
 from django.core.cache import cache
+from django.db import transaction
 
 from games.integrations.igdb import (
     IGDB_GAME_TYPE_IDS,
+    attach_igdb_game_time_to_beat,
     get_game_search_results,
     get_igdb_game_new_fields,
     query_igdb_game_by_slug,
@@ -16,7 +18,7 @@ from games.integrations.igdb import (
 )
 from games.models import Game, GameBeatTime
 from games.services.parser_service import parse_game_prices_from_db
-from utils.functions import update_fields_if_needed_async
+from utils.functions import update_fields_if_needed
 
 
 IGDB_PLATFORMS_CACHE_KEY = 'igdb:platforms'
@@ -82,7 +84,8 @@ async def get_or_sync_game(slug):
     except Exception:
         igdb_game = None
     if igdb_game is not None:
-        await _apply_igdb_game(game, igdb_game, include_media=True)
+        igdb_game = await sync_to_async(attach_igdb_game_time_to_beat)(igdb_game, game)
+        game = await sync_to_async(_apply_igdb_game)(game, igdb_game, include_media=True)
     elif game.igdb_last_update is None:
         raise IgdbUnavailableError
     return game
@@ -100,15 +103,16 @@ async def get_or_create_game(slug, include_media=False):
     if not igdb_game:
         raise GameNotFoundError
 
+    igdb_game = await sync_to_async(attach_igdb_game_time_to_beat)(igdb_game)
     fields = get_igdb_game_new_fields(igdb_game)
     igdb_id = fields.get('igdb_id')
     lookup = {'igdb_id': igdb_id} if igdb_id is not None else {'igdb_slug': slug}
-    defaults = {key: value for key, value in fields.items() if key not in lookup}
-    game, created = await Game.objects.aget_or_create(**lookup, defaults=defaults)
-    if not created:
-        await update_fields_if_needed_async(game, fields)
-    await _apply_igdb_relations(game, igdb_game, include_media=include_media)
-    return game
+    return await sync_to_async(_create_and_apply_igdb_game)(
+        lookup,
+        fields,
+        igdb_game,
+        include_media,
+    )
 
 
 async def get_game_prices(slug, user):
@@ -122,18 +126,30 @@ async def get_game_prices(slug, user):
     return await parse_game_prices_from_db(game, steam_region=steam_region)
 
 
-async def _apply_igdb_game(game, igdb_game, include_media):
-    await update_fields_if_needed_async(game, get_igdb_game_new_fields(igdb_game))
-    await _apply_igdb_relations(game, igdb_game, include_media=include_media)
+@transaction.atomic
+def _create_and_apply_igdb_game(lookup, fields, igdb_game, include_media):
+    defaults = {key: value for key, value in fields.items() if key not in lookup}
+    game, created = Game.objects.get_or_create(**lookup, defaults=defaults)
+    if not created:
+        update_fields_if_needed(game, fields)
+    _apply_igdb_relations(game, igdb_game, include_media)
+    return game
 
 
-async def _apply_igdb_relations(game, igdb_game, include_media):
-    await update_game_genres_from_igdb(game, igdb_game)
-    await update_game_developers_from_igdb(game, igdb_game)
-    await update_game_beat_times_from_igdb(game, igdb_game)
+@transaction.atomic
+def _apply_igdb_game(game, igdb_game, include_media):
+    update_fields_if_needed(game, get_igdb_game_new_fields(igdb_game))
+    _apply_igdb_relations(game, igdb_game, include_media)
+    return game
+
+
+def _apply_igdb_relations(game, igdb_game, include_media):
+    async_to_sync(update_game_genres_from_igdb)(game, igdb_game)
+    async_to_sync(update_game_developers_from_igdb)(game, igdb_game)
+    async_to_sync(update_game_beat_times_from_igdb)(game, igdb_game)
     if include_media:
-        await update_game_media_from_igdb(game, igdb_game)
-    await update_game_stores_from_igdb(game, igdb_game)
+        async_to_sync(update_game_media_from_igdb)(game, igdb_game)
+    async_to_sync(update_game_stores_from_igdb)(game, igdb_game)
 
 
 def _parse_id_filter(value, name, allowed_values=None, positive_only=False):

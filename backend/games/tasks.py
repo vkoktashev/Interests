@@ -4,6 +4,7 @@ import logging
 from asgiref.sync import async_to_sync
 from celery.schedules import crontab
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
@@ -11,6 +12,7 @@ from config.celery import app
 from games.functions import is_game_released
 from games.integrations.hltb import get_game_release_year, get_hltb_game, extract_hltb_hours_map
 from games.integrations.igdb import (
+    attach_igdb_game_time_to_beat,
     get_igdb_game_new_fields,
     query_igdb_game_by_id,
     resolve_igdb_game_details,
@@ -192,15 +194,17 @@ def _refresh_game_details_by_igdb_id(igdb_id):
 
 def _apply_igdb_game_details(game_obj, igdb_game, source):
     try:
-        fields_to_update = {}
-        fields_to_update.update(get_igdb_game_new_fields(igdb_game))
-        changed_fields = _get_changed_fields(game_obj, fields_to_update)
-        update_fields_if_needed(game_obj, fields_to_update)
-        async_to_sync(update_game_genres_from_igdb)(game_obj, igdb_game)
-        async_to_sync(update_game_developers_from_igdb)(game_obj, igdb_game)
-        async_to_sync(update_game_beat_times_from_igdb)(game_obj, igdb_game)
-        async_to_sync(update_game_media_from_igdb)(game_obj, igdb_game)
-        async_to_sync(update_game_stores_from_igdb)(game_obj, igdb_game)
+        igdb_game = attach_igdb_game_time_to_beat(igdb_game, game_obj)
+        with transaction.atomic():
+            fields_to_update = {}
+            fields_to_update.update(get_igdb_game_new_fields(igdb_game))
+            changed_fields = _get_changed_fields(game_obj, fields_to_update)
+            update_fields_if_needed(game_obj, fields_to_update)
+            async_to_sync(update_game_genres_from_igdb)(game_obj, igdb_game)
+            async_to_sync(update_game_developers_from_igdb)(game_obj, igdb_game)
+            async_to_sync(update_game_beat_times_from_igdb)(game_obj, igdb_game)
+            async_to_sync(update_game_media_from_igdb)(game_obj, igdb_game)
+            async_to_sync(update_game_stores_from_igdb)(game_obj, igdb_game)
     except Exception:
         logger.exception(
             '%s: failed to apply IGDB details for game id=%s name=%s igdb_id=%s igdb_slug=%s',
@@ -242,46 +246,47 @@ def refresh_hltb_beat_times_for_game(game_obj, now=None):
         logger.debug('refresh_hltb_beat_times_for_game: no HLTB result for game id=%s', game_obj.id)
         return None
 
-    update_fields_if_needed(game_obj, {
-        'hltb_name': hltb_game.get('game_name') or game_obj.hltb_name,
-        'hltb_id': hltb_game.get('game_id') or game_obj.hltb_id,
-    })
-
     hours_map = extract_hltb_hours_map(hltb_game)
-    if not hours_map:
-        logger.debug('refresh_hltb_beat_times_for_game: no valid HLTB hours for game id=%s', game_obj.id)
-        return None
+    with transaction.atomic():
+        update_fields_if_needed(game_obj, {
+            'hltb_name': hltb_game.get('game_name') or game_obj.hltb_name,
+            'hltb_id': hltb_game.get('game_id') or game_obj.hltb_id,
+        })
 
-    existing_entries = GameBeatTime.objects.filter(game=game_obj, source=GameBeatTime.SOURCE_HLTB)
-    upserted_ids = []
-    for beat_type, hours_value in (
-        (GameBeatTime.TYPE_MAIN, hours_map.get('main')),
-        (GameBeatTime.TYPE_EXTRA, hours_map.get('extra')),
-        (GameBeatTime.TYPE_COMPLETE, hours_map.get('complete')),
-    ):
-        if hours_value is None:
-            continue
-        beat_time = GameBeatTime.objects.filter(
-            game=game_obj,
-            source=GameBeatTime.SOURCE_HLTB,
-            type=beat_type,
-        ).first()
-        if beat_time is None:
-            beat_time = GameBeatTime.objects.create(
+        if not hours_map:
+            logger.debug('refresh_hltb_beat_times_for_game: no valid HLTB hours for game id=%s', game_obj.id)
+            return None
+
+        existing_entries = GameBeatTime.objects.filter(game=game_obj, source=GameBeatTime.SOURCE_HLTB)
+        upserted_ids = []
+        for beat_type, hours_value in (
+            (GameBeatTime.TYPE_MAIN, hours_map.get('main')),
+            (GameBeatTime.TYPE_EXTRA, hours_map.get('extra')),
+            (GameBeatTime.TYPE_COMPLETE, hours_map.get('complete')),
+        ):
+            if hours_value is None:
+                continue
+            beat_time = GameBeatTime.objects.filter(
                 game=game_obj,
                 source=GameBeatTime.SOURCE_HLTB,
                 type=beat_type,
-                hours=hours_value,
-                last_update=now,
-            )
-        else:
-            update_fields_if_needed(beat_time, {'hours': hours_value, 'last_update': now})
-        upserted_ids.append(beat_time.id)
+            ).first()
+            if beat_time is None:
+                beat_time = GameBeatTime.objects.create(
+                    game=game_obj,
+                    source=GameBeatTime.SOURCE_HLTB,
+                    type=beat_type,
+                    hours=hours_value,
+                    last_update=now,
+                )
+            else:
+                update_fields_if_needed(beat_time, {'hours': hours_value, 'last_update': now})
+            upserted_ids.append(beat_time.id)
 
-    if upserted_ids:
-        existing_entries.exclude(id__in=upserted_ids).delete()
-    else:
-        existing_entries.delete()
+        if upserted_ids:
+            existing_entries.exclude(id__in=upserted_ids).delete()
+        else:
+            existing_entries.delete()
 
     return hours_map
 
