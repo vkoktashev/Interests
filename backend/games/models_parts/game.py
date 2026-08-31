@@ -45,6 +45,18 @@ class Game(models.Model):
         return self.igdb_name or self.hltb_name or self.igdb_slug or f'Game #{self.pk}'
 
     class Meta:
+        constraints = (
+            models.UniqueConstraint(
+                fields=('igdb_id',),
+                condition=models.Q(igdb_id__isnull=False),
+                name='unique_game_igdb_id',
+            ),
+            models.UniqueConstraint(
+                fields=('igdb_slug',),
+                condition=~models.Q(igdb_slug=''),
+                name='unique_game_igdb_slug',
+            ),
+        )
         verbose_name = 'игра'
         verbose_name_plural = 'игры'
 

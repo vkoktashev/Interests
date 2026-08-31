@@ -92,10 +92,12 @@ class Episode(models.Model):
     class Meta:
         verbose_name = 'серия'
         verbose_name_plural = 'серии'
-        UniqueConstraint(
-            name='unique_season_episode_number',
-            fields=['tmdb_season", "tmdb_episode_number'],
-            deferrable=Deferrable.DEFERRED,
+        constraints = (
+            UniqueConstraint(
+                name='unique_season_episode_number',
+                fields=('tmdb_season', 'tmdb_episode_number'),
+                deferrable=Deferrable.DEFERRED,
+            ),
         )
 
     def __str__(self):
@@ -162,6 +164,12 @@ class UserShow(UserScore):
 
     class Meta:
         unique_together = (("user", "show"),)
+        constraints = (
+            models.CheckConstraint(
+                condition=models.Q(score__gte=0, score__lte=10),
+                name='user_show_score_between_0_and_10',
+            ),
+        )
         verbose_name = 'сериал пользователя'
         verbose_name_plural = 'сериалы пользователей'
 
@@ -171,6 +179,12 @@ class UserSeason(UserScore):
 
     class Meta:
         unique_together = (("user", "season"),)
+        constraints = (
+            models.CheckConstraint(
+                condition=models.Q(score__gte=0, score__lte=10),
+                name='user_season_score_between_0_and_10',
+            ),
+        )
         verbose_name = 'сезон пользователя'
         verbose_name_plural = 'сезоны пользователей'
 
@@ -181,6 +195,12 @@ class UserEpisode(UserScore):
 
     class Meta:
         unique_together = (("user", "episode"),)
+        constraints = (
+            models.CheckConstraint(
+                condition=models.Q(score__gte=-1, score__lte=10),
+                name='user_episode_score_between_minus_1_and_10',
+            ),
+        )
         verbose_name = 'серия пользователя'
         verbose_name_plural = 'серии пользователей'
 

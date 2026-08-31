@@ -2,7 +2,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 
-from users.models import UserLog, UserScore, UserLogAbstract
+from users.models import UserScore, UserLogAbstract
 
 
 class Movie(models.Model):
@@ -52,6 +52,12 @@ class UserMovie(UserScore):
 
     class Meta:
         unique_together = (("user", "movie"),)
+        constraints = (
+            models.CheckConstraint(
+                condition=models.Q(score__gte=0, score__lte=10),
+                name='user_movie_score_between_0_and_10',
+            ),
+        )
         verbose_name = 'фильм пользователя'
         verbose_name_plural = 'фильмы пользователей'
 

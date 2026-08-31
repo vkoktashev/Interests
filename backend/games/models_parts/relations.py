@@ -55,6 +55,18 @@ class GameScreenshot(models.Model):
     sort_order = models.PositiveIntegerField(default=0)
 
     class Meta:
+        constraints = (
+            models.UniqueConstraint(
+                fields=('game', 'igdb_id'),
+                condition=models.Q(igdb_id__isnull=False),
+                name='unique_game_screenshot_igdb_id',
+            ),
+            models.UniqueConstraint(
+                fields=('game', 'image'),
+                condition=~models.Q(image=''),
+                name='unique_game_screenshot_image',
+            ),
+        )
         ordering = ('sort_order', 'id')
 
 
@@ -83,4 +95,10 @@ class GameBeatTime(models.Model):
 
     class Meta:
         unique_together = (("game", "type", "source"),)
+        constraints = (
+            models.CheckConstraint(
+                condition=models.Q(hours__gte=0),
+                name='game_beat_time_hours_nonnegative',
+            ),
+        )
         ordering = ('game_id', 'source', 'type', 'id')

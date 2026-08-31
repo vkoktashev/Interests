@@ -101,10 +101,11 @@ async def get_or_create_game(slug, include_media=False):
         raise GameNotFoundError
 
     fields = get_igdb_game_new_fields(igdb_game)
-    game = await Game.objects.filter(igdb_slug=slug).afirst()
-    if game is None:
-        game = await Game.objects.acreate(**fields)
-    else:
+    igdb_id = fields.get('igdb_id')
+    lookup = {'igdb_id': igdb_id} if igdb_id is not None else {'igdb_slug': slug}
+    defaults = {key: value for key, value in fields.items() if key not in lookup}
+    game, created = await Game.objects.aget_or_create(**lookup, defaults=defaults)
+    if not created:
         await update_fields_if_needed_async(game, fields)
     await _apply_igdb_relations(game, igdb_game, include_media=include_media)
     return game

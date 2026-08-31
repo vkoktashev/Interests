@@ -28,6 +28,16 @@ class UserGame(UserScore):
 
     class Meta:
         unique_together = (("user", "game"),)
+        constraints = (
+            models.CheckConstraint(
+                condition=models.Q(score__gte=0, score__lte=10),
+                name='user_game_score_between_0_and_10',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(spent_time__gte=0),
+                name='user_game_spent_time_nonnegative',
+            ),
+        )
         verbose_name = 'игра пользователя'
         verbose_name_plural = 'игры пользователей'
 

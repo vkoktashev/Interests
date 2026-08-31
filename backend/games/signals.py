@@ -1,4 +1,4 @@
-from django.db.models.signals import pre_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 
@@ -8,13 +8,17 @@ from utils.functions import field_is_changed
 
 
 @receiver(pre_save, sender=UserGame)
-def create_log(instance, **kwargs):
+def capture_previous_fields(instance, **kwargs):
     try:
         old_instance = UserGame.objects.get(user=instance.user, game=instance.game)
-        old_fields = UserGameSerializer(old_instance).data
+        instance._log_previous_fields = UserGameSerializer(old_instance).data
     except UserGame.DoesNotExist:
-        old_fields = None
+        instance._log_previous_fields = None
 
+
+@receiver(post_save, sender=UserGame)
+def create_log(instance, **kwargs):
+    old_fields = getattr(instance, '_log_previous_fields', None)
     fields = UserGameSerializer(instance).data
     game_log_dict = dict(GameLog.ACTION_TYPE_CHOICES)
 
@@ -22,8 +26,12 @@ def create_log(instance, **kwargs):
         if field_is_changed(game_log_dict, field, fields, old_fields, UserGame._meta):
             action_type = field
             action_result = fields[field]
-            GameLog.objects.create(user=instance.user, game=instance.game,
-                                   action_type=action_type, action_result=action_result)
+            GameLog.objects.create(
+                user=instance.user,
+                game=instance.game,
+                action_type=action_type,
+                action_result=action_result,
+            )
 
 
 @receiver(pre_save, sender=UserGame)

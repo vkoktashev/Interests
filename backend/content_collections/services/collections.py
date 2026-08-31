@@ -6,7 +6,7 @@ from content_collections.media import (
     get_collection_content_keys,
     get_media_item,
 )
-from content_collections.models import CollectionItemOrder
+from content_collections.models import Collection, CollectionItemOrder
 
 
 class CollectionInputError(Exception):
@@ -43,6 +43,7 @@ def create_collection(serializer, author, requested_items):
 
 @transaction.atomic
 def add_collection_item(collection, media_type, object_id):
+    collection = _lock_collection(collection)
     item, relation_name, error = get_media_item(media_type, object_id)
     if error == 'Контент не найден.':
         raise CollectionItemNotFoundError(error)
@@ -70,6 +71,7 @@ def add_collection_item(collection, media_type, object_id):
 
 @transaction.atomic
 def reorder_collection_items(collection, items):
+    collection = _lock_collection(collection)
     if not isinstance(items, list):
         raise CollectionInputError('Порядок элементов должен быть списком.')
 
@@ -104,6 +106,7 @@ def reorder_collection_items(collection, items):
 
 @transaction.atomic
 def remove_collection_item(collection, media_type, object_id):
+    collection = _lock_collection(collection)
     config = MEDIA_CONFIG.get(media_type)
     if config is None:
         raise CollectionInputError('Неизвестный тип контента.')
@@ -174,3 +177,7 @@ def _sync_collection_item_orders(collection):
             next_position += 1
     if missing_orders:
         CollectionItemOrder.objects.bulk_create(missing_orders)
+
+
+def _lock_collection(collection):
+    return Collection.objects.select_for_update().get(pk=collection.pk)

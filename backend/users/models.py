@@ -3,6 +3,7 @@ from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.db.models.functions import Lower
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -78,6 +79,16 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.username
 
     class Meta:
+        constraints = (
+            models.UniqueConstraint(
+                Lower('username'),
+                name='unique_user_username_case_insensitive',
+            ),
+            models.UniqueConstraint(
+                Lower('email'),
+                name='unique_user_email_case_insensitive',
+            ),
+        )
         verbose_name = 'пользователь'
         verbose_name_plural = 'пользователи'
 
@@ -138,6 +149,12 @@ class UserFollow(models.Model):
 
     class Meta:
         unique_together = (("user", "followed_user"),)
+        constraints = (
+            models.CheckConstraint(
+                condition=~models.Q(user=models.F('followed_user')),
+                name='prevent_user_self_follow',
+            ),
+        )
         verbose_name = 'подписка'
         verbose_name_plural = 'подписки'
 
