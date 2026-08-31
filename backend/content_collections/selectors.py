@@ -44,7 +44,7 @@ def get_collection_queryset(action, request_user, author=None, progress_user=Non
             queryset = queryset.filter(privacy=Collection.PRIVACY_PUBLIC)
         return _annotate_progress(queryset, progress_user) if progress_user else queryset
 
-    if action in ('update', 'partial_update', 'add_item', 'remove_item', 'reorder'):
+    if action in ('update', 'partial_update', 'destroy', 'add_item', 'remove_item', 'reorder'):
         return (
             Collection.objects
             .filter(author=request_user)

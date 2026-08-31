@@ -64,6 +64,12 @@
         align-items: flex-end;
     }
 
+    &__owner-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
     &__setting-badge {
         @include body2;
         flex-shrink: 0;
@@ -259,7 +265,13 @@
             flex-direction: column;
         }
 
-        &__edit-button {
+        &__owner-actions {
+            flex-direction: column;
+        }
+
+        &__owner-actions,
+        &__edit-button,
+        &__delete-button {
             width: 100%;
         }
 
