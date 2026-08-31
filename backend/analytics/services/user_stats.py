@@ -827,4 +827,3 @@ def calculate_activity_stats(user: User, user_timezone=None) -> dict:
         }
     }
 
-

@@ -21,11 +21,6 @@ from users.services.logs import (
     get_logs,
     get_user_by_id,
 )
-from users.services.stats import (
-    InvalidPersonalityTypeError,
-    get_top_personalities,
-    get_user_stats,
-)
 from users.services.tracking import update_follow, update_user_settings
 from utils.constants import (
     CANNOT_DELETE_ANOTHER_USER_LOG,
@@ -125,34 +120,6 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         if error_response is not None:
             return error_response
         return Response(get_user_profile_payload(request, user))
-
-    @action(detail=True, methods=['get'])
-    def stats(self, request, **kwargs):
-        user, error_response = _resolve_user(kwargs.get('pk'), request.user)
-        if error_response is not None:
-            return error_response
-        if not is_user_available(request.user, user):
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        return Response(
-            get_user_stats(user, request.query_params.get('tz')),
-            status=status.HTTP_200_OK,
-        )
-
-    @action(detail=True, methods=['get'], url_path='top-personalities')
-    def top_personalities(self, request, **kwargs):
-        user, error_response = _resolve_user(kwargs.get('pk'), request.user)
-        if error_response is not None:
-            return error_response
-        if not is_user_available(request.user, user):
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        try:
-            results = get_top_personalities(user, request.query_params.get('type'))
-        except InvalidPersonalityTypeError:
-            return Response(
-                {ERROR: 'Type must be one of: actors, directors, studios.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        return Response({'results': results}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['put'])
     def follow(self, request, **kwargs):

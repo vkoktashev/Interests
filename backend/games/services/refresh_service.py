@@ -48,6 +48,9 @@ def enqueue_game_refresh(slug=None, igdb_id=None, refresh_version=None):
             )
             if is_queued:
                 logger.info('enqueue_game_refresh queued by slug=%s', slug)
+        if not is_queued:
+            cache.delete(lock_key)
     except Exception:
+        cache.delete(lock_key)
         cache.set(broker_backoff_key, True, GAME_DETAILS_REFRESH_BROKER_BACKOFF_SECS)
         logger.exception('enqueue_game_refresh failed to dispatch: identity=%s', identity)

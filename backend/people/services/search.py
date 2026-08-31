@@ -1,19 +1,15 @@
 import tmdbsimple as tmdb
-from django.core.cache import cache
-from requests import HTTPError
 
+from integrations.tmdb import TmdbIntegrationError as TmdbUnavailableError, cached_tmdb_call
 from people.models import Person
-from utils.constants import CACHE_TIMEOUT, LANGUAGE, TMDB_POSTER_PATH_PREFIX
+from utils.constants import LANGUAGE, TMDB_POSTER_PATH_PREFIX
 
 
 def search_people(query, page):
     if not query:
         return [], 0
 
-    try:
-        results = _get_people_search_results(query=query, page=page)
-    except HTTPError:
-        results = {'results': [], 'total_results': 0}
+    results = _get_people_search_results(query=query, page=page)
 
     people = []
     for result in results.get('results', []):
@@ -31,11 +27,10 @@ def search_people(query, page):
 
 def _get_people_search_results(query, page):
     key = f'tmdb_people_search_{query.replace(" ", "_")}_page_{page}'
-    results = cache.get(key, None)
-    if results is None:
-        results = tmdb.Search().person(query=query, page=page, language=LANGUAGE)
-        cache.set(key, results, CACHE_TIMEOUT)
-    return results
+    return cached_tmdb_call(
+        key,
+        lambda: tmdb.Search().person(query=query, page=page, language=LANGUAGE),
+    )
 
 
 def _upsert_search_result(result):

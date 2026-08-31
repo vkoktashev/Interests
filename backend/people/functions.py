@@ -1,9 +1,9 @@
-from django.core.cache import cache
 from django.utils import timezone
 import tmdbsimple as tmdb
 
+from integrations.tmdb import cached_tmdb_call
 from people.models import Person
-from utils.constants import CACHE_TIMEOUT, LANGUAGE, TMDB_POSTER_PATH_PREFIX
+from utils.constants import LANGUAGE, TMDB_POSTER_PATH_PREFIX
 from utils.functions import update_fields_if_needed
 
 PERSON_MOVIE_CREDITS_CACHE_TIMEOUT = 60 * 60 * 24
@@ -16,28 +16,32 @@ def get_tmdb_person_key(tmdb_id):
 
 def get_tmdb_person(tmdb_id):
     key = get_tmdb_person_key(tmdb_id)
-    tmdb_person = cache.get(key, None)
-    if tmdb_person is None:
-        tmdb_person = tmdb.People(tmdb_id).info(language=LANGUAGE, append_to_response='external_ids')
-        cache.set(key, tmdb_person, CACHE_TIMEOUT)
-    return tmdb_person
+    return cached_tmdb_call(
+        key,
+        lambda: tmdb.People(tmdb_id).info(
+            language=LANGUAGE,
+            append_to_response='external_ids',
+        ),
+    )
 
 
 def get_tmdb_person_movie_credits(tmdb_id):
     key = f'person_{tmdb_id}_movie_credits'
-    movie_credits = cache.get(key, None)
-    if movie_credits is None:
-        movie_credits = tmdb.People(tmdb_id).movie_credits(language=LANGUAGE)
-        cache.set(key, movie_credits, PERSON_MOVIE_CREDITS_CACHE_TIMEOUT)
+    movie_credits = cached_tmdb_call(
+        key,
+        lambda: tmdb.People(tmdb_id).movie_credits(language=LANGUAGE),
+        timeout=PERSON_MOVIE_CREDITS_CACHE_TIMEOUT,
+    )
     return movie_credits or {'cast': [], 'crew': []}
 
 
 def get_tmdb_person_tv_credits(tmdb_id):
     key = f'person_{tmdb_id}_tv_credits'
-    tv_credits = cache.get(key, None)
-    if tv_credits is None:
-        tv_credits = tmdb.People(tmdb_id).tv_credits(language=LANGUAGE)
-        cache.set(key, tv_credits, PERSON_TV_CREDITS_CACHE_TIMEOUT)
+    tv_credits = cached_tmdb_call(
+        key,
+        lambda: tmdb.People(tmdb_id).tv_credits(language=LANGUAGE),
+        timeout=PERSON_TV_CREDITS_CACHE_TIMEOUT,
+    )
     return tv_credits or {'cast': [], 'crew': []}
 
 

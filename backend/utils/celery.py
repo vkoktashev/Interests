@@ -1,11 +1,15 @@
 import logging
 import socket
 from concurrent.futures import ThreadPoolExecutor
+from time import monotonic
 from urllib.parse import urlparse
 
+from celery import Task
 from django.conf import settings
 from django.core.cache import cache
 from django.db import close_old_connections
+
+from integrations import ExternalUnavailableError
 
 BROKER_BACKOFF_SECS = 60
 BROKER_AVAILABLE_CACHE_SECS = 5
@@ -13,6 +17,8 @@ BROKER_CONNECT_TIMEOUT_SECS = 0.2
 BROKER_AVAILABLE_CACHE_KEY = 'celery_broker_available'
 BROKER_UNAVAILABLE_CACHE_KEY = 'celery_broker_unavailable'
 LOCAL_TASK_MAX_WORKERS = 4
+BACKGROUND_TASK_DEBOUNCE_SECS = 60 * 30
+TASK_EXECUTION_LOCK_SECS = 60 * 30
 
 logger = logging.getLogger(__name__)
 _local_task_executor = (
@@ -20,6 +26,16 @@ _local_task_executor = (
     if getattr(settings, 'CELERY_LOCAL_FALLBACK', False)
     else None
 )
+
+
+class ExternalRefreshTask(Task):
+    autoretry_for = (ExternalUnavailableError,)
+    retry_backoff = 5
+    retry_backoff_max = 60 * 5
+    retry_jitter = True
+    retry_kwargs = {'max_retries': 3}
+    acks_late = True
+    reject_on_worker_lost = True
 
 
 def enqueue_background_task(task, args=None, kwargs=None, task_name=None):
@@ -47,6 +63,57 @@ def enqueue_background_task(task, args=None, kwargs=None, task_name=None):
         return False
 
     return True
+
+
+def enqueue_background_task_once(task, identity, args=None, kwargs=None, task_name=None, timeout=None):
+    lock_key = f'background_task_enqueued:{task.name}:{identity}'
+    if not cache.add(lock_key, True, timeout or BACKGROUND_TASK_DEBOUNCE_SECS):
+        return False
+
+    is_queued = enqueue_background_task(task, args=args, kwargs=kwargs, task_name=task_name)
+    if not is_queued:
+        cache.delete(lock_key)
+    return is_queued
+
+
+def execute_locked_task(task_name, identity, operation, timeout=TASK_EXECUTION_LOCK_SECS):
+    lock_key = f'background_task_running:{task_name}:{identity}'
+    lock_acquired = None
+    try:
+        lock_acquired = cache.add(lock_key, True, timeout)
+    except Exception:
+        logger.exception('Failed to acquire task execution lock: task=%s identity=%s', task_name, identity)
+
+    if lock_acquired is False:
+        logger.info('Skipped already running task: task=%s identity=%s', task_name, identity)
+        return None
+
+    started_at = monotonic()
+    logger.info('Background task started: task=%s identity=%s', task_name, identity)
+    try:
+        result = operation()
+    except Exception:
+        logger.exception(
+            'Background task failed: task=%s identity=%s duration_seconds=%.3f',
+            task_name,
+            identity,
+            monotonic() - started_at,
+        )
+        raise
+    else:
+        logger.info(
+            'Background task finished: task=%s identity=%s duration_seconds=%.3f',
+            task_name,
+            identity,
+            monotonic() - started_at,
+        )
+        return result
+    finally:
+        if lock_acquired:
+            try:
+                cache.delete(lock_key)
+            except Exception:
+                logger.exception('Failed to release task execution lock: task=%s identity=%s', task_name, identity)
 
 
 def _enqueue_local_background_task(task, args, kwargs, task_name):

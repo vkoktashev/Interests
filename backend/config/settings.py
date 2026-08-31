@@ -27,6 +27,7 @@ INSTALLED_APPS = [
 
     # our apps
     'config',
+    'analytics.apps.AnalyticsConfig',
     'users',
     'games',
     'people',
@@ -200,6 +201,12 @@ CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', CELERY_BROKER_UR
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_RESULT_EXPIRES = 60 * 60 * 24
+CELERY_TIMEZONE = 'Europe/Moscow'
+CELERY_ENABLE_UTC = True
 
 CACHE_URL = os.environ.get('CACHE_URL')
 if DEBUG and not CACHE_URL:

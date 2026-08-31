@@ -1,6 +1,6 @@
 from django.db import transaction
 
-from users.models import UserFollow
+from users.models import UserFollow, UserLog
 from users.serializers import SettingsSerializer, UserFollowSerializer
 
 
@@ -12,7 +12,15 @@ def update_follow(user, followed_user, data):
     serializer = UserFollowSerializer(user_follow, data=serializer_data, partial=True) \
         if user_follow is not None else UserFollowSerializer(data=serializer_data)
     serializer.is_valid(raise_exception=True)
-    serializer.save()
+    previous_is_following = user_follow.is_following if user_follow is not None else None
+    user_follow = serializer.save()
+    if previous_is_following is None or previous_is_following != user_follow.is_following:
+        UserLog.objects.create(
+            user=user_follow.user,
+            followed_user=user_follow.followed_user,
+            action_type=UserLog.ACTION_TYPE_FOLLOW,
+            action_result=user_follow.is_following,
+        )
     return serializer.data
 
 

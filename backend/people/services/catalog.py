@@ -1,22 +1,18 @@
 from datetime import timedelta
 
 from django.utils import timezone
-from requests import ConnectionError, HTTPError, Timeout
 
+from integrations.tmdb import TmdbNotFoundError, TmdbUnavailableError
 from people.functions import fetch_and_upsert_person
 from people.models import Person
 from people.tasks import refresh_person_details
-from utils.celery import enqueue_background_task
+from utils.celery import enqueue_background_task_once
 
 
 PERSON_DETAILS_REFRESH_INTERVAL = timedelta(days=7)
 
 
 class PersonNotFoundError(Exception):
-    pass
-
-
-class TmdbUnavailableError(Exception):
     pass
 
 
@@ -50,8 +46,9 @@ def person_refresh_is_due(person):
 
 
 def enqueue_person_refresh(tmdb_id):
-    return enqueue_background_task(
+    return enqueue_background_task_once(
         refresh_person_details,
+        identity=tmdb_id,
         args=(tmdb_id,),
         task_name='refresh_person_details',
     )
@@ -63,19 +60,5 @@ def _sync_person_if_needed(person, tmdb_id):
 
     try:
         return fetch_and_upsert_person(tmdb_id)
-    except HTTPError as error:
-        if _get_http_status(error) == 404:
-            raise PersonNotFoundError from error
-        raise TmdbUnavailableError from error
-    except (ConnectionError, Timeout, ValueError) as error:
-        raise TmdbUnavailableError from error
-
-
-def _get_http_status(error):
-    if getattr(error, 'response', None) is not None:
-        return error.response.status_code
-
-    try:
-        return int(str(error.args[0]).split(' ', 1)[0])
-    except (IndexError, TypeError, ValueError):
-        return None
+    except TmdbNotFoundError as error:
+        raise PersonNotFoundError from error

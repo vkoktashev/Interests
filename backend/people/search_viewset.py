@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from people.selectors import get_people_search_payload
-from people.services.search import search_people
-from utils.constants import DEFAULT_PAGE_NUMBER
+from people.services.search import TmdbUnavailableError, search_people
+from utils.constants import DEFAULT_PAGE_NUMBER, TMDB_UNAVAILABLE
 from utils.swagger import openapi, swagger_auto_schema
 
 
@@ -23,9 +23,15 @@ class SearchPeopleViewSet(GenericViewSet):
     )
     @action(detail=False, methods=['get'])
     def tmdb(self, request, *args, **kwargs):
-        people, total_results = search_people(
-            query=request.GET.get('query', '').strip(),
-            page=request.GET.get('page', DEFAULT_PAGE_NUMBER),
-        )
+        try:
+            people, total_results = search_people(
+                query=request.GET.get('query', '').strip(),
+                page=request.GET.get('page', DEFAULT_PAGE_NUMBER),
+            )
+        except TmdbUnavailableError:
+            return Response(
+                {'error': TMDB_UNAVAILABLE},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         payload = get_people_search_payload(people, total_results, request)
         return Response(payload, status=status.HTTP_200_OK)

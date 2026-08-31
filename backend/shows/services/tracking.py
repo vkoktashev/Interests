@@ -1,8 +1,20 @@
 from django.db import transaction
+from django.utils import timezone
 
-from shows.models import Episode, EpisodeLog, Show, ShowLog, UserEpisode, UserShow
-from shows.serializers import UserEpisodeSerializer, UserShowWriteSerializer
+from shows.models import (
+    Episode,
+    EpisodeLog,
+    Season,
+    SeasonLog,
+    Show,
+    ShowLog,
+    UserEpisode,
+    UserSeason,
+    UserShow,
+)
+from shows.serializers import UserEpisodeSerializer, UserSeasonSerializer, UserShowWriteSerializer
 from utils.constants import EPISODE_NOT_WATCHED_SCORE, EPISODE_WATCHED_SCORE
+from utils.tracking_logs import capture_tracking_state, create_tracking_logs
 
 
 class ShowNotFoundError(Exception):
@@ -10,6 +22,10 @@ class ShowNotFoundError(Exception):
 
 
 class InvalidEpisodesError(Exception):
+    pass
+
+
+class SeasonNotFoundError(Exception):
     pass
 
 
@@ -23,10 +39,34 @@ def update_user_show(user, tmdb_id, data):
     serializer_data = data.copy()
     serializer_data.update({'user': user.pk, 'show': show.pk})
     user_show = UserShow.objects.filter(user=user, show=show).first()
+    previous_state = capture_tracking_state(user_show, ShowLog)
     serializer = UserShowWriteSerializer(user_show, data=serializer_data) \
         if user_show is not None else UserShowWriteSerializer(data=serializer_data)
     serializer.is_valid(raise_exception=True)
-    serializer.save()
+    user_show = serializer.save(updated_at=timezone.now())
+    create_tracking_logs(user_show, previous_state, ShowLog, 'show')
+    return serializer.data
+
+
+@transaction.atomic
+def update_user_season(user, show_tmdb_id, season_number, data):
+    show = Show.objects.filter(tmdb_id=show_tmdb_id).first()
+    if show is None:
+        raise ShowNotFoundError
+
+    season = Season.objects.filter(tmdb_show=show, tmdb_season_number=season_number).first()
+    if season is None:
+        raise SeasonNotFoundError
+
+    serializer_data = data.copy()
+    serializer_data.update({'user': user.pk, 'season': season.pk})
+    user_season = UserSeason.objects.filter(user=user, season=season).first()
+    previous_state = capture_tracking_state(user_season, SeasonLog)
+    serializer = UserSeasonSerializer(user_season, data=serializer_data) \
+        if user_season is not None else UserSeasonSerializer(data=serializer_data)
+    serializer.is_valid(raise_exception=True)
+    user_season = serializer.save()
+    create_tracking_logs(user_season, previous_state, SeasonLog, 'season')
     return serializer.data
 
 

@@ -8,7 +8,6 @@ from difflib import SequenceMatcher
 from typing import Any, Optional
 from urllib.parse import urlparse
 
-import requests
 from igdb.wrapper import IGDBWrapper
 from django.utils import timezone
 
@@ -24,6 +23,8 @@ from games.models import (
     Genre,
     Store,
 )
+from integrations import ExternalIntegrationError, ExternalUnavailableError
+from integrations.http import external_request
 from people.models import Developer
 from utils.functions import objects_to_str, update_fields_if_needed_async
 from videos.models import Video
@@ -134,7 +135,9 @@ def get_igdb_access_token() -> str:
     if not client_id or not client_secret:
         raise RuntimeError('IGDB credentials are missing: set IGDB_CLIENT_ID and IGDB_CLIENT_SECRET in .env')
 
-    response = requests.post(
+    response = external_request(
+        'igdb',
+        'POST',
         TWITCH_TOKEN_URL,
         params={
             'client_id': client_id,
@@ -143,8 +146,6 @@ def get_igdb_access_token() -> str:
         },
         timeout=IGDB_API_TIMEOUT,
     )
-    response.raise_for_status()
-
     payload = response.json()
     access_token = payload.get('access_token')
     expires_in = int(payload.get('expires_in') or 0)
@@ -162,6 +163,16 @@ def get_igdb_wrapper() -> IGDBWrapper:
         raise RuntimeError('IGDB client id is missing: set IGDB_CLIENT_ID in .env')
     access_token = get_igdb_access_token()
     return IGDBWrapper(client_id, access_token)
+
+
+def _request_igdb(endpoint, body):
+    try:
+        raw = get_igdb_wrapper().api_request(endpoint, body)
+        return json.loads(raw.decode('utf-8')) if raw else []
+    except ExternalIntegrationError:
+        raise
+    except Exception as error:
+        raise ExternalUnavailableError('igdb') from error
 
 
 def _build_igdb_game_filters(
@@ -205,13 +216,8 @@ def _get_igdb_platform_ids(game: dict[str, Any]) -> set[int]:
 
 
 def query_igdb_platforms() -> list[dict[str, Any]]:
-    wrapper = get_igdb_wrapper()
     body = 'fields id,name,abbreviation,slug; sort name asc; limit 500;'
-    raw = wrapper.api_request('platforms', body)
-    if not raw:
-        return []
-
-    platforms = json.loads(raw.decode('utf-8')) or []
+    platforms = _request_igdb('platforms', body)
     return [
         {
             'id': platform['id'],
@@ -230,7 +236,6 @@ def query_igdb_games(
     game_types: list[int] | None = None,
     platform_ids: list[int] | None = None,
 ) -> list[dict[str, Any]]:
-    wrapper = get_igdb_wrapper()
     safe_query = (query or '').replace('"', '\\"')
     game_filters = _build_igdb_game_filters(game_types, platform_ids)
     body = (
@@ -240,10 +245,7 @@ def query_igdb_games(
         f'{game_filters}'
         f'limit {max(1, min(limit, 50))};'
     )
-    raw = wrapper.api_request('games', body)
-    if not raw:
-        return []
-    return json.loads(raw.decode('utf-8'))
+    return _request_igdb('games', body)
 
 
 def _format_igdb_cover_url(url: str | None) -> str:
@@ -509,7 +511,6 @@ def get_game_search_results(
 
     offset = (safe_page - 1) * safe_page_size
     request_limit = safe_page_size + 1
-    wrapper = get_igdb_wrapper()
     safe_query = (query or '').replace('\\', '\\\\').replace('"', '\\"')
     game_filters = _build_igdb_game_filters(normalized_game_types, normalized_platform_ids)
     body = (
@@ -520,11 +521,7 @@ def get_game_search_results(
         f'limit {request_limit}; '
         f'offset {offset};'
     )
-    raw = wrapper.api_request('games', body)
-    if not raw:
-        return {'results': [], 'has_next': False}
-
-    games = json.loads(raw.decode('utf-8')) or []
+    games = _request_igdb('games', body)
     should_paginate_locally = not games
     if not games:
         # Fallback 1: simpler IGDB search payload can return matches when rich payload returns empty.
@@ -586,7 +583,6 @@ def get_game_search_results(
 
 
 def query_igdb_game_by_id(igdb_id: int) -> Optional[dict[str, Any]]:
-    wrapper = get_igdb_wrapper()
     body = (
         f'fields id,name,slug,category,game_type,first_release_date,summary,rating,rating_count,aggregated_rating,'
         f'aggregated_rating_count,{IGDB_RELEASE_DATE_FIELDS},cover.url,url,'
@@ -597,15 +593,11 @@ def query_igdb_game_by_id(igdb_id: int) -> Optional[dict[str, Any]]:
         f'where id = {int(igdb_id)}; '
         f'limit 1;'
     )
-    raw = wrapper.api_request('games', body)
-    if not raw:
-        return None
-    items = json.loads(raw.decode('utf-8')) or []
+    items = _request_igdb('games', body)
     return items[0] if items else None
 
 
 def query_igdb_game_by_slug(slug: str) -> Optional[dict[str, Any]]:
-    wrapper = get_igdb_wrapper()
     safe_slug = (slug or '').replace('\\', '\\\\').replace('"', '\\"')
     body = (
         f'fields id,name,slug,category,game_type,first_release_date,summary,rating,rating_count,aggregated_rating,'
@@ -617,10 +609,7 @@ def query_igdb_game_by_slug(slug: str) -> Optional[dict[str, Any]]:
         f'where slug = "{safe_slug}"; '
         f'limit 1;'
     )
-    raw = wrapper.api_request('games', body)
-    if not raw:
-        return None
-    items = json.loads(raw.decode('utf-8')) or []
+    items = _request_igdb('games', body)
     return items[0] if items else None
 
 
@@ -909,34 +898,43 @@ def _seconds_to_hours(value: Any) -> Decimal | None:
 
 
 def query_igdb_game_time_to_beat(igdb_game_id: int) -> Optional[dict[str, Any]]:
-    wrapper = get_igdb_wrapper()
     body = (
         f'fields id,game_id,hastily,normally,completely,count; '
         f'where game_id = {int(igdb_game_id)}; '
         f'limit 1;'
     )
-    raw = wrapper.api_request('game_time_to_beats', body)
-    if not raw:
-        return None
-    items = json.loads(raw.decode('utf-8')) or []
+    items = _request_igdb('game_time_to_beats', body)
     return items[0] if items else None
 
 
+def attach_igdb_game_time_to_beat(igdb_game: dict[str, Any], game: Game | None = None) -> dict[str, Any]:
+    if 'game_time_to_beat' in igdb_game:
+        return igdb_game
+
+    igdb_game_id = igdb_game.get('id') or getattr(game, 'igdb_id', None)
+    if not igdb_game_id:
+        return igdb_game
+
+    try:
+        game_time_to_beat = query_igdb_game_time_to_beat(int(igdb_game_id))
+    except Exception:
+        # An absent key tells the write phase to preserve existing beat times.
+        return igdb_game
+
+    result = dict(igdb_game)
+    result['game_time_to_beat'] = game_time_to_beat
+    return result
+
+
 async def update_game_beat_times_from_igdb(game: Game, igdb_game: dict[str, Any]) -> None:
+    if 'game_time_to_beat' not in igdb_game:
+        return
+
     game_time_to_beat = igdb_game.get('game_time_to_beat')
     if isinstance(game_time_to_beat, list):
         game_time_to_beat = game_time_to_beat[0] if game_time_to_beat else None
     if not isinstance(game_time_to_beat, dict):
         game_time_to_beat = None
-
-    if game_time_to_beat is None:
-        igdb_game_id = igdb_game.get('id') or game.igdb_id
-        if igdb_game_id:
-            try:
-                game_time_to_beat = query_igdb_game_time_to_beat(int(igdb_game_id))
-            except Exception:
-                # Do not touch existing data if IGDB beat-time query failed.
-                return
 
     type_to_value = {
         GameBeatTime.TYPE_MAIN: (game_time_to_beat or {}).get('hastily'),

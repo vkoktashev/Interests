@@ -23,7 +23,7 @@ function StatisticsBlock({ userId }: IStatisticsBlockProps) {
 	const dispatch = useDispatch();
 	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 	const statsFetchConfig = useMemo(() => userId && ({
-		url: `/users/user/${userId}/stats/?tz=${encodeURIComponent(userTimezone)}`,
+		url: `/analytics/users/${userId}/stats/?tz=${encodeURIComponent(userTimezone)}`,
 		method: 'get',
 	}), [userId, userTimezone]);
 	const {data: stats, isLoading} = useFetch(statsFetchConfig as any);

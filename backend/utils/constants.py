@@ -1,9 +1,3 @@
-import os
-
-import tmdbsimple as tmdb
-
-tmdb.API_KEY = os.environ['TMDB_API_KEY']
-tmdb.REQUESTS_TIMEOUT = 8
 LANGUAGE = 'ru'
 TMDB_VIDEO_LANGUAGES = f'{LANGUAGE},en'
 TMDB_TRAILER_TYPE = 'Trailer'
@@ -31,9 +25,6 @@ TMDB_STILL_PATH_PREFIX = 'https://image.tmdb.org/t/p/w1920_and_h1080_bestv2'
 EPISODE_NOT_WATCHED_SCORE = -1
 EPISODE_WATCHED_SCORE = 0
 MINUTES_IN_HOUR = 60
-
-UPDATE_DATES_HOUR = 5
-UPDATE_DATES_MINUTE = 0
 
 # errors
 ERROR = 'error'

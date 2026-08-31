@@ -4,11 +4,12 @@ from django.db import transaction
 from django.db.models.deletion import ProtectedError
 from django.utils import timezone
 
+from integrations.tmdb import cached_tmdb_call
 from people.models import Person
 from shows.models import Episode, ShowGenre, ShowPerson, SeasonPerson, EpisodePerson, UserSeason, SeasonLog, \
     UserEpisode, EpisodeLog
 from utils.constants import TMDB_BACKDROP_PATH_PREFIX, TMDB_POSTER_PATH_PREFIX, TMDB_STILL_PATH_PREFIX, LANGUAGE, \
-    CACHE_TIMEOUT, TMDB_TRAILER_TYPE, TMDB_VIDEO_LANGUAGES
+    TMDB_TRAILER_TYPE, TMDB_VIDEO_LANGUAGES
 from utils.functions import update_fields_if_needed, get_english_translation_data
 
 
@@ -321,57 +322,57 @@ def sync_episode_people(episode, tmdb_episode_credits):
 
 def get_tmdb_show(tmdb_id):
     key = get_tmdb_show_key(tmdb_id)
-    tmdb_show = cache.get(key, None)
-    if tmdb_show is None:
-        tmdb_show = tmdb.TV(tmdb_id).info(language=LANGUAGE, append_to_response='translations')
-        cache.set(key, tmdb_show, CACHE_TIMEOUT)
-    return tmdb_show
+    return cached_tmdb_call(
+        key,
+        lambda: tmdb.TV(tmdb_id).info(
+            language=LANGUAGE,
+            append_to_response='translations',
+        ),
+    )
 
 
 def get_tmdb_show_videos(tmdb_id):
     key = f'show_{tmdb_id}_trailers_{TMDB_VIDEO_LANGUAGES.replace(",", "_")}'
-    tmdb_show_videos = cache.get(key, None)
-    if tmdb_show_videos is None:
-        tmdb_show_videos = tmdb.TV(tmdb_id).videos(
+
+    def fetch_videos():
+        videos = tmdb.TV(tmdb_id).videos(
             language=LANGUAGE,
             include_video_language=TMDB_VIDEO_LANGUAGES,
         )['results']
-        tmdb_show_videos = [
-            video for video in tmdb_show_videos
+        return [
+            video for video in videos
             if video.get('type') == TMDB_TRAILER_TYPE
         ]
-        cache.set(key, tmdb_show_videos, CACHE_TIMEOUT)
-    return tmdb_show_videos
+
+    return cached_tmdb_call(key, fetch_videos)
 
 
 def get_tmdb_show_credits(tmdb_id):
     key = f'show_{tmdb_id}_aggregate_credits'
-    tmdb_show_credits = cache.get(key, None)
-    if tmdb_show_credits is None:
-        tmdb_show_credits = tmdb.TV(tmdb_id).aggregate_credits(
+    return cached_tmdb_call(
+        key,
+        lambda: tmdb.TV(tmdb_id).aggregate_credits(
             language=LANGUAGE,
-        )
-        cache.set(key, tmdb_show_credits, CACHE_TIMEOUT)
-    return tmdb_show_credits
+        ),
+    )
 
 
 def get_tmdb_show_recommendations(tmdb_id, page=1):
     key = f'show_{tmdb_id}_recommendations_{LANGUAGE.replace("-", "_")}_{page}'
-    tmdb_recommendations = cache.get(key, None)
-    if tmdb_recommendations is None:
-        tmdb_recommendations = tmdb.TV(tmdb_id).recommendations(language=LANGUAGE, page=page)
-        cache.set(key, tmdb_recommendations, CACHE_TIMEOUT)
+    tmdb_recommendations = cached_tmdb_call(
+        key,
+        lambda: tmdb.TV(tmdb_id).recommendations(language=LANGUAGE, page=page),
+    )
 
     return tmdb_recommendations or {'page': page, 'total_pages': 1, 'total_results': 0, 'results': []}
 
 
 def get_tmdb_season(show_tmdb_id, season_number):
     key = get_tmdb_season_key(show_tmdb_id, season_number)
-    tmdb_season = cache.get(key, None)
-    if tmdb_season is None:
-        tmdb_season = tmdb.TV_Seasons(show_tmdb_id, season_number).info(language=LANGUAGE)
-        cache.set(key, tmdb_season, CACHE_TIMEOUT)
-    return tmdb_season
+    return cached_tmdb_call(
+        key,
+        lambda: tmdb.TV_Seasons(show_tmdb_id, season_number).info(language=LANGUAGE),
+    )
 
 
 def get_tmdb_season_videos(show_tmdb_id, season_number):
@@ -379,36 +380,38 @@ def get_tmdb_season_videos(show_tmdb_id, season_number):
         f'show_{show_tmdb_id}_season_{season_number}_trailers_'
         f'{TMDB_VIDEO_LANGUAGES.replace(",", "_")}'
     )
-    tmdb_season_videos = cache.get(key, None)
-    if tmdb_season_videos is None:
+
+    def fetch_videos():
         payload = tmdb.TV_Seasons(show_tmdb_id, season_number).videos(
             language=LANGUAGE,
             include_video_language=TMDB_VIDEO_LANGUAGES,
         )
-        tmdb_season_videos = [
+        return [
             video for video in (payload.get('results') or [])
             if video.get('type') == TMDB_TRAILER_TYPE
         ]
-        cache.set(key, tmdb_season_videos, CACHE_TIMEOUT)
-    return tmdb_season_videos
+
+    return cached_tmdb_call(key, fetch_videos)
 
 
 def get_tmdb_season_credits(show_tmdb_id, season_number):
     key = f'show_{show_tmdb_id}_season_{season_number}_credits'
-    tmdb_season_credits = cache.get(key, None)
-    if tmdb_season_credits is None:
-        tmdb_season_credits = tmdb.TV_Seasons(show_tmdb_id, season_number).credits(language=LANGUAGE)
-        cache.set(key, tmdb_season_credits, CACHE_TIMEOUT)
-    return tmdb_season_credits
+    return cached_tmdb_call(
+        key,
+        lambda: tmdb.TV_Seasons(show_tmdb_id, season_number).credits(language=LANGUAGE),
+    )
 
 
 def get_tmdb_episode(show_tmdb_id, season_number, episode_number):
     key = get_tmdb_episode_key(show_tmdb_id, season_number, episode_number)
-    tmdb_episode = cache.get(key, None)
-    if tmdb_episode is None:
-        tmdb_episode = tmdb.TV_Episodes(show_tmdb_id, season_number, episode_number).info(language=LANGUAGE)
-        cache.set(key, tmdb_episode, CACHE_TIMEOUT)
-    return tmdb_episode
+    return cached_tmdb_call(
+        key,
+        lambda: tmdb.TV_Episodes(
+            show_tmdb_id,
+            season_number,
+            episode_number,
+        ).info(language=LANGUAGE),
+    )
 
 
 def get_tmdb_episode_videos(show_tmdb_id, season_number, episode_number):
@@ -416,27 +419,30 @@ def get_tmdb_episode_videos(show_tmdb_id, season_number, episode_number):
         f'show_{show_tmdb_id}_season_{season_number}_episode_{episode_number}_trailers_'
         f'{TMDB_VIDEO_LANGUAGES.replace(",", "_")}'
     )
-    tmdb_episode_videos = cache.get(key, None)
-    if tmdb_episode_videos is None:
+
+    def fetch_videos():
         payload = tmdb.TV_Episodes(show_tmdb_id, season_number, episode_number).videos(
             language=LANGUAGE,
             include_video_language=TMDB_VIDEO_LANGUAGES,
         )
-        tmdb_episode_videos = [
+        return [
             video for video in (payload.get('results') or [])
             if video.get('type') == TMDB_TRAILER_TYPE
         ]
-        cache.set(key, tmdb_episode_videos, CACHE_TIMEOUT)
-    return tmdb_episode_videos
+
+    return cached_tmdb_call(key, fetch_videos)
 
 
 def get_tmdb_episode_credits(show_tmdb_id, season_number, episode_number):
     key = f'show_{show_tmdb_id}_season_{season_number}_episode_{episode_number}_credits'
-    tmdb_episode_credits = cache.get(key, None)
-    if tmdb_episode_credits is None:
-        tmdb_episode_credits = tmdb.TV_Episodes(show_tmdb_id, season_number, episode_number).credits(language=LANGUAGE)
-        cache.set(key, tmdb_episode_credits, CACHE_TIMEOUT)
-    return tmdb_episode_credits
+    return cached_tmdb_call(
+        key,
+        lambda: tmdb.TV_Episodes(
+            show_tmdb_id,
+            season_number,
+            episode_number,
+        ).credits(language=LANGUAGE),
+    )
 
 
 def upsert_season_from_tmdb(show, tmdb_season):
@@ -554,3 +560,4 @@ def clear_tmdb_episode_cache(show_tmdb_id, season_number, episode_number):
         get_tmdb_episode_key(show_tmdb_id, season_number, episode_number),
         f'show_{show_tmdb_id}_season_{season_number}_episode_{episode_number}_credits',
     ))
+from integrations.tmdb import cached_tmdb_call

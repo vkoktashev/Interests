@@ -1,29 +1,28 @@
 from datetime import datetime
 import logging
 
-from celery.schedules import crontab
+from django.db import transaction
 from django.db.models import Q
-from requests import HTTPError, ConnectionError
 
 from config.celery import app
+from integrations.tmdb import TmdbIntegrationError
 from shows.functions import clear_tmdb_episode_cache, clear_tmdb_season_cache, clear_tmdb_show_cache, \
     get_show_new_fields, get_tmdb_show, sync_show_genres, \
     get_tmdb_show_credits, sync_show_people, sync_show_seasons, upsert_season_from_tmdb, get_tmdb_season, \
-    sync_season_episodes, \
+    get_tmdb_show_videos, get_tmdb_season_videos, get_tmdb_episode_videos, sync_season_episodes, \
     get_tmdb_season_credits, sync_season_people, get_tmdb_episode, get_episode_new_fields, get_tmdb_episode_credits, \
     sync_episode_people
-from shows.models import Show, UserShow, Season, Episode
+from shows.models import Episode, EpisodeVideo, Season, SeasonVideo, Show, ShowVideo, UserShow
 from shows.services.cast_sync import run_show_cast_sync
-from utils.constants import UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
+from utils.celery import ExternalRefreshTask, enqueue_background_task_once, execute_locked_task
 from utils.functions import update_fields_if_needed
+from videos.functions import sync_tmdb_videos
 
 logger = logging.getLogger(__name__)
 
 
 @app.task(bind=True, track_started=True)
 def sync_show_cast(self):
-    logger.info('sync_show_cast: start')
-
     def report_progress(progress):
         try:
             self.update_state(state='PROGRESS', meta=progress)
@@ -34,77 +33,57 @@ def sync_show_cast(self):
         log_method = logger.error if level == 'error' else logger.info
         log_method('sync_show_cast: %s', message)
 
-    try:
-        summary = run_show_cast_sync(
+    def sync_cast():
+        return run_show_cast_sync(
             progress_callback=report_progress,
             output_callback=log_output,
         )
-    except Exception:
-        logger.exception('sync_show_cast: failed')
-        raise
 
-    logger.info('sync_show_cast: finish summary=%s', summary)
-    return summary
+    return execute_locked_task('sync_show_cast', 'all', sync_cast, timeout=60 * 60 * 12)
 
 
-@app.on_after_finalize.connect
-def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(
-        crontab(hour=UPDATE_DATES_HOUR, minute=UPDATE_DATES_MINUTE),
-        update_shows.s(),
-    )
-
-
-@app.task
+@app.task(base=ExternalRefreshTask, ignore_result=True)
 def refresh_show_details(tmdb_id, force=False):
-    logger.info('refresh_show_details: start tmdb_id=%s force=%s', tmdb_id, force)
-    if force:
-        clear_tmdb_show_cache(tmdb_id)
-    show = update_show_details(tmdb_id)
-    logger.info('refresh_show_details: finish tmdb_id=%s updated=%s', tmdb_id, show is not None)
-    return show.id if show is not None else None
+    def refresh():
+        if force:
+            clear_tmdb_show_cache(tmdb_id)
+        return update_show_details(tmdb_id).id
+
+    return execute_locked_task('refresh_show_details', tmdb_id, refresh)
 
 
-@app.task
+@app.task(base=ExternalRefreshTask, ignore_result=True)
 def refresh_season_details(show_tmdb_id, season_number, force=False):
-    logger.info(
-        'refresh_season_details: start show_tmdb_id=%s season_number=%s force=%s',
-        show_tmdb_id,
-        season_number,
-        force,
+    identity = f'{show_tmdb_id}:{season_number}'
+
+    def refresh():
+        if force:
+            clear_tmdb_season_cache(show_tmdb_id, season_number)
+        season = update_season_details(show_tmdb_id, season_number)
+        return season.id if season is not None else None
+
+    return execute_locked_task(
+        'refresh_season_details',
+        identity,
+        refresh,
     )
-    if force:
-        clear_tmdb_season_cache(show_tmdb_id, season_number)
-    season = update_season_details(show_tmdb_id, season_number)
-    logger.info(
-        'refresh_season_details: finish show_tmdb_id=%s season_number=%s updated=%s',
-        show_tmdb_id,
-        season_number,
-        season is not None,
-    )
-    return season.id if season is not None else None
 
 
-@app.task
+@app.task(base=ExternalRefreshTask, ignore_result=True)
 def refresh_episode_details(show_tmdb_id, season_number, episode_number, force=False):
-    logger.info(
-        'refresh_episode_details: start show_tmdb_id=%s season_number=%s episode_number=%s force=%s',
-        show_tmdb_id,
-        season_number,
-        episode_number,
-        force,
+    identity = f'{show_tmdb_id}:{season_number}:{episode_number}'
+
+    def refresh():
+        if force:
+            clear_tmdb_episode_cache(show_tmdb_id, season_number, episode_number)
+        episode = update_episode_details(show_tmdb_id, season_number, episode_number)
+        return episode.id if episode is not None else None
+
+    return execute_locked_task(
+        'refresh_episode_details',
+        identity,
+        refresh,
     )
-    if force:
-        clear_tmdb_episode_cache(show_tmdb_id, season_number, episode_number)
-    episode = update_episode_details(show_tmdb_id, season_number, episode_number)
-    logger.info(
-        'refresh_episode_details: finish show_tmdb_id=%s season_number=%s episode_number=%s updated=%s',
-        show_tmdb_id,
-        season_number,
-        episode_number,
-        episode is not None,
-    )
-    return episode.id if episode is not None else None
 
 
 def update_show_details(show_tmdb_id):
@@ -113,22 +92,31 @@ def update_show_details(show_tmdb_id):
     try:
         tmdb_show = get_tmdb_show(show_tmdb_id)
         tmdb_show_credits = get_tmdb_show_credits(show_tmdb_id)
-    except (HTTPError, ConnectionError):
+    except TmdbIntegrationError:
         logger.exception('update_show_details: failed to fetch TMDB show details for tmdb_id=%s', show_tmdb_id)
-        return None
+        raise
+
+    try:
+        tmdb_videos = get_tmdb_show_videos(show_tmdb_id)
+    except TmdbIntegrationError:
+        tmdb_videos = None
+        logger.warning('update_show_details: failed to fetch TMDB videos for tmdb_id=%s', show_tmdb_id)
 
     show = None
     try:
-        new_fields = get_show_new_fields(tmdb_show)
-        show, created = Show.objects.get_or_create(tmdb_id=show_tmdb_id, defaults=new_fields)
-        changed_fields = list(new_fields.keys()) if created else _get_changed_fields(show, new_fields)
-        if not created:
-            update_fields_if_needed(show, new_fields)
+        with transaction.atomic():
+            new_fields = get_show_new_fields(tmdb_show)
+            show, created = Show.objects.get_or_create(tmdb_id=show_tmdb_id, defaults=new_fields)
+            changed_fields = list(new_fields.keys()) if created else _get_changed_fields(show, new_fields)
+            if not created:
+                update_fields_if_needed(show, new_fields)
 
-        sync_show_genres(show, tmdb_show)
-        sync_show_people(show, tmdb_show_credits, tmdb_show)
+            sync_show_genres(show, tmdb_show)
+            sync_show_people(show, tmdb_show_credits, tmdb_show)
+            if tmdb_videos is not None:
+                sync_tmdb_videos(show, ShowVideo, tmdb_videos)
 
-        season_sync_result = sync_show_seasons(show, tmdb_show.get('seasons'))
+            season_sync_result = sync_show_seasons(show, tmdb_show.get('seasons'))
     except Exception:
         logger.exception(
             'update_show_details: failed to apply TMDB show details for show id=%s name=%s tmdb_id=%s',
@@ -136,7 +124,7 @@ def update_show_details(show_tmdb_id):
             getattr(show, 'tmdb_name', None),
             show_tmdb_id,
         )
-        return None
+        raise
 
     logger.debug(
         'update_show_details: refreshed show id=%s name=%s tmdb_id=%s created=%s changed_fields=%s '
@@ -171,7 +159,7 @@ def update_season_details(show_tmdb_id, season_number):
     try:
         tmdb_season = get_tmdb_season(show_tmdb_id, season_number)
         tmdb_season_credits = get_tmdb_season_credits(show_tmdb_id, season_number)
-    except (HTTPError, ConnectionError):
+    except TmdbIntegrationError:
         logger.exception(
             'update_season_details: failed to fetch TMDB season details for show id=%s name=%s tmdb_id=%s season_number=%s',
             show.id,
@@ -179,23 +167,35 @@ def update_season_details(show_tmdb_id, season_number):
             show_tmdb_id,
             season_number,
         )
-        return None
+        raise
+    try:
+        tmdb_videos = get_tmdb_season_videos(show_tmdb_id, season_number)
+    except TmdbIntegrationError:
+        tmdb_videos = None
+        logger.warning(
+            'update_season_details: failed to fetch TMDB videos for show_tmdb_id=%s season_number=%s',
+            show_tmdb_id,
+            season_number,
+        )
 
     try:
-        season = upsert_season_from_tmdb(show, tmdb_season)
-        if season is None:
-            logger.warning(
-                'update_season_details: skipped show id=%s name=%s tmdb_id=%s season_number=%s reason=no_season_payload',
-                show.id,
-                show.tmdb_name,
-                show_tmdb_id,
-                season_number,
-            )
-            return None
+        with transaction.atomic():
+            season = upsert_season_from_tmdb(show, tmdb_season)
+            if season is None:
+                logger.warning(
+                    'update_season_details: skipped show id=%s name=%s tmdb_id=%s season_number=%s reason=no_season_payload',
+                    show.id,
+                    show.tmdb_name,
+                    show_tmdb_id,
+                    season_number,
+                )
+                return None
 
-        episodes_count = len(tmdb_season.get('episodes') or [])
-        sync_season_episodes(season, tmdb_season.get('episodes') or [])
-        sync_season_people(season, tmdb_season_credits)
+            episodes_count = len(tmdb_season.get('episodes') or [])
+            sync_season_episodes(season, tmdb_season.get('episodes') or [])
+            sync_season_people(season, tmdb_season_credits)
+            if tmdb_videos is not None:
+                sync_tmdb_videos(season, SeasonVideo, tmdb_videos)
     except Exception:
         logger.exception(
             'update_season_details: failed to apply TMDB season details for show id=%s name=%s tmdb_id=%s season_number=%s',
@@ -204,7 +204,7 @@ def update_season_details(show_tmdb_id, season_number):
             show_tmdb_id,
             season_number,
         )
-        return None
+        raise
 
     logger.debug(
         'update_season_details: refreshed season id=%s name=%s show_id=%s show_tmdb_id=%s season_number=%s episodes=%s',
@@ -249,7 +249,7 @@ def update_episode_details(show_tmdb_id, season_number, episode_number):
     try:
         tmdb_episode = get_tmdb_episode(show_tmdb_id, season_number, episode_number)
         tmdb_episode_credits = get_tmdb_episode_credits(show_tmdb_id, season_number, episode_number)
-    except (HTTPError, ConnectionError):
+    except TmdbIntegrationError:
         logger.exception(
             'update_episode_details: failed to fetch TMDB episode details for show id=%s name=%s tmdb_id=%s season_number=%s episode_number=%s',
             season.tmdb_show.id,
@@ -258,21 +258,35 @@ def update_episode_details(show_tmdb_id, season_number, episode_number):
             season_number,
             episode_number,
         )
-        return None
+        raise
+    try:
+        tmdb_videos = get_tmdb_episode_videos(show_tmdb_id, season_number, episode_number)
+    except TmdbIntegrationError:
+        tmdb_videos = None
+        logger.warning(
+            'update_episode_details: failed to fetch TMDB videos for show_tmdb_id=%s season_number=%s '
+            'episode_number=%s',
+            show_tmdb_id,
+            season_number,
+            episode_number,
+        )
 
     episode = None
     try:
-        defaults = get_episode_new_fields(tmdb_episode, season.id)
-        episode, created = Episode.objects.get_or_create(
-            tmdb_season=season,
-            tmdb_episode_number=episode_number,
-            defaults=defaults
-        )
-        changed_fields = list(defaults.keys()) if created else _get_changed_fields(episode, defaults)
-        if not created:
-            update_fields_if_needed(episode, defaults)
+        with transaction.atomic():
+            defaults = get_episode_new_fields(tmdb_episode, season.id)
+            episode, created = Episode.objects.get_or_create(
+                tmdb_season=season,
+                tmdb_episode_number=episode_number,
+                defaults=defaults
+            )
+            changed_fields = list(defaults.keys()) if created else _get_changed_fields(episode, defaults)
+            if not created:
+                update_fields_if_needed(episode, defaults)
 
-        sync_episode_people(episode, tmdb_episode_credits)
+            sync_episode_people(episode, tmdb_episode_credits)
+            if tmdb_videos is not None:
+                sync_tmdb_videos(episode, EpisodeVideo, tmdb_videos)
     except Exception:
         logger.exception(
             'update_episode_details: failed to apply TMDB episode details for episode id=%s show_tmdb_id=%s season_number=%s episode_number=%s',
@@ -281,7 +295,7 @@ def update_episode_details(show_tmdb_id, season_number, episode_number):
             season_number,
             episode_number,
         )
-        return None
+        raise
 
     logger.debug(
         'update_episode_details: refreshed episode id=%s name=%s show_tmdb_id=%s season_number=%s episode_number=%s created=%s changed_fields=%s',
@@ -312,52 +326,90 @@ def update_shows():
         Q(tmdb_release_date__gte=today_date) | Q(tmdb_release_date=None)
     ).distinct()
     candidates_count = shows.count()
-    updated_count = 0
+    scheduled_count = 0
     skipped_count = 0
     failed_count = 0
 
     logger.info('update_shows: start today=%s candidates=%s', today_date, candidates_count)
 
-    for show in shows:
+    for show in shows.iterator(chunk_size=200):
         if not show.tmdb_id:
             skipped_count += 1
             logger.warning('update_shows: skipped show id=%s name=%s reason=empty_tmdb_id', show.id, show.tmdb_name)
             continue
 
-        logger.debug(
-            'update_shows: processing show id=%s name=%s tmdb_id=%s release_date=%s status=%s',
-            show.id,
-            show.tmdb_name,
-            show.tmdb_id,
-            show.tmdb_release_date,
-            show.tmdb_status,
-        )
         try:
-            updated_show = update_show_details(show.tmdb_id)
-            if updated_show is None:
-                failed_count += 1
+            is_queued = enqueue_background_task_once(
+                refresh_show_details,
+                identity=show.tmdb_id,
+                args=(show.tmdb_id,),
+                task_name='refresh_show_details',
+            )
+            if is_queued:
+                scheduled_count += 1
             else:
-                updated_count += 1
+                skipped_count += 1
         except Exception:
             failed_count += 1
-            logger.exception('update_shows: failed show id=%s name=%s tmdb_id=%s', show.id, show.tmdb_name, show.tmdb_id)
+            logger.exception(
+                'update_shows: failed to enqueue show id=%s name=%s tmdb_id=%s',
+                show.id,
+                show.tmdb_name,
+                show.tmdb_id,
+            )
 
     logger.info(
-        'update_shows: finish candidates=%s updated=%s skipped=%s failed=%s',
+        'update_shows: finish candidates=%s scheduled=%s skipped=%s failed=%s',
         candidates_count,
-        updated_count,
+        scheduled_count,
         skipped_count,
         failed_count,
     )
+    return {
+        'candidates': candidates_count,
+        'scheduled': scheduled_count,
+        'skipped': skipped_count,
+        'errors': failed_count,
+    }
 
 
 @app.task
 def update_all_shows_task(start_index):
-    for show in Show.objects.all()[start_index:]:
-        update_show_details(show.tmdb_id)
+    scheduled_count = 0
+    skipped_count = 0
+    shows = Show.objects.order_by('id')[start_index:].prefetch_related('season_set')
+    for show in shows.iterator(chunk_size=100):
+        if not show.tmdb_id:
+            skipped_count += 1
+            continue
+
+        if enqueue_background_task_once(
+                refresh_show_details,
+                identity=show.tmdb_id,
+                args=(show.tmdb_id,),
+                task_name='refresh_show_details',
+        ):
+            scheduled_count += 1
+        else:
+            skipped_count += 1
 
         for season in show.season_set.all():
-            update_season_details(show.tmdb_id, season.tmdb_season_number)
+            identity = f'{show.tmdb_id}:{season.tmdb_season_number}'
+            if enqueue_background_task_once(
+                    refresh_season_details,
+                    identity=identity,
+                    args=(show.tmdb_id, season.tmdb_season_number),
+                    task_name='refresh_season_details',
+            ):
+                scheduled_count += 1
+            else:
+                skipped_count += 1
+
+    return {
+        'scheduled': scheduled_count,
+        'skipped': skipped_count,
+        'errors': 0,
+    }
 
 
 def _get_changed_fields(obj, new_fields):

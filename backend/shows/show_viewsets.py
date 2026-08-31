@@ -17,7 +17,7 @@ from shows.services.catalog import (
     ShowNotFoundError as CatalogShowNotFoundError,
     TmdbUnavailableError,
     enqueue_show_refresh,
-    get_or_sync_show,
+    get_show_for_detail,
     get_show_recommendations,
     get_show_trailers,
     show_refresh_is_due,
@@ -30,6 +30,7 @@ from shows.services.tracking import (
     update_user_show,
 )
 from shows.tasks import update_all_shows_task, update_shows
+from utils.celery import enqueue_background_task_once
 from utils.constants import ERROR, SHOW_NOT_FOUND, TMDB_UNAVAILABLE
 
 
@@ -51,14 +52,14 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     def retrieve(self, request, *args, **kwargs):
         tmdb_id = kwargs.get('tmdb_id')
         try:
-            show = get_or_sync_show(tmdb_id)
+            show, needs_refresh = get_show_for_detail(tmdb_id)
         except CatalogShowNotFoundError:
             return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
         except TmdbUnavailableError:
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         response = Response(get_show_payload(show, request))
-        if show_refresh_is_due(show):
+        if needs_refresh or show_refresh_is_due(show):
             show_id = show.tmdb_id
             response.add_post_render_callback(lambda _: enqueue_show_refresh(show_id))
 
@@ -225,8 +226,13 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
     def update_all_shows(self, request):
         start_index = int(request.GET.get('start_index', 0))
-        update_all_shows_task.delay(start_index)
-        return Response()
+        is_queued = enqueue_background_task_once(
+            update_all_shows_task,
+            identity=f'all:{start_index}',
+            args=(start_index,),
+            task_name='update_all_shows_task',
+        )
+        return Response({'queued': is_queued})
 
     @swagger_auto_schema(
         responses={
@@ -236,5 +242,9 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     )
     @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
     def update_shows(self, request):
-        update_shows()
-        return Response()
+        is_queued = enqueue_background_task_once(
+            update_shows,
+            identity='scheduled',
+            task_name='update_shows',
+        )
+        return Response({'queued': is_queued})
