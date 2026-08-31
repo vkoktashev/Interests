@@ -83,10 +83,18 @@ class CollectionSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_author(collection):
+        if collection.author_id is None:
+            return {
+                'id': None,
+                'username': 'Система',
+                'gender': None,
+                'is_system': True,
+            }
         return {
             'id': collection.author_id,
             'username': collection.author.username,
             'gender': collection.author.gender,
+            'is_system': False,
         }
 
     def get_contains_item(self, collection):

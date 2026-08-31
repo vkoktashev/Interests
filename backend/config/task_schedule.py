@@ -21,6 +21,11 @@ PERIODIC_TASKS = {
         'hour': 9,
         'minute': 0,
     },
+    'sync_kinopoisk_top250': {
+        'task': 'content_collections.tasks.sync_kinopoisk_top250',
+        'hour': 5,
+        'minute': 0,
+    },
 }
 
 

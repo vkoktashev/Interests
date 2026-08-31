@@ -23,8 +23,9 @@ interface ICollection {
 	id: number;
 	title: string;
 	author: {
-		id: number;
+		id: number | null;
 		username: string;
+		is_system?: boolean;
 	};
 	privacy: 'public' | 'private';
 	created_at: string;

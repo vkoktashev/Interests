@@ -18,9 +18,12 @@ class Collection(models.Model):
 
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
         on_delete=models.CASCADE,
         related_name='collections',
     )
+    system_key = models.CharField(max_length=64, unique=True, null=True, blank=True)
     subscribers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         blank=True,

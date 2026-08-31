@@ -88,6 +88,17 @@ def get_tmdb_movie(tmdb_id):
     )
 
 
+def find_tmdb_movie_by_imdb_id(imdb_id):
+    key = f'movie_find_imdb_{imdb_id}'
+    return cached_tmdb_call(
+        key,
+        lambda: tmdb.Find(imdb_id).info(
+            external_source='imdb_id',
+            language=LANGUAGE,
+        ),
+    )
+
+
 def get_tmdb_movie_videos(tmdb_id):
     key = f'movie_{tmdb_id}_trailers_{TMDB_VIDEO_LANGUAGES.replace(",", "_")}'
 
