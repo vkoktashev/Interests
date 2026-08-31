@@ -164,6 +164,10 @@ class UserShow(UserScore):
 
     class Meta:
         unique_together = (("user", "show"),)
+        indexes = (
+            models.Index(fields=('user', 'status'), name='ushow_user_status_idx'),
+            models.Index(fields=('user', '-updated_at'), name='ushow_user_updated_idx'),
+        )
         constraints = (
             models.CheckConstraint(
                 condition=models.Q(score__gte=0, score__lte=10),
@@ -195,6 +199,9 @@ class UserEpisode(UserScore):
 
     class Meta:
         unique_together = (("user", "episode"),)
+        indexes = (
+            models.Index(fields=('user', 'score'), name='uepisode_user_score_idx'),
+        )
         constraints = (
             models.CheckConstraint(
                 condition=models.Q(score__gte=-1, score__lte=10),
@@ -212,6 +219,13 @@ class ShowLog(UserLogAbstract):
     show = models.ForeignKey(Show, on_delete=models.PROTECT)
 
     class Meta:
+        indexes = (
+            models.Index(fields=('user', '-created'), name='shlog_user_created_idx'),
+            models.Index(
+                fields=('user', 'action_type', '-created'),
+                name='shlog_user_type_created_idx',
+            ),
+        )
         verbose_name = 'лог сериала'
         verbose_name_plural = 'логи сериалов'
 
@@ -220,6 +234,9 @@ class SeasonLog(UserLogAbstract):
     season = models.ForeignKey(Season, on_delete=models.PROTECT)
 
     class Meta:
+        indexes = (
+            models.Index(fields=('user', '-created'), name='selog_user_created_idx'),
+        )
         verbose_name = 'лог сезона'
         verbose_name_plural = 'логи сезонов'
 
@@ -228,6 +245,13 @@ class EpisodeLog(UserLogAbstract):
     episode = models.ForeignKey(Episode, on_delete=models.PROTECT)
 
     class Meta:
+        indexes = (
+            models.Index(fields=('user', '-created'), name='eplog_user_created_idx'),
+            models.Index(
+                fields=('user', 'action_type', '-created'),
+                name='eplog_user_type_created_idx',
+            ),
+        )
         verbose_name = 'лог серии'
         verbose_name_plural = 'логи серий'
 

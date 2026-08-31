@@ -52,6 +52,10 @@ class UserMovie(UserScore):
 
     class Meta:
         unique_together = (("user", "movie"),)
+        indexes = (
+            models.Index(fields=('user', 'status'), name='umovie_user_status_idx'),
+            models.Index(fields=('user', '-updated_at'), name='umovie_user_updated_idx'),
+        )
         constraints = (
             models.CheckConstraint(
                 condition=models.Q(score__gte=0, score__lte=10),
@@ -66,6 +70,13 @@ class MovieLog(UserLogAbstract):
     movie = models.ForeignKey(Movie, on_delete=models.PROTECT)
 
     class Meta:
+        indexes = (
+            models.Index(fields=('user', '-created'), name='mlog_user_created_idx'),
+            models.Index(
+                fields=('user', 'action_type', '-created'),
+                name='mlog_user_type_created_idx',
+            ),
+        )
         verbose_name = 'лог фильма'
         verbose_name_plural = 'логи фильмов'
 

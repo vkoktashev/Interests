@@ -138,6 +138,9 @@ class UserLog(models.Model):
     followed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_user')
 
     class Meta:
+        indexes = (
+            models.Index(fields=('user', '-created'), name='ulog_user_created_idx'),
+        )
         verbose_name = 'лог подписки'
         verbose_name_plural = 'логи подписок'
 
@@ -149,6 +152,9 @@ class UserFollow(models.Model):
 
     class Meta:
         unique_together = (("user", "followed_user"),)
+        indexes = (
+            models.Index(fields=('user', 'is_following'), name='ufollow_user_active_idx'),
+        )
         constraints = (
             models.CheckConstraint(
                 condition=~models.Q(user=models.F('followed_user')),

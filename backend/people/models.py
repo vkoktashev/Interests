@@ -53,6 +53,9 @@ class PersonLog(models.Model):
     action_type = models.CharField(max_length=30, choices=ACTION_TYPE_CHOICES)
 
     class Meta:
+        indexes = (
+            models.Index(fields=('user', '-created'), name='plog_user_created_idx'),
+        )
         verbose_name = 'лог отслеживания человека'
         verbose_name_plural = 'логи отслеживания людей'
 
