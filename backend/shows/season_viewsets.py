@@ -19,6 +19,11 @@ from shows.models import UserSeason, Show, Season, UserShow, UserEpisode, Season
 from shows.serializers import UserSeasonSerializer, FollowedUserSeasonSerializer, UserEpisodeInSeasonSerializer, \
     ShowSerializer
 from shows.selectors import user_watched_show
+from shows.services.tracking import (
+    SeasonNotFoundError as TrackingSeasonNotFoundError,
+    ShowNotFoundError as TrackingShowNotFoundError,
+    update_user_season,
+)
 from shows.tasks import refresh_season_details
 from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
@@ -140,30 +145,19 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             404: openapi.Response('Show or Season Not Found'),
         }
     )
-    @transaction.atomic
     def update(self, request, *args, **kwargs):
         try:
-            show = Show.objects.get(tmdb_id=kwargs.get('show_tmdb_id'))
-            season = Season.objects.get(tmdb_show=show, tmdb_season_number=kwargs.get('number'))
-        except Show.DoesNotExist:
-            return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-        except Season.DoesNotExist:
+            response_data = update_user_season(
+                request.user,
+                kwargs.get('show_tmdb_id'),
+                kwargs.get('number'),
+                request.data,
+            )
+        except TrackingSeasonNotFoundError:
             return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-
-        data = request.data.copy()
-        data.update({'user': request.user.pk,
-                     'season': season.pk})
-
-        try:
-            user_season = UserSeason.objects.get(user=request.user, season=season)
-            serializer = self.get_serializer(user_season, data=data)
-        except UserSeason.DoesNotExist:
-            serializer = self.get_serializer(data=data)
-
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        except TrackingShowNotFoundError:
+            return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+        return Response(response_data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: FollowedUserSeasonSerializer(many=True)})
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
