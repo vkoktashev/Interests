@@ -107,7 +107,7 @@ class CollectionViewSet(
 
     def retrieve(self, request, *args, **kwargs):
         collection = self.get_object()
-        if not is_user_available(request.user, collection.author):
+        if collection.author_id is not None and not is_user_available(request.user, collection.author):
             return Response(
                 {'error': 'Профиль скрыт настройками приватности.'},
                 status=status.HTTP_403_FORBIDDEN,
@@ -156,7 +156,7 @@ class CollectionViewSet(
                 {'error': 'Нельзя подписаться на собственную подборку.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if not is_user_available(request.user, collection.author):
+        if collection.author_id is not None and not is_user_available(request.user, collection.author):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         collection.subscribers.add(request.user)
@@ -170,7 +170,7 @@ class CollectionViewSet(
                 {'error': 'Нельзя отписаться от собственной подборки.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if not is_user_available(request.user, collection.author):
+        if collection.author_id is not None and not is_user_available(request.user, collection.author):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         collection.subscribers.remove(request.user)
@@ -184,7 +184,7 @@ class CollectionViewSet(
                 {'error': 'Нельзя клонировать собственную подборку.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if not is_user_available(request.user, collection.author):
+        if collection.author_id is not None and not is_user_available(request.user, collection.author):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         cloned_collection = clone_collection(collection, request.user)

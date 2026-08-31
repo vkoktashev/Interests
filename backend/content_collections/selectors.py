@@ -81,7 +81,9 @@ def get_collection_queryset(action, request_user, author=None, progress_user=Non
     else:
         queryset = queryset.filter(privacy=Collection.PRIVACY_PUBLIC)
         available_author_ids = User.objects.filter(privacy=User.PRIVACY_ALL).values('pk')
-    queryset = queryset.filter(author_id__in=available_author_ids)
+    queryset = queryset.filter(
+        Q(author_id__in=available_author_ids) | Q(author__isnull=True)
+    )
     return _annotate_progress(queryset, progress_user) if progress_user else queryset
 
 

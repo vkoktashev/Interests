@@ -8,6 +8,7 @@ class ScheduledTask(models.Model):
     UPDATE_SHOWS = 'update_shows'
     SYNC_SHOW_CAST = 'sync_show_cast'
     SEND_RELEASE_EMAILS = 'send_release_emails'
+    SYNC_KINOPOISK_TOP250 = 'sync_kinopoisk_top250'
 
     TASK_CHOICES = (
         (UPDATE_UPCOMING_GAMES, 'Обновление будущих игр'),
@@ -15,6 +16,7 @@ class ScheduledTask(models.Model):
         (UPDATE_SHOWS, 'Обновление сериалов'),
         (SYNC_SHOW_CAST, 'Синхронизация актеров сериалов'),
         (SEND_RELEASE_EMAILS, 'Рассылка уведомлений о релизах'),
+        (SYNC_KINOPOISK_TOP250, 'Синхронизация Топ 250 Кинопоиска'),
     )
 
     code = models.CharField(max_length=64, unique=True, choices=TASK_CHOICES)

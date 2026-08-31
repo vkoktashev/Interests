@@ -34,6 +34,12 @@ TASK_DEFINITIONS = {
         'schedule': get_periodic_task_schedule_label('send_release_emails'),
         'task_path': 'users.tasks.send_release_emails',
     },
+    'sync_kinopoisk_top250': {
+        'name': 'Синхронизация Топ 250 Кинопоиска',
+        'description': 'Обновляет системную подборку, ее порядок и загружает отсутствующие фильмы из TMDB.',
+        'schedule': get_periodic_task_schedule_label('sync_kinopoisk_top250'),
+        'task_path': 'content_collections.tasks.sync_kinopoisk_top250',
+    },
 }
 
 

@@ -49,9 +49,10 @@ interface ICollectionDetail {
 	created_at: string;
 	updated_at: string;
 	author: {
-		id: number;
+		id: number | null;
 		username: string;
-		gender?: 'male' | 'female';
+		gender?: 'male' | 'female' | null;
+		is_system?: boolean;
 	};
 	counts: {
 		games: number;
@@ -289,7 +290,7 @@ function CollectionPage() {
 
 	const allItems = collection.ordered_items || mixItems(collection.items);
 	const authorAvatarUrl = getDefaultAvatarUrl(
-		collection.author.username || collection.author.id,
+		collection.author.username || collection.author.id || 'system',
 		collection.author.gender,
 	);
 
@@ -300,18 +301,29 @@ function CollectionPage() {
 					<div className={bem.element('eyebrow')}>Подборка</div>
 					<h1 className={bem.element('title')}>{collection.title}</h1>
 					<div className={bem.element('meta')}>
-						<Link
-							className={bem.element('author')}
-							toRoute={ROUTE_USER}
-							toRouteParams={{userId: collection.author.id}}
-						>
-							<img
-								className={bem.element('author-avatar')}
-								src={authorAvatarUrl}
-								alt=''
-							/>
-							<span>{collection.author.username}</span>
-						</Link>
+						{collection.author.is_system || collection.author.id === null ? (
+							<div className={bem.element('author', {static: true})}>
+								<img
+									className={bem.element('author-avatar')}
+									src={authorAvatarUrl}
+									alt=''
+								/>
+								<span>{collection.author.username}</span>
+							</div>
+						) : (
+							<Link
+								className={bem.element('author')}
+								toRoute={ROUTE_USER}
+								toRouteParams={{userId: collection.author.id}}
+							>
+								<img
+									className={bem.element('author-avatar')}
+									src={authorAvatarUrl}
+									alt=''
+								/>
+								<span>{collection.author.username}</span>
+							</Link>
+						)}
 						<span>{getSummary(collection)}</span>
 					</div>
 				</div>
