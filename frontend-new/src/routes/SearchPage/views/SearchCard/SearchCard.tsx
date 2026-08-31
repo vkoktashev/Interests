@@ -1,6 +1,7 @@
 import React from 'react';
 import {Link} from '@steroidsjs/core/ui/nav';
 import {useBem} from '@steroidsjs/core/hooks';
+import StatusBadge from '../../../../shared/StatusBadge';
 import {ISearchCardData} from '../searchTypes';
 import './search-card.scss';
 
@@ -37,9 +38,11 @@ function SearchCard({info, className}: ISearchCardProps) {
 						<div className={bem.element('title-row')}>
 							<h4 className={bem.element('name')} title={info.name}>{info.name}</h4>
 							{info.statusBadge && (
-								<span className={bem.element('status', {[info.statusBadge.tone]: true})}>
-									{info.statusBadge.label}
-								</span>
+								<StatusBadge
+									className={bem.element('status')}
+									label={info.statusBadge.label}
+									tone={info.statusBadge.tone}
+								/>
 							)}
 						</div>
 						{hasDetails && (

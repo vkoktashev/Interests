@@ -163,6 +163,20 @@ class CollectionViewSet(
         return Response({'subscribed': True}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'])
+    def unsubscribe(self, request, *args, **kwargs):
+        collection = self.get_object()
+        if collection.author_id == request.user.pk:
+            return Response(
+                {'error': 'Нельзя отписаться от собственной подборки.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not is_user_available(request.user, collection.author):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        collection.subscribers.remove(request.user)
+        return Response({'subscribed': False}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
     def clone(self, request, *args, **kwargs):
         collection = self.get_object()
         if collection.author_id == request.user.pk:

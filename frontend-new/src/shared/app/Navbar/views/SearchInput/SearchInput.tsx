@@ -5,6 +5,7 @@ import {useBem, useComponents, useDispatch} from '@steroidsjs/core/hooks';
 import {goToRoute} from '@steroidsjs/core/actions/router';
 import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW} from '../../../../../routes';
 import useWindowDimensions from '../../../../../hooks/useWindowDimensions';
+import StatusBadge from '../../../../StatusBadge';
 import {getUserStatusBadge} from '../../../../mediaStatus';
 import type {IMediaStatusBadge} from '../../../../mediaStatus';
 import './search-input.scss';
@@ -355,9 +356,12 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 											{item.title}
 										</span>
 										{item.statusBadge && (
-											<span className={bem.element('hint-status', {[item.statusBadge.tone]: true})}>
-												{item.statusBadge.label}
-											</span>
+											<StatusBadge
+												className={bem.element('hint-status')}
+												label={item.statusBadge.label}
+												tone={item.statusBadge.tone}
+												size='sm'
+											/>
 										)}
 									</span>
 									<span className={bem.element('hint-year')}>

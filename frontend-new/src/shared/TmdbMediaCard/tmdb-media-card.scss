@@ -74,30 +74,6 @@
     color: $newText3;
     background: rgba(255, 255, 255, 0.03);
 
-    &_planned {
-      border-color: rgba(79, 93, 234, 0.28);
-      background: rgba(79, 93, 234, 0.12);
-      color: #cbd5ff;
-    }
-
-    &_done {
-      border-color: rgba(52, 211, 153, 0.25);
-      background: rgba(52, 211, 153, 0.1);
-      color: #bbf7d0;
-    }
-
-    &_progress {
-      border-color: rgba(250, 204, 21, 0.24);
-      background: rgba(250, 204, 21, 0.08);
-      color: #fde68a;
-    }
-
-    &_stopped {
-      border-color: rgba(248, 113, 113, 0.22);
-      background: rgba(248, 113, 113, 0.08);
-      color: #fecaca;
-    }
-
     &_score {
       border-color: rgba(79, 93, 234, 0.28);
       background: rgba(79, 93, 234, 0.12);

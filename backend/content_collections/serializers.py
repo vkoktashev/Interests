@@ -86,6 +86,7 @@ class CollectionSerializer(serializers.ModelSerializer):
         return {
             'id': collection.author_id,
             'username': collection.author.username,
+            'gender': collection.author.gender,
         }
 
     def get_contains_item(self, collection):
