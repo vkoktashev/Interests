@@ -28,6 +28,7 @@ interface ICollectionItem {
 	order_id: number;
 	name: string;
 	cover_url: string;
+	user_status?: string;
 }
 
 interface ICollectionItems {
@@ -143,6 +144,11 @@ function CollectionItemCard({item}: {item: ICollectionItem}) {
 					</div>
 				)}
 			</div>
+			{!!item.user_status && (
+				<div className={bem.element('item-status')}>
+					{item.user_status}
+				</div>
+			)}
 			<div className={bem.element('item-tooltip')} role='tooltip'>
 				{item.name || 'Без названия'}
 			</div>

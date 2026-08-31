@@ -120,6 +120,8 @@ class CollectionViewSet(
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
+        if self.action == 'retrieve':
+            context['progress_user'] = self.get_progress_user()
         if self.request.user.is_authenticated:
             context['subscribed_collection_ids'] = set(
                 self.request.user.subscribed_collections.values_list('pk', flat=True)
