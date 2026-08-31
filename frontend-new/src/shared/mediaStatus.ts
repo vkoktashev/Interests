@@ -6,6 +6,30 @@ export interface IMediaStatusBadge {
 	tone: TMediaStatusTone;
 }
 
+const STATUS_TONES_BY_LABEL: Record<string, TMediaStatusTone> = {
+	'Буду играть': 'planned',
+	'Буду смотреть': 'planned',
+	'Прошел': 'done',
+	'Посмотрел': 'done',
+	'Пройдено': 'done',
+	'Просмотрено': 'done',
+	'Играю': 'progress',
+	'Смотрю': 'progress',
+	'Не играл': 'progress',
+	'Не смотрел': 'progress',
+	'Дропнул': 'stopped',
+	'Дропнуто': 'stopped',
+};
+
+export function getMediaStatusToneByLabel(label?: string | null): TMediaStatusTone | null {
+	return label ? STATUS_TONES_BY_LABEL[label] || null : null;
+}
+
+export function getMediaStatusBadgeByLabel(label?: string | null): IMediaStatusBadge | null {
+	const tone = getMediaStatusToneByLabel(label);
+	return label && tone ? {label, tone} : null;
+}
+
 export function getUserStatusBadge(type: TMediaType, status?: string | null): IMediaStatusBadge | null {
 	if (status === 'going') {
 		return {

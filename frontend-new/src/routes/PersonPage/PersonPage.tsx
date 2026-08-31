@@ -7,6 +7,7 @@ import {getRouteParam} from '@steroidsjs/core/reducers/router';
 import {Loader} from '@steroidsjs/core/ui/layout';
 
 import TmdbMediaCard from '../../shared/TmdbMediaCard/TmdbMediaCard';
+import {getMediaStatusBadgeByLabel} from '../../shared/mediaStatus';
 
 type TPersonMovie = {
 	id: number;
@@ -37,14 +38,6 @@ const ROLE_LABELS: Record<string, string> = {
 	actor: 'Актер',
 	director: 'Режиссер',
 	creator: 'Создатель',
-};
-
-const STATUS_BADGE_MAP: Record<string, {label: string; tone: 'planned' | 'done' | 'progress' | 'stopped'}> = {
-	'Буду смотреть': {label: 'Буду смотреть', tone: 'planned'},
-	'Посмотрел': {label: 'Посмотрел', tone: 'done'},
-	'Дропнул': {label: 'Дропнул', tone: 'stopped'},
-	'Не смотрел': {label: 'Не смотрел', tone: 'progress'},
-	'Смотрю': {label: 'Смотрю', tone: 'progress'},
 };
 
 const SECONDARY_CHARACTER_PATTERNS = [
@@ -265,7 +258,7 @@ export function PersonPage() {
 											{label: 'Роль', value: (movie.roles || []).map(role => ROLE_LABELS[role] || role).join(', ')},
 											...(movie.character ? [{label: 'Персонаж', value: movie.character}] : []),
 										]}
-										statusBadge={movie.user_status ? STATUS_BADGE_MAP[movie.user_status] : undefined}
+										statusBadge={getMediaStatusBadgeByLabel(movie.user_status) || undefined}
 									/>
 								))
 							) : (
@@ -298,7 +291,7 @@ export function PersonPage() {
 											{label: 'Роль', value: (show.roles || []).map(role => ROLE_LABELS[role] || role).join(', ')},
 											...(show.character ? [{label: 'Персонаж', value: show.character}] : []),
 										]}
-										statusBadge={show.user_status ? STATUS_BADGE_MAP[show.user_status] : undefined}
+										statusBadge={getMediaStatusBadgeByLabel(show.user_status) || undefined}
 									/>
 								))
 							) : (

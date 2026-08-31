@@ -8,6 +8,9 @@ import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getRouteParams} from '@steroidsjs/core/reducers/router';
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 
+import {getDefaultAvatarUrl} from '../../shared/avatar';
+import StatusBadge from '../../shared/StatusBadge';
+import {getMediaStatusToneByLabel} from '../../shared/mediaStatus';
 import {
 	ROUTE_COLLECTION,
 	ROUTE_COLLECTION_EDIT,
@@ -48,6 +51,7 @@ interface ICollectionDetail {
 	author: {
 		id: number;
 		username: string;
+		gender?: 'male' | 'female';
 	};
 	counts: {
 		games: number;
@@ -127,6 +131,7 @@ function getItemRoute(item: ICollectionItem) {
 function CollectionItemCard({item}: {item: ICollectionItem}) {
 	const bem = useBem('collection-page');
 	const itemRoute = getItemRoute(item);
+	const statusTone = getMediaStatusToneByLabel(item.user_status);
 
 	return (
 		<Link
@@ -145,9 +150,11 @@ function CollectionItemCard({item}: {item: ICollectionItem}) {
 				)}
 			</div>
 			{!!item.user_status && (
-				<div className={bem.element('item-status')}>
-					{item.user_status}
-				</div>
+				<StatusBadge
+					className={bem.element('item-status')}
+					label={item.user_status}
+					tone={statusTone || undefined}
+				/>
 			)}
 			<div className={bem.element('item-tooltip')} role='tooltip'>
 				{item.name || 'Без названия'}
@@ -165,7 +172,10 @@ function CollectionPage() {
 	const [isDeleting, setDeleting] = useState(false);
 	const [isSubscribing, setSubscribing] = useState(false);
 	const [isCloning, setCloning] = useState(false);
-	const [subscribedCollectionId, setSubscribedCollectionId] = useState<number>();
+	const [subscriptionOverride, setSubscriptionOverride] = useState<{
+		collectionId: number;
+		isSubscribed: boolean;
+	}>();
 	const effectiveProgressUserId = progressUserId || currentUser?.id;
 	const fetchConfig = useMemo(() => collectionId && ({
 		url: `/collections/${collectionId}/${effectiveProgressUserId
@@ -176,7 +186,9 @@ function CollectionPage() {
 	const {data, isLoading, axiosError} = useFetch(fetchConfig as any);
 	const collection = data as ICollectionDetail;
 	const isOwner = collection?.author?.id === currentUser?.id;
-	const isSubscribed = collection?.is_subscribed || subscribedCollectionId === collection?.id;
+	const isSubscribed = !!collection && subscriptionOverride?.collectionId === collection.id
+		? subscriptionOverride.isSubscribed
+		: !!collection?.is_subscribed;
 	const cloneCollection = useCallback(async () => {
 		if (!collection || !currentUser?.id || isOwner || isCloning) {
 			return;
@@ -202,22 +214,32 @@ function CollectionPage() {
 			setCloning(false);
 		}
 	}, [collection, currentUser?.id, dispatch, http, isCloning, isOwner]);
-	const subscribe = useCallback(async () => {
-		if (!collection || !currentUser?.id || isOwner || isSubscribed || isSubscribing) {
+	const toggleSubscription = useCallback(async () => {
+		if (!collection || !currentUser?.id || isOwner || isSubscribing) {
 			return;
 		}
 
 		setSubscribing(true);
 		try {
-			await http.post(`/collections/${collection.id}/subscribe/`);
-			setSubscribedCollectionId(collection.id);
-			dispatch(showNotification('Подборка добавлена в ваши подписки', 'success'));
+			await http.post(`/collections/${collection.id}/${isSubscribed ? 'unsubscribe' : 'subscribe'}/`);
+			setSubscriptionOverride({
+				collectionId: collection.id,
+				isSubscribed: !isSubscribed,
+			});
+			dispatch(showNotification(
+				isSubscribed
+					? 'Вы отписались от подборки'
+					: 'Подборка добавлена в ваши подписки',
+				'success',
+			));
 		} catch (requestError) {
 			const responseData = requestError?.response?.data;
 			dispatch(showNotification(
 				responseData?.error
 					|| responseData?.detail
-					|| 'Не удалось подписаться на подборку',
+					|| (isSubscribed
+						? 'Не удалось отписаться от подборки'
+						: 'Не удалось подписаться на подборку'),
 				'danger',
 			));
 		} finally {
@@ -266,6 +288,10 @@ function CollectionPage() {
 	}
 
 	const allItems = collection.ordered_items || mixItems(collection.items);
+	const authorAvatarUrl = getDefaultAvatarUrl(
+		collection.author.username || collection.author.id,
+		collection.author.gender,
+	);
 
 	return (
 		<div className={bem.block()}>
@@ -279,7 +305,12 @@ function CollectionPage() {
 							toRoute={ROUTE_USER}
 							toRouteParams={{userId: collection.author.id}}
 						>
-							{collection.author.username}
+							<img
+								className={bem.element('author-avatar')}
+								src={authorAvatarUrl}
+								alt=''
+							/>
+							<span>{collection.author.username}</span>
 						</Link>
 						<span>{getSummary(collection)}</span>
 					</div>
@@ -335,12 +366,12 @@ function CollectionPage() {
 								type='button'
 								className={bem.element('subscribe-button')}
 								color={isSubscribed ? 'secondary' : 'primary'}
-								disabled={isSubscribed || isSubscribing || isCloning}
-								onClick={subscribe}
+								disabled={isSubscribing || isCloning}
+								onClick={toggleSubscription}
 							>
-								{isSubscribed
-									? 'Вы подписаны'
-									: (isSubscribing ? 'Подписываем...' : 'Подписаться')}
+								{isSubscribing
+									? (isSubscribed ? 'Отписываем...' : 'Подписываем...')
+									: (isSubscribed ? 'Отписаться' : 'Подписаться')}
 							</Button>
 						</div>
 					)}

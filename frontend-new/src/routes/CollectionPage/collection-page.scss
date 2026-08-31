@@ -36,6 +36,7 @@
     &__meta {
         @include body2;
         display: flex;
+        align-items: center;
         flex-wrap: wrap;
         gap: 0.45rem 0.8rem;
         margin-top: 0.55rem;
@@ -43,12 +44,23 @@
     }
 
     &__author {
+        display: inline-flex;
+        align-items: center;
         color: $newText3;
         text-decoration: none;
 
         &:hover {
             color: $newAccent2;
         }
+    }
+
+    &__author-avatar {
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        margin-right: 0.4rem;
+        border-radius: 50%;
+        object-fit: cover;
     }
 
     &__header-actions,
@@ -176,21 +188,12 @@
     }
 
     &__item-status {
-        @include caption;
         position: absolute;
         z-index: 2;
         right: 0.5rem;
         bottom: 0.5rem;
         max-width: calc(100% - 1rem);
-        overflow: hidden;
-        padding: 0.3rem 0.5rem;
-        border: 1px solid rgba($newText3, 0.16);
-        border-radius: 999px;
-        background-color: rgba($newBackground1, 0.86);
-        color: $newText3;
         box-shadow: 0 4px 12px rgba($newBackground1, 0.3);
-        text-overflow: ellipsis;
-        white-space: nowrap;
         pointer-events: none;
     }
 

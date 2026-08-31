@@ -3,6 +3,7 @@ import LoadingOverlay from 'react-loading-overlay';
 import Pagination from '@steroidsjs/core/ui/list/Pagination/Pagination';
 import {useBem, useComponents} from '@steroidsjs/core/hooks';
 import CategoriesTab from '../../shared/CategoriesTab';
+import StatusBadge from '../../shared/StatusBadge';
 import TmdbMediaCard, {ITmdbMediaCardItem} from '../../shared/TmdbMediaCard/TmdbMediaCard';
 import {getUserStatusBadge} from '../../shared/mediaStatus';
 import pluralizeRu from '../UnwatchedPage/views/pluralizeRu';
@@ -190,12 +191,15 @@ function CommunityPicksPage() {
 													</div>
 												)}
 												{(() => {
-													const statusBadge = getUserStatusBadge(itemType, item.user_status);
-													return statusBadge ? (
-														<div className={bem.element('points-status', {[statusBadge.tone]: true})}>
-															{statusBadge.label}
-														</div>
-													) : null;
+											const statusBadge = getUserStatusBadge(itemType, item.user_status);
+											return statusBadge ? (
+												<StatusBadge
+													className={bem.element('points-status')}
+													label={statusBadge.label}
+													tone={statusBadge.tone}
+													size='sm'
+												/>
+											) : null;
 												})()}
 											</div>
 										</div>

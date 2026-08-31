@@ -83,11 +83,11 @@
     border-color: rgba(188, 125, 86, 0.28);
   }
 
-  .tmdb-media-card:has(.tmdb-media-card__badge_planned) {
+  .tmdb-media-card:has(.status-badge_planned) {
     box-shadow: 0 0 0 1px rgba($newAccent2, 0.12) inset;
   }
 
-  .tmdb-media-card:has(.tmdb-media-card__badge_done) {
+  .tmdb-media-card:has(.status-badge_done) {
     box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.12) inset;
   }
 
@@ -174,40 +174,7 @@
 
   &__points-status {
     justify-self: center;
-    display: inline-flex;
-    align-items: center;
-    padding: 0.18rem 0.45rem;
-    border-radius: 999px;
-    font-size: 0.7rem;
-    line-height: 1.1;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: $newText3;
-    background: rgba(255, 255, 255, 0.03);
     margin-top: 0.15rem;
-
-    &_planned {
-      border-color: rgba(79, 93, 234, 0.28);
-      background: rgba(79, 93, 234, 0.12);
-      color: #cbd5ff;
-    }
-
-    &_done {
-      border-color: rgba(52, 211, 153, 0.25);
-      background: rgba(52, 211, 153, 0.1);
-      color: #bbf7d0;
-    }
-
-    &_progress {
-      border-color: rgba(250, 204, 21, 0.24);
-      background: rgba(250, 204, 21, 0.08);
-      color: #fde68a;
-    }
-
-    &_stopped {
-      border-color: rgba(248, 113, 113, 0.22);
-      background: rgba(248, 113, 113, 0.08);
-      color: #fecaca;
-    }
   }
 
   &__points-meta {
@@ -324,9 +291,5 @@
       line-height: 1.15;
     }
 
-    &__points-status {
-      font-size: 0.65rem;
-      padding: 0.15rem 0.4rem;
-    }
   }
 }

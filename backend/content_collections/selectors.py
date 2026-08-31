@@ -30,7 +30,7 @@ def get_collection_author(request_user, author_id):
 
 
 def get_collection_queryset(action, request_user, author=None, progress_user=None, ordering=None):
-    if action in ('retrieve', 'subscribe', 'clone'):
+    if action in ('retrieve', 'subscribe', 'unsubscribe', 'clone'):
         queryset = (
             Collection.objects
             .select_related('author')

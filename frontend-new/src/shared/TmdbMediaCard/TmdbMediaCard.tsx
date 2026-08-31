@@ -1,6 +1,8 @@
 import React from 'react';
 import {useBem} from '@steroidsjs/core/hooks';
 
+import StatusBadge from '../StatusBadge';
+import type {IMediaStatusBadge} from '../mediaStatus';
 import './tmdb-media-card.scss';
 
 export type ITmdbMediaCardItem = {
@@ -31,10 +33,7 @@ type ITmdbMediaCardProps = {
 	itemType: 'movie' | 'show' | 'game';
 	className?: string;
 	details?: ITmdbMediaCardDetail[];
-	statusBadge?: {
-		label: string;
-		tone: 'planned' | 'done' | 'progress' | 'stopped';
-	};
+	statusBadge?: IMediaStatusBadge;
 };
 
 function formatDate(value?: string) {
@@ -108,9 +107,7 @@ export default function TmdbMediaCard(props: ITmdbMediaCardProps) {
 				{(statusBadge || typeof item.user_score === 'number') && (
 					<div className={bem.element('badges')}>
 						{statusBadge && (
-							<div className={bem.element('badge', {[statusBadge.tone]: true})}>
-								{statusBadge.label}
-							</div>
+							<StatusBadge label={statusBadge.label} tone={statusBadge.tone} />
 						)}
 						{typeof item.user_score === 'number' && item.user_score > 0 && (
 							<div className={bem.element('badge', {score: true})}>

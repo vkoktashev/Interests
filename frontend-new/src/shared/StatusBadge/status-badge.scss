@@ -1,0 +1,56 @@
+@import "style/colors";
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 4px 8px;
+    overflow: hidden;
+    border: 1px solid rgba($newText3, 0.12);
+    border-radius: 999px;
+    background: rgba($newBackground1, 0.82);
+    color: $newText3;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &_sm {
+        padding: 3px 6px;
+        font-size: 0.66rem;
+        line-height: 1;
+    }
+
+    &_planned {
+        border-color: rgba(79, 93, 234, 0.4);
+        background:
+            linear-gradient(rgba(79, 93, 234, 0.18), rgba(79, 93, 234, 0.18)),
+            rgba($newBackground1, 0.82);
+        color: #cbd5ff;
+    }
+
+    &_done {
+        border-color: rgba(52, 211, 153, 0.36);
+        background:
+            linear-gradient(rgba(52, 211, 153, 0.14), rgba(52, 211, 153, 0.14)),
+            rgba($newBackground1, 0.82);
+        color: #bbf7d0;
+    }
+
+    &_progress {
+        border-color: rgba(250, 204, 21, 0.34);
+        background:
+            linear-gradient(rgba(250, 204, 21, 0.12), rgba(250, 204, 21, 0.12)),
+            rgba($newBackground1, 0.82);
+        color: #fde68a;
+    }
+
+    &_stopped {
+        border-color: rgba(248, 113, 113, 0.34);
+        background:
+            linear-gradient(rgba(248, 113, 113, 0.12), rgba(248, 113, 113, 0.12)),
+            rgba($newBackground1, 0.82);
+        color: #fecaca;
+    }
+}
