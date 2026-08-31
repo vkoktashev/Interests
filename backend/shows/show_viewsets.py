@@ -17,7 +17,7 @@ from shows.services.catalog import (
     ShowNotFoundError as CatalogShowNotFoundError,
     TmdbUnavailableError,
     enqueue_show_refresh,
-    get_or_sync_show,
+    get_show_for_detail,
     get_show_recommendations,
     get_show_trailers,
     show_refresh_is_due,
@@ -51,14 +51,14 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     def retrieve(self, request, *args, **kwargs):
         tmdb_id = kwargs.get('tmdb_id')
         try:
-            show = get_or_sync_show(tmdb_id)
+            show, needs_refresh = get_show_for_detail(tmdb_id)
         except CatalogShowNotFoundError:
             return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
         except TmdbUnavailableError:
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         response = Response(get_show_payload(show, request))
-        if show_refresh_is_due(show):
+        if needs_refresh or show_refresh_is_due(show):
             show_id = show.tmdb_id
             response.add_post_render_callback(lambda _: enqueue_show_refresh(show_id))
 

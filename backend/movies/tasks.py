@@ -8,10 +8,11 @@ from requests import HTTPError, ConnectionError, Timeout
 
 from config.celery import app
 from movies.functions import clear_tmdb_movie_cache, get_movie_new_fields, get_tmdb_movie, get_cast_crew, \
-    get_tmdb_movie_release_dates, update_movie_genres, update_movie_people
-from movies.models import Movie
+    get_tmdb_movie_release_dates, get_tmdb_movie_videos, update_movie_genres, update_movie_people
+from movies.models import Movie, MovieVideo
 from utils.constants import UPDATE_DATES_HOUR, UPDATE_DATES_MINUTE
 from utils.functions import update_fields_if_needed
+from videos.functions import sync_tmdb_videos
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +100,12 @@ def update_movie_details(tmdb_id, movie_obj=None):
         return
 
     try:
+        tmdb_videos = get_tmdb_movie_videos(tmdb_id)
+    except (HTTPError, ConnectionError, Timeout):
+        tmdb_videos = None
+        logger.warning('update_movie_details: failed to fetch TMDB videos for tmdb_id=%s', tmdb_id)
+
+    try:
         with transaction.atomic():
             new_fields = get_movie_new_fields(tmdb_movie, tmdb_release_dates)
             if movie_obj is None:
@@ -113,6 +120,8 @@ def update_movie_details(tmdb_id, movie_obj=None):
 
             update_movie_genres(movie_obj, tmdb_movie)
             update_movie_people(movie_obj, tmdb_cast_crew)
+            if tmdb_videos is not None:
+                sync_tmdb_videos(movie_obj, MovieVideo, tmdb_videos)
     except Exception:
         logger.exception(
             'update_movie_details: failed to apply TMDB details for movie id=%s name=%s tmdb_id=%s',

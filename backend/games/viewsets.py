@@ -21,7 +21,7 @@ from games.services.catalog import (
     InvalidSearchFilterError,
     get_game_prices,
     get_igdb_platforms,
-    get_or_sync_game,
+    get_game_for_detail,
     search_igdb_games,
 )
 from games.services.hltb_service import get_hltb_payload
@@ -132,20 +132,27 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     )
     async def retrieve(self, request, *args, **kwargs):
         try:
-            game = await get_or_sync_game(kwargs.get('slug'))
+            game, needs_refresh = await get_game_for_detail(kwargs.get('slug'))
         except CatalogGameNotFoundError:
             return Response({ERROR: GAME_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
         except IgdbUnavailableError:
             return Response({ERROR: IGDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         response = Response(await parse_game_from_db(game))
-        if game.igdb_last_update \
-                and game.igdb_last_update <= timezone.now() - GAME_DETAILS_REFRESH_INTERVAL:
-            await sync_to_async(enqueue_game_refresh)(
+        if needs_refresh or (
+                game.igdb_last_update
+                and game.igdb_last_update <= timezone.now() - GAME_DETAILS_REFRESH_INTERVAL
+        ):
+            refresh_version = (
+                int(game.igdb_last_update.timestamp())
+                if game.igdb_last_update
+                else None
+            )
+            response.add_post_render_callback(lambda _: enqueue_game_refresh(
                 game.igdb_slug,
                 game.igdb_id,
-                int(game.igdb_last_update.timestamp()),
-            )
+                refresh_version,
+            ))
         return response
 
     @swagger_auto_schema(

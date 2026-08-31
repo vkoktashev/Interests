@@ -14,11 +14,11 @@ from movies.functions import (
     update_movie_genres,
     update_movie_people,
 )
-from movies.models import Movie, MovieVideo
+from movies.models import Movie
 from movies.tasks import refresh_movie_details
-from utils.celery import enqueue_background_task
+from utils.celery import enqueue_background_task_once
 from utils.functions import update_fields_if_needed
-from videos.functions import serialize_videos, sync_tmdb_videos
+from videos.functions import serialize_tmdb_videos
 
 
 MOVIE_DETAILS_REFRESH_INTERVAL = timedelta(days=7)
@@ -32,10 +32,10 @@ class TmdbUnavailableError(Exception):
     pass
 
 
-def get_or_sync_movie(tmdb_id):
+def get_movie_for_detail(tmdb_id):
     movie = Movie.objects.filter(tmdb_id=tmdb_id).first()
     if movie is not None and movie.tmdb_last_update is not None:
-        return movie
+        return movie, False
 
     try:
         tmdb_movie = get_tmdb_movie(tmdb_id)
@@ -56,15 +56,14 @@ def get_or_sync_movie(tmdb_id):
         )
         if not created:
             update_fields_if_needed(movie, new_fields)
-
         update_movie_genres(movie, tmdb_movie)
         update_movie_people(movie, tmdb_cast_crew)
-    return movie
+    return movie, False
 
 
 def get_movie_trailers(tmdb_id):
     try:
-        movie = Movie.objects.get(tmdb_id=tmdb_id)
+        Movie.objects.get(tmdb_id=tmdb_id)
         tmdb_videos = get_tmdb_movie_videos(tmdb_id)
     except Movie.DoesNotExist as error:
         raise MovieNotFoundError from error
@@ -75,8 +74,7 @@ def get_movie_trailers(tmdb_id):
     except (ConnectionError, Timeout) as error:
         raise TmdbUnavailableError from error
 
-    sync_tmdb_videos(movie, MovieVideo, tmdb_videos)
-    return serialize_videos(movie, MovieVideo)
+    return serialize_tmdb_videos(tmdb_videos)
 
 
 def get_movie_recommendations(tmdb_id, page):
@@ -91,8 +89,9 @@ def get_movie_recommendations(tmdb_id, page):
 
 
 def enqueue_movie_refresh(tmdb_id):
-    return enqueue_background_task(
+    return enqueue_background_task_once(
         refresh_movie_details,
+        identity=tmdb_id,
         args=(tmdb_id,),
         task_name='refresh_movie_details',
     )

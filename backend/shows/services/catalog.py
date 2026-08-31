@@ -14,11 +14,11 @@ from shows.functions import (
     sync_show_people,
     sync_show_seasons,
 )
-from shows.models import Show, ShowVideo
+from shows.models import Show
 from shows.tasks import refresh_show_details
-from utils.celery import enqueue_background_task
+from utils.celery import enqueue_background_task_once
 from utils.functions import update_fields_if_needed
-from videos.functions import serialize_videos, sync_tmdb_videos
+from videos.functions import serialize_tmdb_videos
 
 
 SHOW_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
@@ -32,10 +32,10 @@ class TmdbUnavailableError(Exception):
     pass
 
 
-def get_or_sync_show(tmdb_id):
+def get_show_for_detail(tmdb_id):
     show = Show.objects.filter(tmdb_id=tmdb_id).first()
     if not _show_requires_sync(show):
-        return show
+        return show, False
 
     try:
         tmdb_show = get_tmdb_show(tmdb_id)
@@ -43,13 +43,9 @@ def get_or_sync_show(tmdb_id):
     except HTTPError as error:
         if _get_http_status(error) == 404:
             raise ShowNotFoundError from error
-        if show is None:
-            raise TmdbUnavailableError from error
-        return show
+        raise TmdbUnavailableError from error
     except (ConnectionError, Timeout) as error:
-        if show is None:
-            raise TmdbUnavailableError from error
-        return show
+        raise TmdbUnavailableError from error
 
     with transaction.atomic():
         new_fields = get_show_new_fields(tmdb_show)
@@ -59,16 +55,15 @@ def get_or_sync_show(tmdb_id):
         )
         if not created:
             update_fields_if_needed(show, new_fields)
-
         sync_show_genres(show, tmdb_show)
         sync_show_people(show, tmdb_show_credits, tmdb_show)
         sync_show_seasons(show, tmdb_show.get('seasons'))
-    return show
+    return show, False
 
 
 def get_show_trailers(tmdb_id):
     try:
-        show = Show.objects.get(tmdb_id=tmdb_id)
+        Show.objects.get(tmdb_id=tmdb_id)
         tmdb_videos = get_tmdb_show_videos(tmdb_id)
     except Show.DoesNotExist as error:
         raise ShowNotFoundError from error
@@ -79,8 +74,7 @@ def get_show_trailers(tmdb_id):
     except (ConnectionError, Timeout) as error:
         raise TmdbUnavailableError from error
 
-    sync_tmdb_videos(show, ShowVideo, tmdb_videos)
-    return serialize_videos(show, ShowVideo)
+    return serialize_tmdb_videos(tmdb_videos)
 
 
 def get_show_recommendations(tmdb_id, page):
@@ -95,8 +89,9 @@ def get_show_recommendations(tmdb_id, page):
 
 
 def enqueue_show_refresh(tmdb_id):
-    return enqueue_background_task(
+    return enqueue_background_task_once(
         refresh_show_details,
+        identity=tmdb_id,
         args=(tmdb_id,),
         task_name='refresh_show_details',
     )

@@ -18,7 +18,7 @@ from movies.services.catalog import (
     enqueue_movie_refresh,
     get_movie_recommendations,
     get_movie_trailers,
-    get_or_sync_movie,
+    get_movie_for_detail,
     movie_refresh_is_due,
 )
 from movies.services.tracking import (
@@ -42,14 +42,14 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     )
     def retrieve(self, request, *args, **kwargs):
         try:
-            movie = get_or_sync_movie(kwargs.get('tmdb_id'))
+            movie, needs_refresh = get_movie_for_detail(kwargs.get('tmdb_id'))
         except CatalogMovieNotFoundError:
             return Response({ERROR: MOVIE_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
         except TmdbUnavailableError:
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         response = Response(get_movie_payload(movie, request))
-        if movie_refresh_is_due(movie):
+        if needs_refresh or movie_refresh_is_due(movie):
             movie_id = movie.tmdb_id
             response.add_post_render_callback(lambda _: enqueue_movie_refresh(movie_id))
         return response

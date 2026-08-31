@@ -12,13 +12,25 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from proxy.functions import get_proxy_url
-from shows.functions import get_tmdb_season, get_season_new_fields, sync_season_episodes, \
-    get_tmdb_season_credits, get_tmdb_season_videos, sync_season_people, get_tmdb_show, get_tmdb_show_credits, \
-    get_show_new_fields, sync_show_genres, sync_show_people
-from shows.models import UserSeason, Show, Season, UserShow, UserEpisode, SeasonPerson, SeasonVideo
+from shows.functions import (
+    get_season_new_fields,
+    get_tmdb_season,
+    get_tmdb_season_credits,
+    get_tmdb_season_videos,
+    sync_season_episodes,
+    sync_season_people,
+)
+from shows.models import UserSeason, Show, Season, UserShow, UserEpisode, SeasonPerson
 from shows.serializers import UserSeasonSerializer, FollowedUserSeasonSerializer, UserEpisodeInSeasonSerializer, \
     ShowSerializer
 from shows.selectors import user_watched_show
+from shows.services.catalog import (
+    ShowNotFoundError as CatalogShowNotFoundError,
+    TmdbUnavailableError as CatalogTmdbUnavailableError,
+    enqueue_show_refresh,
+    get_show_for_detail,
+    show_refresh_is_due,
+)
 from shows.services.tracking import (
     SeasonNotFoundError as TrackingSeasonNotFoundError,
     ShowNotFoundError as TrackingShowNotFoundError,
@@ -27,10 +39,10 @@ from shows.services.tracking import (
 from shows.tasks import refresh_season_details
 from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
-from utils.celery import enqueue_background_task
+from utils.celery import enqueue_background_task_once
 from utils.constants import ERROR, SEASON_NOT_FOUND, TMDB_UNAVAILABLE, SHOW_NOT_FOUND
 from utils.functions import update_fields_if_needed
-from videos.functions import serialize_videos, sync_tmdb_videos
+from videos.functions import serialize_tmdb_videos
 
 SEASON_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
 
@@ -43,27 +55,13 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     def retrieve(self, request, *args, **kwargs):
         show_tmdb_id = kwargs.get('show_tmdb_id')
         season_number = kwargs.get('number')
-
-        show = Show.objects.filter(tmdb_id=show_tmdb_id).first()
-        if show is None:
-            try:
-                tmdb_show = get_tmdb_show(show_tmdb_id)
-                tmdb_show_credits = get_tmdb_show_credits(show_tmdb_id)
-            except HTTPError as e:
-                error_code = int(e.args[0].split(' ', 1)[0])
-                if error_code == 404:
-                    return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-            except (ConnectionError, Timeout):
-                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-            with transaction.atomic():
-                show_fields = get_show_new_fields(tmdb_show)
-                show, created = Show.objects.get_or_create(tmdb_id=show_tmdb_id, defaults=show_fields)
-                if not created:
-                    update_fields_if_needed(show, show_fields)
-                sync_show_genres(show, tmdb_show)
-                sync_show_people(show, tmdb_show_credits, tmdb_show)
+        try:
+            show, _ = get_show_for_detail(show_tmdb_id)
+        except CatalogShowNotFoundError:
+            return Response({ERROR: SHOW_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+        except CatalogTmdbUnavailableError:
+            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        show_needs_refresh = show_refresh_is_due(show)
 
         season = Season.objects.filter(tmdb_show=show, tmdb_season_number=season_number).first()
         has_missing_episodes = season is not None and not season.episode_set.exists()
@@ -95,7 +93,11 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 sync_season_people(season, tmdb_season_credits)
 
         response = Response(parse_season(season, request))
-        if season.tmdb_last_update and season.tmdb_last_update <= timezone.now() - SEASON_DETAILS_REFRESH_INTERVAL:
+        if show_needs_refresh:
+            response.add_post_render_callback(lambda _: enqueue_show_refresh(show.tmdb_id))
+        if season.tmdb_last_update and (
+                season.tmdb_last_update <= timezone.now() - SEASON_DETAILS_REFRESH_INTERVAL
+        ):
             response.add_post_render_callback(
                 lambda _: enqueue_season_refresh(show.tmdb_id, season.tmdb_season_number)
             )
@@ -128,8 +130,7 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except (ConnectionError, Timeout):
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        sync_tmdb_videos(season, SeasonVideo, tmdb_videos)
-        return Response(serialize_videos(season, SeasonVideo))
+        return Response(serialize_tmdb_videos(tmdb_videos))
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -250,8 +251,9 @@ def parse_season(season, request):
 
 
 def enqueue_season_refresh(show_tmdb_id, season_number):
-    enqueue_background_task(
+    enqueue_background_task_once(
         refresh_season_details,
+        identity=f'{show_tmdb_id}:{season_number}',
         args=(show_tmdb_id, season_number),
         task_name='refresh_season_details'
     )

@@ -13,6 +13,7 @@ BROKER_CONNECT_TIMEOUT_SECS = 0.2
 BROKER_AVAILABLE_CACHE_KEY = 'celery_broker_available'
 BROKER_UNAVAILABLE_CACHE_KEY = 'celery_broker_unavailable'
 LOCAL_TASK_MAX_WORKERS = 4
+BACKGROUND_TASK_DEBOUNCE_SECS = 60 * 30
 
 logger = logging.getLogger(__name__)
 _local_task_executor = (
@@ -47,6 +48,17 @@ def enqueue_background_task(task, args=None, kwargs=None, task_name=None):
         return False
 
     return True
+
+
+def enqueue_background_task_once(task, identity, args=None, kwargs=None, task_name=None, timeout=None):
+    lock_key = f'background_task_enqueued:{task.name}:{identity}'
+    if not cache.add(lock_key, True, timeout or BACKGROUND_TASK_DEBOUNCE_SECS):
+        return False
+
+    is_queued = enqueue_background_task(task, args=args, kwargs=kwargs, task_name=task_name)
+    if not is_queued:
+        cache.delete(lock_key)
+    return is_queued
 
 
 def _enqueue_local_background_task(task, args, kwargs, task_name):

@@ -92,3 +92,29 @@ def serialize_videos(owner, relation_model):
         }
         for relation in relations
     ]
+
+
+def serialize_tmdb_videos(tmdb_videos):
+    results = []
+    seen_urls = set()
+    for tmdb_video in tmdb_videos or []:
+        if tmdb_video.get('type') != TMDB_TRAILER_TYPE:
+            continue
+        platform = tmdb_video.get('site') or ''
+        video_key = tmdb_video.get('key')
+        if platform != 'YouTube' or not video_key:
+            continue
+
+        url = YOUTUBE_PREFIX + video_key
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+        results.append({
+            'external_id': str(tmdb_video.get('id') or ''),
+            'name': tmdb_video.get('name') or '',
+            'url': url,
+            'source': Video.SOURCE_TMDB,
+            'platform': platform,
+            'type': tmdb_video.get('type') or '',
+        })
+    return results

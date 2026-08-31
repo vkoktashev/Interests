@@ -16,7 +16,7 @@ from games.integrations.igdb import (
     update_game_media_from_igdb,
     update_game_stores_from_igdb,
 )
-from games.models import Game, GameBeatTime
+from games.models import Game, GameBeatTime, GameScreenshot, GameVideo
 from games.services.parser_service import parse_game_prices_from_db
 from utils.functions import update_fields_if_needed
 
@@ -63,21 +63,25 @@ def get_igdb_platforms():
     return platforms
 
 
-async def get_or_sync_game(slug):
+async def get_game_for_detail(slug):
     game = await get_or_create_game(slug, include_media=True)
     has_igdb_beat_times = await GameBeatTime.objects.filter(
         game=game,
         source=GameBeatTime.SOURCE_IGDB,
     ).aexists()
+    videos_count = await GameVideo.objects.filter(game=game).acount()
+    screenshots_count = await GameScreenshot.objects.filter(game=game).acount()
     should_fetch_from_igdb = (
         game.igdb_last_update is None
         or game.igdb_videos_count is None
         or game.igdb_screenshots_count is None
+        or videos_count < game.igdb_videos_count
+        or screenshots_count < game.igdb_screenshots_count
         or not game.igdb_name
         or not has_igdb_beat_times
     )
     if not should_fetch_from_igdb:
-        return game
+        return game, False
 
     try:
         igdb_game = await sync_to_async(resolve_igdb_game_details)(game, slug)
@@ -86,9 +90,10 @@ async def get_or_sync_game(slug):
     if igdb_game is not None:
         igdb_game = await sync_to_async(attach_igdb_game_time_to_beat)(igdb_game, game)
         game = await sync_to_async(_apply_igdb_game)(game, igdb_game, include_media=True)
-    elif game.igdb_last_update is None:
+        return game, False
+    if game.igdb_last_update is None:
         raise IgdbUnavailableError
-    return game
+    return game, True
 
 
 async def get_or_create_game(slug, include_media=False):

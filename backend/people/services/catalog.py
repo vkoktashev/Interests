@@ -6,7 +6,7 @@ from requests import ConnectionError, HTTPError, Timeout
 from people.functions import fetch_and_upsert_person
 from people.models import Person
 from people.tasks import refresh_person_details
-from utils.celery import enqueue_background_task
+from utils.celery import enqueue_background_task_once
 
 
 PERSON_DETAILS_REFRESH_INTERVAL = timedelta(days=7)
@@ -50,8 +50,9 @@ def person_refresh_is_due(person):
 
 
 def enqueue_person_refresh(tmdb_id):
-    return enqueue_background_task(
+    return enqueue_background_task_once(
         refresh_person_details,
+        identity=tmdb_id,
         args=(tmdb_id,),
         task_name='refresh_person_details',
     )
