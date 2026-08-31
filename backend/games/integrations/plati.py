@@ -5,10 +5,10 @@ from html import unescape
 from typing import Any, Optional
 from urllib.parse import quote
 
-import requests
 from django.core.cache import cache
 from django.utils.text import slugify
 
+from integrations.http import external_request
 
 PLATI_SEARCH_URL_TEMPLATE = 'https://plati.market/search/{query}'
 PLATI_GAME_URL_TEMPLATE = 'https://plati.market/games/{slug}/{category_id}/'
@@ -187,8 +187,13 @@ def _search_plati_category(game_name: str | None) -> Optional[dict[str, str]]:
         return cached_value
 
     search_url = PLATI_SEARCH_URL_TEMPLATE.format(query=quote(normalized_query))
-    response = requests.get(search_url, headers=PLATI_HEADERS, timeout=PLATI_REQUEST_TIMEOUT_SECS)
-    response.raise_for_status()
+    response = external_request(
+        'plati',
+        'GET',
+        search_url,
+        headers=PLATI_HEADERS,
+        timeout=PLATI_REQUEST_TIMEOUT_SECS,
+    )
 
     categories = _parse_search_categories(response.text or '')
     best_category = None
@@ -271,12 +276,18 @@ def get_plati_store_price(game_name: str | None) -> Optional[dict[str, Any]]:
         return cached_value
 
     category_url = PLATI_GAME_URL_TEMPLATE.format(slug=category_slug, category_id=category_id)
-    response = requests.get(category_url, headers=PLATI_HEADERS, timeout=PLATI_REQUEST_TIMEOUT_SECS)
+    response = external_request(
+        'plati',
+        'GET',
+        category_url,
+        headers=PLATI_HEADERS,
+        timeout=PLATI_REQUEST_TIMEOUT_SECS,
+        allowed_statuses=(404,),
+    )
     if response.status_code == 404:
         cache.set(cache_key, None, PLATI_CACHE_TTL_SECS)
         return None
 
-    response.raise_for_status()
     items = _extract_plati_items(response.text or '', game_name)
 
     if not items:

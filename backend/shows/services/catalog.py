@@ -2,8 +2,8 @@ from datetime import timedelta
 
 from django.db import transaction
 from django.utils import timezone
-from requests import ConnectionError, HTTPError, Timeout
 
+from integrations.tmdb import TmdbNotFoundError, TmdbUnavailableError
 from shows.functions import (
     get_show_new_fields,
     get_tmdb_show,
@@ -28,10 +28,6 @@ class ShowNotFoundError(Exception):
     pass
 
 
-class TmdbUnavailableError(Exception):
-    pass
-
-
 def get_show_for_detail(tmdb_id):
     show = Show.objects.filter(tmdb_id=tmdb_id).first()
     if not _show_requires_sync(show):
@@ -40,12 +36,8 @@ def get_show_for_detail(tmdb_id):
     try:
         tmdb_show = get_tmdb_show(tmdb_id)
         tmdb_show_credits = get_tmdb_show_credits(tmdb_id)
-    except HTTPError as error:
-        if _get_http_status(error) == 404:
-            raise ShowNotFoundError from error
-        raise TmdbUnavailableError from error
-    except (ConnectionError, Timeout) as error:
-        raise TmdbUnavailableError from error
+    except TmdbNotFoundError as error:
+        raise ShowNotFoundError from error
 
     with transaction.atomic():
         new_fields = get_show_new_fields(tmdb_show)
@@ -67,12 +59,8 @@ def get_show_trailers(tmdb_id):
         tmdb_videos = get_tmdb_show_videos(tmdb_id)
     except Show.DoesNotExist as error:
         raise ShowNotFoundError from error
-    except HTTPError as error:
-        if _get_http_status(error) == 404:
-            raise ShowNotFoundError from error
-        raise TmdbUnavailableError from error
-    except (ConnectionError, Timeout) as error:
-        raise TmdbUnavailableError from error
+    except TmdbNotFoundError as error:
+        raise ShowNotFoundError from error
 
     return serialize_tmdb_videos(tmdb_videos)
 
@@ -80,12 +68,8 @@ def get_show_trailers(tmdb_id):
 def get_show_recommendations(tmdb_id, page):
     try:
         return get_tmdb_show_recommendations(tmdb_id, page=page)
-    except HTTPError as error:
-        if _get_http_status(error) == 404:
-            raise ShowNotFoundError from error
-        raise TmdbUnavailableError from error
-    except (ConnectionError, Timeout, ValueError) as error:
-        raise TmdbUnavailableError from error
+    except TmdbNotFoundError as error:
+        raise ShowNotFoundError from error
 
 
 def enqueue_show_refresh(tmdb_id):
@@ -116,13 +100,3 @@ def _show_requires_sync(show):
         show.season_set.values_list('tmdb_season_number', flat=True)
     )
     return bool(expected_season_numbers - database_season_numbers)
-
-
-def _get_http_status(error):
-    if getattr(error, 'response', None) is not None:
-        return error.response.status_code
-
-    try:
-        return int(str(error.args[0]).split(' ', 1)[0])
-    except (IndexError, TypeError, ValueError):
-        return None

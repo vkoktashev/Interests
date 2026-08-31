@@ -3,8 +3,9 @@ from decimal import Decimal, InvalidOperation
 from typing import Any, Optional
 from urllib.parse import urlparse
 
-import requests
 from django.core.cache import cache
+
+from integrations.http import external_request
 
 
 STEAM_APPDETAILS_URL = 'https://store.steampowered.com/api/appdetails'
@@ -115,7 +116,9 @@ def get_steam_store_price(store_url: str | None, country_code: str | None = None
     if cached_value is not STEAM_CACHE_MISS:
         return cached_value
 
-    response = requests.get(
+    response = external_request(
+        'steam',
+        'GET',
         STEAM_APPDETAILS_URL,
         params={
             'appids': app_id,
@@ -124,7 +127,6 @@ def get_steam_store_price(store_url: str | None, country_code: str | None = None
         },
         timeout=8,
     )
-    response.raise_for_status()
     payload = response.json() or {}
 
     app_payload = payload.get(str(app_id)) or {}

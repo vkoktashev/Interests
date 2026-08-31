@@ -4,10 +4,10 @@ import re
 from difflib import SequenceMatcher
 from typing import Any, Optional
 
-import requests
 from django.core.cache import cache
 from django.utils.text import slugify
 
+from integrations.http import external_request
 
 IGM_GAME_URL_TEMPLATE = 'https://igm.gg/game/{slug}'
 IGM_PRICE_CACHE_TTL_SECS = 60 * 60
@@ -404,7 +404,9 @@ def _get_igm_store_price_by_slug(
     if cached_value is not IGM_CACHE_MISS:
         return cached_value
 
-    response = requests.get(
+    response = external_request(
+        'igm',
+        'GET',
         store_url,
         headers={
             'Accept-Language': 'ru-RU,ru;q=0.9',
@@ -415,13 +417,12 @@ def _get_igm_store_price_by_slug(
             ),
         },
         timeout=IGM_REQUEST_TIMEOUT_SECS,
+        allowed_statuses=(404,),
     )
 
     if response.status_code == 404:
         cache.set(cache_key, None, IGM_PRICE_CACHE_TTL_SECS)
         return None
-
-    response.raise_for_status()
 
     page_name = _extract_page_game_name(response.text or '')
     if not _matches_expected_game_name(game_name, page_name):

@@ -4,9 +4,9 @@ import logging
 from celery.schedules import crontab
 from django.db import transaction
 from django.db.models import Q
-from requests import ConnectionError, HTTPError, Timeout
 
 from config.celery import app
+from integrations.tmdb import TmdbIntegrationError
 from shows.functions import clear_tmdb_episode_cache, clear_tmdb_season_cache, clear_tmdb_show_cache, \
     get_show_new_fields, get_tmdb_show, sync_show_genres, \
     get_tmdb_show_credits, sync_show_people, sync_show_seasons, upsert_season_from_tmdb, get_tmdb_season, \
@@ -115,13 +115,13 @@ def update_show_details(show_tmdb_id):
     try:
         tmdb_show = get_tmdb_show(show_tmdb_id)
         tmdb_show_credits = get_tmdb_show_credits(show_tmdb_id)
-    except (HTTPError, ConnectionError, Timeout):
+    except TmdbIntegrationError:
         logger.exception('update_show_details: failed to fetch TMDB show details for tmdb_id=%s', show_tmdb_id)
         return None
 
     try:
         tmdb_videos = get_tmdb_show_videos(show_tmdb_id)
-    except (HTTPError, ConnectionError, Timeout):
+    except TmdbIntegrationError:
         tmdb_videos = None
         logger.warning('update_show_details: failed to fetch TMDB videos for tmdb_id=%s', show_tmdb_id)
 
@@ -182,7 +182,7 @@ def update_season_details(show_tmdb_id, season_number):
     try:
         tmdb_season = get_tmdb_season(show_tmdb_id, season_number)
         tmdb_season_credits = get_tmdb_season_credits(show_tmdb_id, season_number)
-    except (HTTPError, ConnectionError, Timeout):
+    except TmdbIntegrationError:
         logger.exception(
             'update_season_details: failed to fetch TMDB season details for show id=%s name=%s tmdb_id=%s season_number=%s',
             show.id,
@@ -193,7 +193,7 @@ def update_season_details(show_tmdb_id, season_number):
         return None
     try:
         tmdb_videos = get_tmdb_season_videos(show_tmdb_id, season_number)
-    except (HTTPError, ConnectionError, Timeout):
+    except TmdbIntegrationError:
         tmdb_videos = None
         logger.warning(
             'update_season_details: failed to fetch TMDB videos for show_tmdb_id=%s season_number=%s',
@@ -272,7 +272,7 @@ def update_episode_details(show_tmdb_id, season_number, episode_number):
     try:
         tmdb_episode = get_tmdb_episode(show_tmdb_id, season_number, episode_number)
         tmdb_episode_credits = get_tmdb_episode_credits(show_tmdb_id, season_number, episode_number)
-    except (HTTPError, ConnectionError, Timeout):
+    except TmdbIntegrationError:
         logger.exception(
             'update_episode_details: failed to fetch TMDB episode details for show id=%s name=%s tmdb_id=%s season_number=%s episode_number=%s',
             season.tmdb_show.id,
@@ -284,7 +284,7 @@ def update_episode_details(show_tmdb_id, season_number, episode_number):
         return None
     try:
         tmdb_videos = get_tmdb_episode_videos(show_tmdb_id, season_number, episode_number)
-    except (HTTPError, ConnectionError, Timeout):
+    except TmdbIntegrationError:
         tmdb_videos = None
         logger.warning(
             'update_episode_details: failed to fetch TMDB videos for show_tmdb_id=%s season_number=%s '

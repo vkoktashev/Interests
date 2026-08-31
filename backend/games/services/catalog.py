@@ -1,5 +1,4 @@
 from asgiref.sync import async_to_sync, sync_to_async
-from django.core.cache import cache
 from django.db import transaction
 
 from games.integrations.igdb import (
@@ -18,6 +17,7 @@ from games.integrations.igdb import (
 )
 from games.models import Game, GameBeatTime, GameScreenshot, GameVideo
 from games.services.parser_service import parse_game_prices_from_db
+from integrations.cache import cached_external_call
 from utils.functions import update_fields_if_needed
 
 
@@ -51,16 +51,14 @@ def search_igdb_games(query, page, page_size, game_types_value, platforms_value)
 
 
 def get_igdb_platforms():
-    platforms = cache.get(IGDB_PLATFORMS_CACHE_KEY)
-    if platforms is not None:
-        return platforms
-
     try:
-        platforms = query_igdb_platforms()
+        return cached_external_call(
+            IGDB_PLATFORMS_CACHE_KEY,
+            query_igdb_platforms,
+            IGDB_PLATFORMS_CACHE_TIMEOUT,
+        )
     except Exception as error:
         raise IgdbUnavailableError from error
-    cache.set(IGDB_PLATFORMS_CACHE_KEY, platforms, IGDB_PLATFORMS_CACHE_TIMEOUT)
-    return platforms
 
 
 async def get_game_for_detail(slug):

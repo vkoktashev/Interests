@@ -1,6 +1,6 @@
 from celery import shared_task
-from requests import ConnectionError, HTTPError, Timeout
 
+from integrations.tmdb import TmdbIntegrationError
 from people.functions import fetch_and_upsert_person
 
 
@@ -8,6 +8,6 @@ from people.functions import fetch_and_upsert_person
 def refresh_person_details(tmdb_id):
     try:
         fetch_and_upsert_person(tmdb_id)
-    except (HTTPError, ConnectionError, Timeout, ValueError):
+    except TmdbIntegrationError:
         return None
     return None

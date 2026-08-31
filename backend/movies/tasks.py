@@ -4,9 +4,9 @@ import logging
 from celery.schedules import crontab
 from django.db import transaction
 from django.db.models import Q
-from requests import HTTPError, ConnectionError, Timeout
 
 from config.celery import app
+from integrations.tmdb import TmdbIntegrationError
 from movies.functions import clear_tmdb_movie_cache, get_movie_new_fields, get_tmdb_movie, get_cast_crew, \
     get_tmdb_movie_release_dates, get_tmdb_movie_videos, update_movie_genres, update_movie_people
 from movies.models import Movie, MovieVideo
@@ -95,13 +95,13 @@ def update_movie_details(tmdb_id, movie_obj=None):
         tmdb_movie = get_tmdb_movie(tmdb_id)
         tmdb_cast_crew = get_cast_crew(tmdb_id)
         tmdb_release_dates = get_tmdb_movie_release_dates(tmdb_id)
-    except (HTTPError, ConnectionError, Timeout):
+    except TmdbIntegrationError:
         logger.exception('update_movie_details: failed to fetch TMDB details for tmdb_id=%s', tmdb_id)
         return
 
     try:
         tmdb_videos = get_tmdb_movie_videos(tmdb_id)
-    except (HTTPError, ConnectionError, Timeout):
+    except TmdbIntegrationError:
         tmdb_videos = None
         logger.warning('update_movie_details: failed to fetch TMDB videos for tmdb_id=%s', tmdb_id)
 

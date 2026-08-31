@@ -4,13 +4,13 @@ from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
 from utils.swagger import openapi, swagger_auto_schema
-from requests import HTTPError, ConnectionError, Timeout
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from integrations.tmdb import TmdbNotFoundError, TmdbUnavailableError
 from proxy.functions import get_proxy_url
 from shows.functions import (
     get_season_new_fields,
@@ -71,12 +71,9 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             try:
                 tmdb_season = get_tmdb_season(show_tmdb_id, season_number)
                 tmdb_season_credits = get_tmdb_season_credits(show_tmdb_id, season_number)
-            except HTTPError as e:
-                error_code = int(e.args[0].split(' ', 1)[0])
-                if error_code == 404:
-                    return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-                return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-            except (ConnectionError, Timeout):
+            except TmdbNotFoundError:
+                return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            except TmdbUnavailableError:
                 return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             with transaction.atomic():
@@ -122,12 +119,9 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             tmdb_videos = get_tmdb_season_videos(show_tmdb_id, season_number)
         except Season.DoesNotExist:
             return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-        except HTTPError as e:
-            error_code = int(e.args[0].split(' ', 1)[0])
-            if error_code == 404:
-                return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-            return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-        except (ConnectionError, Timeout):
+        except TmdbNotFoundError:
+            return Response({ERROR: SEASON_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+        except TmdbUnavailableError:
             return Response({ERROR: TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         return Response(serialize_tmdb_videos(tmdb_videos))

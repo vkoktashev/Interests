@@ -1,43 +1,27 @@
 import tmdbsimple as tmdb
-from django.core.cache import cache
-from requests import ConnectionError, HTTPError, Timeout
 
-from utils.constants import CACHE_TIMEOUT, LANGUAGE
+from integrations.tmdb import TmdbIntegrationError as TmdbUnavailableError, cached_tmdb_call
+from utils.constants import LANGUAGE
 
 
 TRENDING_CACHE_TTL_SECONDS = 60 * 60 * 12
 
 
-class TmdbUnavailableError(Exception):
-    pass
-
-
 def search_tmdb_shows(query, page):
     key = f'tmdb_show_search_{query.replace(" ", "_")}_page_{page}'
-    results = cache.get(key, None)
-    if results is not None:
-        return results
-
-    try:
-        results = tmdb.Search().tv(query=query, page=page, language=LANGUAGE)
-    except (HTTPError, ConnectionError, Timeout) as error:
-        raise TmdbUnavailableError from error
-    cache.set(key, results, CACHE_TIMEOUT)
-    return results
+    return cached_tmdb_call(
+        key,
+        lambda: tmdb.Search().tv(query=query, page=page, language=LANGUAGE),
+    )
 
 
 def get_trending_shows(time_window):
     key = f'tmdb_trending_shows_{time_window}_{LANGUAGE}'
-    results = cache.get(key, None)
-    if results is not None:
-        return results
-
-    try:
-        results = tmdb.Trending(
+    return cached_tmdb_call(
+        key,
+        lambda: tmdb.Trending(
             media_type='tv',
             time_window=time_window,
-        ).info(language=LANGUAGE)
-    except (HTTPError, ConnectionError, Timeout) as error:
-        raise TmdbUnavailableError from error
-    cache.set(key, results, TRENDING_CACHE_TTL_SECONDS)
-    return results
+        ).info(language=LANGUAGE),
+        timeout=TRENDING_CACHE_TTL_SECONDS,
+    )
