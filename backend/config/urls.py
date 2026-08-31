@@ -8,6 +8,7 @@ from utils.swagger import openapi, get_schema_view, swagger_available
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('analytics/', include('analytics.urls')),
     path('users/', include('users.urls')),
     path('games/', include('games.urls')),
     path('movies/', include('movies.urls')),

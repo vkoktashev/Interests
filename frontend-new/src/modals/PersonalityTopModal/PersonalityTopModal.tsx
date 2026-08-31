@@ -26,7 +26,7 @@ interface IPersonalityTopModalProps extends IModalProps {
 export default function PersonalityTopModal(props: IPersonalityTopModalProps) {
 	const bem = useBem('personality-top-modal');
 	const fetchConfig = useMemo(() => ({
-		url: `/users/user/${props.userId}/top-personalities/?type=${props.topType}`,
+		url: `/analytics/users/${props.userId}/top-personalities/?type=${props.topType}`,
 		method: 'get',
 	}), [props.topType, props.userId]);
 	const {data, isLoading, axiosError} = useFetch(fetchConfig as any);

@@ -27,6 +27,7 @@ INSTALLED_APPS = [
 
     # our apps
     'config',
+    'analytics.apps.AnalyticsConfig',
     'users',
     'games',
     'people',
