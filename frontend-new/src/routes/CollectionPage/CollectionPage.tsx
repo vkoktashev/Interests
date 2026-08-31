@@ -8,7 +8,14 @@ import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getRouteParams} from '@steroidsjs/core/reducers/router';
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 
-import {ROUTE_COLLECTION_EDIT, ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW, ROUTE_USER} from '../index';
+import {
+	ROUTE_COLLECTION,
+	ROUTE_COLLECTION_EDIT,
+	ROUTE_GAME,
+	ROUTE_MOVIE,
+	ROUTE_SHOW,
+	ROUTE_USER,
+} from '../index';
 import './collection-page.scss';
 
 type TDisplayMode = 'mixed' | 'grouped';
@@ -151,6 +158,7 @@ function CollectionPage() {
 	const {collectionId, progressUserId} = useSelector(getRouteParams);
 	const [isDeleting, setDeleting] = useState(false);
 	const [isSubscribing, setSubscribing] = useState(false);
+	const [isCloning, setCloning] = useState(false);
 	const [subscribedCollectionId, setSubscribedCollectionId] = useState<number>();
 	const effectiveProgressUserId = progressUserId || currentUser?.id;
 	const fetchConfig = useMemo(() => collectionId && ({
@@ -163,6 +171,31 @@ function CollectionPage() {
 	const collection = data as ICollectionDetail;
 	const isOwner = collection?.author?.id === currentUser?.id;
 	const isSubscribed = collection?.is_subscribed || subscribedCollectionId === collection?.id;
+	const cloneCollection = useCallback(async () => {
+		if (!collection || !currentUser?.id || isOwner || isCloning) {
+			return;
+		}
+
+		setCloning(true);
+		try {
+			const clonedCollection = await http.post(`/collections/${collection.id}/clone/`);
+			if (!clonedCollection?.id) {
+				throw new Error('Cloned collection id is missing');
+			}
+			dispatch(showNotification('Подборка склонирована', 'success'));
+			dispatch(goToRoute(ROUTE_COLLECTION, {collectionId: clonedCollection.id}));
+		} catch (requestError) {
+			const responseData = requestError?.response?.data;
+			dispatch(showNotification(
+				responseData?.error
+					|| responseData?.detail
+					|| 'Не удалось склонировать подборку',
+				'danger',
+			));
+		} finally {
+			setCloning(false);
+		}
+	}, [collection, currentUser?.id, dispatch, http, isCloning, isOwner]);
 	const subscribe = useCallback(async () => {
 		if (!collection || !currentUser?.id || isOwner || isSubscribed || isSubscribing) {
 			return;
@@ -282,17 +315,28 @@ function CollectionPage() {
 						</div>
 					)}
 					{!!currentUser?.id && !isOwner && (
-						<Button
-							type='button'
-							className={bem.element('subscribe-button')}
-							color={isSubscribed ? 'secondary' : 'primary'}
-							disabled={isSubscribed || isSubscribing}
-							onClick={subscribe}
-						>
-							{isSubscribed
-								? 'Вы подписаны'
-								: (isSubscribing ? 'Подписываем...' : 'Подписаться')}
-						</Button>
+						<div className={bem.element('foreign-actions')}>
+							<Button
+								type='button'
+								className={bem.element('clone-button')}
+								color='secondary'
+								disabled={isCloning || isSubscribing}
+								onClick={cloneCollection}
+							>
+								{isCloning ? 'Клонируем...' : 'Склонировать'}
+							</Button>
+							<Button
+								type='button'
+								className={bem.element('subscribe-button')}
+								color={isSubscribed ? 'secondary' : 'primary'}
+								disabled={isSubscribed || isSubscribing || isCloning}
+								onClick={subscribe}
+							>
+								{isSubscribed
+									? 'Вы подписаны'
+									: (isSubscribing ? 'Подписываем...' : 'Подписаться')}
+							</Button>
+						</div>
 					)}
 				</div>
 			</header>

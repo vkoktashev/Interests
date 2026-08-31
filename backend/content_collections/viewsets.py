@@ -21,6 +21,7 @@ from .services.collections import (
     CollectionInputError,
     CollectionItemNotFoundError,
     add_collection_item,
+    clone_collection,
     create_collection,
     remove_collection_item,
     reorder_collection_items,
@@ -158,6 +159,23 @@ class CollectionViewSet(
 
         collection.subscribers.add(request.user)
         return Response({'subscribed': True}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def clone(self, request, *args, **kwargs):
+        collection = self.get_object()
+        if collection.author_id == request.user.pk:
+            return Response(
+                {'error': 'Нельзя клонировать собственную подборку.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not is_user_available(request.user, collection.author):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        cloned_collection = clone_collection(collection, request.user)
+        return Response(
+            {'id': cloned_collection.pk},
+            status=status.HTTP_201_CREATED,
+        )
 
     @action(detail=False, methods=['get'])
     def content_search(self, request, *args, **kwargs):
