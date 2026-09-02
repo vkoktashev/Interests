@@ -41,7 +41,7 @@ from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
 from utils.celery import enqueue_background_task_once
 from utils.constants import ERROR, SEASON_NOT_FOUND, TMDB_UNAVAILABLE, SHOW_NOT_FOUND
-from utils.functions import update_fields_if_needed
+from utils.functions import create_post_render_callback, update_fields_if_needed
 from videos.functions import serialize_tmdb_videos
 
 SEASON_DETAILS_REFRESH_INTERVAL = timedelta(hours=4)
@@ -91,12 +91,16 @@ class SeasonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         response = Response(parse_season(season, request))
         if show_needs_refresh:
-            response.add_post_render_callback(lambda _: enqueue_show_refresh(show.tmdb_id))
+            response.add_post_render_callback(create_post_render_callback(enqueue_show_refresh, show.tmdb_id))
         if season.tmdb_last_update and (
                 season.tmdb_last_update <= timezone.now() - SEASON_DETAILS_REFRESH_INTERVAL
         ):
             response.add_post_render_callback(
-                lambda _: enqueue_season_refresh(show.tmdb_id, season.tmdb_season_number)
+                create_post_render_callback(
+                    enqueue_season_refresh,
+                    show.tmdb_id,
+                    season.tmdb_season_number,
+                )
             )
         return response
 

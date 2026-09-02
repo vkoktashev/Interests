@@ -32,6 +32,7 @@ from shows.services.tracking import (
 from shows.tasks import update_all_shows_task, update_shows
 from utils.celery import enqueue_background_task_once
 from utils.constants import ERROR, SHOW_NOT_FOUND, TMDB_UNAVAILABLE
+from utils.functions import create_post_render_callback
 
 
 class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -61,7 +62,7 @@ class ShowViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         response = Response(get_show_payload(show, request))
         if needs_refresh or show_refresh_is_due(show):
             show_id = show.tmdb_id
-            response.add_post_render_callback(lambda _: enqueue_show_refresh(show_id))
+            response.add_post_render_callback(create_post_render_callback(enqueue_show_refresh, show_id))
 
         return response
 

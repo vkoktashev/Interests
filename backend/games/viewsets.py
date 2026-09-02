@@ -38,7 +38,7 @@ from utils.constants import (
     GAME_NOT_FOUND,
     IGDB_UNAVAILABLE,
 )
-from utils.functions import get_page_size
+from utils.functions import create_post_render_callback, get_page_size
 
 
 class SearchGamesViewSet(GenericViewSet, mixins.ListModelMixin):
@@ -148,7 +148,8 @@ class GameViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 if game.igdb_last_update
                 else None
             )
-            response.add_post_render_callback(lambda _: enqueue_game_refresh(
+            response.add_post_render_callback(create_post_render_callback(
+                enqueue_game_refresh,
                 game.igdb_slug,
                 game.igdb_id,
                 refresh_version,

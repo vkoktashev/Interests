@@ -26,6 +26,7 @@ from movies.services.tracking import (
     update_user_movie,
 )
 from utils.constants import ERROR, MOVIE_NOT_FOUND, TMDB_UNAVAILABLE
+from utils.functions import create_post_render_callback
 
 
 class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
@@ -51,7 +52,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         response = Response(get_movie_payload(movie, request))
         if needs_refresh or movie_refresh_is_due(movie):
             movie_id = movie.tmdb_id
-            response.add_post_render_callback(lambda _: enqueue_movie_refresh(movie_id))
+            response.add_post_render_callback(create_post_render_callback(enqueue_movie_refresh, movie_id))
         return response
 
     @swagger_auto_schema(
