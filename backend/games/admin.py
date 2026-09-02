@@ -15,11 +15,18 @@ class GameDeveloperInline(admin.TabularInline):
 
 @admin.register(Game)
 class GameAdmin(ForceRefreshAdminMixin, SearchByIdAdminMixin, admin.ModelAdmin):
-    list_display = ('igdb_name', 'igdb_id', 'igdb_release_date', 'igdb_platforms', 'igdb_last_update')
+    list_display = (
+        'igdb_name',
+        'igdb_id',
+        'igdb_game_status',
+        'igdb_release_date',
+        'igdb_platforms',
+        'igdb_last_update',
+    )
     search_fields = ('igdb_name', 'hltb_name', 'igdb_slug', 'rawg_slug')
     search_id_fields = ('pk', 'igdb_id', 'rawg_id', 'hltb_id')
     search_help_text = 'Название, slug или числовой ID (внутренний, IGDB, RAWG, HLTB)'
-    list_filter = ('igdb_release_date', 'igdb_last_update')
+    list_filter = ('igdb_game_status', 'igdb_release_date', 'igdb_last_update')
     date_hierarchy = 'igdb_release_date'
     ordering = ('igdb_name',)
     list_per_page = 50

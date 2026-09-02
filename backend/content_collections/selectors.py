@@ -150,6 +150,7 @@ def get_content_search_payload(search_results, request):
                     game.igdb_release_date.year if game.igdb_release_date else None
                 ),
                 'cover_url': get_proxy_url(request, game.igdb_cover_url),
+                'game_status': game.igdb_game_status,
             }
             for game in search_results['games']
         ],

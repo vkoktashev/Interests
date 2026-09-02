@@ -153,6 +153,13 @@
         margin: 0 0 0.4rem;
     }
 
+    &__card-value-content {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
     &__card-note {
         @include body2;
         margin: 0;

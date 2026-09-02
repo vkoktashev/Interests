@@ -59,6 +59,7 @@ export interface ISearchCardData {
 	overview?: string;
 	layoutVariant?: 'default' | 'media';
 	statusBadge?: IMediaStatusBadge;
+	releaseStatusBadge?: IMediaStatusBadge;
 	route: typeof ROUTE_GAME | typeof ROUTE_MOVIE | typeof ROUTE_SHOW | typeof ROUTE_PERSON;
 	routeParams: Record<string, unknown>;
 }
@@ -76,6 +77,7 @@ export interface IGameSearchItem {
 	tags?: Array<{name: string}>;
 	platforms?: Array<{platform: {name: string}}>;
 	user_status?: string | null;
+	game_status?: string | null;
 }
 
 export interface IGameSearchResponse {

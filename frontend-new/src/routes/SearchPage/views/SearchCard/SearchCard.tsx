@@ -25,13 +25,23 @@ function SearchCard({info, className}: ISearchCardProps) {
 				title={info.name}
 				className={bem.element('link')}
 			>
-				{hasPosterUrl ? (
-					<div className={bem.element('poster')} style={{backgroundImage: info.poster}} />
-				) : hasPosterImage ? (
-					<img className={bem.element('poster')} src={info.poster} alt={info.name} />
-				) : (
-					<div className={bem.element('poster-placeholder')} />
-				)}
+				<div className={bem.element('media')}>
+					{hasPosterUrl ? (
+						<div className={bem.element('poster')} style={{backgroundImage: info.poster}} />
+					) : hasPosterImage ? (
+						<img className={bem.element('poster')} src={info.poster} alt={info.name} />
+					) : (
+						<div className={bem.element('poster-placeholder')} />
+					)}
+					{info.releaseStatusBadge && (
+						<StatusBadge
+							className={bem.element('release-status')}
+							label={info.releaseStatusBadge.label}
+							tone={info.releaseStatusBadge.tone}
+							size='sm'
+						/>
+					)}
+				</div>
 
 				<div className={bem.element('body')}>
 					<div className={bem.element('body-main')}>

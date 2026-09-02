@@ -144,6 +144,7 @@ def get_top_rated_games_payload(user, limit_value, page_value, page_size_value):
         ),
         game_release_date=F('game__igdb_release_date'),
         game_release_date_display=F('game__igdb_release_date_display'),
+        game_status=F('game__igdb_game_status'),
         game_platforms=Coalesce(
             'game__igdb_platforms',
             Value('', output_field=TextField()),
@@ -187,6 +188,7 @@ def get_top_rated_games_payload(user, limit_value, page_value, page_size_value):
         'backdrop_path': row.get('game_backdrop') or '',
         'release_date': row.get('game_release_date'),
         'release_date_display': row.get('game_release_date_display') or '',
+        'game_status': row.get('game_status') or '',
         'genres': ', '.join(genres_by_game_id.get(row.get('game_id'), [])),
         'platforms': row.get('game_platforms') or '',
         'user_status': status_by_game_id.get(row.get('game_id')),

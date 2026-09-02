@@ -15,6 +15,7 @@ def parse_game(source_game, hltb_game=None):
     new_game = {
         'name': source_game.get('name'),
         'slug': source_game.get('slug'),
+        'game_status': source_game.get('game_status') or '',
         'overview': source_game.get('description'),
         'metacritic': source_game.get('metacritic'),
         'genres': objects_to_str(source_game['genres']),
@@ -107,6 +108,7 @@ async def parse_game_from_db(game: Game, hltb_game=None):
         'name': game.igdb_name,
         'slug': game.igdb_slug or '',
         'game_type': game.igdb_game_type,
+        'game_status': game.igdb_game_status,
         'overview': game.igdb_summary,
         'metacritic': score_value,
         'genres': objects_to_str(genres),

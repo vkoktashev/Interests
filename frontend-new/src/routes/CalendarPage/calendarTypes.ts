@@ -7,6 +7,7 @@ export interface ICalendarGame {
 	release_date_format?: number | null;
 	release_date_display?: string;
 	poster_path?: string;
+	game_status?: string | null;
 }
 
 export interface ICalendarMovie {

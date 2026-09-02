@@ -1,10 +1,16 @@
 export type TMediaType = 'game' | 'movie' | 'show';
-export type TMediaStatusTone = 'planned' | 'done' | 'progress' | 'stopped';
+export type TMediaStatusTone = 'planned' | 'done' | 'progress' | 'stopped' | 'earlyAccess';
 
 export interface IMediaStatusBadge {
 	label: string;
 	tone: TMediaStatusTone;
 }
+
+const GAME_RELEASE_STATUS_BADGES: Record<string, IMediaStatusBadge> = {
+	alpha: {label: 'Alpha', tone: 'earlyAccess'},
+	beta: {label: 'Beta', tone: 'earlyAccess'},
+	'early access': {label: 'Early Access', tone: 'earlyAccess'},
+};
 
 const STATUS_TONES_BY_LABEL: Record<string, TMediaStatusTone> = {
 	'Буду играть': 'planned',
@@ -56,4 +62,9 @@ export function getUserStatusBadge(type: TMediaType, status?: string | null): IM
 		};
 	}
 	return null;
+}
+
+export function getGameReleaseStatusBadge(status?: string | null): IMediaStatusBadge | null {
+	const normalizedStatus = (status || '').replace(/[_-]+/g, ' ').trim().toLowerCase();
+	return GAME_RELEASE_STATUS_BADGES[normalizedStatus] || null;
 }

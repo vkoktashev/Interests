@@ -89,6 +89,7 @@ async def get_game_for_detail(slug):
         or videos_count < game.igdb_videos_count
         or screenshots_count < game.igdb_screenshots_count
         or not game.igdb_name
+        or game.igdb_game_status is None
         or not has_igdb_beat_times
     )
     if not should_fetch_from_igdb:

@@ -6,7 +6,7 @@ import {goToRoute} from '@steroidsjs/core/actions/router';
 import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW} from '../../../../../routes';
 import useWindowDimensions from '../../../../../hooks/useWindowDimensions';
 import StatusBadge from '../../../../StatusBadge';
-import {getUserStatusBadge} from '../../../../mediaStatus';
+import {getGameReleaseStatusBadge, getUserStatusBadge} from '../../../../mediaStatus';
 import type {IMediaStatusBadge} from '../../../../mediaStatus';
 import './search-input.scss';
 
@@ -16,6 +16,7 @@ interface IGameHint {
 	release_date?: string;
 	release_date_display?: string;
 	user_status?: string | null;
+	game_status?: string | null;
 }
 
 interface IMovieHint {
@@ -45,6 +46,7 @@ interface IHintItem {
 	href: string;
 	onClick: () => void;
 	statusBadge?: IMediaStatusBadge;
+	releaseStatusBadge?: IMediaStatusBadge;
 }
 
 interface IHintItemWithIndex extends IHintItem {
@@ -183,6 +185,7 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 				title: hint.name,
 				year: getReleaseYear(hint.release_date, hint.release_date_display),
 				statusBadge: getUserStatusBadge('game', hint.user_status) || undefined,
+				releaseStatusBadge: getGameReleaseStatusBadge(hint.game_status) || undefined,
 				href: `/game/${hint.slug}`,
 				onClick: () => dispatch(goToRoute(ROUTE_GAME, {gameId: hint.slug})),
 			}))),
@@ -364,8 +367,17 @@ export function SearchInput({ onSubmit, className, autoFocus = false }: ISearchI
 											/>
 										)}
 									</span>
-									<span className={bem.element('hint-year')}>
-										{item.year}
+									<span className={bem.element('hint-meta')}>
+										{item.releaseStatusBadge && (
+											<StatusBadge
+												label={item.releaseStatusBadge.label}
+												tone={item.releaseStatusBadge.tone}
+												size='sm'
+											/>
+										)}
+										<span className={bem.element('hint-year')}>
+											{item.year}
+										</span>
 									</span>
 								</a>
 							))

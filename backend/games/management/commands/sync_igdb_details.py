@@ -1,6 +1,7 @@
 import time
 
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 from games.models import Game
 from games.tasks import refresh_game_details_by_igdb_id
 
@@ -33,7 +34,10 @@ class Command(BaseCommand):
         include_not_found = bool(options['include_not_found'])
         dry_run = bool(options['dry_run'])
 
-        games_qs = Game.objects.filter(igdb_last_update__isnull=True, igdb_id__isnull=False).order_by('id')
+        games_qs = Game.objects.filter(
+            Q(igdb_last_update__isnull=True) | Q(igdb_game_status__isnull=True),
+            igdb_id__isnull=False,
+        ).order_by('id')
         if not include_not_found:
             games_qs = games_qs.exclude(igdb_name='Not Found')
         if limit:
@@ -42,7 +46,7 @@ class Command(BaseCommand):
         games = list(games_qs)
         total = len(games)
         if total == 0:
-            self.stdout.write(self.style.WARNING('No games without IGDB details'))
+            self.stdout.write(self.style.WARNING('No games without IGDB details or release status'))
             return
 
         self.stdout.write(

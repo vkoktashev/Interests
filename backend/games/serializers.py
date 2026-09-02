@@ -31,6 +31,7 @@ class GameSerializer(ModelSerializer):
     backdrop_path = SerializerMethodField('get_backdrop_path')
     platform_score = SerializerMethodField('get_platform_score')
     platforms = SerializerMethodField('get_platforms')
+    game_status = SerializerMethodField('get_game_status')
 
     @staticmethod
     def get_name(game):
@@ -68,6 +69,10 @@ class GameSerializer(ModelSerializer):
     def get_platforms(game):
         return game.igdb_platforms
 
+    @staticmethod
+    def get_game_status(game):
+        return game.igdb_game_status
+
     class Meta:
         model = Game
         fields = (
@@ -81,6 +86,7 @@ class GameSerializer(ModelSerializer):
             'backdrop_path',
             'platform_score',
             'platforms',
+            'game_status',
         )
 
 
@@ -150,6 +156,7 @@ class TypedGameSerializer(ModelSerializer):
     backdrop_path = SerializerMethodField('get_backdrop_path')
     platform_score = SerializerMethodField('get_platform_score')
     platforms = SerializerMethodField('get_platforms')
+    game_status = SerializerMethodField('get_game_status')
     type = SerializerMethodField('get_type')
 
     @staticmethod
@@ -189,6 +196,10 @@ class TypedGameSerializer(ModelSerializer):
         return game.igdb_platforms
 
     @staticmethod
+    def get_game_status(game):
+        return game.igdb_game_status
+
+    @staticmethod
     def get_type(game):
         return TYPE_GAME
 
@@ -205,5 +216,6 @@ class TypedGameSerializer(ModelSerializer):
             'backdrop_path',
             'platform_score',
             'platforms',
+            'game_status',
             'type',
         )

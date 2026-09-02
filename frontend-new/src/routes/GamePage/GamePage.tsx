@@ -21,6 +21,8 @@ import LoginForm from '../../modals/LoginForm';
 import MediaGalleryBlock from '../../shared/MediaGalleryBlock';
 import GamePrices from './views/GamePrices';
 import AddToCollectionButton from '../../shared/AddToCollectionButton';
+import StatusBadge from '../../shared/StatusBadge';
+import {getGameReleaseStatusBadge} from '../../shared/mediaStatus';
 import {GAME_TYPE_LABELS} from '../SearchPage/views/searchTypes';
 import {IGamePricesResponse} from '../../interfaces/IGamePrice';
 import "./game-page.scss";
@@ -344,6 +346,7 @@ export function GamePage() {
 	}, [game?.id]);
 	const releaseDateText = game?.release_date_display || game?.release_date;
 	const gameTypeLabel = game?.game_type != null ? GAME_TYPE_LABELS[game.game_type] : undefined;
+	const releaseStatusBadge = getGameReleaseStatusBadge(game?.game_status);
 
 	const infoRows = useMemo(() => ([
 		{label: 'Тип', value: gameTypeLabel},
@@ -383,9 +386,18 @@ export function GamePage() {
 						</div>
 						<div className={bem.element('info')}>
 							<div className={bem.element('title-row')}>
-								<h1 className={bem.element('info-header')}>
-									{game.name}
-								</h1>
+								<div className={bem.element('title-main')}>
+									<h1 className={bem.element('info-header')}>
+										{game.name}
+									</h1>
+									{releaseStatusBadge && (
+										<StatusBadge
+											className={bem.element('release-status')}
+											label={releaseStatusBadge.label}
+											tone={releaseStatusBadge.tone}
+										/>
+									)}
+								</div>
 								<div className={bem.element('title-actions')}>
 									<a
 										hidden={!canEditRedTigerinoPlaylist}
