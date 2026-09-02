@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getRouteParam} from '@steroidsjs/core/reducers/router';
@@ -28,6 +28,10 @@ import {Button, TextField} from '@steroidsjs/core/ui/form';
 
 const HLTB_REFRESH_POLL_INTERVAL_MS = 3000;
 const HLTB_REFRESH_MAX_POLLS = 20;
+const IGDB_SYNC_NOTIFICATION_BY_STATUS: Record<string, string> = {
+	temporarily_unavailable: 'Не удалось обновить данные игры из IGDB. Показываем сохранённую версию.',
+	source_not_found: 'Игра больше не найдена в IGDB. Показываем сохранённые данные.',
+};
 
 function HltbIcon(props: {className?: string}) {
 	return <span className={props.className} aria-hidden='true' />;
@@ -51,6 +55,7 @@ export function GamePage() {
 	const [isGameTimeRequestStarted, setGameTimeRequestStarted] = useState(false);
 	const [visibleGameTime, setVisibleGameTime] = useState<{gameId: any; data: any}>();
 	const [isMobileViewport, setIsMobileViewport] = useState(false);
+	const lastExternalSyncNotificationKey = useRef<string>();
 
 	const gameFetchConfig = useMemo(() => gameId && ({
 		url: `/games/game/${gameId}/`,
@@ -103,6 +108,7 @@ export function GamePage() {
 
 	useEffect(
 		() => {
+			lastExternalSyncNotificationKey.current = undefined;
 			setClearUI();
 		},
 		// eslint-disable-next-line
@@ -114,6 +120,22 @@ export function GamePage() {
 			document.title = game.name;
 		}
 	}, [game?.name]);
+
+	useEffect(() => {
+		const externalSyncStatus = game?.external_sync?.status;
+		const message = IGDB_SYNC_NOTIFICATION_BY_STATUS[externalSyncStatus];
+		if (!message || game?.slug !== gameId) {
+			return;
+		}
+
+		const notificationKey = `${gameId}:${externalSyncStatus}`;
+		if (lastExternalSyncNotificationKey.current === notificationKey) {
+			return;
+		}
+
+		lastExternalSyncNotificationKey.current = notificationKey;
+		dispatch(showNotification(message, 'warning', {timeOut: 6000}));
+	}, [dispatch, game?.external_sync?.status, game?.slug, gameId]);
 
 	useEffect(() => {
 		setOverviewExpanded(false);

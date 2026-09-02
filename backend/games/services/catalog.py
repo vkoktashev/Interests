@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from asgiref.sync import async_to_sync, sync_to_async
 from django.db import transaction
 
@@ -17,12 +19,23 @@ from games.integrations.igdb import (
 )
 from games.models import Game, GameBeatTime, GameScreenshot, GameVideo
 from games.services.parser_service import parse_game_prices_from_db
+from integrations import ExternalIntegrationError
 from integrations.cache import cached_external_call
 from utils.functions import update_fields_if_needed
 
 
 IGDB_PLATFORMS_CACHE_KEY = 'igdb:platforms'
 IGDB_PLATFORMS_CACHE_TIMEOUT = 24 * 60 * 60
+IGDB_SYNC_STATUS_AVAILABLE = 'available'
+IGDB_SYNC_STATUS_SOURCE_NOT_FOUND = 'source_not_found'
+IGDB_SYNC_STATUS_TEMPORARILY_UNAVAILABLE = 'temporarily_unavailable'
+
+
+@dataclass(frozen=True)
+class GameDetailResult:
+    game: Game
+    external_sync_status: str
+    needs_refresh: bool
 
 
 class GameNotFoundError(Exception):
@@ -79,19 +92,17 @@ async def get_game_for_detail(slug):
         or not has_igdb_beat_times
     )
     if not should_fetch_from_igdb:
-        return game, False
+        return GameDetailResult(game, IGDB_SYNC_STATUS_AVAILABLE, False)
 
     try:
         igdb_game = await sync_to_async(resolve_igdb_game_details)(game, slug)
-    except Exception:
-        igdb_game = None
+    except ExternalIntegrationError:
+        return GameDetailResult(game, IGDB_SYNC_STATUS_TEMPORARILY_UNAVAILABLE, True)
     if igdb_game is not None:
         igdb_game = await sync_to_async(attach_igdb_game_time_to_beat)(igdb_game, game)
         game = await sync_to_async(_apply_igdb_game)(game, igdb_game, include_media=True)
-        return game, False
-    if game.igdb_last_update is None:
-        raise IgdbUnavailableError
-    return game, True
+        return GameDetailResult(game, IGDB_SYNC_STATUS_AVAILABLE, False)
+    return GameDetailResult(game, IGDB_SYNC_STATUS_SOURCE_NOT_FOUND, True)
 
 
 async def get_or_create_game(slug, include_media=False):
@@ -101,7 +112,7 @@ async def get_or_create_game(slug, include_media=False):
 
     try:
         igdb_game = await sync_to_async(query_igdb_game_by_slug)(slug)
-    except Exception as error:
+    except ExternalIntegrationError as error:
         raise IgdbUnavailableError from error
     if not igdb_game:
         raise GameNotFoundError
