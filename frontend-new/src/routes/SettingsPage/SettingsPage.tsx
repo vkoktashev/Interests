@@ -214,6 +214,10 @@ function SettingsPage() {
 										attribute="receive_episodes_releases"
 										label={__('релиз новых серий сериалов')}
 									/>
+									<CheckboxField
+										attribute="receive_show_status_changes"
+										label={__('изменения статуса сериалов')}
+									/>
 								</div>
 							</section>
 							<section className={bem.element('card')}>
