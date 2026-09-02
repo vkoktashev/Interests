@@ -34,6 +34,20 @@ class GameDeveloper(models.Model):
         return f'{self.game} — {self.developer}'
 
 
+class GamePublisher(models.Model):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    publisher = models.ForeignKey('people.Developer', on_delete=models.CASCADE)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = (("game", "publisher"),)
+        verbose_name = 'издатель игры'
+        verbose_name_plural = 'издатели игр'
+
+    def __str__(self):
+        return f'{self.game} — {self.publisher}'
+
+
 class GameVideo(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     video = models.ForeignKey('videos.Video', on_delete=models.CASCADE)

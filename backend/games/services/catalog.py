@@ -15,6 +15,7 @@ from games.integrations.igdb import (
     update_game_developers_from_igdb,
     update_game_genres_from_igdb,
     update_game_media_from_igdb,
+    update_game_publishers_from_igdb,
     update_game_stores_from_igdb,
 )
 from games.models import Game, GameBeatTime, GameScreenshot, GameVideo
@@ -161,6 +162,7 @@ def _apply_igdb_game(game, igdb_game, include_media):
 def _apply_igdb_relations(game, igdb_game, include_media):
     async_to_sync(update_game_genres_from_igdb)(game, igdb_game)
     async_to_sync(update_game_developers_from_igdb)(game, igdb_game)
+    async_to_sync(update_game_publishers_from_igdb)(game, igdb_game)
     async_to_sync(update_game_beat_times_from_igdb)(game, igdb_game)
     if include_media:
         async_to_sync(update_game_media_from_igdb)(game, igdb_game)

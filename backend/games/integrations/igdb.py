@@ -17,6 +17,7 @@ from games.models import (
     GameBeatTime,
     GameDeveloper,
     GameGenre,
+    GamePublisher,
     GameScreenshot,
     GameStore,
     GameVideo,
@@ -617,7 +618,8 @@ def query_igdb_game_by_id(igdb_id: int) -> Optional[dict[str, Any]]:
         f'summary,rating,rating_count,aggregated_rating,'
         f'aggregated_rating_count,{IGDB_RELEASE_DATE_FIELDS},cover.url,url,'
         f'platforms.id,platforms.name,genres.id,genres.name,genres.slug,'
-        f'involved_companies.developer,involved_companies.company.id,involved_companies.company.name,'
+        f'involved_companies.developer,involved_companies.publisher,'
+        f'involved_companies.company.id,involved_companies.company.name,'
         f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height,'
         f'websites.id,websites.url,websites.category; '
         f'where id = {int(igdb_id)}; '
@@ -634,7 +636,8 @@ def query_igdb_game_by_slug(slug: str) -> Optional[dict[str, Any]]:
         f'summary,rating,rating_count,aggregated_rating,'
         f'aggregated_rating_count,{IGDB_RELEASE_DATE_FIELDS},cover.url,url,'
         f'platforms.id,platforms.name,genres.id,genres.name,genres.slug,'
-        f'involved_companies.developer,involved_companies.company.id,involved_companies.company.name,'
+        f'involved_companies.developer,involved_companies.publisher,'
+        f'involved_companies.company.id,involved_companies.company.name,'
         f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height,'
         f'websites.id,websites.url,websites.category; '
         f'where slug = "{safe_slug}"; '
@@ -758,9 +761,15 @@ async def update_game_developers_from_igdb(game: Game, igdb_game: dict[str, Any]
             igdb_id=developer_id,
             defaults={'name': developer_name},
         )
+        update_fields = {}
         if developer_obj.name != developer_name:
-            developer_obj.name = developer_name
-            await developer_obj.asave(update_fields=('name',))
+            update_fields['name'] = developer_name
+        if developer_obj.is_publisher:
+            update_fields['is_publisher'] = False
+        if update_fields:
+            for key, value in update_fields.items():
+                setattr(developer_obj, key, value)
+            await developer_obj.asave(update_fields=tuple(update_fields.keys()))
 
         link, _ = await GameDeveloper.objects.aget_or_create(
             game=game,
@@ -777,6 +786,48 @@ async def update_game_developers_from_igdb(game: Game, igdb_game: dict[str, Any]
             to_delete_ids.append(existing_link.id)
     if to_delete_ids:
         await GameDeveloper.objects.filter(id__in=to_delete_ids).adelete()
+
+
+async def update_game_publishers_from_igdb(game: Game, igdb_game: dict[str, Any]) -> None:
+    existing_links = GamePublisher.objects.filter(game=game).select_related('publisher')
+    new_links = []
+    to_delete_ids = []
+
+    for index, involved in enumerate(igdb_game.get('involved_companies') or []):
+        if not involved.get('publisher'):
+            continue
+        company = involved.get('company') or {}
+        publisher_id = company.get('id')
+        publisher_name = company.get('name')
+        if publisher_id is None or not publisher_name:
+            continue
+
+        publisher_obj, _ = await Developer.objects.aget_or_create(
+            igdb_id=publisher_id,
+            defaults={
+                'name': publisher_name,
+                'is_publisher': True,
+            },
+        )
+        if publisher_obj.name != publisher_name:
+            publisher_obj.name = publisher_name
+            await publisher_obj.asave(update_fields=('name',))
+
+        link, _ = await GamePublisher.objects.aget_or_create(
+            game=game,
+            publisher=publisher_obj,
+            defaults={'sort_order': index},
+        )
+        if link.sort_order != index:
+            link.sort_order = index
+            await link.asave(update_fields=('sort_order',))
+        new_links.append(link)
+
+    async for existing_link in existing_links:
+        if existing_link not in new_links:
+            to_delete_ids.append(existing_link.id)
+    if to_delete_ids:
+        await GamePublisher.objects.filter(id__in=to_delete_ids).adelete()
 
 
 async def update_game_media_from_igdb(game: Game, igdb_game: dict[str, Any]) -> None:

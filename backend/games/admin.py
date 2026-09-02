@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from utils.admin import ForceRefreshAdminMixin, SearchByIdAdminMixin
-from .models import Game, GameDeveloper, GameLog, UserGame
+from .models import Game, GameDeveloper, GameLog, GamePublisher, UserGame
 from .tasks import refresh_game_details, refresh_game_details_by_igdb_id
 
 
@@ -9,6 +9,14 @@ class GameDeveloperInline(admin.TabularInline):
     model = GameDeveloper
     autocomplete_fields = ('developer',)
     fields = ('developer', 'sort_order')
+    extra = 0
+    show_change_link = True
+
+
+class GamePublisherInline(admin.TabularInline):
+    model = GamePublisher
+    autocomplete_fields = ('publisher',)
+    fields = ('publisher', 'sort_order')
     extra = 0
     show_change_link = True
 
@@ -30,7 +38,7 @@ class GameAdmin(ForceRefreshAdminMixin, SearchByIdAdminMixin, admin.ModelAdmin):
     date_hierarchy = 'igdb_release_date'
     ordering = ('igdb_name',)
     list_per_page = 50
-    inlines = (GameDeveloperInline,)
+    inlines = (GameDeveloperInline, GamePublisherInline)
 
     def enqueue_force_refresh(self, obj):
         if obj.igdb_id:
@@ -48,6 +56,18 @@ class GameDeveloperAdmin(SearchByIdAdminMixin, admin.ModelAdmin):
     search_help_text = 'Название игры или студии, slug либо числовой ID'
     autocomplete_fields = ('game', 'developer')
     list_select_related = ('game', 'developer')
+    ordering = ('game__igdb_name', 'sort_order')
+    list_per_page = 50
+
+
+@admin.register(GamePublisher)
+class GamePublisherAdmin(SearchByIdAdminMixin, admin.ModelAdmin):
+    list_display = ('game', 'publisher', 'sort_order')
+    search_fields = ('game__igdb_name', 'game__igdb_slug', 'publisher__name')
+    search_id_fields = ('pk', 'game_id', 'game__igdb_id', 'publisher_id', 'publisher__igdb_id')
+    search_help_text = 'Название игры или издателя, slug либо числовой ID'
+    autocomplete_fields = ('game', 'publisher')
+    list_select_related = ('game', 'publisher')
     ordering = ('game__igdb_name', 'sort_order')
     list_per_page = 50
 

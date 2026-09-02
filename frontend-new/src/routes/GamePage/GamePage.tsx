@@ -351,10 +351,11 @@ export function GamePage() {
 	const infoRows = useMemo(() => ([
 		{label: 'Тип', value: gameTypeLabel},
 		{label: 'Разработчики', value: game?.developers},
+		{label: 'Издатели', value: game?.publishers},
 		{label: 'Дата релиза', value: releaseDateText},
 		{label: 'Жанр', value: game?.genres},
 		{label: 'Платформы', value: game?.platforms},
-	]).filter(item => Boolean(item.value)), [gameTypeLabel, game?.developers, releaseDateText, game?.genres, game?.platforms]);
+	]).filter(item => Boolean(item.value)), [gameTypeLabel, game?.developers, game?.publishers, releaseDateText, game?.genres, game?.platforms]);
 
 	const overviewPlainText = useMemo(
 		() => String(game?.overview || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
