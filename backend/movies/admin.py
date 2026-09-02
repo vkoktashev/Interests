@@ -29,7 +29,7 @@ class MovieAdmin(ForceRefreshAdminMixin, SearchByIdAdminMixin, admin.ModelAdmin)
 
 @admin.register(UserMovie)
 class UserMovieAdmin(SearchByIdAdminMixin, admin.ModelAdmin):
-    list_display = ('user', 'movie', 'status', 'score', 'updated_at')
+    list_display = ('user', 'movie', 'status', 'watch_count', 'score', 'updated_at')
     list_filter = ('status', 'score', 'updated_at')
     search_fields = ('user__username', 'user__email', 'movie__tmdb_name', 'movie__tmdb_original_name')
     search_id_fields = ('pk', 'user_id', 'movie_id', 'movie__tmdb_id')

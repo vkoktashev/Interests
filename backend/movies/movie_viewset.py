@@ -113,6 +113,7 @@ class MovieViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 'status': openapi.Schema(type=openapi.TYPE_STRING,
                                          enum=[UserMovie.STATUS_WATCHED, UserMovie.STATUS_STOPPED,
                                                UserMovie.STATUS_GOING, UserMovie.STATUS_NOT_WATCHED]),
+                'watch_count': openapi.Schema(type=openapi.TYPE_INTEGER, minimum=0),
                 'score': openapi.Schema(type=openapi.TYPE_INTEGER),
                 'review': openapi.Schema(type=openapi.TYPE_STRING),
             },

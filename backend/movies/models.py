@@ -48,6 +48,7 @@ class UserMovie(UserScore):
 
     movie = models.ForeignKey(Movie, on_delete=models.PROTECT)
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=STATUS_NOT_WATCHED)
+    watch_count = models.PositiveIntegerField(default=0)
     updated_at = models.DateTimeField(null=False, default=timezone.now)
 
     class Meta:
@@ -60,6 +61,10 @@ class UserMovie(UserScore):
             models.CheckConstraint(
                 condition=models.Q(score__gte=0, score__lte=10),
                 name='user_movie_score_between_0_and_10',
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(status='watched') | models.Q(watch_count__gte=1),
+                name='watched_movie_has_watch_count',
             ),
         )
         verbose_name = 'фильм пользователя'

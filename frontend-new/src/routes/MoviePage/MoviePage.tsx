@@ -32,6 +32,7 @@ export function MoviePage() {
 	const [review, setReview] = useState("");
 	const [userStatus, setUserStatus] = useState("Не смотрел");
 	const [userRate, setUserRate] = useState(0);
+	const [userWatchCount, setUserWatchCount] = useState(0);
 	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
 	const [isMobileViewport, setIsMobileViewport] = useState(false);
 
@@ -57,16 +58,18 @@ export function MoviePage() {
 	}, [movieId]);
 
 	useEffect(() => {
-			setReview("");
-			setUserStatus("Не смотрел");
-			setUserRate(0);
-		}, [movieId]);
+		setReview("");
+		setUserStatus("Не смотрел");
+		setUserRate(0);
+		setUserWatchCount(0);
+	}, [movieId]);
 
 	useEffect(() => {
 			if (!user) {
 				setReview("");
 				setUserRate(0);
 				setUserStatus("Не смотрел");
+				setUserWatchCount(0);
 			}
 		},[user]);
 
@@ -99,10 +102,12 @@ export function MoviePage() {
 				setReview(userInfo.review);
 				setUserStatus(userInfo.status);
 				setUserRate(userInfo.score);
+				setUserWatchCount(userInfo.watch_count || 0);
 			} else {
 				setReview("");
 				setUserRate(0);
 				setUserStatus("Не смотрел");
+				setUserWatchCount(0);
 			}
 		},
 		// eslint-disable-next-line
@@ -226,24 +231,66 @@ export function MoviePage() {
 										/>
 										</div>
 										<div className={bem.element('actions-statuses')}>
-										<StatusButtonGroup
-											statuses={["Не смотрел", "Буду смотреть", "Дропнул", "Посмотрел"]}
-											className={bem.element('info-statuses')}
-											userStatus={userStatus}
-											onChangeStatus={(status) => {
-												if (!user) {
-													dispatch(openModal(LoginForm));
-												} else {
-													setUserStatus(status);
-													setMovieStatus({ status: status });
-													if (status === "Не смотрел") {
-														setReview("");
-														setUserRate(0);
+											<StatusButtonGroup
+												statuses={["Не смотрел", "Буду смотреть", "Дропнул", "Посмотрел"]}
+												className={bem.element('info-statuses')}
+												userStatus={userStatus}
+												onChangeStatus={(status) => {
+													if (!user) {
+														dispatch(openModal(LoginForm));
+													} else {
+														setUserStatus(status);
+														const watchCount = status === "Посмотрел"
+															? Math.max(userWatchCount, 1)
+															: userWatchCount;
+														setUserWatchCount(status === "Не смотрел" ? 0 : watchCount);
+														setMovieStatus({
+															status: status,
+															watch_count: status === "Не смотрел" ? 0 : watchCount,
+														});
+														if (status === "Не смотрел") {
+															setReview("");
+															setUserRate(0);
+														}
 													}
-												}
-											}}
-										/>
+												}}
+											/>
 										</div>
+										{userStatus === "Посмотрел" && (
+											<div className={bem.element('actions-watch-count')}>
+												<span className={bem.element('actions-watch-count-label')}>
+													Количество просмотров
+												</span>
+												<div className={bem.element('watch-count-control')}>
+													<button
+														type='button'
+														className={bem.element('watch-count-button')}
+														disabled={userWatchCount <= 1}
+														aria-label='Уменьшить количество просмотров'
+														onClick={() => {
+															const watchCount = Math.max(1, userWatchCount - 1);
+															setUserWatchCount(watchCount);
+															setMovieStatus({watch_count: watchCount});
+														}}
+													>
+														−
+													</button>
+													<span className={bem.element('watch-count-value')}>{userWatchCount}</span>
+													<button
+														type='button'
+														className={bem.element('watch-count-button')}
+														aria-label='Увеличить количество просмотров'
+														onClick={() => {
+															const watchCount = userWatchCount + 1;
+															setUserWatchCount(watchCount);
+															setMovieStatus({watch_count: watchCount});
+														}}
+													>
+														+
+													</button>
+												</div>
+											</div>
+										)}
 									</div>
 								</LoadingOverlay>
 							</div>
