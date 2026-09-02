@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 SHOW_CHANGES_SOURCE_TMDB = 'tmdb'
 SHOW_CHANGES_MAX_LOOKBACK_DAYS = 13
+SHOW_DETAILS_ESTIMATED_REQUEST_COUNT = 3
 TRACKED_SHOW_STATUSES = (
     UserShow.STATUS_GOING,
     UserShow.STATUS_WATCHING,
@@ -324,16 +325,8 @@ def update_episode_details(show_tmdb_id, season_number, episode_number):
     return episode
 
 
-def sync_show_status_changes(today_date):
-    sync_state, _ = ShowChangesSyncState.objects.get_or_create(
-        source=SHOW_CHANGES_SOURCE_TMDB,
-    )
-    tracked_show_ids = set(
-        Show.objects.filter(
-            usershow__user__receive_show_status_changes=True,
-            usershow__status__in=TRACKED_SHOW_STATUSES,
-        ).values_list('tmdb_id', flat=True).distinct()
-    )
+def select_changed_show_ids(today_date, local_show_ids, max_pages):
+    sync_state, _ = ShowChangesSyncState.objects.get_or_create(source=SHOW_CHANGES_SOURCE_TMDB)
     last_successful_date = sync_state.last_successful_date
     oldest_supported_date = today_date - timedelta(days=SHOW_CHANGES_MAX_LOOKBACK_DAYS)
     requires_full_recovery = bool(
@@ -344,22 +337,35 @@ def sync_show_status_changes(today_date):
     used_direct_check = requires_full_recovery
 
     if requires_full_recovery:
-        changed_tracked_ids = tracked_show_ids
-    elif tracked_show_ids:
+        changed_local_ids = local_show_ids
+    elif local_show_ids:
         previous_date = last_successful_date or today_date - timedelta(days=1)
         start_date = max(previous_date, oldest_supported_date)
         changed_show_ids, pages_count, total_pages_count = get_tmdb_changed_show_ids(
             start_date,
             today_date,
-            max_pages=len(tracked_show_ids),
+            max_pages=max_pages,
         )
         if changed_show_ids is None:
-            changed_tracked_ids = tracked_show_ids
+            changed_local_ids = local_show_ids
             used_direct_check = True
         else:
-            changed_tracked_ids = tracked_show_ids.intersection(changed_show_ids)
+            changed_local_ids = local_show_ids.intersection(changed_show_ids)
     else:
-        changed_tracked_ids = set()
+        changed_local_ids = set()
+
+    return {
+        'ids': changed_local_ids,
+        'sync_state': sync_state,
+        'pages': pages_count,
+        'total_pages': total_pages_count,
+        'recovery': requires_full_recovery,
+        'direct': used_direct_check,
+    }
+
+
+def sync_show_status_changes(tracked_show_ids, changed_show_ids):
+    changed_tracked_ids = tracked_show_ids.intersection(changed_show_ids)
 
     checked_count = 0
     updated_count = 0
@@ -384,55 +390,18 @@ def sync_show_status_changes(today_date):
         if event_created:
             events_count += 1
 
-    if failed_count == 0:
-        sync_state.last_successful_date = today_date
-        sync_state.save(update_fields=('last_successful_date',))
-
-    logger.info(
-        'sync_show_status_changes: finish tracked=%s pages=%s total_pages=%s checked=%s updated=%s events=%s errors=%s recovery=%s direct=%s',
-        len(tracked_show_ids),
-        pages_count,
-        total_pages_count,
-        checked_count,
-        updated_count,
-        events_count,
-        failed_count,
-        requires_full_recovery,
-        used_direct_check,
-    )
     return {
         'tracked': len(tracked_show_ids),
-        'pages': pages_count,
-        'total_pages': total_pages_count,
         'checked': checked_count,
         'updated': updated_count,
         'events': events_count,
         'errors': failed_count,
-        'recovery': requires_full_recovery,
-        'direct': used_direct_check,
     }
 
 
 @app.task
 def update_shows():
     today_date = datetime.today().date()
-
-    try:
-        status_changes_result = sync_show_status_changes(today_date)
-    except Exception:
-        logger.exception('update_shows: failed to sync TMDB show changes')
-        status_changes_result = {
-            'tracked': 0,
-            'pages': 0,
-            'total_pages': 0,
-            'checked': 0,
-            'updated': 0,
-            'events': 0,
-            'errors': 1,
-            'recovery': False,
-            'direct': False,
-        }
-
     accepted_statuses = (
         Show.TMDB_STATUS_PILOT, Show.TMDB_STATUS_PLANNED,
         Show.TMDB_STATUS_IN_PRODUCTION, Show.TMDB_STATUS_RETURNING_SERIES
@@ -444,14 +413,93 @@ def update_shows():
          (Q(tmdb_status='') | Q(tmdb_status__in=accepted_statuses))) |
         Q(tmdb_release_date__gte=today_date) | Q(tmdb_release_date=None)
     ).distinct()
-    candidates_count = shows.count()
+    candidate_show_ids = set(shows.values_list('tmdb_id', flat=True))
+    tracked_show_ids = set(
+        Show.objects.filter(
+            usershow__user__receive_show_status_changes=True,
+            usershow__status__in=TRACKED_SHOW_STATUSES,
+        ).values_list('tmdb_id', flat=True).distinct()
+    )
+    local_show_ids = candidate_show_ids.union(tracked_show_ids)
+    status_only_show_ids = tracked_show_ids - candidate_show_ids
+    changes_max_pages = (
+        SHOW_DETAILS_ESTIMATED_REQUEST_COUNT * len(candidate_show_ids) +
+        len(status_only_show_ids)
+    )
+    changes_error_count = 0
+
+    try:
+        changes_result = select_changed_show_ids(
+            today_date,
+            local_show_ids,
+            max_pages=changes_max_pages,
+        )
+    except Exception:
+        changes_error_count = 1
+        changes_result = {
+            'ids': local_show_ids,
+            'sync_state': None,
+            'pages': 0,
+            'total_pages': 0,
+            'recovery': False,
+            'direct': True,
+        }
+        logger.exception('update_shows: failed to fetch TMDB show changes, using direct refresh')
+
+    changed_show_ids = changes_result['ids']
+    try:
+        status_changes_result = sync_show_status_changes(tracked_show_ids, changed_show_ids)
+    except Exception:
+        logger.exception('update_shows: failed to sync TMDB show status changes')
+        status_changes_result = {
+            'tracked': len(tracked_show_ids),
+            'checked': 0,
+            'updated': 0,
+            'events': 0,
+            'errors': 1,
+        }
+
+    status_changes_result.update({
+        'pages': changes_result['pages'],
+        'total_pages': changes_result['total_pages'],
+        'recovery': changes_result['recovery'],
+        'direct': changes_result['direct'],
+    })
+    logger.info(
+        'sync_show_status_changes: finish tracked=%s pages=%s total_pages=%s checked=%s updated=%s '
+        'events=%s errors=%s recovery=%s direct=%s',
+        status_changes_result['tracked'],
+        status_changes_result['pages'],
+        status_changes_result['total_pages'],
+        status_changes_result['checked'],
+        status_changes_result['updated'],
+        status_changes_result['events'],
+        status_changes_result['errors'],
+        status_changes_result['recovery'],
+        status_changes_result['direct'],
+    )
+
+    shows_to_refresh = Show.objects.filter(
+        tmdb_id__in=candidate_show_ids.intersection(changed_show_ids)
+    ).order_by('tmdb_id')
+    candidates_count = len(candidate_show_ids)
+    changed_candidates_count = shows_to_refresh.count()
     scheduled_count = 0
     skipped_count = 0
-    failed_count = status_changes_result['errors']
+    failed_count = changes_error_count + status_changes_result['errors']
 
-    logger.info('update_shows: start today=%s candidates=%s', today_date, candidates_count)
+    logger.info(
+        'update_shows: start today=%s candidates=%s changed_candidates=%s tracked=%s pages=%s total_pages=%s direct=%s',
+        today_date,
+        candidates_count,
+        changed_candidates_count,
+        len(tracked_show_ids),
+        changes_result['pages'],
+        changes_result['total_pages'],
+        changes_result['direct'],
+    )
 
-    for show in shows.iterator(chunk_size=200):
+    for show in shows_to_refresh.iterator(chunk_size=200):
         if not show.tmdb_id:
             skipped_count += 1
             logger.warning('update_shows: skipped show id=%s name=%s reason=empty_tmdb_id', show.id, show.tmdb_name)
@@ -477,15 +525,22 @@ def update_shows():
                 show.tmdb_id,
             )
 
+    if failed_count == 0 and changes_result['sync_state'] is not None:
+        sync_state = changes_result['sync_state']
+        sync_state.last_successful_date = today_date
+        sync_state.save(update_fields=('last_successful_date',))
+
     logger.info(
-        'update_shows: finish candidates=%s scheduled=%s skipped=%s failed=%s',
+        'update_shows: finish candidates=%s changed_candidates=%s scheduled=%s skipped=%s failed=%s',
         candidates_count,
+        changed_candidates_count,
         scheduled_count,
         skipped_count,
         failed_count,
     )
     return {
         'candidates': candidates_count,
+        'changed_candidates': changed_candidates_count,
         'scheduled': scheduled_count,
         'skipped': skipped_count,
         'errors': failed_count,
