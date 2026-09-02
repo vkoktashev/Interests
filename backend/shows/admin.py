@@ -8,6 +8,7 @@ from .models import (
     SeasonLog,
     Show,
     ShowLog,
+    ShowStatusChange,
     UserEpisode,
     UserSeason,
     UserShow,
@@ -36,6 +37,19 @@ class ShowAdmin(ForceRefreshAdminMixin, SearchByIdAdminMixin, admin.ModelAdmin):
 
     def enqueue_force_refresh(self, obj):
         return refresh_show_details.delay(obj.tmdb_id, force=True)
+
+
+@admin.register(ShowStatusChange)
+class ShowStatusChangeAdmin(SearchByIdAdminMixin, admin.ModelAdmin):
+    list_display = ('show', 'old_status', 'new_status', 'detected_at', 'emailed_at')
+    list_filter = ('old_status', 'new_status', 'detected_at', 'emailed_at')
+    search_fields = ('show__tmdb_name', 'show__tmdb_original_name')
+    search_id_fields = ('pk', 'show_id', 'show__tmdb_id')
+    autocomplete_fields = ('show',)
+    list_select_related = ('show',)
+    date_hierarchy = 'detected_at'
+    ordering = ('-detected_at',)
+    list_per_page = 50
 
 
 @admin.register(Season)

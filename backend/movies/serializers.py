@@ -26,6 +26,19 @@ class UserMovieReadSerializer(serializers.ModelSerializer):
 class UserMovieWriteSerializer(serializers.ModelSerializer):
     status = ChoicesField(choices=UserMovie.STATUS_CHOICES, required=False)
 
+    def validate(self, attrs):
+        current_status = self.instance.status if self.instance is not None else UserMovie.STATUS_NOT_WATCHED
+        status = attrs.get('status', current_status)
+        current_watch_count = self.instance.watch_count if self.instance is not None else 0
+        watch_count = attrs.get('watch_count', current_watch_count)
+
+        if status == UserMovie.STATUS_NOT_WATCHED:
+            attrs['watch_count'] = 0
+        elif status == UserMovie.STATUS_WATCHED and watch_count == 0:
+            attrs['watch_count'] = 1
+
+        return attrs
+
     class Meta:
         model = UserMovie
         exclude = ('id', 'updated_at')

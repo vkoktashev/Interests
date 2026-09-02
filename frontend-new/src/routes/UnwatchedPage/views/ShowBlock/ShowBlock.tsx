@@ -9,6 +9,27 @@ import {ISetEpisodesPayload, IUnwatchedShow} from '../types';
 import pluralizeRu from '../pluralizeRu';
 import './show-block.scss';
 
+interface IShowState {
+	label: string;
+	tone: 'active' | 'ended' | 'planned' | 'canceled';
+}
+
+const SHOW_STATES: Record<string, IShowState> = {
+	'Ended': {label: 'Завершился', tone: 'ended'},
+	'Завершился': {label: 'Завершился', tone: 'ended'},
+	'Returning Series': {label: 'Продолжается', tone: 'active'},
+	'Продолжается': {label: 'Продолжается', tone: 'active'},
+	'In Production': {label: 'В производстве', tone: 'active'},
+	'В производстве': {label: 'В производстве', tone: 'active'},
+	'Planned': {label: 'Планируется', tone: 'planned'},
+	'Планируется': {label: 'Планируется', tone: 'planned'},
+	'Pilot': {label: 'Пилот', tone: 'planned'},
+	'Пилот': {label: 'Пилот', tone: 'planned'},
+	'Canceled': {label: 'Отменён', tone: 'canceled'},
+	'Отменен': {label: 'Отменён', tone: 'canceled'},
+	'Отменён': {label: 'Отменён', tone: 'canceled'},
+};
+
 function getSeasonStorageKey(showId: number, seasonNumber: number): string {
 	return `unwatched:${showId}:${seasonNumber}`;
 }
@@ -60,6 +81,7 @@ function ShowBlock({
 		}, {} as Record<number, boolean>)
 	);
 	const posterSrc = useMemo(() => getPosterSrc(show.tmdb_poster_path), [show.tmdb_poster_path]);
+	const showState = SHOW_STATES[show.tmdb_status || ''];
 
 	const totalEpisodes = useMemo(
 		() => show?.seasons?.reduce((sum, season) => sum + (season.episodes?.length || 0), 0) || 0,
@@ -118,6 +140,11 @@ function ShowBlock({
 					<h3 className={bem.element('name')}>{show.tmdb_name}</h3>
 				</Link>
 				<div className={bem.element('meta')}>
+					{showState && (
+						<span className={bem.element('status', {[showState.tone]: true})}>
+							{showState.label}
+						</span>
+					)}
 					<span>
 						{show.seasons?.length || 0} {pluralizeRu(show.seasons?.length || 0, 'сезон', 'сезона', 'сезонов')}
 					</span>

@@ -99,6 +99,34 @@
         }
     }
 
+    &__status {
+        display: inline-flex;
+        align-items: center;
+
+        &_active {
+            color: $newText3;
+        }
+
+        &_planned {
+            color: $newText3;
+        }
+    }
+
+    &__meta &__status_active {
+        border-color: rgba($newAccent2, 0.42);
+        background-color: rgba($newAccent2, 0.14);
+    }
+
+    &__meta &__status_planned {
+        border-color: rgba($newAccent1, 0.38);
+        background-color: rgba($newAccent1, 0.1);
+    }
+
+    &__meta &__status_canceled {
+        border-color: rgba($calendarMoviesColor, 0.48);
+        background-color: rgba($calendarMoviesColor, 0.14);
+    }
+
     &__seasons {
         display: flex;
         flex-direction: column;

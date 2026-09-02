@@ -58,6 +58,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     receive_movies_releases = models.BooleanField(default=False)
     receive_movies_digital_releases = models.BooleanField(default=False)
     receive_episodes_releases = models.BooleanField(default=False)
+    receive_show_status_changes = models.BooleanField(default=False)
     backdrop_path = models.CharField(max_length=200, null=True)
     privacy = models.CharField(max_length=50, choices=PRIVACY_CHOICES, default=PRIVACY_ALL)
     gender = models.CharField(max_length=16, choices=GENDER_CHOICES, default=GENDER_MALE)

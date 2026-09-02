@@ -39,7 +39,7 @@ from users.functions import get_public_non_followed_user_ids
 from users.models import UserFollow
 from utils.celery import enqueue_background_task_once
 from utils.constants import ERROR, EPISODE_NOT_FOUND, TMDB_UNAVAILABLE, SHOW_NOT_FOUND, EPISODE_NOT_WATCHED_SCORE
-from utils.functions import update_fields_if_needed
+from utils.functions import create_post_render_callback, update_fields_if_needed
 from videos.functions import serialize_tmdb_videos
 
 
@@ -117,18 +117,20 @@ class EpisodeViewSet(GenericViewSet, mixins.RetrieveModelMixin):
 
         response = Response(parse_episode(episode, request))
         if show_needs_refresh:
-            response.add_post_render_callback(lambda _: enqueue_show_refresh(show.tmdb_id))
+            response.add_post_render_callback(create_post_render_callback(enqueue_show_refresh, show.tmdb_id))
         if season.tmdb_last_update and (
                 season.tmdb_last_update <= timezone.now() - SEASON_DETAILS_REFRESH_INTERVAL
         ):
-            response.add_post_render_callback(lambda _: enqueue_season_refresh(
+            response.add_post_render_callback(create_post_render_callback(
+                enqueue_season_refresh,
                 show.tmdb_id,
                 season.tmdb_season_number,
             ))
         if episode.tmdb_last_update and (
                 episode.tmdb_last_update <= timezone.now() - EPISODE_DETAILS_REFRESH_INTERVAL
         ):
-            response.add_post_render_callback(lambda _: enqueue_episode_refresh(
+            response.add_post_render_callback(create_post_render_callback(
+                enqueue_episode_refresh,
                 show.tmdb_id,
                 season.tmdb_season_number,
                 episode.tmdb_episode_number,

@@ -4,7 +4,7 @@ from django.db import transaction
 from django.db.models.deletion import ProtectedError
 from django.utils import timezone
 
-from integrations.tmdb import cached_tmdb_call
+from integrations.tmdb import cached_tmdb_call, call_tmdb
 from people.models import Person
 from shows.models import Episode, ShowGenre, ShowPerson, SeasonPerson, EpisodePerson, UserSeason, SeasonLog, \
     UserEpisode, EpisodeLog
@@ -329,6 +329,41 @@ def get_tmdb_show(tmdb_id):
             append_to_response='translations',
         ),
     )
+
+
+def get_tmdb_changed_show_ids(start_date, end_date, max_pages=None):
+    changed_ids = set()
+    page = 1
+    total_pages = 1
+    fetched_pages = 0
+
+    while page <= total_pages:
+        payload = call_tmdb(
+            lambda: tmdb.Changes().tv(
+                start_date=start_date.isoformat(),
+                end_date=end_date.isoformat(),
+                page=page,
+            )
+        )
+        changed_ids.update(
+            item.get('id')
+            for item in payload.get('results') or []
+            if item.get('id') is not None
+        )
+        total_pages = max(int(payload.get('total_pages') or 1), 1)
+        fetched_pages += 1
+        if max_pages is not None and total_pages > max_pages:
+            return None, fetched_pages, total_pages
+        page += 1
+
+    return changed_ids, fetched_pages, total_pages
+
+
+def get_tmdb_show_status(tmdb_id):
+    payload = call_tmdb(
+        lambda: tmdb.TV(tmdb_id).info(language=LANGUAGE)
+    )
+    return payload.get('status') or ''
 
 
 def get_tmdb_show_videos(tmdb_id):

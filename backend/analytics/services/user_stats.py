@@ -101,15 +101,18 @@ def calculate_games_stats(user_games: QuerySet, user: User) -> dict:
 def calculate_movies_stats(user: User) -> dict:
     watched_movies = UserMovie.objects.filter(user=user, status=UserMovie.STATUS_WATCHED)
     if watched_movies.exists():
-        movies_total_spent_time = watched_movies.aggregate(total_time_spent=Sum('movie__tmdb_runtime')) \
+        movies_total_spent_time = watched_movies.aggregate(
+            total_time_spent=Sum(F('movie__tmdb_runtime') * F('watch_count'))
+        ) \
             .get('total_time_spent')
 
         movies_genres_spent_time = watched_movies.values(name=F('movie__moviegenre__genre__tmdb_name')) \
-            .annotate(spent_time_percent=Sum('movie__tmdb_runtime'))
+            .annotate(spent_time_percent=Sum(F('movie__tmdb_runtime') * F('watch_count')))
 
-        for genre in movies_genres_spent_time:
-            genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 /
-                                                movies_total_spent_time, 1)
+        if movies_total_spent_time > 0:
+            for genre in movies_genres_spent_time:
+                genre['spent_time_percent'] = round(genre['spent_time_percent'] * 100 /
+                                                    movies_total_spent_time, 1)
 
         movies_total_spent_time = round(movies_total_spent_time / MINUTES_IN_HOUR, 1)
 
@@ -698,7 +701,7 @@ def calculate_time_distribution_last_year(user: User) -> dict:
         user=user,
         movie_id__in=watched_movie_ids_last_year,
     ) \
-        .aggregate(total_time_spent=Sum('movie__tmdb_runtime')) \
+        .aggregate(total_time_spent=Sum(F('movie__tmdb_runtime') * F('watch_count'))) \
         .get('total_time_spent') or 0
 
     watched_episode_ids_last_year = EpisodeLog.objects \
