@@ -31,7 +31,6 @@ class AuthViewSet(GenericViewSet):
         return _service_response(
             signup,
             request.data,
-            request.scheme,
             success_status=status.HTTP_201_CREATED,
         )
 
@@ -82,7 +81,6 @@ class AuthViewSet(GenericViewSet):
         response = _service_response(
             request_password_reset,
             request.data.get('email'),
-            request.scheme,
         )
         if response.status_code == status.HTTP_200_OK:
             return Response(status=status.HTTP_200_OK)

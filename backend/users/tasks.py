@@ -7,14 +7,13 @@ from django.utils import timezone
 from django.utils.html import escape
 
 from config.celery import app
-from config.settings import EMAIL_HOST_USER
+from config.settings import EMAIL_HOST_USER, FRONTEND_URL
 from games.models import Game, UserGame
 from movies.models import Movie, UserMovie
 from people.models import PersonCredit
 from shows.models import Episode, Show, ShowStatusChange, UserShow
 from users.models import User
 from utils.celery import execute_locked_task
-from utils.constants import SITE_URL
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +99,7 @@ def _send_release_emails(today_date):
             if user_games_count:
                 games_message += f'Новые игры:<br>'
                 for game in games:
-                    games_message += f'<a href="http://{SITE_URL}/game/{game.igdb_slug}/">' \
+                    games_message += f'<a href="{FRONTEND_URL}/game/{game.igdb_slug}/">' \
                                      f'{game.igdb_name}</a><br>'
                 games_message += '<br>'
                 message_empty = False
@@ -114,7 +113,7 @@ def _send_release_emails(today_date):
             if user_movies_count:
                 movies_message += f'Новые фильмы:<br>'
                 for movie in movies:
-                    movies_message += f'<a href="http://{SITE_URL}/movie/{movie.tmdb_id}/">' \
+                    movies_message += f'<a href="{FRONTEND_URL}/movie/{movie.tmdb_id}/">' \
                                       f'{movie.tmdb_name}</a><br>'
                 movies_message += '<br>'
                 message_empty = False
@@ -131,7 +130,7 @@ def _send_release_emails(today_date):
             if user_digital_movies_count:
                 digital_movies_message += 'Цифровые релизы фильмов:<br>'
                 for movie in digital_movies:
-                    digital_movies_message += f'<a href="http://{SITE_URL}/movie/{movie.tmdb_id}/">' \
+                    digital_movies_message += f'<a href="{FRONTEND_URL}/movie/{movie.tmdb_id}/">' \
                                               f'{movie.tmdb_name}</a><br>'
                 digital_movies_message += '<br>'
                 message_empty = False
@@ -149,15 +148,15 @@ def _send_release_emails(today_date):
                 episodes_message += f'Новые эпизоды:<br>'
                 for episode in episodes:
                     episodes_message += \
-                        f'<a href="http://{SITE_URL}/show/{episode.tmdb_season.tmdb_show.tmdb_id}' \
+                        f'<a href="{FRONTEND_URL}/show/{episode.tmdb_season.tmdb_show.tmdb_id}' \
                         f'/season/{episode.tmdb_season.tmdb_season_number}' \
                         f'/episode/{episode.tmdb_episode_number}/">' \
                         f'{episode.tmdb_episode_number} эпизод</a> ' \
-                        f'<a href="http://{SITE_URL}/show/{episode.tmdb_season.tmdb_show.tmdb_id}' \
+                        f'<a href="{FRONTEND_URL}/show/{episode.tmdb_season.tmdb_show.tmdb_id}' \
                         f'/season/{episode.tmdb_season.tmdb_season_number}/">' \
                         f'{episode.tmdb_season.tmdb_season_number} сезона</a> ' \
                         f'сериала ' \
-                        f'<a href="http://{SITE_URL}/show/{episode.tmdb_season.tmdb_show.tmdb_id}/">' \
+                        f'<a href="{FRONTEND_URL}/show/{episode.tmdb_season.tmdb_show.tmdb_id}/">' \
                         f'{episode.tmdb_season.tmdb_show.tmdb_name}</a><br>'
                 episodes_message += '<br>'
                 message_empty = False
@@ -218,7 +217,7 @@ def _send_release_emails(today_date):
                                    f'{introduction_text}' \
                                    f'<br><br>'
 
-            preferences_message = f'<a href="http://{SITE_URL}/settings/"><font size="2">' \
+            preferences_message = f'<a href="{FRONTEND_URL}/settings/"><font size="2">' \
                                   f'Изменить настройки оповещений</font></a>'
 
             message = introduction_message + games_message + movies_message + digital_movies_message + \
@@ -300,7 +299,7 @@ def _get_people_releases_message(user, today_person_credits):
     message = 'Новые работы отслеживаемых людей:<br>'
     for item in credits_by_person.values():
         person = item['person']
-        person_link = f'<a href="http://{SITE_URL}/person/{person.id}/">{escape(person.name)}</a>'
+        person_link = f'<a href="{FRONTEND_URL}/person/{person.id}/">{escape(person.name)}</a>'
         project_messages = [
             _get_person_credit_message(credit)
             for credit in item['credits']
@@ -312,7 +311,7 @@ def _get_people_releases_message(user, today_person_credits):
 
 def _get_person_credit_message(credit):
     media_path = 'movie' if credit.media_type == PersonCredit.MEDIA_TYPE_MOVIE else 'show'
-    media_link = f'<a href="http://{SITE_URL}/{media_path}/{credit.tmdb_id}/">{escape(credit.name)}</a>'
+    media_link = f'<a href="{FRONTEND_URL}/{media_path}/{credit.tmdb_id}/">{escape(credit.name)}</a>'
     role_labels = [
         PERSON_CREDIT_ROLE_LABELS[role]
         for role in credit.roles
@@ -325,7 +324,7 @@ def _get_person_credit_message(credit):
 
 def _get_show_status_change_message(status_change):
     show = status_change.show
-    show_link = f'<a href="http://{SITE_URL}/show/{show.tmdb_id}/">{escape(show.tmdb_name)}</a>'
+    show_link = f'<a href="{FRONTEND_URL}/show/{show.tmdb_id}/">{escape(show.tmdb_name)}</a>'
     active_statuses = (
         Show.TMDB_STATUS_RETURNING_SERIES,
         Show.TMDB_STATUS_IN_PRODUCTION,
