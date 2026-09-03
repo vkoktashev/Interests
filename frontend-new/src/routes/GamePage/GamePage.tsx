@@ -518,10 +518,12 @@ export function GamePage() {
 						</div>
 					</div>
 					<MediaGalleryBlock
+						key={gameId}
 						className={bem.element('media-card')}
 						trailers={game?.trailers}
 						screenshots={game?.screenshots}
 						isMobileViewport={isMobileViewport}
+						isCollapsedByDefault
 					/>
 
 					<div className={bem.element('overview', {withMedia: hasMedia && !isMobileViewport})}>
