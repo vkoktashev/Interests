@@ -10,12 +10,19 @@ from config.celery import app
 from config.settings import EMAIL_HOST_USER
 from games.models import Game, UserGame
 from movies.models import Movie, UserMovie
+from people.models import PersonCredit
 from shows.models import Episode, Show, ShowStatusChange, UserShow
 from users.models import User
 from utils.celery import execute_locked_task
 from utils.constants import SITE_URL
 
 logger = logging.getLogger(__name__)
+
+PERSON_CREDIT_ROLE_LABELS = {
+    PersonCredit.ROLE_ACTOR: 'актёр',
+    PersonCredit.ROLE_DIRECTOR: 'режиссёр',
+    PersonCredit.ROLE_CREATOR: 'создатель',
+}
 
 
 @app.task
@@ -38,6 +45,7 @@ def _send_release_emails(today_date):
     today_movies = Movie.objects.filter(tmdb_release_date=today_date)
     today_digital_movies = Movie.objects.filter(tmdb_digital_release_date=today_date)
     today_episodes = Episode.objects.filter(tmdb_release_date=today_date)
+    today_person_credits = PersonCredit.objects.filter(release_date=today_date)
     pending_status_changes = list(
         ShowStatusChange.objects.filter(emailed_at=None).select_related('show')
     )
@@ -46,6 +54,7 @@ def _send_release_emails(today_date):
                                 Q(receive_games_releases=True) |
                                 Q(receive_movies_releases=True) |
                                 Q(receive_movies_digital_releases=True) |
+                                Q(receive_people_releases=True) |
                                 Q(receive_show_status_changes=True))
     candidates_count = users.count()
     sent_count = 0
@@ -53,13 +62,15 @@ def _send_release_emails(today_date):
     failed_count = 0
 
     logger.info(
-        'send_release_emails: start today=%s users=%s games=%s movies=%s digital_movies=%s episodes=%s status_changes=%s',
+        'send_release_emails: start today=%s users=%s games=%s movies=%s digital_movies=%s episodes=%s '
+        'person_credits=%s status_changes=%s',
         today_date,
         candidates_count,
         today_games.count(),
         today_movies.count(),
         today_digital_movies.count(),
         today_episodes.count(),
+        today_person_credits.count(),
         len(pending_status_changes),
     )
 
@@ -68,12 +79,14 @@ def _send_release_emails(today_date):
         movies_message = ''
         digital_movies_message = ''
         episodes_message = ''
+        people_releases_message = ''
         status_changes_message = ''
         message_empty = True
         user_games_count = 0
         user_movies_count = 0
         user_digital_movies_count = 0
         user_episodes_count = 0
+        user_person_credits_count = 0
         user_status_changes_count = 0
 
         logger.debug('send_release_emails: processing user id=%s username=%s', user.id, user.username)
@@ -149,6 +162,14 @@ def _send_release_emails(today_date):
                 episodes_message += '<br>'
                 message_empty = False
 
+        if user.receive_people_releases:
+            people_releases_message, user_person_credits_count = _get_people_releases_message(
+                user,
+                today_person_credits,
+            )
+            if user_person_credits_count:
+                message_empty = False
+
         if user.receive_show_status_changes:
             tracked_show_ids = set(
                 UserShow.objects.filter(
@@ -180,6 +201,7 @@ def _send_release_emails(today_date):
                 user_movies_count,
                 user_digital_movies_count,
                 user_episodes_count,
+                user_person_credits_count,
             ))
             if has_releases and user_status_changes_count:
                 introduction_text = 'Напоминаем о сегодняшних релизах и изменениях сериалов.'
@@ -200,7 +222,7 @@ def _send_release_emails(today_date):
                                   f'Изменить настройки оповещений</font></a>'
 
             message = introduction_message + games_message + movies_message + digital_movies_message + \
-                episodes_message + status_changes_message + preferences_message
+                episodes_message + people_releases_message + status_changes_message + preferences_message
             email = EmailMultiAlternatives(mail_subject, message, to=[user.email], from_email=EMAIL_HOST_USER)
             email.content_subtype = 'html'
             try:
@@ -208,25 +230,29 @@ def _send_release_emails(today_date):
             except Exception:
                 failed_count += 1
                 logger.exception(
-                    'send_release_emails: failed to send email user id=%s username=%s games=%s movies=%s digital_movies=%s episodes=%s status_changes=%s',
+                    'send_release_emails: failed to send email user id=%s username=%s games=%s movies=%s '
+                    'digital_movies=%s episodes=%s person_credits=%s status_changes=%s',
                     user.id,
                     user.username,
                     user_games_count,
                     user_movies_count,
                     user_digital_movies_count,
                     user_episodes_count,
+                    user_person_credits_count,
                     user_status_changes_count,
                 )
             else:
                 sent_count += 1
                 logger.debug(
-                    'send_release_emails: sent user id=%s username=%s games=%s movies=%s digital_movies=%s episodes=%s status_changes=%s',
+                    'send_release_emails: sent user id=%s username=%s games=%s movies=%s digital_movies=%s '
+                    'episodes=%s person_credits=%s status_changes=%s',
                     user.id,
                     user.username,
                     user_games_count,
                     user_movies_count,
                     user_digital_movies_count,
                     user_episodes_count,
+                    user_person_credits_count,
                     user_status_changes_count,
                 )
         else:
@@ -252,6 +278,49 @@ def _send_release_emails(today_date):
         'skipped': skipped_count,
         'errors': failed_count,
     }
+
+
+def _get_people_releases_message(user, today_person_credits):
+    credits = list(
+        today_person_credits.filter(person__tracked_by_users__user=user)
+        .select_related('person')
+        .order_by('person__name', 'person_id', 'media_type', 'name', 'tmdb_id')
+    )
+    if not credits:
+        return '', 0
+
+    credits_by_person = {}
+    for credit in credits:
+        person_credits = credits_by_person.setdefault(
+            credit.person_id,
+            {'person': credit.person, 'credits': []},
+        )
+        person_credits['credits'].append(credit)
+
+    message = 'Новые работы отслеживаемых людей:<br>'
+    for item in credits_by_person.values():
+        person = item['person']
+        person_link = f'<a href="http://{SITE_URL}/person/{person.id}/">{escape(person.name)}</a>'
+        project_messages = [
+            _get_person_credit_message(credit)
+            for credit in item['credits']
+        ]
+        message += f'{person_link}: {"; ".join(project_messages)}<br>'
+
+    return message + '<br>', len(credits)
+
+
+def _get_person_credit_message(credit):
+    media_path = 'movie' if credit.media_type == PersonCredit.MEDIA_TYPE_MOVIE else 'show'
+    media_link = f'<a href="http://{SITE_URL}/{media_path}/{credit.tmdb_id}/">{escape(credit.name)}</a>'
+    role_labels = [
+        PERSON_CREDIT_ROLE_LABELS[role]
+        for role in credit.roles
+        if role in PERSON_CREDIT_ROLE_LABELS
+    ]
+    if role_labels:
+        return f'{media_link} ({", ".join(role_labels)})'
+    return media_link
 
 
 def _get_show_status_change_message(status_change):

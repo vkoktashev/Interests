@@ -215,6 +215,10 @@ function SettingsPage() {
 										label={__('релиз новых серий сериалов')}
 									/>
 									<CheckboxField
+										attribute="receive_people_releases"
+										label={__('релизы работ отслеживаемых людей')}
+									/>
+									<CheckboxField
 										attribute="receive_show_status_changes"
 										label={__('изменения статуса сериалов')}
 									/>

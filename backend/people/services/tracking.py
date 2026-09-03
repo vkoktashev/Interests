@@ -1,6 +1,7 @@
 from django.db import transaction
 
 from people.models import Person, PersonLog, UserPerson
+from people.services.catalog import enqueue_person_credits_refresh
 
 
 class PersonNotFoundError(Exception):
@@ -32,4 +33,6 @@ def set_person_tracking(user, person_id, is_tracked):
             action_type=PersonLog.ACTION_TYPE_TRACK,
             action_result=is_tracked,
         )
+        if is_tracked:
+            transaction.on_commit(lambda: enqueue_person_credits_refresh(person.id))
     return is_tracked
