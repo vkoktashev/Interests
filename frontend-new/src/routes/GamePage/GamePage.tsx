@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getRouteParam} from '@steroidsjs/core/reducers/router';
@@ -21,6 +21,8 @@ import LoginForm from '../../modals/LoginForm';
 import MediaGalleryBlock from '../../shared/MediaGalleryBlock';
 import GamePrices from './views/GamePrices';
 import AddToCollectionButton from '../../shared/AddToCollectionButton';
+import StatusBadge from '../../shared/StatusBadge';
+import {getGameReleaseStatusBadge} from '../../shared/mediaStatus';
 import {GAME_TYPE_LABELS} from '../SearchPage/views/searchTypes';
 import {IGamePricesResponse} from '../../interfaces/IGamePrice';
 import "./game-page.scss";
@@ -28,6 +30,10 @@ import {Button, TextField} from '@steroidsjs/core/ui/form';
 
 const HLTB_REFRESH_POLL_INTERVAL_MS = 3000;
 const HLTB_REFRESH_MAX_POLLS = 20;
+const IGDB_SYNC_NOTIFICATION_BY_STATUS: Record<string, string> = {
+	temporarily_unavailable: 'Не удалось обновить данные игры из IGDB. Показываем сохранённую версию.',
+	source_not_found: 'Игра больше не найдена в IGDB. Показываем сохранённые данные.',
+};
 
 function HltbIcon(props: {className?: string}) {
 	return <span className={props.className} aria-hidden='true' />;
@@ -51,6 +57,7 @@ export function GamePage() {
 	const [isGameTimeRequestStarted, setGameTimeRequestStarted] = useState(false);
 	const [visibleGameTime, setVisibleGameTime] = useState<{gameId: any; data: any}>();
 	const [isMobileViewport, setIsMobileViewport] = useState(false);
+	const lastExternalSyncNotificationKey = useRef<string>();
 
 	const gameFetchConfig = useMemo(() => gameId && ({
 		url: `/games/game/${gameId}/`,
@@ -103,6 +110,7 @@ export function GamePage() {
 
 	useEffect(
 		() => {
+			lastExternalSyncNotificationKey.current = undefined;
 			setClearUI();
 		},
 		// eslint-disable-next-line
@@ -114,6 +122,22 @@ export function GamePage() {
 			document.title = game.name;
 		}
 	}, [game?.name]);
+
+	useEffect(() => {
+		const externalSyncStatus = game?.external_sync?.status;
+		const message = IGDB_SYNC_NOTIFICATION_BY_STATUS[externalSyncStatus];
+		if (!message || game?.slug !== gameId) {
+			return;
+		}
+
+		const notificationKey = `${gameId}:${externalSyncStatus}`;
+		if (lastExternalSyncNotificationKey.current === notificationKey) {
+			return;
+		}
+
+		lastExternalSyncNotificationKey.current = notificationKey;
+		dispatch(showNotification(message, 'warning', {timeOut: 6000}));
+	}, [dispatch, game?.external_sync?.status, game?.slug, gameId]);
 
 	useEffect(() => {
 		setOverviewExpanded(false);
@@ -322,14 +346,16 @@ export function GamePage() {
 	}, [game?.id]);
 	const releaseDateText = game?.release_date_display || game?.release_date;
 	const gameTypeLabel = game?.game_type != null ? GAME_TYPE_LABELS[game.game_type] : undefined;
+	const releaseStatusBadge = getGameReleaseStatusBadge(game?.game_status);
 
 	const infoRows = useMemo(() => ([
 		{label: 'Тип', value: gameTypeLabel},
 		{label: 'Разработчики', value: game?.developers},
+		{label: 'Издатели', value: game?.publishers},
 		{label: 'Дата релиза', value: releaseDateText},
 		{label: 'Жанр', value: game?.genres},
 		{label: 'Платформы', value: game?.platforms},
-	]).filter(item => Boolean(item.value)), [gameTypeLabel, game?.developers, releaseDateText, game?.genres, game?.platforms]);
+	]).filter(item => Boolean(item.value)), [gameTypeLabel, game?.developers, game?.publishers, releaseDateText, game?.genres, game?.platforms]);
 
 	const overviewPlainText = useMemo(
 		() => String(game?.overview || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
@@ -361,9 +387,18 @@ export function GamePage() {
 						</div>
 						<div className={bem.element('info')}>
 							<div className={bem.element('title-row')}>
-								<h1 className={bem.element('info-header')}>
-									{game.name}
-								</h1>
+								<div className={bem.element('title-main')}>
+									<h1 className={bem.element('info-header')}>
+										{game.name}
+									</h1>
+									{releaseStatusBadge && (
+										<StatusBadge
+											className={bem.element('release-status')}
+											label={releaseStatusBadge.label}
+											tone={releaseStatusBadge.tone}
+										/>
+									)}
+								</div>
 								<div className={bem.element('title-actions')}>
 									<a
 										hidden={!canEditRedTigerinoPlaylist}
@@ -483,10 +518,12 @@ export function GamePage() {
 						</div>
 					</div>
 					<MediaGalleryBlock
+						key={gameId}
 						className={bem.element('media-card')}
 						trailers={game?.trailers}
 						screenshots={game?.screenshots}
 						isMobileViewport={isMobileViewport}
+						isCollapsedByDefault
 					/>
 
 					<div className={bem.element('overview', {withMedia: hasMedia && !isMobileViewport})}>

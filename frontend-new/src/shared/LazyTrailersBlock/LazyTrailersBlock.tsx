@@ -25,17 +25,27 @@ export default function LazyTrailersBlock(props: ILazyTrailersBlockProps) {
 	const bem = useBem('lazy-trailers-block');
 	const {http} = useComponents();
 	const [isOpen, setIsOpen] = useState(false);
+	const [isContentMounted, setIsContentMounted] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const [trailers, setTrailers] = useState<TTrailer[]>([]);
 	const [hasError, setHasError] = useState(false);
 	const requestIdRef = useRef(0);
+	const openFrameRef = useRef<number | null>(null);
 
 	useEffect(() => {
-		requestIdRef.current += 1;
 		setIsOpen(false);
+		setIsContentMounted(false);
 		setIsLoading(false);
 		setTrailers([]);
 		setHasError(false);
+
+		return () => {
+			requestIdRef.current += 1;
+			if (openFrameRef.current !== null) {
+				cancelAnimationFrame(openFrameRef.current);
+				openFrameRef.current = null;
+			}
+		};
 	}, [props.endpoint]);
 
 	const loadTrailers = useCallback(async () => {
@@ -60,12 +70,25 @@ export default function LazyTrailersBlock(props: ILazyTrailersBlockProps) {
 	}, [http, props.endpoint]);
 
 	const toggleTrailers = useCallback(() => {
-		const shouldOpen = !isOpen;
-		setIsOpen(shouldOpen);
-		if (shouldOpen) {
+		if (isOpen) {
+			setIsOpen(false);
+		} else {
+			setIsContentMounted(true);
 			loadTrailers();
+			if (openFrameRef.current !== null) {
+				cancelAnimationFrame(openFrameRef.current);
+			}
+			openFrameRef.current = requestAnimationFrame(() => {
+				openFrameRef.current = null;
+				setIsOpen(true);
+			});
 		}
 	}, [isOpen, loadTrailers]);
+	const onContentTransitionEnd = useCallback((event: React.TransitionEvent<HTMLDivElement>) => {
+		if (event.target === event.currentTarget && !isOpen) {
+			setIsContentMounted(false);
+		}
+	}, [isOpen]);
 
 	if (props.isMobileViewport) {
 		return null;
@@ -83,8 +106,11 @@ export default function LazyTrailersBlock(props: ILazyTrailersBlockProps) {
 				<FaChevronDown className={bem.element('icon', {open: isOpen})} />
 			</button>
 
-			{isOpen && (
-				<div className={bem.element('content')}>
+			{isContentMounted && (
+				<div
+					className={bem.element('content', {open: isOpen})}
+					onTransitionEnd={onContentTransitionEnd}
+				>
 					<div className={bem.element('content-inner')}>
 						{isLoading && trailers.length < 1 && (
 							<div className={bem.element('message')}>Загрузка трейлеров...</div>

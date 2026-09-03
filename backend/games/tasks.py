@@ -19,6 +19,7 @@ from games.integrations.igdb import (
     update_game_developers_from_igdb,
     update_game_genres_from_igdb,
     update_game_media_from_igdb,
+    update_game_publishers_from_igdb,
     update_game_stores_from_igdb,
 )
 from games.models import Game, GameBeatTime
@@ -209,6 +210,7 @@ def _apply_igdb_game_details(game_obj, igdb_game, source):
             update_fields_if_needed(game_obj, fields_to_update)
             async_to_sync(update_game_genres_from_igdb)(game_obj, igdb_game)
             async_to_sync(update_game_developers_from_igdb)(game_obj, igdb_game)
+            async_to_sync(update_game_publishers_from_igdb)(game_obj, igdb_game)
             async_to_sync(update_game_beat_times_from_igdb)(game_obj, igdb_game)
             async_to_sync(update_game_media_from_igdb)(game_obj, igdb_game)
             async_to_sync(update_game_stores_from_igdb)(game_obj, igdb_game)

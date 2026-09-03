@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.utils import timezone
 import tmdbsimple as tmdb
 
@@ -43,6 +44,13 @@ def get_tmdb_person_tv_credits(tmdb_id):
         timeout=PERSON_TV_CREDITS_CACHE_TIMEOUT,
     )
     return tv_credits or {'cast': [], 'crew': []}
+
+
+def clear_tmdb_person_credits_cache(tmdb_id):
+    cache.delete_many((
+        f'person_{tmdb_id}_movie_credits',
+        f'person_{tmdb_id}_tv_credits',
+    ))
 
 
 def get_person_new_fields(tmdb_person):

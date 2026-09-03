@@ -28,6 +28,12 @@ TASK_DEFINITIONS = {
         'schedule': 'Только вручную',
         'task_path': 'shows.tasks.sync_show_cast',
     },
+    'sync_tracked_person_credits': {
+        'name': 'Синхронизация работ отслеживаемых людей',
+        'description': 'Обновляет фильмы и сериалы отслеживаемых людей для почтовых уведомлений.',
+        'schedule': get_periodic_task_schedule_label('sync_tracked_person_credits'),
+        'task_path': 'people.tasks.sync_tracked_person_credits',
+    },
     'send_release_emails': {
         'name': 'Рассылка уведомлений о релизах',
         'description': 'Отправляет подписчикам письма о сегодняшних релизах. Повторный запуск повторит рассылку.',

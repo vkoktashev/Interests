@@ -17,6 +17,7 @@ from games.models import (
     GameBeatTime,
     GameDeveloper,
     GameGenre,
+    GamePublisher,
     GameScreenshot,
     GameStore,
     GameVideo,
@@ -32,6 +33,16 @@ from videos.models import Video
 TWITCH_TOKEN_URL = 'https://id.twitch.tv/oauth2/token'
 IGDB_API_TIMEOUT = 8
 IGDB_GAME_TYPE_IDS = frozenset(range(15))
+IGDB_LEGACY_GAME_STATUSES = {
+    0: 'Released',
+    2: 'Alpha',
+    3: 'Beta',
+    4: 'Early Access',
+    5: 'Offline',
+    6: 'Cancelled',
+    7: 'Rumored',
+    8: 'Delisted',
+}
 
 _token_cache: dict[str, Any] = {
     'access_token': None,
@@ -204,6 +215,22 @@ def _get_igdb_game_type(game: dict[str, Any]) -> int | None:
         return None
 
 
+def _get_igdb_game_status(game: dict[str, Any]) -> str:
+    game_status = game.get('game_status')
+    if isinstance(game_status, dict):
+        status = game_status.get('status')
+        if status:
+            return str(status)
+    elif isinstance(game_status, str):
+        return game_status
+
+    legacy_status = game.get('status')
+    try:
+        return IGDB_LEGACY_GAME_STATUSES.get(int(legacy_status), '')
+    except (TypeError, ValueError):
+        return ''
+
+
 def _get_igdb_platform_ids(game: dict[str, Any]) -> set[int]:
     platform_ids = set()
     for platform in game.get('platforms') or []:
@@ -240,7 +267,8 @@ def query_igdb_games(
     game_filters = _build_igdb_game_filters(game_types, platform_ids)
     body = (
         f'search "{safe_query}"; '
-        f'fields id,name,slug,category,game_type,first_release_date,aggregated_rating,total_rating,'
+        f'fields id,name,slug,category,game_type,game_status.status,status,first_release_date,'
+        f'aggregated_rating,total_rating,'
         f'{IGDB_RELEASE_DATE_FIELDS},rating_count,cover.url,url,platforms.id,platforms.name; '
         f'{game_filters}'
         f'limit {max(1, min(limit, 50))};'
@@ -515,7 +543,8 @@ def get_game_search_results(
     game_filters = _build_igdb_game_filters(normalized_game_types, normalized_platform_ids)
     body = (
         f'search "{safe_query}"; '
-        f'fields id,name,slug,category,game_type,first_release_date,{IGDB_RELEASE_DATE_FIELDS},'
+        f'fields id,name,slug,category,game_type,game_status.status,status,first_release_date,'
+        f'{IGDB_RELEASE_DATE_FIELDS},'
         f'cover.url,genres.name,platforms.id,platforms.name,keywords.name; '
         f'{game_filters}'
         f'limit {request_limit}; '
@@ -571,6 +600,7 @@ def get_game_search_results(
             'slug': game.get('slug') or '',
             'game_type': game_type,
             'category': game_type,
+            'game_status': _get_igdb_game_status(game),
             'background_image': _format_igdb_cover_url((game.get('cover') or {}).get('url')),
             'released': release_info['date'].isoformat() if release_info['date'] else None,
             'released_display': release_info['date_display'],
@@ -584,10 +614,12 @@ def get_game_search_results(
 
 def query_igdb_game_by_id(igdb_id: int) -> Optional[dict[str, Any]]:
     body = (
-        f'fields id,name,slug,category,game_type,first_release_date,summary,rating,rating_count,aggregated_rating,'
+        f'fields id,name,slug,category,game_type,game_status.status,status,first_release_date,'
+        f'summary,rating,rating_count,aggregated_rating,'
         f'aggregated_rating_count,{IGDB_RELEASE_DATE_FIELDS},cover.url,url,'
         f'platforms.id,platforms.name,genres.id,genres.name,genres.slug,'
-        f'involved_companies.developer,involved_companies.company.id,involved_companies.company.name,'
+        f'involved_companies.developer,involved_companies.publisher,'
+        f'involved_companies.company.id,involved_companies.company.name,'
         f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height,'
         f'websites.id,websites.url,websites.category; '
         f'where id = {int(igdb_id)}; '
@@ -600,10 +632,12 @@ def query_igdb_game_by_id(igdb_id: int) -> Optional[dict[str, Any]]:
 def query_igdb_game_by_slug(slug: str) -> Optional[dict[str, Any]]:
     safe_slug = (slug or '').replace('\\', '\\\\').replace('"', '\\"')
     body = (
-        f'fields id,name,slug,category,game_type,first_release_date,summary,rating,rating_count,aggregated_rating,'
+        f'fields id,name,slug,category,game_type,game_status.status,status,first_release_date,'
+        f'summary,rating,rating_count,aggregated_rating,'
         f'aggregated_rating_count,{IGDB_RELEASE_DATE_FIELDS},cover.url,url,'
         f'platforms.id,platforms.name,genres.id,genres.name,genres.slug,'
-        f'involved_companies.developer,involved_companies.company.id,involved_companies.company.name,'
+        f'involved_companies.developer,involved_companies.publisher,'
+        f'involved_companies.company.id,involved_companies.company.name,'
         f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height,'
         f'websites.id,websites.url,websites.category; '
         f'where slug = "{safe_slug}"; '
@@ -654,6 +688,7 @@ def get_igdb_game_new_fields(igdb_game: dict[str, Any]) -> dict[str, Any]:
         'igdb_name': igdb_game.get('name') or '',
         'igdb_slug': igdb_game.get('slug') or '',
         'igdb_game_type': _get_igdb_game_type(igdb_game),
+        'igdb_game_status': _get_igdb_game_status(igdb_game),
         'igdb_year': release_year,
         'igdb_release_date': first_release_date,
         'igdb_release_date_format': release_info['date_format'],
@@ -726,9 +761,15 @@ async def update_game_developers_from_igdb(game: Game, igdb_game: dict[str, Any]
             igdb_id=developer_id,
             defaults={'name': developer_name},
         )
+        update_fields = {}
         if developer_obj.name != developer_name:
-            developer_obj.name = developer_name
-            await developer_obj.asave(update_fields=('name',))
+            update_fields['name'] = developer_name
+        if developer_obj.is_publisher:
+            update_fields['is_publisher'] = False
+        if update_fields:
+            for key, value in update_fields.items():
+                setattr(developer_obj, key, value)
+            await developer_obj.asave(update_fields=tuple(update_fields.keys()))
 
         link, _ = await GameDeveloper.objects.aget_or_create(
             game=game,
@@ -745,6 +786,48 @@ async def update_game_developers_from_igdb(game: Game, igdb_game: dict[str, Any]
             to_delete_ids.append(existing_link.id)
     if to_delete_ids:
         await GameDeveloper.objects.filter(id__in=to_delete_ids).adelete()
+
+
+async def update_game_publishers_from_igdb(game: Game, igdb_game: dict[str, Any]) -> None:
+    existing_links = GamePublisher.objects.filter(game=game).select_related('publisher')
+    new_links = []
+    to_delete_ids = []
+
+    for index, involved in enumerate(igdb_game.get('involved_companies') or []):
+        if not involved.get('publisher'):
+            continue
+        company = involved.get('company') or {}
+        publisher_id = company.get('id')
+        publisher_name = company.get('name')
+        if publisher_id is None or not publisher_name:
+            continue
+
+        publisher_obj, _ = await Developer.objects.aget_or_create(
+            igdb_id=publisher_id,
+            defaults={
+                'name': publisher_name,
+                'is_publisher': True,
+            },
+        )
+        if publisher_obj.name != publisher_name:
+            publisher_obj.name = publisher_name
+            await publisher_obj.asave(update_fields=('name',))
+
+        link, _ = await GamePublisher.objects.aget_or_create(
+            game=game,
+            publisher=publisher_obj,
+            defaults={'sort_order': index},
+        )
+        if link.sort_order != index:
+            link.sort_order = index
+            await link.asave(update_fields=('sort_order',))
+        new_links.append(link)
+
+    async for existing_link in existing_links:
+        if existing_link not in new_links:
+            to_delete_ids.append(existing_link.id)
+    if to_delete_ids:
+        await GamePublisher.objects.filter(id__in=to_delete_ids).adelete()
 
 
 async def update_game_media_from_igdb(game: Game, igdb_game: dict[str, Any]) -> None:

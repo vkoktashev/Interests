@@ -11,11 +11,11 @@
   backdrop-filter: blur(8px);
 
   &__header {
+    position: relative;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 10px;
-    margin-bottom: 10px;
   }
 
   &__title {
@@ -24,6 +24,58 @@
     font-size: 1.1rem;
     line-height: 1.2;
     color: $newText3;
+  }
+
+  &__toggle {
+    flex: 1;
+    width: 100%;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 0;
+    background: transparent;
+    padding: 0 78px 0 0;
+    color: $newText3;
+    font: inherit;
+    font-size: 1.05rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  &__toggle-icon {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    flex-shrink: 0;
+    color: $newText2;
+    transform: translateY(-50%);
+    transition: transform 0.2s ease, color 0.2s ease;
+
+    &_expanded {
+      transform: translateY(-50%) rotate(180deg);
+      color: $newText3;
+    }
+  }
+
+  &__content {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows 0.25s ease, opacity 0.25s ease;
+
+    &_expanded {
+      grid-template-rows: 1fr;
+      opacity: 1;
+    }
+  }
+
+  &__content-inner {
+    min-height: 0;
+    overflow: hidden;
+    padding-top: 10px;
   }
 
   &__carousel {
@@ -55,6 +107,13 @@
     color: $newText3;
     cursor: pointer;
     transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+
+    &_collapsible {
+      position: absolute;
+      top: 0;
+      right: 32px;
+      z-index: 1;
+    }
 
     &:hover {
       border-color: rgba($newAccent2, 0.44);

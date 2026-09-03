@@ -9,7 +9,32 @@ import { setSaveEpisodes } from "actions/modals";
 import {showNotification} from '@steroidsjs/core/actions/notifications';
 import {Button} from '@steroidsjs/core/ui/form';
 
-function SeasonsBlock({ showId, seasons, userWatchedShow }) {
+function getEpisodeAirDate(airDate: unknown): number | null {
+	const value = String(airDate || '');
+	const localizedMatch = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(value);
+	if (localizedMatch) {
+		return Date.UTC(
+			Number(localizedMatch[3]),
+			Number(localizedMatch[2]) - 1,
+			Number(localizedMatch[1]),
+		);
+	}
+
+	const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+	if (isoMatch) {
+		return Date.UTC(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
+	}
+
+	return null;
+}
+
+function SeasonsBlock({
+	showId,
+	seasons,
+	userWatchedShow,
+	defaultEpisodeRuntime,
+	onRuntimeInfoChange,
+}) {
 	const {http} = useComponents();
 	const user = useSelector(getUser);
     const dispatch = useDispatch();
@@ -18,6 +43,62 @@ function SeasonsBlock({ showId, seasons, userWatchedShow }) {
 	const [showSeasonsUserInfo, setShowSeasonsUserInfo] = useState<any>({});
 	const [seasonDirtyMap, setSeasonDirtyMap] = useState<Record<string, boolean>>({});
 	const hasPendingChanges = useMemo(() => Object.values(seasonDirtyMap).some(Boolean), [seasonDirtyMap]);
+	const runtimeInfo = useMemo(() => {
+		const regularSeasonNumbers = (seasons || [])
+			.map(season => Number(season.season_number))
+			.filter(seasonNumber => seasonNumber > 0);
+		const loadedRegularSeasons = showSeasons.filter(season => Number(season.season_number) > 0);
+		if (loadedRegularSeasons.length < regularSeasonNumbers.length) {
+			return null;
+		}
+
+		const today = new Date();
+		const todayTimestamp = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+		const episodes = loadedRegularSeasons.flatMap(season => season.episodes || []).filter(episode => {
+			const airDate = getEpisodeAirDate(episode.air_date);
+			return airDate !== null && airDate <= todayTimestamp;
+		});
+		if (episodes.length === 0) {
+			return null;
+		}
+
+		const knownRuntimes = episodes
+			.map(episode => Number(episode.runtime || 0))
+			.filter(runtime => runtime > 0);
+		const fallbackRuntime = Number(defaultEpisodeRuntime || 0) || (
+			knownRuntimes.length > 0
+				? Math.round(knownRuntimes.reduce((sum, runtime) => sum + runtime, 0) / knownRuntimes.length)
+				: 0
+		);
+		if (fallbackRuntime === 0) {
+			return null;
+		}
+
+		const getRuntime = episode => Number(episode.runtime || 0) || fallbackRuntime;
+		const totalRuntime = episodes.reduce((sum, episode) => sum + getRuntime(episode), 0);
+		const hasAllUserInfo = !user || regularSeasonNumbers.every(seasonNumber => (
+			Object.prototype.hasOwnProperty.call(showSeasonsUserInfo, String(seasonNumber))
+		));
+		let remainingRuntime: number | null = null;
+
+		if (user && hasAllUserInfo) {
+			const watchedEpisodeIds = new Set(
+				Object.values(showSeasonsUserInfo).flatMap((seasonInfo: any) => (
+					(seasonInfo?.episodes_user_info || [])
+						.filter(episode => Number(episode.score) > -1)
+						.map(episode => String(episode.tmdb_id))
+				))
+			);
+			const unwatchedEpisodes = episodes.filter(episode => !watchedEpisodeIds.has(String(episode.id)));
+			remainingRuntime = unwatchedEpisodes.reduce((sum, episode) => sum + getRuntime(episode), 0);
+		}
+
+		return {
+			episodeRuntime: fallbackRuntime,
+			totalRuntime,
+			remainingRuntime,
+		};
+	}, [defaultEpisodeRuntime, seasons, showSeasons, showSeasonsUserInfo, user]);
 
 	const getEpisodeByID = useCallback((episodes, id) => {
 		for (let episode in episodes) {
@@ -81,13 +162,24 @@ function SeasonsBlock({ showId, seasons, userWatchedShow }) {
 		}
 	}, [dispatch]);
 
+	useEffect(() => {
+		onRuntimeInfoChange(runtimeInfo);
+	}, [onRuntimeInfoChange, runtimeInfo]);
+
 	const addSeason = useCallback((season) => {
-		if (!showSeasons.some(showSeason => showSeason.tmdb_id === season.id)) {
-			setShowSeasons(prevState => [
-				...prevState,
-				season,
-			]);
-		}
+		setShowSeasons(prevState => {
+			const seasonIndex = prevState.findIndex(showSeason => showSeason.id === season.id);
+			if (seasonIndex === -1) {
+				return [...prevState, season];
+			}
+			if (prevState[seasonIndex] === season) {
+				return prevState;
+			}
+
+			const nextState = [...prevState];
+			nextState[seasonIndex] = season;
+			return nextState;
+		});
 	}, []);
 
 	const addSeasonUserInfo = useCallback((seasonId: string, userInfo: any) => {

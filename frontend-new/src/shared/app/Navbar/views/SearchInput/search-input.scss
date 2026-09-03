@@ -195,6 +195,13 @@
     &__hint-year {
         font-size: 0.78rem;
         color: $newText2;
+    }
+
+    &__hint-meta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
         padding-left: 8px;
     }
 

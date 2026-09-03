@@ -204,6 +204,7 @@ class CollectionDetailSerializer(CollectionSerializer):
                         item.igdb_release_date.year if item.igdb_release_date else None
                     ),
                     'cover_url': get_proxy_url(request, item.igdb_cover_url),
+                    'game_status': item.igdb_game_status,
                     'user_status': status_labels.get(media_type, {}).get(object_id),
                 }
             elif media_type == 'movie':

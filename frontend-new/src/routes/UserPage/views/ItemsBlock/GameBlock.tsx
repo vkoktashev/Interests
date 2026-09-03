@@ -15,6 +15,7 @@ function GameBlock({ games }) {
 					review: game.review,
 					spent_time: parseFloat(game.spent_time),
 					poster: game.game.poster_path || game.game.backdrop_path,
+					game_status: game.game.game_status,
 				};
 			})}
 			statuses={[
@@ -31,6 +32,7 @@ function GameBlock({ games }) {
 				{ label: "Отзыв", key: "review" },
 				{ label: "Время прохождения", key: "spent_time" },
 				{ label: "Картинка", key: "poster" },
+				{ label: "Стадия релиза", key: "game_status" },
 			]}
 			name={"Игры"}
 		/>

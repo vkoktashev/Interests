@@ -124,6 +124,14 @@
         overflow-wrap: anywhere;
     }
 
+    &__result-main {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 5px 8px;
+        min-width: 0;
+    }
+
     &__result-year,
     &__state {
         @include caption;

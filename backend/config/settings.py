@@ -3,6 +3,8 @@ from datetime import timedelta
 
 from dotenv import load_dotenv
 
+from utils.constants import SITE_URL
+
 load_dotenv()
 
 SECRET_KEY = os.environ['SECRET_KEY']
@@ -10,6 +12,12 @@ SECRET_KEY = os.environ['SECRET_KEY']
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 DEBUG = os.environ['DEBUG'] == 'True'
+
+FRONTEND_SCHEME = 'http' if DEBUG else 'https'
+FRONTEND_URL = os.environ.get(
+    'FRONTEND_URL',
+    f'{FRONTEND_SCHEME}://{SITE_URL}',
+).rstrip('/')
 
 ALLOWED_HOSTS = ['*']
 

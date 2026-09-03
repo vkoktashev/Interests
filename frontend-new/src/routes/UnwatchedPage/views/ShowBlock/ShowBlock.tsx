@@ -2,16 +2,21 @@ import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import classnames from 'classnames';
 import {Link} from '@steroidsjs/core/ui/nav';
 import {useBem} from '@steroidsjs/core/hooks';
-import {FaChevronDown} from 'react-icons/fa';
+import {FaChevronDown, FaRegClock} from 'react-icons/fa';
 import EpisodeRow from '../EpisodeRow';
 import {ROUTE_SHOW} from '../../../index';
 import {ISetEpisodesPayload, IUnwatchedShow} from '../types';
 import pluralizeRu from '../pluralizeRu';
+import formatDuration from '../../../../shared/formatDuration';
 import './show-block.scss';
 
 interface IShowState {
 	label: string;
 	tone: 'active' | 'ended' | 'planned' | 'canceled';
+}
+
+interface IRuntimeInfo {
+	minutes: number;
 }
 
 const SHOW_STATES: Record<string, IShowState> = {
@@ -59,6 +64,24 @@ function getPosterSrc(path?: string): string | null {
 	return `https://image.tmdb.org/t/p/w185${path}`;
 }
 
+function getRuntimeInfo(episodes, fallbackRuntime: number): IRuntimeInfo | null {
+	if (episodes.length === 0) {
+		return null;
+	}
+
+	const hasMissingRuntime = episodes.some(episode => Number(episode.tmdb_runtime || 0) === 0);
+	if (hasMissingRuntime && fallbackRuntime === 0) {
+		return null;
+	}
+
+	return {
+		minutes: episodes.reduce(
+			(sum, episode) => sum + (Number(episode.tmdb_runtime || 0) || fallbackRuntime),
+			0,
+		),
+	};
+}
+
 interface IShowBlockProps {
 	loggedIn: boolean;
 	show: IUnwatchedShow;
@@ -87,6 +110,27 @@ function ShowBlock({
 		() => show?.seasons?.reduce((sum, season) => sum + (season.episodes?.length || 0), 0) || 0,
 		[show],
 	);
+	const runtime = useMemo(() => {
+		const episodes = (show?.seasons || []).flatMap(season => season.episodes || []);
+		const knownRuntimes = episodes
+			.map(episode => Number(episode.tmdb_runtime || 0))
+			.filter(episodeRuntime => episodeRuntime > 0);
+		const fallbackRuntime = Number(show.tmdb_episode_runtime || 0) || (
+			knownRuntimes.length > 0
+				? Math.round(knownRuntimes.reduce((sum, episodeRuntime) => sum + episodeRuntime, 0) / knownRuntimes.length)
+				: 0
+		);
+
+		return {
+			show: getRuntimeInfo(episodes, fallbackRuntime),
+			seasons: new Map(
+				(show?.seasons || []).map(season => [
+					season.tmdb_season_number,
+					getRuntimeInfo(season.episodes || [], fallbackRuntime),
+				])
+			),
+		};
+	}, [show]);
 	const totalAvailableEpisodes = Number(show.total_episodes_count || 0);
 	const watchedEpisodes = Math.min(Number(show.watched_episodes_count || 0), totalAvailableEpisodes);
 	const progressPercent = totalAvailableEpisodes > 0
@@ -151,12 +195,19 @@ function ShowBlock({
 					<span>
 						{totalEpisodes} {pluralizeRu(totalEpisodes, 'серия', 'серии', 'серий')}
 					</span>
+					{runtime.show && (
+						<span className={bem.element('runtime')}>
+							<FaRegClock />
+							{formatDuration(runtime.show.minutes)}
+						</span>
+					)}
 				</div>
 			</div>
 
 			<div className={bem.element('seasons')}>
 				{show?.seasons?.map(season => {
 					const isSeasonOpen = openSeasons[season.tmdb_season_number] ?? true;
+					const seasonRuntime = runtime.seasons.get(season.tmdb_season_number);
 					return (
 						<details
 							open={isSeasonOpen}
@@ -172,6 +223,15 @@ function ShowBlock({
 									<span className={bem.element('season-count')}>
 										{season.episodes?.length || 0} {pluralizeRu(season.episodes?.length || 0, 'серия', 'серии', 'серий')}
 									</span>
+									{seasonRuntime && (
+										<span
+											className={bem.element('season-runtime')}
+											title={`Осталось ${formatDuration(seasonRuntime.minutes)}`}
+										>
+											<FaRegClock />
+											{formatDuration(seasonRuntime.minutes)}
+										</span>
+									)}
 								</div>
 								<div className={bem.element('season-toggle')}>
 									<span className={bem.element('season-toggle-text')}>

@@ -1,6 +1,6 @@
-import React, {useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import ReactPlayer from 'react-player';
-import {FaExpand} from 'react-icons/fa';
+import {FaChevronDown, FaExpand} from 'react-icons/fa';
 import {Carousel} from 'react-responsive-carousel';
 import Lightbox from 'yet-another-react-lightbox';
 import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
@@ -47,6 +47,7 @@ interface IMediaGalleryBlockProps {
 	trailers?: TTrailer[];
 	screenshots?: TScreenshot[];
 	isMobileViewport?: boolean;
+	isCollapsedByDefault?: boolean;
 }
 
 export default function MediaGalleryBlock(props: IMediaGalleryBlockProps) {
@@ -54,6 +55,15 @@ export default function MediaGalleryBlock(props: IMediaGalleryBlockProps) {
 	const trailers = props.trailers || [];
 	const screenshots = props.screenshots || [];
 	const [lightboxIndex, setLightboxIndex] = useState<number>(-1);
+	const [isExpanded, setIsExpanded] = useState(!props.isCollapsedByDefault);
+	const [isContentMounted, setIsContentMounted] = useState(!props.isCollapsedByDefault);
+	const expandFrameRef = useRef<number | null>(null);
+
+	useEffect(() => () => {
+		if (expandFrameRef.current !== null) {
+			cancelAnimationFrame(expandFrameRef.current);
+		}
+	}, []);
 
 	const getYouTubeId = (url: string) => {
 		const match = url.match(/[?&]v=([^&#]+)/i)
@@ -147,6 +157,27 @@ export default function MediaGalleryBlock(props: IMediaGalleryBlockProps) {
 		}
 		return 'Скриншоты';
 	}, [trailers.length, screenshots.length]);
+	const isContentVisible = !props.isCollapsedByDefault || isExpanded;
+	const toggleMedia = () => {
+		if (isExpanded) {
+			setIsExpanded(false);
+			setLightboxIndex(-1);
+		} else {
+			setIsContentMounted(true);
+			if (expandFrameRef.current !== null) {
+				cancelAnimationFrame(expandFrameRef.current);
+			}
+			expandFrameRef.current = requestAnimationFrame(() => {
+				expandFrameRef.current = null;
+				setIsExpanded(true);
+			});
+		}
+	};
+	const onContentTransitionEnd = (event: React.TransitionEvent<HTMLDivElement>) => {
+		if (event.target === event.currentTarget && !isExpanded) {
+			setIsContentMounted(false);
+		}
+	};
 
 	if ((!mediaItems.length) || props.isMobileViewport) {
 		return null;
@@ -155,100 +186,125 @@ export default function MediaGalleryBlock(props: IMediaGalleryBlockProps) {
 	return (
 		<div className={rootClassName}>
 			<div className={bem.element('header')}>
-				<h3 className={bem.element('title')}>{title}</h3>
-				<button
-					type='button'
-					className={bem.element('open-gallery-button')}
-					onClick={() => setLightboxIndex(0)}
-					aria-label='Открыть галерею'
-				>
-					<FaExpand />
-				</button>
+				{props.isCollapsedByDefault ? (
+					<button
+						type='button'
+						className={bem.element('toggle')}
+						onClick={toggleMedia}
+						aria-expanded={isExpanded}
+					>
+						<span>{isExpanded ? 'Скрыть медиа' : 'Показать медиа'}</span>
+						<FaChevronDown className={bem.element('toggle-icon', {expanded: isExpanded})} />
+					</button>
+				) : (
+					<h3 className={bem.element('title')}>{title}</h3>
+				)}
+				{isContentVisible && (
+					<button
+						type='button'
+						className={bem.element('open-gallery-button', {
+							collapsible: props.isCollapsedByDefault,
+						})}
+						onClick={() => setLightboxIndex(0)}
+						aria-label='Открыть галерею'
+					>
+						<FaExpand />
+					</button>
+				)}
 			</div>
 
-			<Carousel
-				className={bem.element('carousel')}
-				showArrows
-				centerMode
-				centerSlidePercentage={50}
-				showThumbs={false}
-				showStatus={false}
-				showIndicators={false}
-			>
-				{mediaItems.map((item, index) => (
-					<div className={bem.element('media-item')} key={item.key}>
-						{item.type === 'trailer' ? (
-							<div className={bem.element('trailer')}>
-								{getYouTubeId(item.url) ? (
-									<iframe
-										src={getYouTubeEmbedUrl(item.url)}
-										title={`trailer-${index}`}
-										className={bem.element('trailer-player')}
-										allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
-										referrerPolicy='strict-origin-when-cross-origin'
-										allowFullScreen
-									/>
-								) : (
-									<ReactPlayer url={item.url} controls className={bem.element('trailer-player')} />
-								)}
-							</div>
-						) : (
-							<div
-								className={bem.element('screenshot')}
-								role='button'
-								tabIndex={0}
-								onClick={() => setLightboxIndex(index)}
-								onKeyDown={(event) => {
-									if (event.key === 'Enter' || event.key === ' ') {
-										event.preventDefault();
-										setLightboxIndex(index);
+			{isContentMounted && (
+				<div
+					className={bem.element('content', {expanded: isContentVisible})}
+					onTransitionEnd={onContentTransitionEnd}
+				>
+					<div className={bem.element('content-inner')}>
+						<Carousel
+							className={bem.element('carousel')}
+							showArrows
+							centerMode
+							centerSlidePercentage={50}
+							showThumbs={false}
+							showStatus={false}
+							showIndicators={false}
+						>
+							{mediaItems.map((item, index) => (
+								<div className={bem.element('media-item')} key={item.key}>
+									{item.type === 'trailer' ? (
+										<div className={bem.element('trailer')}>
+											{getYouTubeId(item.url) ? (
+												<iframe
+													src={getYouTubeEmbedUrl(item.url)}
+													title={`trailer-${index}`}
+													className={bem.element('trailer-player')}
+													allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
+													referrerPolicy='strict-origin-when-cross-origin'
+													allowFullScreen
+												/>
+											) : (
+												<ReactPlayer url={item.url} controls className={bem.element('trailer-player')} />
+											)}
+										</div>
+									) : (
+										<div
+											className={bem.element('screenshot')}
+											role='button'
+											tabIndex={0}
+											onClick={() => setLightboxIndex(index)}
+											onKeyDown={(event) => {
+												if (event.key === 'Enter' || event.key === ' ') {
+													event.preventDefault();
+													setLightboxIndex(index);
+												}
+											}}
+										>
+											<img src={item.url} alt='' className={bem.element('screenshot-image')} />
+										</div>
+									)}
+									</div>
+								))}
+						</Carousel>
+
+						<Lightbox
+							open={lightboxIndex >= 0}
+							close={() => setLightboxIndex(-1)}
+							index={lightboxIndex < 0 ? 0 : lightboxIndex}
+							slides={lightboxSlides as any}
+							plugins={[Video, Thumbnails]}
+							video={{
+								autoPlay: false,
+							}}
+							thumbnails={{
+								position: 'bottom',
+								width: 112,
+								height: 64,
+								border: 0,
+								borderRadius: 8,
+								padding: 3,
+								gap: 8,
+							}}
+							render={{
+								slide: ({slide}) => {
+									if ((slide as TLightboxSlide).type !== 'youtube') {
+										return undefined;
 									}
-								}}
-							>
-								<img src={item.url} alt='' className={bem.element('screenshot-image')} />
-							</div>
-						)}
+
+									const url = (slide as TLightboxSlide).src;
+									if (!url) {
+										return null;
+									}
+
+									return (
+										<div className={bem.element('lightbox-youtube')}>
+											<ReactPlayer url={url} controls className={bem.element('lightbox-player')} />
+										</div>
+									);
+								},
+							}}
+						/>
 					</div>
-				))}
-			</Carousel>
-
-			<Lightbox
-				open={lightboxIndex >= 0}
-				close={() => setLightboxIndex(-1)}
-				index={lightboxIndex < 0 ? 0 : lightboxIndex}
-				slides={lightboxSlides as any}
-				plugins={[Video, Thumbnails]}
-				video={{
-					autoPlay: false,
-				}}
-				thumbnails={{
-					position: 'bottom',
-					width: 112,
-					height: 64,
-					border: 0,
-					borderRadius: 8,
-					padding: 3,
-					gap: 8,
-				}}
-				render={{
-					slide: ({slide}) => {
-						if ((slide as TLightboxSlide).type !== 'youtube') {
-							return undefined;
-						}
-
-						const url = (slide as TLightboxSlide).src;
-						if (!url) {
-							return null;
-						}
-
-						return (
-							<div className={bem.element('lightbox-youtube')}>
-								<ReactPlayer url={url} controls className={bem.element('lightbox-player')} />
-							</div>
-						);
-					},
-				}}
-			/>
+				</div>
+			)}
 		</div>
 	);
 }

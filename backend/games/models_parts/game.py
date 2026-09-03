@@ -20,6 +20,7 @@ class Game(models.Model):
     igdb_name = models.CharField(max_length=200, blank=True)
     igdb_slug = models.CharField(max_length=200, blank=True)
     igdb_game_type = models.IntegerField(null=True, blank=True)
+    igdb_game_status = models.CharField(max_length=50, null=True, blank=True)
     igdb_year = models.IntegerField(null=True, blank=True)
     igdb_release_date = models.DateField(null=True, blank=True)
     igdb_release_date_format = models.IntegerField(null=True, blank=True)

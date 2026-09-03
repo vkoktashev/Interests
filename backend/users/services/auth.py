@@ -12,11 +12,11 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import status
 
 from config import settings
-from config.settings import EMAIL_HOST_USER
+from config.settings import EMAIL_HOST_USER, FRONTEND_URL
 from users.models import User, UserPasswordToken
 from users.serializers import MyTokenObtainPairSerializer, UserSerializer
 from users.tokens import account_activation_token
-from utils.constants import EMAIL_ERROR, SITE_URL, USER_NOT_FOUND, WRONG_URL
+from utils.constants import EMAIL_ERROR, USER_NOT_FOUND, WRONG_URL
 
 
 GOOGLE_SIGNUP_CACHE_TTL_SECS = 60 * 10
@@ -30,13 +30,13 @@ class AuthServiceError(Exception):
 
 
 @transaction.atomic
-def signup(data, request_scheme):
+def signup(data):
     serializer = UserSerializer(data=data)
     serializer.is_valid(raise_exception=True)
     user = serializer.save()
     uid64 = urlsafe_base64_encode(force_bytes(user.pk))
     token = account_activation_token.make_token(user)
-    activation_link = f'{request_scheme}://{SITE_URL}/confirm/?uid64={uid64}&token={token}'
+    activation_link = f'{FRONTEND_URL}/confirm/?uid64={uid64}&token={token}'
     _send_email(
         'Активация аккаунта.',
         f'Привет {user.username}, для активации аккаунта '
@@ -181,7 +181,7 @@ def confirm_email(uid64, token):
 
 
 @transaction.atomic
-def request_password_reset(email, request_scheme):
+def request_password_reset(email):
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist as error:
@@ -195,7 +195,7 @@ def request_password_reset(email, request_scheme):
     password_token.reset_token = reset_token
     password_token.is_active = True
     password_token.save()
-    link = f'{request_scheme}://{SITE_URL}/confirm_password/?token=' \
+    link = f'{FRONTEND_URL}/confirm_password/?token=' \
            f'{urlsafe_base64_encode(force_bytes(reset_token))}'
     _send_email(
         'Сброс пароля.',

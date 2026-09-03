@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from utils.admin import SearchByIdAdminMixin
-from .models import Developer, Person, PersonLog, UserPerson
+from .models import Developer, Person, PersonCredit, PersonLog, UserPerson
 
 
 @admin.register(Person)
@@ -15,12 +15,26 @@ class PersonAdmin(SearchByIdAdminMixin, admin.ModelAdmin):
         'tmdb_place_of_birth',
         'tmdb_popularity',
         'tmdb_last_update',
+        'tmdb_credits_last_update',
     )
     search_fields = ('name', 'imdb_id')
     search_id_fields = ('pk', 'tmdb_id')
     search_help_text = 'Имя, IMDb ID, внутренний ID или TMDB ID'
     list_filter = ('tmdb_birthday', 'tmdb_deathday', 'tmdb_last_update')
     ordering = ('name',)
+    list_per_page = 50
+
+
+@admin.register(PersonCredit)
+class PersonCreditAdmin(SearchByIdAdminMixin, admin.ModelAdmin):
+    list_display = ('person', 'name', 'media_type', 'release_date', 'roles', 'updated_at')
+    list_filter = ('media_type', 'release_date', 'updated_at')
+    search_fields = ('person__name', 'name')
+    search_id_fields = ('pk', 'person_id', 'tmdb_id')
+    autocomplete_fields = ('person',)
+    list_select_related = ('person',)
+    date_hierarchy = 'release_date'
+    ordering = ('-release_date', 'name')
     list_per_page = 50
 
 

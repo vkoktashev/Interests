@@ -4,7 +4,7 @@ from games.functions import format_game_release_date, get_game_release_date_disp
 from games.integrations.igm import get_igm_store_info, get_igm_store_price
 from games.integrations.plati import get_plati_store_info, get_plati_store_price
 from games.integrations.steam import get_steam_region_label, get_steam_store_price
-from games.models import Game, GameDeveloper, GameGenre, GameScreenshot, GameStore, GameVideo
+from games.models import Game, GameDeveloper, GameGenre, GamePublisher, GameScreenshot, GameStore, GameVideo
 from games.integrations.hltb import add_hltb_gameplay_fields
 from utils.functions import objects_to_str
 
@@ -15,10 +15,12 @@ def parse_game(source_game, hltb_game=None):
     new_game = {
         'name': source_game.get('name'),
         'slug': source_game.get('slug'),
+        'game_status': source_game.get('game_status') or '',
         'overview': source_game.get('description'),
         'metacritic': source_game.get('metacritic'),
         'genres': objects_to_str(source_game['genres']),
         'developers': objects_to_str(source_game['developers']),
+        'publishers': objects_to_str(source_game.get('publishers') or []),
         'platforms': objects_to_str(platforms),
         'background': source_game.get('background_image_additional')
         if source_game.get('background_image_additional') is not None
@@ -63,10 +65,20 @@ async def parse_game_from_db(game: Game, hltb_game=None):
         })
 
     developers = []
-    game_developers = GameDeveloper.objects.filter(game=game).select_related('developer').order_by('sort_order')
+    game_developers = GameDeveloper.objects.filter(
+        game=game,
+        developer__is_publisher=False,
+    ).select_related('developer').order_by('sort_order')
     async for game_developer in game_developers:
         developers.append({
             'name': game_developer.developer.name,
+        })
+
+    publishers = []
+    game_publishers = GamePublisher.objects.filter(game=game).select_related('publisher').order_by('sort_order')
+    async for game_publisher in game_publishers:
+        publishers.append({
+            'name': game_publisher.publisher.name,
         })
 
     trailers = []
@@ -107,10 +119,12 @@ async def parse_game_from_db(game: Game, hltb_game=None):
         'name': game.igdb_name,
         'slug': game.igdb_slug or '',
         'game_type': game.igdb_game_type,
+        'game_status': game.igdb_game_status,
         'overview': game.igdb_summary,
         'metacritic': score_value,
         'genres': objects_to_str(genres),
         'developers': objects_to_str(developers),
+        'publishers': objects_to_str(publishers),
         'platforms': game.igdb_platforms,
         'background': game.igdb_cover_url,
         'poster': game.igdb_cover_url,

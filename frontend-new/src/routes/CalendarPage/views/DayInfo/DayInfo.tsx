@@ -3,6 +3,8 @@ import {useBem} from '@steroidsjs/core/hooks';
 import {Link} from '@steroidsjs/core/ui/nav';
 import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW, ROUTE_SHOW_EPISODE} from '../../../index';
 import {hasApproximateGameReleaseDate, ICalendarDay} from '../../calendarTypes';
+import StatusBadge from '../../../../shared/StatusBadge';
+import {getGameReleaseStatusBadge} from '../../../../shared/mediaStatus';
 import './day-info.scss';
 
 interface IDayInfoProps {
@@ -29,23 +31,34 @@ function DayInfo({day, date, compact}: IDayInfoProps) {
 			{
 				key: 'games',
 				title: 'Игры',
-				items: day.games.map(game => ({
-					id: game.id,
-					render: (
-						<span>
-							<Link
-								className='day-info__link'
-								toRoute={ROUTE_GAME}
-								toRouteParams={{gameId: game.slug}}
-							>
-								{game.name}
-							</Link>
-							{hasApproximateGameReleaseDate(game) ? (
-								<span className={bem.element('item-note')}> · {game.release_date_display}</span>
-							) : null}
-						</span>
-					),
-				})),
+				items: day.games.map(game => {
+					const releaseStatusBadge = getGameReleaseStatusBadge(game.game_status);
+					return {
+						id: game.id,
+						render: (
+							<span>
+								<Link
+									className='day-info__link'
+									toRoute={ROUTE_GAME}
+									toRouteParams={{gameId: game.slug}}
+								>
+									{game.name}
+								</Link>
+								{releaseStatusBadge && (
+									<StatusBadge
+										className={bem.element('release-status')}
+										label={releaseStatusBadge.label}
+										tone={releaseStatusBadge.tone}
+										size='sm'
+									/>
+								)}
+								{hasApproximateGameReleaseDate(game) ? (
+									<span className={bem.element('item-note')}> · {game.release_date_display}</span>
+								) : null}
+							</span>
+						),
+					};
+				}),
 			},
 			{
 				key: 'movies',

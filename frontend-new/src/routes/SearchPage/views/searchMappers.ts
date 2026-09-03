@@ -1,5 +1,5 @@
 import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_PERSON, ROUTE_SHOW} from '../../index';
-import {getUserStatusBadge} from '../../../shared/mediaStatus';
+import {getGameReleaseStatusBadge, getUserStatusBadge} from '../../../shared/mediaStatus';
 import {GAME_TYPE_LABELS, IGameSearchItem, IPersonSearchItem, ISearchCardData, ITmdbMediaItem} from './searchTypes';
 
 const DETAILS_LIMIT = 6;
@@ -37,6 +37,7 @@ export function mapGameToCard(game: IGameSearchItem): ISearchCardData {
 		poster: game.background_image ? `url(${game.background_image})` : undefined,
 		layoutVariant: 'media',
 		statusBadge: getUserStatusBadge('game', game.user_status) || undefined,
+		releaseStatusBadge: getGameReleaseStatusBadge(game.game_status) || undefined,
 		releaseDate: game.released_display || formatDate(game.released),
 		genres: joinNames(game.genres, genre => genre.name),
 		tags: joinNames(game.tags, tag => tag.name, DETAILS_LIMIT),
