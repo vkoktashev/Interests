@@ -3,6 +3,7 @@ export interface IUnwatchedEpisode {
 	tmdb_episode_number: number;
 	tmdb_name: string;
 	tmdb_release_date?: string;
+	tmdb_runtime: number;
 }
 
 export interface IUnwatchedSeason {
@@ -17,6 +18,7 @@ export interface IUnwatchedShow {
 	tmdb_name: string;
 	tmdb_poster_path?: string;
 	tmdb_status?: string;
+	tmdb_episode_runtime: number;
 	total_episodes_count: number;
 	watched_episodes_count: number;
 	seasons: IUnwatchedSeason[];
