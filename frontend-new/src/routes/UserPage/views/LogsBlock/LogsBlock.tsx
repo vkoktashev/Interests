@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import { FaAngleDown, FaAngleUp } from "react-icons/fa";
 import {useBem, useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
@@ -24,6 +24,7 @@ function LogsBlock(props: ILogsBlockProps) {
 	const dispatch = useDispatch();
 	const formValues = useSelector(state => getFormValues(state, props.formId));
 	const currentUser = useSelector(getUser);
+	const logsRef = useRef<HTMLDivElement | null>(null);
 	const [collapse, setCollapse] = useState(true);
 	const { width } = useWindowDimensions();
 
@@ -96,12 +97,14 @@ function LogsBlock(props: ILogsBlockProps) {
 					/>
 				</div>
 			</Form>
-			<LogsByDay
-				logs={props.logs}
-				showUsername={!!props.showUsername}
-				currentUser={currentUser}
-				onDeleteLog={props.onDeleteLog}
-			/>
+			<div ref={logsRef} className={bem.element('logs')}>
+				<LogsByDay
+					logs={props.logs}
+					showUsername={!!props.showUsername}
+					currentUser={currentUser}
+					onDeleteLog={props.onDeleteLog}
+				/>
+			</div>
 			<Pagination
 				aroundCount={3}
 				list={{
@@ -113,6 +116,10 @@ function LogsBlock(props: ILogsBlockProps) {
 				onChange={page => {
 					dispatch(formChange(props.formId, 'page', page));
 					submitForm();
+					logsRef.current?.scrollIntoView({
+						behavior: 'smooth',
+						block: 'start',
+					});
 				}}
 			/>
 		</div>
