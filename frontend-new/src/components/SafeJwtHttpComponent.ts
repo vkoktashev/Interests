@@ -63,11 +63,11 @@ export default class SafeJwtHttpComponent extends JwtHttpComponent {
 						return axiosInstance.request(originalRequest);
 					}
 				} catch {
-					this._components.store.dispatch(logout());
+					this._components.store.dispatch(logout(false));
 					throw error;
 				}
 
-				this._components.store.dispatch(logout());
+				this._components.store.dispatch(logout(false));
 				throw error;
 			},
 		);
