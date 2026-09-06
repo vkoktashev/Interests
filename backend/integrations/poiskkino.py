@@ -1,5 +1,9 @@
 from dataclasses import dataclass
+import logging
 import os
+import time
+
+import requests
 
 from integrations.exceptions import ExternalUnavailableError
 from integrations.http import external_request
@@ -9,6 +13,11 @@ POISKKINO_PROVIDER = 'poiskkino.dev'
 POISKKINO_MOVIES_URL = 'https://api.poiskkino.dev/v1.5/movie'
 POISKKINO_PAGE_SIZE = 10
 POISKKINO_MAX_PAGES = 30
+POISKKINO_CONNECT_TIMEOUT_SECS = 20
+POISKKINO_READ_TIMEOUT_SECS = 30
+POISKKINO_REQUEST_ATTEMPTS = 3
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -27,6 +36,14 @@ def get_kinopoisk_top250():
             message='POISKKINO_API_KEY is not configured',
         )
 
+    with requests.Session() as session:
+        session.headers.update({'X-API-KEY': api_key})
+        ranked_movies = _load_ranked_movies(session)
+
+    return [ranked_movies[position] for position in sorted(ranked_movies)]
+
+
+def _load_ranked_movies(session):
     ranked_movies = {}
     cursor = None
     seen_cursors = set()
@@ -43,21 +60,7 @@ def get_kinopoisk_top250():
         if cursor is not None:
             params.append(('next', cursor))
 
-        response = external_request(
-            POISKKINO_PROVIDER,
-            'GET',
-            POISKKINO_MOVIES_URL,
-            headers={'X-API-KEY': api_key},
-            params=params,
-        )
-        try:
-            payload = response.json()
-        except ValueError as error:
-            raise ExternalUnavailableError(
-                POISKKINO_PROVIDER,
-                message='poiskkino.dev returned invalid JSON',
-            ) from error
-
+        payload = _request_page(session, params)
         docs = payload.get('docs') if isinstance(payload, dict) else None
         if not isinstance(docs, list):
             raise ExternalUnavailableError(
@@ -85,8 +88,47 @@ def get_kinopoisk_top250():
             POISKKINO_PROVIDER,
             message='poiskkino.dev pagination exceeded the safety limit',
         )
+    return ranked_movies
 
-    return [ranked_movies[position] for position in sorted(ranked_movies)]
+
+def _request_page(session, params):
+    for attempt in range(1, POISKKINO_REQUEST_ATTEMPTS + 1):
+        try:
+            response = external_request(
+                POISKKINO_PROVIDER,
+                'GET',
+                POISKKINO_MOVIES_URL,
+                timeout=(POISKKINO_CONNECT_TIMEOUT_SECS, POISKKINO_READ_TIMEOUT_SECS),
+                session=session,
+                params=params,
+            )
+            try:
+                return response.json()
+            except ValueError as error:
+                raise ExternalUnavailableError(
+                    POISKKINO_PROVIDER,
+                    message='poiskkino.dev returned invalid JSON',
+                ) from error
+        except ExternalUnavailableError as error:
+            if attempt == POISKKINO_REQUEST_ATTEMPTS or not _is_retryable(error):
+                raise
+            retry_delay = 2 ** (attempt - 1)
+            logger.warning(
+                'poiskkino.dev request failed, retrying: attempt=%s/%s delay_seconds=%s status_code=%s',
+                attempt,
+                POISKKINO_REQUEST_ATTEMPTS,
+                retry_delay,
+                error.status_code,
+            )
+            time.sleep(retry_delay)
+
+
+def _is_retryable(error):
+    return (
+        error.status_code is None
+        or error.status_code in (408, 425, 429)
+        or error.status_code >= 500
+    )
 
 
 def _parse_ranked_movie(movie_data):
