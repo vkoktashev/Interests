@@ -5,7 +5,7 @@ from django.utils import timezone
 from integrations.tmdb import TmdbNotFoundError, TmdbUnavailableError
 from people.functions import fetch_and_upsert_person
 from people.models import Person
-from people.tasks import refresh_person_details
+from people.tasks import refresh_person_credits, refresh_person_details
 from utils.celery import enqueue_background_task_once
 
 
@@ -51,6 +51,15 @@ def enqueue_person_refresh(tmdb_id):
         identity=tmdb_id,
         args=(tmdb_id,),
         task_name='refresh_person_details',
+    )
+
+
+def enqueue_person_credits_refresh(person_id):
+    return enqueue_background_task_once(
+        refresh_person_credits,
+        identity=person_id,
+        args=(person_id,),
+        task_name='refresh_person_credits',
     )
 
 

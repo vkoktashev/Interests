@@ -16,6 +16,11 @@ PERIODIC_TASKS = {
         'hour': 3,
         'minute': 40,
     },
+    'sync_tracked_person_credits': {
+        'task': 'people.tasks.sync_tracked_person_credits',
+        'hour': 4,
+        'minute': 20,
+    },
     'send_release_emails': {
         'task': 'users.tasks.send_release_emails',
         'hour': 9,

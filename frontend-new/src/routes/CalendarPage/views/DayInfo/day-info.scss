@@ -43,6 +43,11 @@
         font-size: 0.82rem;
     }
 
+    &__release-status {
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+
     &__link {
         color: $newAccent2;
         text-decoration: none;

@@ -2,6 +2,8 @@ import React, {useCallback} from 'react';
 import {DragDropContext, Draggable, Droppable, DropResult} from '@hello-pangea/dnd';
 import {FaGripVertical, FaTrash} from 'react-icons/fa';
 import {useBem} from '@steroidsjs/core/hooks';
+import StatusBadge from '../StatusBadge';
+import {getGameReleaseStatusBadge} from '../mediaStatus';
 
 import './collection-items-editor.scss';
 
@@ -15,6 +17,7 @@ export interface ICollectionEditableItem {
 	name: string;
 	release_year: number | null;
 	cover_url: string;
+	game_status?: string | null;
 }
 
 interface ICollectionItemsEditorProps {
@@ -51,6 +54,9 @@ function SortableItem(props: {
 }) {
 	const bem = useBem('collection-items-editor');
 	const {item} = props;
+	const releaseStatusBadge = item.type === 'game'
+		? getGameReleaseStatusBadge(item.game_status)
+		: null;
 
 	return (
 		<Draggable
@@ -83,9 +89,18 @@ function SortableItem(props: {
 						)}
 					</div>
 					<div className={bem.element('item-body')}>
-						<div className={bem.element('item-type')}>
-							{TYPE_LABELS[item.type]}
-							{!!item.release_year && ` · ${item.release_year}`}
+						<div className={bem.element('item-meta')}>
+							<div className={bem.element('item-type')}>
+								{TYPE_LABELS[item.type]}
+								{!!item.release_year && ` · ${item.release_year}`}
+							</div>
+							{releaseStatusBadge && (
+								<StatusBadge
+									label={releaseStatusBadge.label}
+									tone={releaseStatusBadge.tone}
+									size='sm'
+								/>
+							)}
 						</div>
 						<div className={bem.element('item-name')}>{item.name}</div>
 					</div>

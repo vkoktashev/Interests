@@ -2,6 +2,8 @@ import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {FaSearch, FaTimes} from 'react-icons/fa';
 import {MdLiveTv, MdLocalMovies, MdVideogameAsset} from 'react-icons/md';
 import {useBem, useComponents} from '@steroidsjs/core/hooks';
+import StatusBadge from '../../shared/StatusBadge';
+import {getGameReleaseStatusBadge} from '../../shared/mediaStatus';
 
 import {ICollectionEditableItem, TCollectionItemType} from '../../shared/CollectionItemsEditor';
 import './collection-content-search.scss';
@@ -12,6 +14,7 @@ interface ISearchItem {
 	name: string;
 	release_year: number | null;
 	cover_url: string;
+	game_status?: string | null;
 }
 
 interface ISearchResults {
@@ -109,6 +112,7 @@ function CollectionContentSearch(props: ICollectionContentSearchProps) {
 				name: item.name,
 				release_year: item.release_year,
 				cover_url: item.cover_url,
+				game_status: item.game_status,
 			});
 			setQuery('');
 			setResults(EMPTY_RESULTS);
@@ -188,6 +192,9 @@ function CollectionContentSearch(props: ICollectionContentSearchProps) {
 							{section.items.map(item => {
 								const itemIndex = flatIndex;
 								flatIndex += 1;
+								const releaseStatusBadge = item.type === 'game'
+									? getGameReleaseStatusBadge(item.game_status)
+									: null;
 								return (
 									<button
 										type='button'
@@ -201,7 +208,16 @@ function CollectionContentSearch(props: ICollectionContentSearchProps) {
 										<span className={bem.element('result-cover')}>
 											{item.cover_url ? <img src={item.cover_url} alt='' /> : null}
 										</span>
-										<span className={bem.element('result-name')}>{item.name}</span>
+										<span className={bem.element('result-main')}>
+											<span className={bem.element('result-name')}>{item.name}</span>
+											{releaseStatusBadge && (
+												<StatusBadge
+													label={releaseStatusBadge.label}
+													tone={releaseStatusBadge.tone}
+													size='sm'
+												/>
+											)}
+										</span>
 										<span className={bem.element('result-year')}>{item.release_year || ''}</span>
 									</button>
 								);

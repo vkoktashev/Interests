@@ -2,6 +2,8 @@ import * as React from 'react';
 import {useBem} from '@steroidsjs/core/hooks';
 import {Link} from '@steroidsjs/core/ui/nav';
 import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW} from '../../../index';
+import StatusBadge from '../../../../shared/StatusBadge';
+import {getGameReleaseStatusBadge} from '../../../../shared/mediaStatus';
 import './RandomCard.scss';
 
 interface IRandomCardProps {
@@ -12,6 +14,9 @@ interface IRandomCardProps {
 function RandomCard(props: IRandomCardProps) {
     const bem = useBem('RandomCard');
     const {winner} = props;
+    const releaseStatusBadge = winner?.type === 'game'
+        ? getGameReleaseStatusBadge(winner.game_status)
+        : null;
 
     const getRoute = (item: any) => {
         switch (item.type) {
@@ -48,7 +53,7 @@ function RandomCard(props: IRandomCardProps) {
                 className={bem.element('poster')}
                 alt='poster'
             />
-            <div>
+            <div className={bem.element('content')}>
                 <Link
                     toRoute={getRoute(props.winner)}
                     toRouteParams={getRouteParams(props.winner)}
@@ -56,6 +61,9 @@ function RandomCard(props: IRandomCardProps) {
                 >
                     {winner.tmdb_name || winner.name}
                 </Link>
+                {releaseStatusBadge && (
+                    <StatusBadge label={releaseStatusBadge.label} tone={releaseStatusBadge.tone} size='sm' />
+                )}
             </div>
         </div>
     );

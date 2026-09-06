@@ -3,6 +3,13 @@ from asgiref.sync import sync_to_async
 from utils.openapi_params import DEFAULT_PAGE_SIZE
 
 
+def create_post_render_callback(callback, *args, **kwargs):
+    def post_render_callback(_response):
+        callback(*args, **kwargs)
+
+    return post_render_callback
+
+
 def get_page_size(page_size):
     try:
         page_size = int(page_size)

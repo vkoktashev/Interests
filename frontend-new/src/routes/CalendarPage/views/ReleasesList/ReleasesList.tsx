@@ -4,6 +4,8 @@ import {useBem} from '@steroidsjs/core/hooks';
 import {Link} from '@steroidsjs/core/ui/nav';
 import {ROUTE_GAME, ROUTE_MOVIE, ROUTE_SHOW, ROUTE_SHOW_EPISODE} from '../../../index';
 import {hasApproximateGameReleaseDate, ICalendarDay, TCalendarEntry} from '../../calendarTypes';
+import StatusBadge from '../../../../shared/StatusBadge';
+import {getGameReleaseStatusBadge} from '../../../../shared/mediaStatus';
 import './releases-list.scss';
 
 interface IReleasesListProps {
@@ -142,21 +144,31 @@ function ReleasesList({entries}: IReleasesListProps) {
 						</div>
 
 						<div className='releases-list__content'>
-							{day.games.map(game => (
-								<div key={`game-${game.id}`} className={bem.element('release-card')}>
-									<ReleaseCover src={game.poster_path} alt={game.name} type='game'/>
-									<div className={bem.element('release-body')}>
-										<div className={bem.element('release-title')}>
-											<Link toRoute={ROUTE_GAME} toRouteParams={{gameId: game.slug}}>
-												{game.name}
-											</Link>
+							{day.games.map(game => {
+								const releaseStatusBadge = getGameReleaseStatusBadge(game.game_status);
+								return (
+									<div key={`game-${game.id}`} className={bem.element('release-card')}>
+										<ReleaseCover src={game.poster_path} alt={game.name} type='game'/>
+										<div className={bem.element('release-body')}>
+											<div className={bem.element('release-title')}>
+												<Link toRoute={ROUTE_GAME} toRouteParams={{gameId: game.slug}}>
+													{game.name}
+												</Link>
+											</div>
+											{releaseStatusBadge && (
+												<StatusBadge
+													label={releaseStatusBadge.label}
+													tone={releaseStatusBadge.tone}
+													size='sm'
+												/>
+											)}
+											{hasApproximateGameReleaseDate(game) ? (
+												<div className={bem.element('release-meta')}>{game.release_date_display}</div>
+											) : null}
 										</div>
-										{hasApproximateGameReleaseDate(game) ? (
-											<div className={bem.element('release-meta')}>{game.release_date_display}</div>
-										) : null}
 									</div>
-								</div>
-							))}
+								);
+							})}
 
 							{day.movies.map(movie => (
 								<div

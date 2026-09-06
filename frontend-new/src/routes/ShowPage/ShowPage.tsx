@@ -16,6 +16,7 @@ import LazyTrailersBlock from '../../shared/LazyTrailersBlock';
 import AddToCollectionButton from '../../shared/AddToCollectionButton';
 import PersonCard, {IPersonCardItem} from '../../shared/PersonCard';
 import CastModal from '../../modals/CastModal';
+import formatDuration from '../../shared/formatDuration';
 
 import "./show-page.scss";
 import LoginForm from '../../modals/LoginForm';
@@ -37,6 +38,7 @@ function ShowPage(props) {
 	const [userRate, setUserRate] = useState(0);
 	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
 	const [isMobileViewport, setIsMobileViewport] = useState(false);
+	const [runtimeInfo, setRuntimeInfo] = useState<any>(null);
 
     const showFetchConfig = useMemo(() => showId && ({
         url: `/shows/show/${showId}/`,
@@ -74,6 +76,7 @@ function ShowPage(props) {
 
 	useEffect(() => {
 		setOverviewExpanded(false);
+		setRuntimeInfo(null);
 	}, [showId]);
 
 	useEffect(() => {
@@ -101,12 +104,36 @@ function ShowPage(props) {
         }
     }, [userInfo]);
 
-    const infoRows = useMemo(() => ([
+	const episodeRuntime = Number(show?.episode_run_time || runtimeInfo?.episodeRuntime || 0);
+	const totalRuntime = Number(runtimeInfo?.totalRuntime || 0);
+	const remainingRuntime = Number(runtimeInfo?.remainingRuntime || 0);
+	const shouldShowRemainingRuntime = user
+		&& ["Буду смотреть", "Смотрю", "Посмотрел"].includes(userStatus)
+		&& remainingRuntime > 0
+		&& remainingRuntime < totalRuntime;
+	const infoRows = useMemo(() => ([
         {label: 'Жанр', value: show?.genres},
         {label: 'Компания', value: show?.production_companies},
         {label: 'Первая серия', value: show?.first_air_date},
         {label: 'Последняя серия', value: show?.last_air_date},
-        {label: 'Длительность серии', value: show?.episode_run_time ? `${show.episode_run_time} мин` : ''},
+        {
+            label: 'Длительность серии',
+            value: episodeRuntime
+                ? `${episodeRuntime} мин`
+                : '',
+        },
+        {
+            label: 'Длительность сериала',
+            value: runtimeInfo?.totalRuntime
+                ? formatDuration(runtimeInfo.totalRuntime)
+                : '',
+        },
+        {
+            label: 'Осталось смотреть',
+            value: shouldShowRemainingRuntime
+                ? formatDuration(runtimeInfo.remainingRuntime)
+                : '',
+        },
         {label: 'Количество сезонов', value: show?.seasons_count},
         {label: 'Количество серий', value: show?.episodes_count},
         {label: 'Статус', value: show?.status},
@@ -116,6 +143,9 @@ function ShowPage(props) {
         show?.first_air_date,
         show?.last_air_date,
         show?.episode_run_time,
+        episodeRuntime,
+        runtimeInfo,
+        shouldShowRemainingRuntime,
         show?.seasons_count,
         show?.episodes_count,
         show?.status,
@@ -358,9 +388,12 @@ function ShowPage(props) {
                                 <section className={bem.element('content-card', {seasons: true})}>
                                     <h3 className={bem.element('seasons-header')}>Список серий</h3>
                                     <SeasonsBlock
+                                        key={showId}
                                         showId={showId}
                                         seasons={show?.seasons}
                                         userWatchedShow={userStatus !== "Не смотрел"}
+                                        defaultEpisodeRuntime={show?.episode_run_time}
+                                        onRuntimeInfoChange={setRuntimeInfo}
                                     />
                                 </section>
 

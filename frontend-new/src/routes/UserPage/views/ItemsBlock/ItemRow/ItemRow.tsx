@@ -1,5 +1,7 @@
 import React from 'react';
 import {FaClock, FaStar} from 'react-icons/fa';
+import StatusBadge from '../../../../../shared/StatusBadge';
+import {getGameReleaseStatusBadge} from '../../../../../shared/mediaStatus';
 import './item-row.scss';
 
 interface IItemField {
@@ -16,6 +18,7 @@ interface IItemRowData {
 	spent_time?: number;
 	progress?: string;
 	review?: string;
+	game_status?: string | null;
 }
 
 interface IItemRowProps {
@@ -54,6 +57,7 @@ function ItemRow({data, fields}: IItemRowProps) {
 	const itemName = data.name || 'Без названия';
 	const itemLink = data.link || '#';
 	const hasPoster = Boolean(data.poster);
+	const releaseStatusBadge = getGameReleaseStatusBadge(data.game_status);
 
 	return (
 		<article className='item-row'>
@@ -69,9 +73,14 @@ function ItemRow({data, fields}: IItemRowProps) {
 				</div>
 
 				<div className='item-row__content'>
-					<a href={itemLink} className='item-row__name' title={itemName}>
-						{itemName}
-					</a>
+					<div className='item-row__name-row'>
+						<a href={itemLink} className='item-row__name' title={itemName}>
+							{itemName}
+						</a>
+						{releaseStatusBadge && (
+							<StatusBadge label={releaseStatusBadge.label} tone={releaseStatusBadge.tone} size='sm' />
+						)}
+					</div>
 				</div>
 
 				<div className='item-row__aside'>

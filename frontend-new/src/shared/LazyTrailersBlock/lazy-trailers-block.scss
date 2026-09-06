@@ -42,7 +42,12 @@
     display: grid;
     grid-template-rows: 0fr;
     opacity: 0;
-    animation: lazy-trailers-expand 0.25s ease forwards;
+    transition: grid-template-rows 0.25s ease, opacity 0.25s ease;
+
+    &_open {
+      grid-template-rows: 1fr;
+      opacity: 1;
+    }
   }
 
   &__content-inner {
@@ -89,12 +94,5 @@
     &__toggle {
       font-size: 1rem;
     }
-  }
-}
-
-@keyframes lazy-trailers-expand {
-  to {
-    grid-template-rows: 1fr;
-    opacity: 1;
   }
 }

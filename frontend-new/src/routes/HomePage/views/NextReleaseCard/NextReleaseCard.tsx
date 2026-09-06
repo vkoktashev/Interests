@@ -8,6 +8,8 @@ import {
 	ROUTE_SHOW,
 	ROUTE_SHOW_EPISODE,
 } from '../../../index';
+import StatusBadge from '../../../../shared/StatusBadge';
+import {getGameReleaseStatusBadge} from '../../../../shared/mediaStatus';
 
 interface INextReleaseCardProps {
 	loggedIn: boolean;
@@ -57,6 +59,7 @@ function NextReleaseCard({loggedIn}: INextReleaseCardProps) {
 					displayDate: game.release_date_display,
 					route: ROUTE_GAME,
 					params: {gameId: game.slug},
+					gameStatus: game.game_status,
 				};
 			}
 			if (day?.movies?.length) {
@@ -98,6 +101,9 @@ function NextReleaseCard({loggedIn}: INextReleaseCardProps) {
 	const nextReleaseDateLabel = nextRelease?.kind === 'game' && nextRelease.displayDate
 		? nextRelease.displayDate
 		: (nextRelease ? formatDateLabel(nextRelease.date) : '');
+	const releaseStatusBadge = nextRelease?.kind === 'game'
+		? getGameReleaseStatusBadge(nextRelease.gameStatus)
+		: null;
 
 	return (
 		<div className={bem.element('card', {accent: true})}>
@@ -107,12 +113,17 @@ function NextReleaseCard({loggedIn}: INextReleaseCardProps) {
 				{!isLoading && !nextRelease && loggedIn && "Релизов пока нет"}
 				{!loggedIn && "Персональный календарь"}
 				{nextRelease?.kind === 'game' && (
-					<Link
-						className={bem.element('link')}
-						toRoute={nextRelease.route}
-						toRouteParams={nextRelease.params}>
-						{nextRelease.title}
-					</Link>
+					<span className={bem.element('card-value-content')}>
+						<Link
+							className={bem.element('link')}
+							toRoute={nextRelease.route}
+							toRouteParams={nextRelease.params}>
+							{nextRelease.title}
+						</Link>
+						{releaseStatusBadge && (
+							<StatusBadge label={releaseStatusBadge.label} tone={releaseStatusBadge.tone} size='sm' />
+						)}
+					</span>
 				)}
 				{nextRelease?.kind === 'movie' && (
 					<Link

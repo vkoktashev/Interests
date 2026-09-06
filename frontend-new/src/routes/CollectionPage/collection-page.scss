@@ -201,6 +201,16 @@
         pointer-events: none;
     }
 
+    &__item-release-status {
+        position: absolute;
+        z-index: 2;
+        top: 0.5rem;
+        left: 0.5rem;
+        max-width: calc(100% - 1rem);
+        box-shadow: 0 4px 12px rgba($newBackground1, 0.3);
+        pointer-events: none;
+    }
+
     &__item-tooltip {
         @include body2;
         position: absolute;

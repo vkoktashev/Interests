@@ -99,6 +99,48 @@
         }
     }
 
+    &__status {
+        display: inline-flex;
+        align-items: center;
+
+        &_active {
+            color: $newText3;
+        }
+
+        &_planned {
+            color: $newText3;
+        }
+    }
+
+    &__meta &__status_active {
+        border-color: rgba($newAccent2, 0.42);
+        background-color: rgba($newAccent2, 0.14);
+    }
+
+    &__meta &__status_planned {
+        border-color: rgba($newAccent1, 0.38);
+        background-color: rgba($newAccent1, 0.1);
+    }
+
+    &__meta &__status_canceled {
+        border-color: rgba($calendarMoviesColor, 0.48);
+        background-color: rgba($calendarMoviesColor, 0.14);
+    }
+
+    &__meta &__runtime {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: $newText3;
+        border-color: rgba($newAccent2, 0.46);
+        background: linear-gradient(135deg, rgba($newAccent2, 0.22), rgba($newAccent1, 0.12));
+
+        svg {
+            color: lighten($newAccent2, 16%);
+            font-size: 0.78rem;
+        }
+    }
+
     &__seasons {
         display: flex;
         flex-direction: column;
@@ -158,6 +200,20 @@
         white-space: nowrap;
     }
 
+    &__season-runtime {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: $newText2;
+        font-size: 0.78rem;
+        white-space: nowrap;
+
+        svg {
+            color: rgba($newText2, 0.78);
+            font-size: 0.7rem;
+        }
+    }
+
     &__season-toggle {
         display: inline-flex;
         align-items: center;
@@ -215,6 +271,7 @@
 
         &__season-summary-left {
             gap: 6px;
+            flex-wrap: wrap;
         }
 
     }

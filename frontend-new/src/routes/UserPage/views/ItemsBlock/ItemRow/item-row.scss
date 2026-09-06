@@ -86,6 +86,14 @@
         }
     }
 
+    &__name-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px 10px;
+        min-width: 0;
+    }
+
     &__meta {
         display: flex;
         flex-direction: row;

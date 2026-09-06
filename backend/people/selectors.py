@@ -192,6 +192,8 @@ def _attach_movies_user_status(user, movies):
     user_movies = UserMovie.objects.filter(
         user=user,
         movie_id__in=list(movie_pk_by_tmdb.values()),
+    ).exclude(
+        status=UserMovie.STATUS_NOT_WATCHED,
     ).values('movie__tmdb_id', 'status', 'score')
     user_status_by_tmdb = {row['movie__tmdb_id']: status_map.get(row['status']) for row in user_movies}
     user_score_by_tmdb = {row['movie__tmdb_id']: row.get('score') for row in user_movies}
@@ -217,6 +219,8 @@ def _attach_shows_user_status(user, shows):
     user_shows = UserShow.objects.filter(
         user=user,
         show_id__in=list(show_pk_by_tmdb.values()),
+    ).exclude(
+        status=UserShow.STATUS_NOT_WATCHED,
     ).values('show__tmdb_id', 'status', 'score')
     user_status_by_tmdb = {row['show__tmdb_id']: status_map.get(row['status']) for row in user_shows}
     user_score_by_tmdb = {row['show__tmdb_id']: row.get('score') for row in user_shows}

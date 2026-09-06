@@ -15,6 +15,7 @@ interface IPickItem {
 	platforms?: string;
 	tags?: string;
 	user_status?: string;
+	game_status?: string | null;
 	ratings_count?: number;
 	average_user_score?: number;
 }
@@ -49,6 +50,7 @@ function CommunityPicksBlock() {
 			platforms: item.platforms,
 			tags: item.tags,
 			user_status: item.user_status,
+			game_status: item.game_status,
 		};
 
 		return (

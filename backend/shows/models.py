@@ -55,6 +55,34 @@ class Show(models.Model):
         verbose_name_plural = 'сериалы'
 
 
+class ShowStatusChange(models.Model):
+    show = models.ForeignKey(Show, on_delete=models.CASCADE)
+    old_status = models.CharField(max_length=30, choices=Show.TMDB_STATUS_CHOICES)
+    new_status = models.CharField(max_length=30, choices=Show.TMDB_STATUS_CHOICES)
+    detected_at = models.DateTimeField(default=timezone.now)
+    emailed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = (
+            models.Index(fields=('emailed_at', 'detected_at'), name='show_status_email_idx'),
+        )
+        ordering = ('detected_at', 'id')
+        verbose_name = 'изменение статуса сериала'
+        verbose_name_plural = 'изменения статуса сериалов'
+
+    def __str__(self):
+        return f'{self.show}: {self.old_status} → {self.new_status}'
+
+
+class ShowChangesSyncState(models.Model):
+    source = models.CharField(max_length=20, primary_key=True)
+    last_successful_date = models.DateField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'состояние синхронизации изменений сериалов'
+        verbose_name_plural = 'состояния синхронизации изменений сериалов'
+
+
 class Season(models.Model):
     tmdb_id = models.IntegerField(unique=True)
     tmdb_season_number = models.IntegerField()

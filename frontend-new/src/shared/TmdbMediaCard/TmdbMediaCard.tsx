@@ -3,6 +3,7 @@ import {useBem} from '@steroidsjs/core/hooks';
 
 import StatusBadge from '../StatusBadge';
 import type {IMediaStatusBadge} from '../mediaStatus';
+import {getGameReleaseStatusBadge} from '../mediaStatus';
 import './tmdb-media-card.scss';
 
 export type ITmdbMediaCardItem = {
@@ -20,6 +21,7 @@ export type ITmdbMediaCardItem = {
 	platforms?: string;
 	tags?: string;
 	user_status?: string;
+	game_status?: string | null;
 	user_score?: number | null;
 };
 
@@ -80,6 +82,9 @@ export default function TmdbMediaCard(props: ITmdbMediaCardProps) {
 	const renderDetails = providedDetails.length > 0 ? providedDetails : fallbackDetails;
 	const hasDetails = renderDetails.length > 0 || Boolean(item.overview);
 	const releaseDateText = item.release_date_display || formatDate(item.release_date);
+	const releaseStatusBadge = itemType === 'game'
+		? getGameReleaseStatusBadge(item.game_status)
+		: null;
 
 	return (
 		<a className={[bem.block(), className].filter(Boolean).join(' ')} href={href}>
@@ -90,6 +95,14 @@ export default function TmdbMediaCard(props: ITmdbMediaCardProps) {
 					<div className={bem.element('poster-fallback')}>
 						{titleText.charAt(0).toUpperCase()}
 					</div>
+				)}
+				{releaseStatusBadge && (
+					<StatusBadge
+						className={bem.element('release-status')}
+						label={releaseStatusBadge.label}
+						tone={releaseStatusBadge.tone}
+						size='sm'
+					/>
 				)}
 			</div>
 

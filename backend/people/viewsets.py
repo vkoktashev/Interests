@@ -20,6 +20,7 @@ from people.services.tracking import (
     set_person_tracking,
 )
 from utils.constants import ERROR, PERSON_NOT_FOUND, TMDB_UNAVAILABLE
+from utils.functions import create_post_render_callback
 from utils.swagger import openapi, swagger_auto_schema
 
 
@@ -87,5 +88,5 @@ class PersonViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         response = Response(get_person_payload(person, request))
         if person_refresh_is_due(person):
             tmdb_id = person.tmdb_id
-            response.add_post_render_callback(lambda _: enqueue_person_refresh(tmdb_id))
+            response.add_post_render_callback(create_post_render_callback(enqueue_person_refresh, tmdb_id))
         return response

@@ -7,6 +7,7 @@ class ScheduledTask(models.Model):
     UPDATE_UPCOMING_MOVIES = 'update_upcoming_movies'
     UPDATE_SHOWS = 'update_shows'
     SYNC_SHOW_CAST = 'sync_show_cast'
+    SYNC_TRACKED_PERSON_CREDITS = 'sync_tracked_person_credits'
     SEND_RELEASE_EMAILS = 'send_release_emails'
     SYNC_KINOPOISK_TOP250 = 'sync_kinopoisk_top250'
 
@@ -15,6 +16,7 @@ class ScheduledTask(models.Model):
         (UPDATE_UPCOMING_MOVIES, 'Обновление будущих фильмов'),
         (UPDATE_SHOWS, 'Обновление сериалов'),
         (SYNC_SHOW_CAST, 'Синхронизация актеров сериалов'),
+        (SYNC_TRACKED_PERSON_CREDITS, 'Синхронизация работ отслеживаемых людей'),
         (SEND_RELEASE_EMAILS, 'Рассылка уведомлений о релизах'),
         (SYNC_KINOPOISK_TOP250, 'Синхронизация Топ 250 Кинопоиска'),
     )

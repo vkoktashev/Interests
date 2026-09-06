@@ -11,6 +11,7 @@ import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroi
 import {getDefaultAvatarUrl} from '../../shared/avatar';
 import StatusBadge from '../../shared/StatusBadge';
 import {getMediaStatusToneByLabel} from '../../shared/mediaStatus';
+import {getGameReleaseStatusBadge} from '../../shared/mediaStatus';
 import {
 	ROUTE_COLLECTION,
 	ROUTE_COLLECTION_EDIT,
@@ -32,6 +33,7 @@ interface ICollectionItem {
 	name: string;
 	cover_url: string;
 	user_status?: string;
+	game_status?: string | null;
 }
 
 interface ICollectionItems {
@@ -133,6 +135,9 @@ function CollectionItemCard({item}: {item: ICollectionItem}) {
 	const bem = useBem('collection-page');
 	const itemRoute = getItemRoute(item);
 	const statusTone = getMediaStatusToneByLabel(item.user_status);
+	const releaseStatusBadge = item.type === 'game'
+		? getGameReleaseStatusBadge(item.game_status)
+		: null;
 
 	return (
 		<Link
@@ -155,6 +160,14 @@ function CollectionItemCard({item}: {item: ICollectionItem}) {
 					className={bem.element('item-status')}
 					label={item.user_status}
 					tone={statusTone || undefined}
+				/>
+			)}
+			{releaseStatusBadge && (
+				<StatusBadge
+					className={bem.element('item-release-status')}
+					label={releaseStatusBadge.label}
+					tone={releaseStatusBadge.tone}
+					size='sm'
 				/>
 			)}
 			<div className={bem.element('item-tooltip')} role='tooltip'>
