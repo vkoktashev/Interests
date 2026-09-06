@@ -44,6 +44,17 @@ services:
     depends_on:
       - db2
 
+  pg_backup_logs:
+    image: alpine:3.22
+    command:
+      - tail
+      - -F
+      - /var/log/cron.log
+    volumes:
+      - ./backup-logs:/var/log:ro
+    network_mode: none
+    restart: unless-stopped
+
 volumes:
   postgres_data_interests:
   staticfiles:
