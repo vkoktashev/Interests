@@ -14,6 +14,7 @@ from content_collections.models import Collection, CollectionItemOrder
 
 KINOPOISK_TOP250_SYSTEM_KEY = 'kinopoisk-top-250'
 KINOPOISK_TOP250_MIN_ITEMS = 200
+KINOPOISK_TOP250_SYNC_TIMEOUT = 60 * 60 * 4
 
 logger = logging.getLogger(__name__)
 
