@@ -167,24 +167,26 @@ LOGIN_URL = 'users/auth/login'
 if not DEBUG:
     LOGGING = {
         'version': 1,
+        'disable_existing_loggers': False,
         'handlers': {
-            'file': {
-                'level': 'DEBUG',
-                'class': 'logging.FileHandler',
-                'filename': 'general.log',
-            },
             'console': {
                 'level': 'INFO',
                 'class': 'logging.StreamHandler',
+                'stream': 'ext://sys.stdout',
             },
             'mail_admins': {
                 'level': 'ERROR',
                 'class': 'django.utils.log.AdminEmailHandler',
             },
         },
+        'root': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
         'loggers': {
             'django': {
-                'handlers': ['file', 'console', 'mail_admins'],
+                'handlers': ['console', 'mail_admins'],
+                'level': 'INFO',
                 'propagate': False,
             },
         },

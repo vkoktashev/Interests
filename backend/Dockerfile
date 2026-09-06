@@ -1,8 +1,5 @@
 FROM python:3.12.9
 ENV PYTHONUNBUFFERED 1
-RUN mkdir /logs
-RUN touch /logs/celery_worker.log
-RUN touch /logs/celery_beat.log
 RUN mkdir /code
 WORKDIR /code
 COPY requirements.txt /code/
