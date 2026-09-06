@@ -12,7 +12,8 @@ from integrations.http import external_request
 POISKKINO_PROVIDER = 'poiskkino.dev'
 POISKKINO_MOVIES_URL = 'https://api.poiskkino.dev/v1.5/movie'
 POISKKINO_PAGE_SIZE = 10
-POISKKINO_MAX_PAGES = 30
+POISKKINO_MAX_PAGES_PER_BATCH = 10
+POISKKINO_MAX_BATCHES = 3
 POISKKINO_CONNECT_TIMEOUT_SECS = 20
 POISKKINO_READ_TIMEOUT_SECS = 30
 POISKKINO_REQUEST_ATTEMPTS = 3
@@ -45,9 +46,31 @@ def get_kinopoisk_top250():
 
 def _load_ranked_movies(session):
     ranked_movies = {}
+    excluded_kinopoisk_ids = set()
+    for _ in range(POISKKINO_MAX_BATCHES):
+        batch_movies = _load_ranked_movies_batch(session, excluded_kinopoisk_ids)
+        if not batch_movies:
+            break
+
+        previous_count = len(ranked_movies)
+        for position, ranked_movie in batch_movies.items():
+            ranked_movies.setdefault(position, ranked_movie)
+            excluded_kinopoisk_ids.add(ranked_movie.kinopoisk_id)
+        if len(ranked_movies) == previous_count:
+            raise ExternalUnavailableError(
+                POISKKINO_PROVIDER,
+                message='poiskkino.dev repeated an already loaded Top 250 batch',
+            )
+        if len(ranked_movies) >= 250:
+            break
+    return ranked_movies
+
+
+def _load_ranked_movies_batch(session, excluded_kinopoisk_ids):
+    ranked_movies = {}
     cursor = None
     seen_cursors = set()
-    for _ in range(POISKKINO_MAX_PAGES):
+    for _ in range(POISKKINO_MAX_PAGES_PER_BATCH):
         params = [
             ('limit', POISKKINO_PAGE_SIZE),
             ('notNullFields', 'top250'),
@@ -57,6 +80,10 @@ def _load_ranked_movies(session):
             ('selectFields', 'externalId'),
             ('selectFields', 'top250'),
         ]
+        params.extend(
+            ('id', f'!{kinopoisk_id}')
+            for kinopoisk_id in sorted(excluded_kinopoisk_ids)
+        )
         if cursor is not None:
             params.append(('next', cursor))
 
@@ -71,6 +98,11 @@ def _load_ranked_movies(session):
         for movie_data in docs:
             ranked_movie = _parse_ranked_movie(movie_data)
             if ranked_movie is not None:
+                if ranked_movie.kinopoisk_id is None:
+                    raise ExternalUnavailableError(
+                        POISKKINO_PROVIDER,
+                        message='poiskkino.dev returned a Top 250 movie without an id',
+                    )
                 ranked_movies.setdefault(ranked_movie.position, ranked_movie)
 
         if not payload.get('hasNext'):
@@ -83,11 +115,6 @@ def _load_ranked_movies(session):
             )
         seen_cursors.add(next_cursor)
         cursor = next_cursor
-    else:
-        raise ExternalUnavailableError(
-            POISKKINO_PROVIDER,
-            message='poiskkino.dev pagination exceeded the safety limit',
-        )
     return ranked_movies
 
 
