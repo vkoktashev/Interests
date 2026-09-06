@@ -27,6 +27,9 @@ class PoiskkinoRankedMovie:
     kinopoisk_id: int | None
     tmdb_id: int | None
     imdb_id: str | None
+    name: str | None
+    alternative_name: str | None
+    year: int | None
 
 
 def get_kinopoisk_top250():
@@ -77,6 +80,9 @@ def _load_ranked_movies_batch(session, excluded_kinopoisk_ids):
             ('sortField', 'top250'),
             ('sortType', '1'),
             ('selectFields', 'id'),
+            ('selectFields', 'name'),
+            ('selectFields', 'alternativeName'),
+            ('selectFields', 'year'),
             ('selectFields', 'externalId'),
             ('selectFields', 'top250'),
         ]
@@ -176,6 +182,9 @@ def _parse_ranked_movie(movie_data):
         kinopoisk_id=_positive_int(movie_data.get('id')),
         tmdb_id=_positive_int(external_ids.get('tmdb')),
         imdb_id=str(imdb_id).strip() if imdb_id else None,
+        name=_clean_text(movie_data.get('name')),
+        alternative_name=_clean_text(movie_data.get('alternativeName')),
+        year=_positive_int(movie_data.get('year')),
     )
 
 
@@ -185,3 +194,10 @@ def _positive_int(value):
     except (TypeError, ValueError):
         return None
     return value if value > 0 else None
+
+
+def _clean_text(value):
+    if not isinstance(value, str):
+        return None
+    value = value.strip()
+    return value or None
