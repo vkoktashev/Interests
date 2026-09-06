@@ -14,10 +14,12 @@ def external_request(
         *,
         timeout=DEFAULT_EXTERNAL_TIMEOUT_SECS,
         allowed_statuses=(),
+        session=None,
         **kwargs
 ):
     try:
-        response = requests.request(method, url, timeout=timeout, **kwargs)
+        requester = session.request if session is not None else requests.request
+        response = requester(method, url, timeout=timeout, **kwargs)
         if response.status_code in allowed_statuses:
             return response
         response.raise_for_status()
