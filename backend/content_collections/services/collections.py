@@ -20,6 +20,7 @@ class CollectionItemNotFoundError(Exception):
 @transaction.atomic
 def create_collection(serializer, author, requested_items):
     resolved_items = _resolve_requested_content(requested_items)
+    captions = [_validate_caption(item.get('caption', '')) for item in requested_items]
     collection = serializer.save(author=author)
 
     relation_items = {'games': [], 'movies': [], 'shows': []}
@@ -35,6 +36,7 @@ def create_collection(serializer, author, requested_items):
             media_type=media_type,
             object_id=object_id,
             position=position,
+            caption=captions[position],
         )
         for position, (media_type, object_id, _, _) in enumerate(resolved_items)
     ])
@@ -49,6 +51,7 @@ def clone_collection(collection, author):
     cloned_collection = Collection.objects.create(
         author=author,
         title=collection.title,
+        description=collection.description,
         display_mode=collection.display_mode,
         privacy=collection.privacy,
     )
@@ -63,6 +66,7 @@ def clone_collection(collection, author):
             media_type=item_order.media_type,
             object_id=item_order.object_id,
             position=item_order.position,
+            caption=item_order.caption,
         )
         for item_order in collection.item_orders.order_by('position', 'id')
     ])
@@ -119,6 +123,14 @@ def reorder_collection_items(collection, items):
             'Порядок должен содержать все элементы подборки без повторов.'
         )
 
+    existing_captions = {
+        (item.media_type, item.object_id): item.caption
+        for item in collection.item_orders.all()
+    }
+    captions = [
+        _validate_caption(item.get('caption', existing_captions.get(key, '')))
+        for item, key in zip(items, normalized_items)
+    ]
     collection.item_orders.all().delete()
     CollectionItemOrder.objects.bulk_create([
         CollectionItemOrder(
@@ -126,6 +138,7 @@ def reorder_collection_items(collection, items):
             media_type=media_type,
             object_id=object_id,
             position=position,
+            caption=captions[position],
         )
         for position, (media_type, object_id) in enumerate(normalized_items)
     ])
@@ -209,3 +222,9 @@ def _sync_collection_item_orders(collection):
 
 def _lock_collection(collection):
     return Collection.objects.select_for_update().get(pk=collection.pk)
+
+
+def _validate_caption(value):
+    if not isinstance(value, str) or len(value) > 2000:
+        raise CollectionInputError('Подпись должна быть строкой длиной не более 2000 символов.')
+    return value.strip()

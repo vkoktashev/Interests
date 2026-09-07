@@ -30,6 +30,7 @@ class Collection(models.Model):
         related_name='subscribed_collections',
     )
     title = models.CharField(max_length=200)
+    description = models.TextField('Описание', blank=True, default='', max_length=2000)
     display_mode = models.CharField(
         max_length=16,
         choices=DISPLAY_MODE_CHOICES,
@@ -72,6 +73,7 @@ class CollectionItemOrder(models.Model):
     media_type = models.CharField(max_length=16, choices=MEDIA_TYPE_CHOICES)
     object_id = models.PositiveIntegerField()
     position = models.PositiveIntegerField(default=0)
+    caption = models.TextField('Подпись', blank=True, default='', max_length=2000)
 
     class Meta:
         ordering = ('position', 'id')

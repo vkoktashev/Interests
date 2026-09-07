@@ -131,3 +131,65 @@
         color: $newText3;
     }
 }
+
+.collection-items-editor {
+    &__caption-toggle {
+        @include caption;
+        display: block;
+        max-width: 100%;
+        margin-top: 0.2rem;
+        padding: 0.2rem 0;
+        border: 0;
+        background: transparent;
+        color: $newText2;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: pointer;
+
+        &:hover {
+            color: $newText3;
+        }
+
+        &:focus-visible {
+            outline: 2px solid $newAccent2;
+            outline-offset: 2px;
+        }
+
+        &:disabled {
+            cursor: default;
+            opacity: 0.5;
+        }
+    }
+
+    &__caption-field {
+        @include caption;
+        grid-column: 1 / -1;
+        display: grid;
+        gap: 0.4rem;
+        color: $newText2;
+    }
+
+    &__caption-input {
+        @include body2;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        padding: 0.6rem;
+        border: 1px solid rgba($newBackground3, 0.65);
+        border-radius: 0.5rem;
+        background-color: $newBackground2;
+        color: $newText3;
+        resize: vertical;
+
+        &:focus-visible {
+            outline: 2px solid $newAccent2;
+            outline-offset: 1px;
+        }
+
+        &::placeholder {
+            color: $newText2;
+        }
+    }
+}

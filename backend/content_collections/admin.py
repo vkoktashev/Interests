@@ -2,7 +2,8 @@ from django import forms
 from django.contrib import admin
 
 from utils.admin import SearchByIdAdminMixin
-from .models import Collection
+from .models import Collection, CollectionItemOrder
+from .media import MEDIA_CONFIG
 from .services.collections import _sync_collection_item_orders
 
 
@@ -42,9 +43,29 @@ class CollectionTypeFilter(admin.SimpleListFilter):
         return queryset
 
 
+class CollectionItemCaptionInline(admin.TabularInline):
+    model = CollectionItemOrder
+    verbose_name = 'подпись к элементу'
+    verbose_name_plural = 'Подписи к элементам (новые элементы появятся после сохранения)'
+    fields = ('item_name', 'caption')
+    readonly_fields = ('item_name',)
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description='Элемент')
+    def item_name(self, obj):
+        model, _ = MEDIA_CONFIG[obj.media_type]
+        item = model.objects.filter(pk=obj.object_id).first()
+        return str(item) if item else f'{obj.get_media_type_display()} #{obj.object_id}'
+
+
 @admin.register(Collection)
 class CollectionAdmin(SearchByIdAdminMixin, admin.ModelAdmin):
     form = CollectionAdminForm
+    inlines = (CollectionItemCaptionInline,)
     list_display = ('id', 'title', 'collection_author', 'privacy', 'display_mode', 'updated_at')
     list_filter = (CollectionTypeFilter, 'privacy', 'display_mode', 'updated_at')
     search_fields = ('title', 'author__username', 'author__email', 'system_key')
@@ -56,7 +77,7 @@ class CollectionAdmin(SearchByIdAdminMixin, admin.ModelAdmin):
     list_per_page = 50
     readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
-        (None, {'fields': ('title', 'author', 'privacy', 'display_mode')}),
+        (None, {'fields': ('title', 'description', 'author', 'privacy', 'display_mode')}),
         ('Состав подборки', {'fields': ('movies', 'shows', 'games')}),
         ('Подписчики', {'fields': ('subscribers',), 'classes': ('collapse',)}),
         ('Синхронизация и даты', {

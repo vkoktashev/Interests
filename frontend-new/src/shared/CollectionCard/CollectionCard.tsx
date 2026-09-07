@@ -19,6 +19,7 @@ interface ICollectionCounts {
 export interface ICollection {
 	id: number;
 	title: string;
+	description?: string;
 	author: {
 		id: number | null;
 		username: string;
@@ -135,6 +136,9 @@ function CollectionCard({collection, progressUserId}: {collection: ICollection; 
 							/>
 						</div>
 					</div>
+				)}
+				{!!collection.description?.trim() && (
+					<div className={bem.element('description')}>{collection.description}</div>
 				)}
 			</div>
 		</Link>

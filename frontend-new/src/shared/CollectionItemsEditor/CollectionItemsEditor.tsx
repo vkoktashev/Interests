@@ -1,4 +1,4 @@
-import React, {useCallback} from 'react';
+import React, {useCallback, useState} from 'react';
 import {DragDropContext, Draggable, Droppable, DropResult} from '@hello-pangea/dnd';
 import {FaGripVertical, FaTrash} from 'react-icons/fa';
 import {useBem} from '@steroidsjs/core/hooks';
@@ -18,6 +18,7 @@ export interface ICollectionEditableItem {
 	release_year: number | null;
 	cover_url: string;
 	game_status?: string | null;
+	caption?: string;
 }
 
 interface ICollectionItemsEditorProps {
@@ -51,9 +52,12 @@ function SortableItem(props: {
 	index: number;
 	isDisabled: boolean;
 	onRemove: (item: ICollectionEditableItem) => void;
+	onCaptionChange: (item: ICollectionEditableItem, caption: string) => void;
 }) {
 	const bem = useBem('collection-items-editor');
 	const {item} = props;
+	const [isCaptionOpen, setCaptionOpen] = useState(false);
+	const captionId = `collection-caption-${item.type}-${item.order_id}`;
 	const releaseStatusBadge = item.type === 'game'
 		? getGameReleaseStatusBadge(item.game_status)
 		: null;
@@ -103,6 +107,18 @@ function SortableItem(props: {
 							)}
 						</div>
 						<div className={bem.element('item-name')}>{item.name}</div>
+						<button
+							type='button'
+							className={bem.element('caption-toggle')}
+							disabled={props.isDisabled}
+							aria-expanded={isCaptionOpen}
+							aria-controls={isCaptionOpen ? captionId : undefined}
+							aria-label={isCaptionOpen ? 'Свернуть подпись' : item.caption?.trim() ? 'Редактировать подпись' : 'Добавить подпись'}
+							title={item.caption || undefined}
+							onClick={() => setCaptionOpen(value => !value)}
+						>
+							{isCaptionOpen ? 'Свернуть подпись' : item.caption?.trim() ? `Подпись: ${item.caption}` : '+ Добавить подпись'}
+						</button>
 					</div>
 					<button
 						type='button'
@@ -113,6 +129,22 @@ function SortableItem(props: {
 					>
 						<FaTrash />
 					</button>
+					{isCaptionOpen && (
+						<label className={bem.element('caption-field')}>
+							<span>Подпись к элементу</span>
+							<textarea
+								id={captionId}
+								autoFocus
+								className={bem.element('caption-input')}
+								value={item.caption || ''}
+								maxLength={2000}
+								rows={2}
+								placeholder='Необязательная подпись'
+								disabled={props.isDisabled}
+								onChange={event => props.onCaptionChange(item, event.target.value)}
+							/>
+						</label>
+					)}
 				</div>
 			)}
 		</Draggable>
@@ -125,6 +157,7 @@ function SortableList(props: {
 	items: ICollectionEditableItem[];
 	isDisabled: boolean;
 	onRemove: (item: ICollectionEditableItem) => void;
+	onCaptionChange: (item: ICollectionEditableItem, caption: string) => void;
 }) {
 	const bem = useBem('collection-items-editor');
 
@@ -143,6 +176,7 @@ function SortableList(props: {
 							index={index}
 							isDisabled={props.isDisabled}
 							onRemove={props.onRemove}
+							onCaptionChange={props.onCaptionChange}
 						/>
 					))}
 					{provided.placeholder}
@@ -153,6 +187,12 @@ function SortableList(props: {
 }
 
 function CollectionItemsEditor(props: ICollectionItemsEditorProps) {
+	const onCaptionChange = (changedItem: ICollectionEditableItem, caption: string) => {
+		props.onChange(props.items.map(item =>
+			item.type === changedItem.type && item.order_id === changedItem.order_id
+				? {...item, caption}
+				: item));
+	};
 	const bem = useBem('collection-items-editor');
 	const onDragEnd = useCallback((result: DropResult) => {
 		if (!result.destination || result.destination.index === result.source.index) {
@@ -201,6 +241,7 @@ function CollectionItemsEditor(props: ICollectionItemsEditorProps) {
 									items={groupItems}
 									isDisabled={!!props.isDisabled}
 									onRemove={props.onRemove}
+									onCaptionChange={onCaptionChange}
 								/>
 							</section>
 						);
@@ -213,6 +254,7 @@ function CollectionItemsEditor(props: ICollectionItemsEditorProps) {
 					items={props.items}
 					isDisabled={!!props.isDisabled}
 					onRemove={props.onRemove}
+					onCaptionChange={onCaptionChange}
 				/>
 			)}
 		</DragDropContext>

@@ -112,6 +112,17 @@
         padding: 0.85rem;
     }
 
+    &__description {
+        @include body2;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba($newBackground3, 0.65);
+        color: $newText2;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
     &__title-row {
         display: flex;
         align-items: flex-start;

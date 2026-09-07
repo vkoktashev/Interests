@@ -34,6 +34,7 @@ interface ICollectionItem {
 	cover_url: string;
 	user_status?: string;
 	game_status?: string | null;
+	caption?: string;
 }
 
 interface ICollectionItems {
@@ -45,6 +46,7 @@ interface ICollectionItems {
 interface ICollectionDetail {
 	id: number;
 	title: string;
+	description?: string;
 	is_subscribed: boolean;
 	display_mode: TDisplayMode;
 	privacy: TPrivacy;
@@ -140,40 +142,43 @@ function CollectionItemCard({item}: {item: ICollectionItem}) {
 		: null;
 
 	return (
-		<Link
-			className={bem.element('item')}
-			toRoute={itemRoute.route}
-			toRouteParams={itemRoute.params}
-			aria-label={item.name || 'Без названия'}
-		>
-			<div className={bem.element('item-cover')}>
-				{item.cover_url ? (
-					<img className={bem.element('item-image')} src={item.cover_url} alt={item.name} />
-				) : (
-					<div className={bem.element('item-placeholder')}>
-						{item.name?.charAt(0).toUpperCase() || '?'}
-					</div>
-				)}
-			</div>
-			{!!item.user_status && (
-				<StatusBadge
-					className={bem.element('item-status')}
-					label={item.user_status}
-					tone={statusTone || undefined}
-				/>
-			)}
-			{releaseStatusBadge && (
-				<StatusBadge
-					className={bem.element('item-release-status')}
-					label={releaseStatusBadge.label}
-					tone={releaseStatusBadge.tone}
-					size='sm'
-				/>
-			)}
-			<div className={bem.element('item-tooltip')} role='tooltip'>
-				{item.name || 'Без названия'}
-			</div>
-		</Link>
+		<article className={bem.element('item', {captioned: !!item.caption})}>
+			<Link
+				className={bem.element('item-link')}
+				toRoute={itemRoute.route}
+				toRouteParams={itemRoute.params}
+				aria-label={item.name || 'Без названия'}
+			>
+				<div className={bem.element('item-cover')}>
+					{item.cover_url ? (
+						<img className={bem.element('item-image')} src={item.cover_url} alt={item.name} />
+					) : (
+						<div className={bem.element('item-placeholder')}>
+							{item.name?.charAt(0).toUpperCase() || '?'}
+						</div>
+					)}
+					{!!item.user_status && (
+						<StatusBadge
+							className={bem.element('item-status')}
+							label={item.user_status}
+							tone={statusTone || undefined}
+						/>
+					)}
+					{releaseStatusBadge && (
+						<StatusBadge
+							className={bem.element('item-release-status')}
+							label={releaseStatusBadge.label}
+							tone={releaseStatusBadge.tone}
+							size='sm'
+						/>
+					)}
+				</div>
+				{!!item.caption && <div className={bem.element('item-caption')}>{item.caption}</div>}
+				<div className={bem.element('item-tooltip')} role='tooltip'>
+					{item.name || 'Без названия'}
+				</div>
+			</Link>
+		</article>
 	);
 }
 
@@ -402,6 +407,10 @@ function CollectionPage() {
 					)}
 				</div>
 			</header>
+
+			{!!collection.description?.trim() && (
+				<div className={bem.element('description')}>{collection.description}</div>
+			)}
 
 			{!!collection.progress?.total && collection.progress.percent !== null && (
 				<div className={bem.element('progress')}>
