@@ -7,6 +7,7 @@
 
     &__toolbar {
         display: flex;
+        flex-wrap: wrap;
         align-items: flex-end;
         justify-content: space-between;
         gap: 1rem;
@@ -21,190 +22,23 @@
         width: 260px;
     }
 
+    &__search-field {
+        flex: 1 1 240px;
+        max-width: 420px;
+        min-width: 0;
+    }
+
+    &__toolbar-actions {
+        display: flex;
+        align-items: flex-end;
+        gap: 0.75rem;
+        margin-left: auto;
+    }
+
     &__grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 1rem;
-    }
-
-    &__card {
-        display: block;
-        min-width: 0;
-        overflow: hidden;
-        border: 1px solid rgba($newBackground3, 0.65);
-        border-radius: 0.9rem;
-        background-color: mix($newBackground3, $newBackground2, 32%);
-        color: inherit;
-        text-decoration: none;
-        transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
-
-        &.AppButtonView_link {
-            display: block;
-            width: 100%;
-        }
-
-        .AppButtonView__link,
-        .AppButtonView__text,
-        .ButtonView__link,
-        .ButtonView__text {
-            display: block;
-            width: 100%;
-            color: inherit;
-        }
-
-        &:hover {
-            background-color: mix($newBackground3, $newBackground2, 42%);
-            border-color: rgba($newAccent2, 0.5);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 24px rgba($newBackground1, 0.32);
-        }
-
-        &:hover .profile-collections__cover-image {
-            transform: scale(1.025);
-        }
-    }
-
-    &__covers {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        grid-template-rows: 1fr;
-        gap: 0.5rem;
-        aspect-ratio: 2 / 1;
-        padding: 0.6rem;
-        overflow: hidden;
-        background: linear-gradient(145deg, $newBackground1, rgba($newBackground3, 0.7));
-
-        &_single {
-            grid-template-columns: minmax(0, 32%);
-            justify-content: center;
-        }
-
-        &_pair {
-            grid-template-columns: repeat(2, minmax(0, 32%));
-            justify-content: center;
-        }
-
-        &_empty {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-    }
-
-    &__cover {
-        min-width: 0;
-        min-height: 0;
-        overflow: hidden;
-        border-radius: 0.55rem;
-        background-color: $newBackground2;
-        box-shadow: 0 4px 12px rgba($newBackground1, 0.3);
-    }
-
-    &__cover-image,
-    &__cover-placeholder {
-        width: 100%;
-        height: 100%;
-    }
-
-    &__cover-image {
-        display: block;
-        object-fit: cover;
-        object-position: center;
-        transition: transform 0.2s ease;
-    }
-
-    &__cover-placeholder,
-    &__covers-placeholder {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(145deg, rgba($newAccent2, 0.18), rgba($newAccent3, 0.35));
-        color: $newText2;
-    }
-
-    &__cover-placeholder {
-        font-size: 1.8rem;
-        font-weight: 600;
-    }
-
-    &__covers-placeholder {
-        @include body2;
-        width: 100%;
-        height: 100%;
-    }
-
-    &__card-body {
-        padding: 0.85rem;
-    }
-
-    &__title-row {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 0.6rem;
-    }
-
-    &__title {
-        @include headline6;
-        min-width: 0;
-        margin: 0;
-        overflow-wrap: anywhere;
-        color: $newText3;
-    }
-
-    &__privacy {
-        @include caption;
-        flex-shrink: 0;
-        padding: 0.2rem 0.45rem;
-        border-radius: 999px;
-        background-color: rgba($newBackground3, 0.55);
-        color: $newText2;
-    }
-
-    &__author {
-        @include caption;
-        margin-top: 0.35rem;
-        color: $newText2;
-    }
-
-    &__summary-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        margin-top: 0.35rem;
-    }
-
-    &__summary {
-        @include body2;
-        min-width: 0;
-        overflow: hidden;
-        color: $newText2;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    &__progress-value {
-        @include caption;
-        flex-shrink: 0;
-        color: $newText2;
-    }
-
-    &__progress {
-        margin-top: 0.45rem;
-    }
-
-    &__progress-track {
-        height: 5px;
-        overflow: hidden;
-        border-radius: 999px;
-        background-color: rgba($newBackground3, 0.6);
-    }
-
-    &__progress-fill {
-        height: 100%;
-        border-radius: inherit;
-        background-color: $newAccent2;
     }
 
     &__state,
@@ -227,8 +61,21 @@
         }
 
         &__sort-field,
+        &__search-field,
         &__create-button {
             width: 100%;
+        }
+
+        &__search-field {
+            flex: auto;
+            max-width: none;
+        }
+
+        &__toolbar-actions {
+            flex-direction: column;
+            align-items: stretch;
+            width: 100%;
+            margin-left: 0;
         }
 
         &__grid {
