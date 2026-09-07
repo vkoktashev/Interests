@@ -11,6 +11,7 @@ import NextReleaseCard from './views/NextReleaseCard/NextReleaseCard';
 import UnwatchedCard from './views/UnwatchedCard/UnwatchedCard';
 import TrendingBlock from './views/TrendingBlock/TrendingBlock';
 import CommunityPicksBlock from './views/CommunityPicksBlock/CommunityPicksBlock';
+import SystemCollectionsBlock from './views/SystemCollectionsBlock/SystemCollectionsBlock';
 
 /**
  * Основная страница приложения
@@ -43,6 +44,7 @@ export function HomePage() {
 				</div>
 			</section>
 
+			<SystemCollectionsBlock />
 			<TrendingBlock />
 			<CommunityPicksBlock />
 

@@ -154,6 +154,7 @@ class CollectionSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
+            'description',
             'author',
             'display_mode',
             'privacy',
@@ -192,6 +193,10 @@ class CollectionDetailSerializer(CollectionSerializer):
             ordered_content,
             self.context.get('progress_user'),
         )
+        captions = {
+            (item.media_type, item.object_id): item.caption
+            for item in collection.item_orders.all()
+        }
         serialized_items = []
         for media_type, object_id, item in ordered_content:
             if media_type == 'game':
@@ -227,6 +232,7 @@ class CollectionDetailSerializer(CollectionSerializer):
                     'cover_url': get_proxy_url(request, item.tmdb_poster_path),
                     'user_status': status_labels.get(media_type, {}).get(object_id),
                 }
+            serialized_item['caption'] = captions.get((media_type, object_id), '')
             serialized_items.append(serialized_item)
 
         self._serialized_items = serialized_items

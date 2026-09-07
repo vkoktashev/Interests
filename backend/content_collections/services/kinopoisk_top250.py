@@ -197,6 +197,7 @@ def _replace_collection_movies(movies):
     collection.games.clear()
     collection.shows.clear()
     collection.movies.set(movies)
+    captions = dict(collection.item_orders.filter(media_type='movie').values_list('object_id', 'caption'))
     collection.item_orders.all().delete()
     CollectionItemOrder.objects.bulk_create([
         CollectionItemOrder(
@@ -204,6 +205,7 @@ def _replace_collection_movies(movies):
             media_type=CollectionItemOrder.MEDIA_TYPE_MOVIE,
             object_id=movie.pk,
             position=position,
+            caption=captions.get(movie.pk, ''),
         )
         for position, movie in enumerate(movies)
     ])

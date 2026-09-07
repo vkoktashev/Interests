@@ -675,3 +675,91 @@
         }
     }
 }
+
+// Compact media lists on the home page.
+.home-page__section_compact {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+
+    .home-page__trending-head {
+        margin-bottom: 1rem;
+    }
+
+    .home-page__section-title {
+        margin-bottom: 0;
+    }
+
+    .home-page__trending-group {
+        gap: 0.6rem;
+
+        & + .home-page__trending-group {
+            margin-top: 1rem;
+        }
+    }
+
+    .home-page__trending-group-title {
+        @include subtitle1;
+    }
+
+    .home-page__trending-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.65rem;
+    }
+
+    .home-page__trending-card {
+        grid-template-columns: 56px minmax(0, 1fr);
+        gap: 0.65rem;
+        padding: 0.65rem;
+        border-radius: 12px;
+        box-shadow: none;
+
+        .tmdb-media-card__poster {
+            width: 56px;
+            height: 80px;
+            border-radius: 7px;
+        }
+
+        .tmdb-media-card__body {
+            gap: 0.35rem;
+        }
+
+        .tmdb-media-card__top {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 0.4rem;
+        }
+
+        .tmdb-media-card__name {
+            @include subtitle2;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            overflow: hidden;
+        }
+
+        .tmdb-media-card__meta {
+            @include caption;
+            gap: 0.2rem 0.5rem;
+        }
+
+        .tmdb-media-card__details {
+            display: none;
+        }
+    }
+
+    @media (max-width: $tablet-width) {
+        .home-page__trending-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: $mobile-width) {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+
+        .home-page__trending-grid {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+}

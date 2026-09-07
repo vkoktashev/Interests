@@ -20,6 +20,7 @@ import PersonPage from './PersonPage';
 import CollectionCreatePage from './CollectionCreatePage';
 import CollectionPage from './CollectionPage';
 import CollectionEditPage from './CollectionEditPage';
+import EditorialCollectionsPage from './EditorialCollectionsPage';
 
 export const ROUTE_ROOT = 'root';
 
@@ -40,6 +41,7 @@ export const ROUTE_SETTINGS = 'settings';
 export const ROUTE_CALENDAR = 'calendar';
 export const ROUTE_FAQ = 'faq';
 export const ROUTE_COMMUNITY_PICKS = 'community_picks';
+export const ROUTE_EDITORIAL_COLLECTIONS = 'editorial_collections';
 export const ROUTE_COLLECTION_CREATE = 'collection_create';
 export const ROUTE_COLLECTION = 'collection';
 export const ROUTE_COLLECTION_EDIT = 'collection_edit';
@@ -106,6 +108,13 @@ export default {
             path: '/community-picks',
             component: CommunityPicksPage,
             title: __('Выбор пользователей Interests'),
+            roles,
+        },
+        [ROUTE_EDITORIAL_COLLECTIONS]: {
+            exact: true,
+            path: '/editorial-collections',
+            component: EditorialCollectionsPage,
+            title: __('Подборки редакции'),
             roles,
         },
         [ROUTE_COLLECTION_CREATE]: {

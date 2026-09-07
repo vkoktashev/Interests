@@ -21,7 +21,7 @@ function TrendingBlock() {
 	const showItems = ((showsData as any)?.results || []) as ITmdbMediaCardItem[];
 
 	return (
-		<section className={bem.element('section')}>
+		<section className={bem.element('section', {compact: true})}>
 			<div className={bem.element('trending-head')}>
 				<h2 className={bem.element('section-title')}>Тренды TMDB</h2>
 				<span className={bem.element('trending-note')}>Актуальное за день</span>

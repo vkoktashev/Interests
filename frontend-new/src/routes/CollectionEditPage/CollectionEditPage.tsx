@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {Button, DropDownField, Form, InputField} from '@steroidsjs/core/ui/form';
+import {Button, DropDownField, Form, InputField, TextField} from '@steroidsjs/core/ui/form';
 import {Loader} from '@steroidsjs/core/ui/layout';
 import {goToRoute} from '@steroidsjs/core/actions/router';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
@@ -20,6 +20,7 @@ type ICollectionItem = ICollectionEditableItem;
 interface ICollectionDetail {
 	id: number;
 	title: string;
+	description?: string;
 	display_mode: TDisplayMode;
 	privacy: TPrivacy;
 	updated_at: string;
@@ -125,6 +126,7 @@ function CollectionEditPage() {
 
 	const onSubmit = useCallback(async (values: {
 		title: string;
+		description?: string;
 		display_mode: TDisplayMode;
 		privacy: TPrivacy;
 	}) => {
@@ -137,6 +139,7 @@ function CollectionEditPage() {
 		try {
 			await http.send('PATCH', `/collections/${collection.id}/`, {
 				title: values.title.trim(),
+				description: (values.description || '').trim(),
 				display_mode: values.display_mode,
 				privacy: values.privacy,
 			});
@@ -144,12 +147,14 @@ function CollectionEditPage() {
 				items: items.map(item => ({
 					media_type: item.type,
 					object_id: item.order_id,
+					caption: item.caption || '',
 				})),
 			});
 		} catch (requestError) {
 			const responseData = requestError?.response?.data;
 			setError(
 				responseData?.title?.[0]
+				|| responseData?.description?.[0]
 				|| responseData?.error
 				|| responseData?.detail
 				|| 'Не удалось сохранить подборку',
@@ -190,6 +195,7 @@ function CollectionEditPage() {
 					formId={FORM_ID}
 					initialValues={{
 						title: collection.title,
+						description: collection.description || '',
 						display_mode: collection.display_mode,
 						privacy: collection.privacy,
 					}}
@@ -205,6 +211,15 @@ function CollectionEditPage() {
 								className={bem.element('field')}
 								inputProps={{maxLength: 200, autoComplete: 'off'}}
 								required
+							/>
+						</div>
+						<div className={bem.element('wide-field')}>
+							<TextField
+								attribute='description'
+								label='Описание'
+								placeholder='О чём эта подборка'
+								className={bem.element('field')}
+								inputProps={{maxLength: 2000, rows: 3}}
 							/>
 						</div>
 						<DropDownField

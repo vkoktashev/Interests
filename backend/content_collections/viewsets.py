@@ -41,7 +41,7 @@ class CollectionViewSet(
     permission_classes = (IsAuthenticated,)
 
     def get_permissions(self):
-        permission_classes = (AllowAny,) if self.action in ('list', 'retrieve') else self.permission_classes
+        permission_classes = (AllowAny,) if self.action in ('list', 'retrieve', 'system') else self.permission_classes
         return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
@@ -117,6 +117,17 @@ class CollectionViewSet(
         if progress_error:
             return progress_error
         return Response(self.get_serializer(collection).data)
+
+    @action(detail=False, methods=['get'])
+    def system(self, request, *args, **kwargs):
+        collections = (
+            Collection.objects
+            .filter(author__isnull=True, privacy=Collection.PRIVACY_PUBLIC)
+            .select_related('author')
+            .prefetch_related('games', 'movies', 'shows', 'item_orders')
+            .order_by('-updated_at', '-id')
+        )
+        return Response(self.get_serializer(collections, many=True).data)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

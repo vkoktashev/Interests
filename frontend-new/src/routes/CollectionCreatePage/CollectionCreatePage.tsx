@@ -1,5 +1,5 @@
 import React, {useCallback, useState} from 'react';
-import {Button, DropDownField, Form, InputField} from '@steroidsjs/core/ui/form';
+import {Button, DropDownField, Form, InputField, TextField} from '@steroidsjs/core/ui/form';
 import {useBem, useComponents, useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getFormValues} from '@steroidsjs/core/reducers/form';
@@ -54,11 +54,13 @@ function CollectionCreatePage() {
 		try {
 			await http.post('/collections/', {
 				title: values.title.trim(),
+				description: (values.description || '').trim(),
 				display_mode: values.display_mode,
 				privacy: values.privacy,
 				items: items.map(item => ({
 					media_type: item.type,
 					object_id: item.order_id,
+					caption: item.caption || '',
 				})),
 			});
 			dispatch(formReset(FORM_ID));
@@ -67,6 +69,7 @@ function CollectionCreatePage() {
 		} catch (requestError) {
 			const responseData = requestError?.response?.data;
 			const errorMessage = responseData?.title?.[0]
+				|| responseData?.description?.[0]
 				|| responseData?.detail
 				|| responseData?.error
 				|| 'Не удалось создать подборку';
@@ -102,7 +105,7 @@ function CollectionCreatePage() {
 				{!!user?.id && (
 					<Form
 						formId={FORM_ID}
-						initialValues={{title: '', display_mode: 'mixed', privacy: 'public'}}
+						initialValues={{title: '', description: '', display_mode: 'mixed', privacy: 'public'}}
 						onSubmit={onSubmit}
 						className={bem.element('form')}
 						useRedux
@@ -120,6 +123,15 @@ function CollectionCreatePage() {
 										maxLength: 200,
 									}}
 									required
+								/>
+							</div>
+							<div className={bem.element('wide-field')}>
+								<TextField
+									attribute='description'
+									label='Описание'
+									placeholder='О чём эта подборка'
+									className={bem.element('field')}
+									inputProps={{maxLength: 2000, rows: 3}}
 								/>
 							</div>
 							<DropDownField
