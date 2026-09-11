@@ -11,6 +11,7 @@ import LazyTrailersBlock from '../../shared/LazyTrailersBlock';
 import PersonCard, {IPersonCardItem} from '../../shared/PersonCard';
 import CastModal from '../../modals/CastModal';
 import AddToCollectionButton from '../../shared/AddToCollectionButton';
+import ItemCollectionsBlock from '../../shared/ItemCollectionsBlock';
 
 import "./movie-page.scss";
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
@@ -425,21 +426,27 @@ export function MoviePage() {
 										<FriendsActivity info={friendsInfo} />
 									) : (
 										<div className={bem.element('friends-empty')}>
-										Никто из друзей ещё не смотрел этот фильм
-									</div>
-								)}
-							</section>
+											Никто из друзей ещё не смотрел этот фильм
+										</div>
+									)}
+								</section>
 
-							<section className={bem.element('content-card', {friends: true})} hidden={!user}>
-								<h4 className={bem.element('friends-header')}>Отзывы пользователей</h4>
-								{usersInfo?.length > 0 ? (
-									<FriendsActivity info={usersInfo} />
-								) : (
-									<div className={bem.element('friends-empty')}>
-										Другие пользователи ещё не смотрели этот фильм
-									</div>
-								)}
-							</section>
+								<section className={bem.element('content-card', {friends: true})} hidden={!user}>
+									<h4 className={bem.element('friends-header')}>Отзывы пользователей</h4>
+									{usersInfo?.length > 0 ? (
+										<FriendsActivity info={usersInfo} />
+									) : (
+										<div className={bem.element('friends-empty')}>
+											Другие пользователи ещё не смотрели этот фильм
+										</div>
+									)}
+								</section>
+
+								<ItemCollectionsBlock
+									className={bem.element('content-card', {collections: true})}
+									mediaType='movie'
+									objectId={movie.object_id}
+								/>
 
 							</div>
 						</div>

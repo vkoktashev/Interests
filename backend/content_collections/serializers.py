@@ -7,6 +7,22 @@ from shows.models import UserShow
 from .models import Collection
 
 
+def serialize_collection_author(collection):
+    if collection.author_id is None:
+        return {
+            'id': None,
+            'username': 'Система',
+            'gender': None,
+            'is_system': True,
+        }
+    return {
+        'id': collection.author_id,
+        'username': collection.author.username,
+        'gender': collection.author.gender,
+        'is_system': False,
+    }
+
+
 def get_ordered_content(collection):
     media_groups = (
         [('game', game.pk, game) for game in collection.games.all()],
@@ -83,19 +99,7 @@ class CollectionSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_author(collection):
-        if collection.author_id is None:
-            return {
-                'id': None,
-                'username': 'Система',
-                'gender': None,
-                'is_system': True,
-            }
-        return {
-            'id': collection.author_id,
-            'username': collection.author.username,
-            'gender': collection.author.gender,
-            'is_system': False,
-        }
+        return serialize_collection_author(collection)
 
     def get_contains_item(self, collection):
         return collection.pk in self.context.get('contained_collection_ids', set())
@@ -254,3 +258,19 @@ class CollectionDetailSerializer(CollectionSerializer):
             'items',
             'ordered_items',
         )
+
+
+class ContainingCollectionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(source='collection_id')
+    title = serializers.CharField(source='collection.title')
+    author = serializers.SerializerMethodField()
+    caption = serializers.CharField()
+    position = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_author(item_order):
+        return serialize_collection_author(item_order.collection)
+
+    @staticmethod
+    def get_position(item_order):
+        return item_order.position + 1

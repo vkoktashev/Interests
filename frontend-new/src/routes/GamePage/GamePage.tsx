@@ -21,6 +21,7 @@ import LoginForm from '../../modals/LoginForm';
 import MediaGalleryBlock from '../../shared/MediaGalleryBlock';
 import GamePrices from './views/GamePrices';
 import AddToCollectionButton from '../../shared/AddToCollectionButton';
+import ItemCollectionsBlock from '../../shared/ItemCollectionsBlock';
 import StatusBadge from '../../shared/StatusBadge';
 import {getGameReleaseStatusBadge} from '../../shared/mediaStatus';
 import {GAME_TYPE_LABELS} from '../SearchPage/views/searchTypes';
@@ -621,6 +622,12 @@ export function GamePage() {
 									</div>
 								)}
 							</section>
+
+							<ItemCollectionsBlock
+								className={bem.element('content-card', {collections: true})}
+								mediaType='game'
+								objectId={game.id}
+							/>
 						</div>
 						</div>
 					</div>
