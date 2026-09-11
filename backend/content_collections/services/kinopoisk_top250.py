@@ -6,7 +6,7 @@ from django.db import transaction
 from integrations.exceptions import ExternalUnavailableError
 from integrations.poiskkino import POISKKINO_PROVIDER, get_kinopoisk_top250
 from integrations.tmdb import TmdbNotFoundError
-from movies.functions import find_tmdb_movie_by_imdb_id
+from movies.functions import find_tmdb_movie_by_imdb_id, get_tmdb_movie
 from movies.models import Movie
 from movies.services.catalog import MovieNotFoundError, get_movie_for_detail
 from movies.services.discovery import search_tmdb_movies
@@ -35,11 +35,7 @@ def sync_kinopoisk_top250():
     skipped_count = 0
     loaded_count = 0
     for ranked_movie in ranked_movies:
-        tmdb_id = (
-            ranked_movie.tmdb_id
-            or _find_tmdb_id_by_imdb(ranked_movie.imdb_id)
-            or _find_tmdb_id_by_title(ranked_movie)
-        )
+        tmdb_id = _resolve_tmdb_id(ranked_movie)
         if tmdb_id is None or tmdb_id in seen_tmdb_ids:
             skipped_count += 1
             logger.warning(
@@ -89,6 +85,58 @@ def sync_kinopoisk_top250():
         'loaded': loaded_count,
         'skipped': skipped_count,
     }
+
+
+def _resolve_tmdb_id(ranked_movie):
+    if ranked_movie.tmdb_id is not None:
+        if not ranked_movie.imdb_id:
+            return ranked_movie.tmdb_id
+
+        direct_tmdb_imdb_id = _get_tmdb_imdb_id(ranked_movie.tmdb_id)
+        if direct_tmdb_imdb_id == ranked_movie.imdb_id:
+            return ranked_movie.tmdb_id
+
+        fallback_tmdb_id = (
+            _find_tmdb_id_by_imdb(ranked_movie.imdb_id)
+            or _find_tmdb_id_by_title(ranked_movie)
+        )
+        if fallback_tmdb_id is not None:
+            if fallback_tmdb_id != ranked_movie.tmdb_id:
+                logger.warning(
+                    'kinopoisk_top250: external id mismatch kinopoisk_id=%s imdb_id=%s '
+                    'poiskkino_tmdb_id=%s tmdb_imdb_id=%s resolved_tmdb_id=%s',
+                    ranked_movie.kinopoisk_id,
+                    ranked_movie.imdb_id,
+                    ranked_movie.tmdb_id,
+                    direct_tmdb_imdb_id,
+                    fallback_tmdb_id,
+                )
+            return fallback_tmdb_id
+
+        return ranked_movie.tmdb_id
+
+    return (
+        _find_tmdb_id_by_imdb(ranked_movie.imdb_id)
+        or _find_tmdb_id_by_title(ranked_movie)
+    )
+
+
+def _get_tmdb_imdb_id(tmdb_id):
+    movie = Movie.objects.filter(tmdb_id=tmdb_id).only('imdb_id').first()
+    if movie is not None and movie.imdb_id:
+        return movie.imdb_id
+
+    try:
+        movie_data = get_tmdb_movie(tmdb_id)
+    except TmdbNotFoundError:
+        return None
+    if not isinstance(movie_data, dict):
+        return None
+
+    imdb_id = movie_data.get('imdb_id')
+    if imdb_id:
+        return str(imdb_id).strip() or None
+    return None
 
 
 def _find_tmdb_id_by_imdb(imdb_id):
