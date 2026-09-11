@@ -14,9 +14,14 @@ from .selectors import (
     get_contained_collection_ids,
     get_content_search_payload,
     get_user,
+    get_visible_collection_item_orders,
     search_content,
 )
-from .serializers import CollectionDetailSerializer, CollectionSerializer
+from .serializers import (
+    CollectionDetailSerializer,
+    CollectionSerializer,
+    ContainingCollectionSerializer,
+)
 from .services.collections import (
     CollectionInputError,
     CollectionItemNotFoundError,
@@ -41,7 +46,12 @@ class CollectionViewSet(
     permission_classes = (IsAuthenticated,)
 
     def get_permissions(self):
-        permission_classes = (AllowAny,) if self.action in ('list', 'retrieve', 'system') else self.permission_classes
+        permission_classes = (AllowAny,) if self.action in (
+            'list',
+            'retrieve',
+            'system',
+            'containing',
+        ) else self.permission_classes
         return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
@@ -128,6 +138,31 @@ class CollectionViewSet(
             .order_by('-updated_at', '-id')
         )
         return Response(self.get_serializer(collections, many=True).data)
+
+    @action(detail=False, methods=['get'])
+    def containing(self, request, *args, **kwargs):
+        media_type = request.query_params.get('media_type')
+        item, relation_name, error = get_media_item(
+            media_type,
+            request.query_params.get('object_id'),
+        )
+        if error:
+            response_status = (
+                status.HTTP_404_NOT_FOUND
+                if error == 'Контент не найден.'
+                else status.HTTP_400_BAD_REQUEST
+            )
+            return Response({'error': error}, status=response_status)
+
+        item_orders = get_visible_collection_item_orders(
+            item,
+            media_type,
+            relation_name,
+            request.user,
+        )
+        return Response(
+            ContainingCollectionSerializer(item_orders, many=True).data,
+        )
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

@@ -9,7 +9,7 @@ from shows.models import Show, UserShow
 from users.models import User
 from utils.constants import TYPE_GAME, TYPE_MOVIE, TYPE_SHOW
 
-from .models import Collection
+from .models import Collection, CollectionItemOrder
 
 
 ALLOWED_ORDERING = ('created_at', '-created_at', 'updated_at', '-updated_at')
@@ -89,6 +89,47 @@ def get_collection_queryset(action, request_user, author=None, progress_user=Non
 
 def get_contained_collection_ids(item, author):
     return set(item.collections.filter(author=author).values_list('pk', flat=True))
+
+
+def get_visible_collection_item_orders(item, media_type, relation_name, request_user):
+    queryset = (
+        CollectionItemOrder.objects
+        .filter(
+            media_type=media_type,
+            object_id=item.pk,
+            **{f'collection__{relation_name}': item},
+        )
+        .select_related('collection__author')
+    )
+
+    if request_user.is_authenticated:
+        queryset = queryset.filter(
+            Q(collection__privacy=Collection.PRIVACY_PUBLIC)
+            | Q(collection__author=request_user)
+        )
+        available_author_ids = User.objects.filter(
+            Q(pk=request_user.pk)
+            | Q(privacy=User.PRIVACY_ALL)
+            | Q(
+                privacy=User.PRIVACY_FOLLOWED,
+                user__followed_user=request_user,
+                user__is_following=True,
+            )
+        ).values('pk')
+    else:
+        queryset = queryset.filter(collection__privacy=Collection.PRIVACY_PUBLIC)
+        available_author_ids = User.objects.filter(
+            privacy=User.PRIVACY_ALL,
+        ).values('pk')
+
+    return (
+        queryset
+        .filter(
+            Q(collection__author_id__in=available_author_ids)
+            | Q(collection__author__isnull=True)
+        )
+        .order_by('-collection__updated_at', '-collection_id')
+    )
 
 
 def search_content(query):

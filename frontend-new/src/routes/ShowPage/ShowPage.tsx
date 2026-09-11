@@ -14,6 +14,7 @@ import ScoreBlock from '../../shared/ScoreBlock';
 import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
 import LazyTrailersBlock from '../../shared/LazyTrailersBlock';
 import AddToCollectionButton from '../../shared/AddToCollectionButton';
+import ItemCollectionsBlock from '../../shared/ItemCollectionsBlock';
 import PersonCard, {IPersonCardItem} from '../../shared/PersonCard';
 import CastModal from '../../modals/CastModal';
 import formatDuration from '../../shared/formatDuration';
@@ -462,6 +463,12 @@ function ShowPage(props) {
                                         </div>
                                     )}
                                 </section>
+
+                                <ItemCollectionsBlock
+                                    className={bem.element('content-card', {collections: true})}
+                                    mediaType='show'
+                                    objectId={show.object_id}
+                                />
 
                             </div>
                         </div>
