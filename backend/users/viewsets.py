@@ -10,6 +10,7 @@ from users.models import User, UserFollow
 from users.selectors import (
     InvalidRandomCountError,
     get_random_entries,
+    get_random_partners,
     get_release_calendar,
     get_user_profile_payload,
 )
@@ -143,7 +144,26 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         )
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def random_partners(self, request):
+        return Response(get_random_partners(request.user, request.GET.get('query', '').strip()))
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def random(self, request):
+        other_user = None
+        other_user_id = request.GET.get('otherUserId')
+        if other_user_id:
+            try:
+                other_user_id = int(other_user_id)
+            except (TypeError, ValueError):
+                return Response({ERROR: ID_VALUE_ERROR}, status=status.HTTP_400_BAD_REQUEST)
+            if other_user_id == request.user.id:
+                return Response({ERROR: 'Выберите другого пользователя'}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                other_user = User.objects.get(id=other_user_id, is_active=True)
+            except User.DoesNotExist:
+                return Response({ERROR: USER_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            if not is_user_available(request.user, other_user):
+                return Response({ERROR: 'Профиль пользователя недоступен'}, status=status.HTTP_403_FORBIDDEN)
         try:
             entries = get_random_entries(
                 request,
@@ -151,6 +171,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 request.GET.get('count', 10),
                 ended_only=request.GET.get('endedOnly', '') == 'true',
                 all_from_db=request.GET.get('allFromDb', '') == 'true',
+                other_user=other_user,
             )
         except InvalidRandomCountError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
