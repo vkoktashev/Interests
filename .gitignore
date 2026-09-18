@@ -10,3 +10,4 @@ frontend-new/build/
 ./frontend-new/.env
 frontend-dist/
 .understand-anything/
+backend/image_cache/

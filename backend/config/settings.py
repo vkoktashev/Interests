@@ -233,6 +233,14 @@ else:
         },
     }
 
+CACHES['images'] = {
+    'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+    'LOCATION': os.environ.get('IMAGE_CACHE_DIR', os.path.join(BASE_DIR, 'image_cache')),
+    'OPTIONS': {
+        'MAX_ENTRIES': 100000,
+    },
+}
+
 CELERY_LOCAL_FALLBACK = DEBUG and CACHES['default']['BACKEND'] == 'django.core.cache.backends.locmem.LocMemCache'
 
 LANGUAGE_CODE = 'ru-ru'
