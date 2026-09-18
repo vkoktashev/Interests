@@ -4,7 +4,7 @@ from time import time
 from urllib.parse import urlparse
 
 import requests
-from django.core.cache import cache
+from django.core.cache import caches
 from requests.exceptions import InvalidSchema, MissingSchema, RequestException
 
 
@@ -42,7 +42,8 @@ class ImageUpstreamStatusError(Exception):
 def get_image(url):
     _validate_image_url(url)
     cache_key = _get_cache_key(url)
-    cached_image = cache.get(cache_key)
+    image_cache = caches['images']
+    cached_image = image_cache.get(cache_key)
     if cached_image:
         return cached_image, 'HIT'
 
@@ -77,7 +78,7 @@ def get_image(url):
         'etag': f'"{hashlib.sha256(content).hexdigest()}"',
         'last_modified_ts': int(time()),
     }
-    cache.set(cache_key, image_data, IMAGE_CACHE_TTL_SECONDS)
+    image_cache.set(cache_key, image_data, IMAGE_CACHE_TTL_SECONDS)
     return image_data, 'MISS'
 
 

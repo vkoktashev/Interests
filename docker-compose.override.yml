@@ -1,0 +1,7 @@
+services:
+  back:
+    volumes:
+      - image_cache:/code/image_cache
+
+volumes:
+  image_cache:
