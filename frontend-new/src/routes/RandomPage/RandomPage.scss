@@ -111,6 +111,12 @@
     background: var(--rp-line);
   }
 
+  &__partner-field,
+  &__partner-select {
+    width: 100%;
+    min-width: 0;
+  }
+
   &__checkbox-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

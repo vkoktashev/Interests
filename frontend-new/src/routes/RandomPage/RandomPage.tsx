@@ -2,7 +2,7 @@ import React, {useState, useEffect, useCallback, useRef, useMemo} from 'react';
 import RandomCard from './views/RandomCard';
 import {useBem, useComponents, useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import { getUser } from '@steroidsjs/core/reducers/auth';
-import {Button, CheckboxField, Form} from '@steroidsjs/core/ui/form';
+import {Button, CheckboxField, DropDownField, Form} from '@steroidsjs/core/ui/form';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
 import "./RandomPage.scss";
 
@@ -47,6 +47,7 @@ function RandomPage() {
     const {http} = useComponents();
     const bem = useBem('RandomPage');
     const [winner, setWinner] = useState<null | any>(null);
+    const [partnerId, setPartnerId] = useState<number | null>(null);
     const [isLoading, setLoading] = useState(false);
     const [isRevealing, setRevealing] = useState(false);
     const [revealKey, setRevealKey] = useState(0);
@@ -58,6 +59,10 @@ function RandomPage() {
     const resultRef = useRef<HTMLDivElement | null>(null);
     const reelTrackRef = useRef<HTMLDivElement | null>(null);
     const spinOffsetRef = useRef(0);
+    const partnerDataProvider = useMemo(() => ({
+        action: '/users/user/random_partners/',
+        onSearch: (action: string, params: Record<string, unknown>) => http.get(action, params),
+    }), [http]);
 
     const onSubmit = useCallback((values: any) => {
         if (!values?.games && !values?.movies && !values?.shows) {
@@ -78,11 +83,10 @@ function RandomPage() {
             }
             const skipAnimation = !!values.skipAnimation;
             const params = {
-                categories: Object.entries(values)
-                    .filter(([key, value]) => key !== 'endedOnly' && key !== 'allFromDb' && key !== 'skipAnimation' && value)
-                    .map(([key]) => key),
+                categories: categoriesEnum.filter(category => values[category.id]).map(category => category.id),
                 endedOnly: values.endedOnly,
-                allFromDb: values.allFromDb,
+                allFromDb: values.otherUserId ? false : values.allFromDb,
+                ...(values.otherUserId ? {otherUserId: values.otherUserId} : {}),
             };
             if (!params.categories.length) {
                 dispatch(showNotification('Выберите хотя бы одну категорию', 'warning'));
@@ -99,7 +103,10 @@ function RandomPage() {
                         setImageLoaded(true);
                         setReelPhase('done');
                         setLoading(false);
-                        dispatch(showNotification('Подходящих вариантов не найдено', 'warning'));
+                        dispatch(showNotification(
+                            values.otherUserId ? 'Общих планов не найдено' : 'Подходящих вариантов не найдено',
+                            'warning',
+                        ));
                         return;
                     }
                     setCandidates(list);
@@ -269,6 +276,34 @@ function RandomPage() {
                     <div className={bem.element('divider')} />
                     <div className={bem.element('group')}>
                         <div className={bem.element('label')}>
+                            Перекрёстный режим
+                        </div>
+                        <DropDownField
+                            attribute='otherUserId'
+                            label='Второй пользователь'
+                            placeholder='Выберите пользователя'
+                            searchPlaceholder='Найти по имени'
+                            dataProvider={partnerDataProvider}
+                            autoComplete
+                            autoFetch
+                            isSearchAutoFocus
+                            disabled={!user}
+                            isFetchDisabled={!user}
+                            showReset
+                            maxHeight={260}
+                            className={bem.element('partner-select')}
+                            fieldLayoutClassName={bem.element('partner-field')}
+                            onChange={(selectedId: number | null) => setPartnerId(selectedId || null)}
+                        />
+                        {partnerId && (
+                            <div className={bem.element('hint')}>
+                                Выберем из игр, фильмов и сериалов, которые оба добавили в планы.
+                            </div>
+                        )}
+                    </div>
+                    <div className={bem.element('divider')} />
+                    <div className={bem.element('group')}>
+                        <div className={bem.element('label')}>
                             Параметры поиска
                         </div>
                         <CheckboxField
@@ -276,11 +311,13 @@ function RandomPage() {
                             label={__('Только завершенные сериалы')}
                             className={bem.element('checkbox')}
                         />
-                        <CheckboxField
-                            attribute='allFromDb'
-                            label={__('Искать по всей базе (неигранные/непросмотренные)')}
-                            className={bem.element('checkbox')}
-                        />
+                        {!partnerId && (
+                            <CheckboxField
+                                attribute='allFromDb'
+                                label={__('Искать по всей базе (неигранные/непросмотренные)')}
+                                className={bem.element('checkbox')}
+                            />
+                        )}
                     </div>
                     <div className={bem.element('divider')} />
                     <CheckboxField

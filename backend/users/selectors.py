@@ -118,7 +118,7 @@ def get_release_calendar(request, user=None):
     return dict(sorted(calendar.items()))
 
 
-def get_random_entries(request, categories, count_value, ended_only=False, all_from_db=False):
+def get_random_entries(request, categories, count_value, ended_only=False, all_from_db=False, other_user=None):
     try:
         count = int(count_value)
     except (TypeError, ValueError) as error:
@@ -126,15 +126,20 @@ def get_random_entries(request, categories, count_value, ended_only=False, all_f
     if count < 1 or count > 100:
         raise InvalidRandomCountError
 
+    if other_user is not None:
+        all_from_db = False
+
     today = datetime.today().date()
-    games = _get_random_games(request.user, today, all_from_db) if 'games' in categories else None
-    movies = _get_random_movies(request.user, today, all_from_db) if 'movies' in categories else None
-    shows = _get_random_shows(request.user, today, ended_only, all_from_db) \
+    games = _get_random_games(request.user, today, all_from_db, other_user) if 'games' in categories else None
+    movies = _get_random_movies(request.user, today, all_from_db, other_user) if 'movies' in categories else None
+    shows = _get_random_shows(request.user, today, ended_only, all_from_db, other_user) \
         if 'shows' in categories else None
     games_count_available = len(games) if games is not None else 0
     movies_count_available = len(movies) if movies is not None else 0
     shows_count_available = len(shows) if shows is not None else 0
     total = games_count_available + movies_count_available + shows_count_available
+    if not total:
+        return []
     choices = random.choices(
         ['game', 'movie', 'show'],
         weights=(
@@ -169,6 +174,23 @@ def search_users(query):
     users = User.objects.annotate(similarity=TrigramSimilarity('username', query)) \
         .filter(similarity__gt=0.1).order_by('-similarity')
     return UserSerializer(users, many=True).data
+
+
+def get_random_partners(user, query=''):
+    followed_by_user_ids = UserFollow.objects.filter(
+        followed_user=user,
+        is_following=True,
+    ).values('user_id')
+    users = User.objects.filter(is_active=True).filter(
+        Q(privacy=User.PRIVACY_ALL)
+        | Q(privacy=User.PRIVACY_FOLLOWED, id__in=followed_by_user_ids)
+    ).exclude(id=user.id)
+    if query:
+        users = users.filter(username__icontains=query[:150])
+    return [
+        {'id': item['id'], 'label': item['username']}
+        for item in users.order_by('username').values('id', 'username')[:50]
+    ]
 
 
 def _get_user_shows(user):
@@ -310,7 +332,7 @@ def _order_game_calendar_releases(games):
     )).order_by('release_date', 'calendar_release_precision', 'igdb_name', 'id')
 
 
-def _get_random_games(user, today, all_from_db):
+def _get_random_games(user, today, all_from_db, other_user=None):
     if all_from_db:
         return Game.objects.annotate(release_date=F('igdb_release_date')) \
             .filter(release_date__lte=today).exclude(
@@ -321,27 +343,39 @@ def _get_random_games(user, today, all_from_db):
                     UserGame.STATUS_STOPPED,
                 ],
             ).distinct()
-    return UserGame.objects.annotate(game_release_date=F('game__igdb_release_date')).filter(
+    games = UserGame.objects.annotate(game_release_date=F('game__igdb_release_date')).filter(
         user=user,
         status=UserGame.STATUS_GOING,
         game_release_date__lte=today,
     )
+    if other_user is not None:
+        games = games.filter(game_id__in=UserGame.objects.filter(
+            user=other_user,
+            status=UserGame.STATUS_GOING,
+        ).values('game_id'))
+    return games
 
 
-def _get_random_movies(user, today, all_from_db):
+def _get_random_movies(user, today, all_from_db, other_user=None):
     if all_from_db:
         return Movie.objects.filter(tmdb_release_date__lte=today).exclude(
             usermovie__user=user,
             usermovie__status__in=[UserMovie.STATUS_WATCHED, UserMovie.STATUS_STOPPED],
         ).distinct()
-    return UserMovie.objects.filter(
+    movies = UserMovie.objects.filter(
         user=user,
         status=UserMovie.STATUS_GOING,
         movie__tmdb_release_date__lte=today,
     )
+    if other_user is not None:
+        movies = movies.filter(movie_id__in=UserMovie.objects.filter(
+            user=other_user,
+            status=UserMovie.STATUS_GOING,
+        ).values('movie_id'))
+    return movies
 
 
-def _get_random_shows(user, today, ended_only, all_from_db):
+def _get_random_shows(user, today, ended_only, all_from_db, other_user=None):
     if all_from_db:
         filters = {'tmdb_release_date__lte': today}
         if ended_only:
@@ -361,7 +395,13 @@ def _get_random_shows(user, today, ended_only, all_from_db):
     }
     if ended_only:
         filters['show__tmdb_status__in'] = [Show.TMDB_STATUS_ENDED, Show.TMDB_STATUS_CANCELED]
-    return UserShow.objects.filter(**filters)
+    shows = UserShow.objects.filter(**filters)
+    if other_user is not None:
+        shows = shows.filter(show_id__in=UserShow.objects.filter(
+            user=other_user,
+            status=UserShow.STATUS_GOING,
+        ).values('show_id'))
+    return shows
 
 
 def _format_person_life_years(person):
