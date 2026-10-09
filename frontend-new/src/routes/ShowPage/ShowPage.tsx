@@ -159,9 +159,9 @@ function ShowPage(props) {
     const canCollapseOverview = overviewPlainText.length > 420;
     const castPeople = (show?.cast_people || []) as IPersonCardItem[];
     const creatorsPeople = (show?.creators_people || []) as IPersonCardItem[];
-    const peopleLimit = 6;
-    const visibleCreators = creatorsPeople;
-    const visibleCast = castPeople.slice(0, peopleLimit);
+    const peopleLimit = 7;
+    const visibleCreators = creatorsPeople.slice(0, peopleLimit);
+    const visibleCast = castPeople.slice(0, Math.max(0, peopleLimit - visibleCreators.length));
 
     if (!show) {
         return <Loader />;

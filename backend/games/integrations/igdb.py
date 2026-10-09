@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import time
 from calendar import monthrange
 from decimal import Decimal
@@ -276,23 +277,21 @@ def query_igdb_games(
     return _request_igdb('games', body)
 
 
-def _format_igdb_cover_url(url: str | None) -> str:
+def format_igdb_image_url(url: str | None, size: str) -> str:
     if not url:
         return ''
     result = url.strip()
     if result.startswith('//'):
         result = f'https:{result}'
-    result = result.replace('/t_thumb/', '/t_cover_big/')
-    return result
+    return re.sub(r'/t_[^/]+/', f'/t_{size}/', result, count=1)
+
+
+def _format_igdb_cover_url(url: str | None) -> str:
+    return format_igdb_image_url(url, 'cover_big')
 
 
 def _format_igdb_image_url(url: str | None) -> str:
-    if not url:
-        return ''
-    result = url.strip()
-    if result.startswith('//'):
-        result = f'https:{result}'
-    return result.replace('/t_thumb/', '/t_1080p/')
+    return format_igdb_image_url(url, '1080p')
 
 
 def _format_igdb_release_date(value: Any) -> str | None:

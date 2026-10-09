@@ -17,7 +17,7 @@ def _get_proxy_public_path_prefix(request_or_scheme):
     # Local dev usually hits backend directly, without /api prefix.
     if hasattr(request_or_scheme, 'get_host'):
         host = (request_or_scheme.get_host() or '').split(':')[0].lower()
-        if host in ('localhost', '127.0.0.1'):
+        if host in ('localhost', '127.0.0.1', '0.0.0.0'):
             return '/proxy'
 
     # Production frontend usually exposes backend under /api/*.

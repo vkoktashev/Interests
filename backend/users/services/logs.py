@@ -9,6 +9,7 @@ from movies.models import MovieLog
 from movies.serializers import MovieLogSerializer
 from people.models import PersonLog
 from people.serializers import PersonLogSerializer
+from proxy.functions import get_proxy_url
 from shows.models import EpisodeLog, SeasonLog, ShowLog
 from shows.serializers import EpisodeLogSerializer, SeasonLogSerializer, ShowLogSerializer
 from users.models import User, UserLog
@@ -53,7 +54,7 @@ def delete_user_log(user, log_id, log_type):
     entry.delete()
 
 
-def serialize_logs(logs):
+def serialize_logs(logs, request=None):
     results = []
     for entry in logs:
         if isinstance(entry, GameLog):
@@ -70,11 +71,33 @@ def serialize_logs(logs):
             serializer = PersonLogSerializer(entry)
         else:
             serializer = UserLogSerializer(entry)
-        results.append(serializer.data)
+        data = serializer.data
+        data['cover_url'] = get_log_cover_url(entry, request)
+        results.append(data)
     return results
 
 
-def get_logs(user_query, page_size, page_number, search_query, filters):
+def get_log_cover_url(entry, request=None):
+    if isinstance(entry, GameLog):
+        return entry.game.igdb_cover_url
+    if isinstance(entry, MovieLog):
+        path = entry.movie.tmdb_poster_path
+    elif isinstance(entry, ShowLog):
+        path = entry.show.tmdb_poster_path
+    elif isinstance(entry, SeasonLog):
+        path = entry.season.tmdb_poster_path or entry.season.tmdb_show.tmdb_poster_path
+    elif isinstance(entry, EpisodeLog):
+        season = entry.episode.tmdb_season
+        path = season.tmdb_poster_path or season.tmdb_show.tmdb_poster_path
+    elif isinstance(entry, PersonLog):
+        path = entry.person.tmdb_profile_path
+    else:
+        return ''
+
+    return get_proxy_url(request, path) if request is not None else path
+
+
+def get_logs(user_query, page_size, page_number, search_query, filters, request=None):
     page_size = get_page_size(page_size)
     page = page_number
 
@@ -117,7 +140,7 @@ def get_logs(user_query, page_size, page_number, search_query, filters):
     paginator = Paginator(union_logs, page_size)
     paginator_page = paginator.get_page(page)
 
-    results = serialize_logs(paginator_page.object_list)
+    results = serialize_logs(paginator_page.object_list, request=request)
     return results, paginator.count
 
 

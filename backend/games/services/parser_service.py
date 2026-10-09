@@ -1,6 +1,7 @@
 from asgiref.sync import sync_to_async
 
 from games.functions import format_game_release_date, get_game_release_date_display, is_game_released
+from games.integrations.igdb import format_igdb_image_url
 from games.integrations.igm import get_igm_store_info, get_igm_store_price
 from games.integrations.plati import get_plati_store_info, get_plati_store_price
 from games.integrations.steam import get_steam_region_label, get_steam_store_price
@@ -114,6 +115,11 @@ async def parse_game_from_db(game: Game, hltb_game=None):
 
     release_date_value = game.igdb_release_date
     release_date_display = get_game_release_date_display(game)
+    detail_cover_url = format_igdb_image_url(game.igdb_cover_url, '1080p')
+    background_url = next(
+        (screenshot['image'] for screenshot in screenshots if screenshot.get('image')),
+        detail_cover_url,
+    )
     new_game = {
         'id': game.id,
         'name': game.igdb_name,
@@ -126,8 +132,8 @@ async def parse_game_from_db(game: Game, hltb_game=None):
         'developers': objects_to_str(developers),
         'publishers': objects_to_str(publishers),
         'platforms': game.igdb_platforms,
-        'background': game.igdb_cover_url,
-        'poster': game.igdb_cover_url,
+        'background': background_url,
+        'poster': detail_cover_url,
         'release_date': format_game_release_date(release_date_value),
         'release_date_display': release_date_display,
         'is_released': is_game_released(game),

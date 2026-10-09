@@ -1,9 +1,9 @@
-import React from "react";
+import React, {useState} from "react";
 import {useBem, useSelector} from '@steroidsjs/core/hooks';
-import Rating from '../../../../../shared/Rating';
 import formatHours from '../../../../../shared/formatHours';
 import "./log-row.scss";
 import {Link} from '@steroidsjs/core/ui/nav';
+import {MdLocalMovies, MdLiveTv, MdPerson, MdVideogameAsset} from 'react-icons/md';
 import {
 	ROUTE_GAME,
 	ROUTE_MOVIE,
@@ -15,7 +15,7 @@ import {
 } from '../../../../index';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 
-function LogRow({ log, showUsername, onDeleteLog, className }) {
+function LogRow({ log, grouped = false, onDeleteLog, className }) {
 	const bem = useBem('log-row');
 	const isOwnLog = useSelector(state => getUser(state)?.username === log.user);
 	const gender = normalizeGender(log.user_gender);
@@ -23,9 +23,8 @@ function LogRow({ log, showUsername, onDeleteLog, className }) {
 	const actionText = translateActionType(log.action_type, log.action_result, log.type, gender);
 	const typeText = translateType(log.type, log.action_type, log.action_result);
 	const targetNode = nameToLink(log.target, log.type, log.target_id, bem);
-	const userNode = showUsername ? userToLink(log.user, log.user_id, bem) : null;
 	const timeText = formatTime(log.created);
-	const resultNode = actionResultToStr(log.action_type, log.action_result, log.type);
+	const resultNode = actionResultToStr(log.action_type, log.action_result, log.type, bem);
 	const showSeparator = !(
 		(log.type === "user")
 		|| (log.type === "person")
@@ -36,27 +35,25 @@ function LogRow({ log, showUsername, onDeleteLog, className }) {
 	);
 
 	return (
-		<div className={bem(bem.block(), className)}>
+		<div className={bem(bem.block({grouped}), className)}>
 			<div className={bem.element('time')}>{timeText}</div>
-			<div className={bem.element('content')}>
-				{userNode && (
-					<>
-						<span className={bem.element('user')}>{userNode}</span>{' '}
-					</>
-				)}
-				<span className={bem.element('action')}>{actionText}</span>
-				{typeText && (
-					<>
-						{' '}<span className={bem.element('type')}>{typeText}</span>
-					</>
-				)}
-				{' '}<span className={bem.element('target')}>{targetNode}</span>
-				{showSeparator && <span className={bem.element('separator')}>:</span>}
-				{resultNode && (
-					<>
-						{' '}<span className={bem.element('result')}>{resultNode}</span>
-					</>
-				)}
+			<LogMedia log={log} bem={bem} />
+			<div className={bem.element('details')}>
+				<div className={bem.element('content')}>
+					<span className={bem.element('action')}>{actionText}</span>
+					{typeText && (
+						<>
+							{' '}<span className={bem.element('type')}>{typeText}</span>
+						</>
+					)}
+					{' '}<span className={bem.element('target')}>{targetNode}</span>
+					{showSeparator && <span className={bem.element('separator')}>:</span>}
+					{resultNode && (
+						<>
+							{' '}<span className={bem.element('result')}>{resultNode}</span>
+						</>
+					)}
+				</div>
 			</div>
 			<button
 				className={bem.element('delete-button', {hidden: !isOwnLog})}
@@ -67,6 +64,82 @@ function LogRow({ log, showUsername, onDeleteLog, className }) {
 			</button>
 		</div>
 	);
+}
+
+function LogMedia({log, bem}) {
+	const [imageAvailable, setImageAvailable] = useState(Boolean(log.cover_url));
+	const route = getTargetRoute(log.type, log.target_id);
+	const cover = imageAvailable
+		? (
+			<img
+				className={bem.element('cover')}
+				src={log.cover_url}
+				alt={getTargetName(log.target)}
+				loading='lazy'
+				onError={() => setImageAvailable(false)}
+			/>
+		)
+		: (
+			<span className={bem.element('cover-placeholder', {[log.type]: true})} aria-hidden='true'>
+				{getLogTypeIcon(log.type)}
+			</span>
+		);
+
+	return (
+		<div className={bem.element('media')}>
+			{route ? (
+				<Link
+					toRoute={route.name}
+					toRouteParams={route.params}
+					className={bem.element('cover-link')}
+				>
+					{cover}
+				</Link>
+			) : cover}
+		</div>
+	);
+}
+
+function getTargetRoute(type, id) {
+	switch (type) {
+		case 'game':
+			return {name: ROUTE_GAME, params: {gameId: id}};
+		case 'movie':
+			return {name: ROUTE_MOVIE, params: {movieId: id}};
+		case 'show':
+			return {name: ROUTE_SHOW, params: {showId: id}};
+		case 'season':
+			return {name: ROUTE_SHOW_SEASON, params: {showId: id.show_id, showSeasonId: id.season_number}};
+		case 'episode':
+			return {
+				name: ROUTE_SHOW_EPISODE,
+				params: {
+					showId: id.show_id,
+					showSeasonId: id.season_number,
+					showEpisodeId: id.episode_number,
+				},
+			};
+		case 'user':
+			return {name: ROUTE_USER, params: {userId: id}};
+		case 'person':
+			return {name: ROUTE_PERSON, params: {personId: id}};
+		default:
+			return null;
+	}
+}
+
+function getTargetName(target) {
+	if (target && typeof target === 'object') {
+		return target.name || target.parent_name || '';
+	}
+	return target || '';
+}
+
+function getLogTypeIcon(type) {
+	if (type === 'game') return <MdVideogameAsset />;
+	if (type === 'movie') return <MdLocalMovies />;
+	if (type === 'show' || type === 'season' || type === 'episode') return <MdLiveTv />;
+	return <MdPerson />;
 }
 
 function intToSeries(number) {
@@ -333,25 +406,12 @@ function nameToLink(name, type, id, bem) {
 	}
 }
 
-function userToLink(username, userID, bem) {
-	return (
-		<Link
-			toRoute={ROUTE_USER}
-			toRouteParams={{
-				userId: userID,
-			}}
-			className={bem.element('link')}>
-			{username}
-		</Link>
-	);
-}
-
-function actionResultToStr(actionType, actionResult, target) {
+function actionResultToStr(actionType, actionResult, target, bem) {
 	const actionResultNumber = Number(actionResult);
 	switch (actionType) {
 		case "score":
 			if ((target !== "episode") || (actionResultNumber > 0)) {
-				return <Rating initialRating={actionResultNumber} readonly={true} />;
+				return <span className={bem.element('score')}>☆ {actionResultNumber}</span>;
 			}
 			return "";
 		case "status":

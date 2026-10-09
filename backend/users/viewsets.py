@@ -75,6 +75,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 request.GET.get('page'),
                 request.GET.get('query', ''),
                 request.query_params.getlist('filters[]', DEFAULT_LOG_FILTERS),
+                request=request,
             )
             return Response({'log': results, 'count': count})
 
@@ -102,6 +103,7 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             request.GET.get('page'),
             request.GET.get('query', ''),
             request.query_params.getlist('filters[]', DEFAULT_LOG_FILTERS),
+            request=request,
         )
         return Response({'log': results, 'count': count})
 
