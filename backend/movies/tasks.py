@@ -21,9 +21,11 @@ def update_upcoming_movies():
     today_date = datetime.today().date()
 
     movies = Movie.objects \
+        .filter(usermovie__isnull=False) \
         .filter(Q(tmdb_release_date__gte=today_date) |
                 Q(tmdb_release_date=None) |
-                Q(tmdb_digital_release_date__gte=today_date))
+                Q(tmdb_digital_release_date__gte=today_date)) \
+        .distinct()
     candidates_count = movies.count()
     scheduled_count = 0
     skipped_count = 0
