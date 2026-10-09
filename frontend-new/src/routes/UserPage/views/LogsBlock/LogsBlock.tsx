@@ -1,7 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import { FaAngleDown, FaAngleUp } from "react-icons/fa";
 import {useBem, useDispatch, useSelector} from '@steroidsjs/core/hooks';
-import {getUser} from '@steroidsjs/core/reducers/auth';
 import {DropDownField, Form, InputField} from '@steroidsjs/core/ui/form';
 import {formChange, formSubmit} from '@steroidsjs/core/actions/form';
 import Pagination from '@steroidsjs/core/ui/list/Pagination/Pagination';
@@ -23,7 +22,6 @@ function LogsBlock(props: ILogsBlockProps) {
 	const bem = useBem('LogsBlock');
 	const dispatch = useDispatch();
 	const formValues = useSelector(state => getFormValues(state, props.formId));
-	const currentUser = useSelector(getUser);
 	const logsRef = useRef<HTMLDivElement | null>(null);
 	const [collapse, setCollapse] = useState(true);
 	const { width } = useWindowDimensions();
@@ -101,7 +99,6 @@ function LogsBlock(props: ILogsBlockProps) {
 				<LogsByDay
 					logs={props.logs}
 					showUsername={!!props.showUsername}
-					currentUser={currentUser}
 					onDeleteLog={props.onDeleteLog}
 				/>
 			</div>
