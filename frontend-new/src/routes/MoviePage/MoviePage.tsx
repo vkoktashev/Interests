@@ -138,7 +138,7 @@ export function MoviePage() {
 	const canCollapseOverview = overviewPlainText.length > 420;
 	const castPeople = (movie?.cast_people || []) as IPersonCardItem[];
 	const directorsPeople = (movie?.directors_people || []) as IPersonCardItem[];
-	const peopleLimit = 6;
+	const peopleLimit = 7;
 	const visibleDirectors = directorsPeople.slice(0, peopleLimit);
 	const visibleCast = castPeople.slice(0, Math.max(0, peopleLimit - visibleDirectors.length));
 
