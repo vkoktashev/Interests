@@ -10,8 +10,12 @@ Keep the existing `TELEGRAM_TOKEN` and `CHAT_ID`. Never commit these credentials
 Compose defaults to `http://telegram-bot-api:8081`, local file references, and
 1,990,000,000 bytes per document. Larger archives are split. The send timeout is
 3,600 seconds and can be overridden with `TELEGRAM_SEND_TIMEOUT` in `.env`.
-There are no automatic upload retries because an ambiguous timeout can otherwise
-produce duplicate documents. Check the chat before retrying.
+The local API is reached through the router's VPN and is sometimes unavailable.
+If its `getMe` check or any upload fails, the archive is sent once more through
+the cloud API (`TELEGRAM_FALLBACK_API_URL`, default `https://api.telegram.org`)
+in 49 MB parts (`TELEGRAM_FALLBACK_UPLOAD_LIMIT`). A timed-out local upload may
+still have arrived, so the fallback can produce a duplicate. There are no other
+automatic retries. Join the parts with `cat ARCHIVE.part-* > ARCHIVE.sql.gz`.
 
 ## First migration
 
