@@ -36,10 +36,15 @@ the original cloud logout before returning to the cloud. Set these in `.env`:
 TELEGRAM_API_URL=https://api.telegram.org
 TELEGRAM_UPLOAD_LIMIT=49000000
 TELEGRAM_LOCAL_FILES=0
+TELEGRAM_API_REPLICAS=0
 ```
 
-Recreate `pg_backup`; archives will again be sent in 49 MB parts. Coordinate all
+Run `docker compose up -d --no-deps telegram-bot-api pg_backup`; this disables
+the local API and archives will again be sent in 49 MB parts. Coordinate all
 other scripts using the same bot token before moving between API servers.
+
+For local mode, remove these four overrides after fixing network connectivity,
+start the API, then repeat the first migration procedure.
 
 Archives are retained as before. Monitor free disk space and establish a retention
 policy separately; this migration does not automatically delete old backups.
