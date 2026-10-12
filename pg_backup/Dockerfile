@@ -2,7 +2,7 @@
 FROM postgres:16
 
 # Устанавливаем необходимые пакеты
-RUN apt-get update && apt-get install -y cron curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y cron curl jq util-linux && rm -rf /var/lib/apt/lists/*
 
 # Создаем рабочую директорию
 WORKDIR /app

@@ -1,4 +1,7 @@
 .idea
+/.env
+/backups/
+/backup-logs/
 .vscode
 *.pyc
 frontend-new/.eslintcache

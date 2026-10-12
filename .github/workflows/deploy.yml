@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: [self-hosted, Linux, X64, production]
-    timeout-minutes: 30
+    timeout-minutes: 90
 
     steps:
       - name: Deploy on production server
@@ -18,7 +18,7 @@ jobs:
           sudo git fetch origin production
           sudo git reset --hard origin/production
           sudo bash ./build-frontend.sh
-          sudo docker compose down
           sudo docker compose build
-          sudo docker compose up -d
+          sudo mkdir -p backups
+          sudo flock -w 3600 backups/.backup.lock docker compose up -d
           sudo docker compose exec -T back python manage.py migrate --noinput
