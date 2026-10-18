@@ -1,9 +1,10 @@
 import useSavedValues from 'hooks/useSavedValues';
-import useUnsavedChanges from 'hooks/useUnsavedChanges';
+import useUnsavedChanges, {STATUS_RESET_MESSAGE} from 'hooks/useUnsavedChanges';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {SiThemoviedatabase} from 'react-icons/si';
 
+import SaveDock from '../../shared/SaveDock';
 import StatusButtonGroup from '../../shared/StatusButtonGroup';
 import FriendsActivity from '../../shared/FriendsActivity';
 import ScoreBlock from '../../shared/ScoreBlock';
@@ -22,8 +23,8 @@ import {getRouteParam} from '@steroidsjs/core/reducers/router';
 import {Loader} from '@steroidsjs/core/ui/layout';
 import {openModal} from '@steroidsjs/core/actions/modal';
 import LoginForm from '../../modals/LoginForm';
-import {showNotification} from '@steroidsjs/core/actions/notifications';
-import {Button, TextField} from '@steroidsjs/core/ui/form';
+import {TextField} from '@steroidsjs/core/ui/form';
+import {saveFailedNotification, savedNotification} from '../../shared/saveNotifications';
 
 export function MoviePage() {
 	const bem = useBem('movie-page');
@@ -52,16 +53,39 @@ export function MoviePage() {
 	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
 	const {savedValues: savedReview, markSaved: markReviewSaved} = useSavedValues({review: userInfo?.review || ''}, `${user?.id}:${movieId}`);
-	useUnsavedChanges(review !== savedReview.review);
+	const hasReviewChanges = review !== savedReview.review;
+	useUnsavedChanges(hasReviewChanges);
+	useEffect(() => {
+		if (!hasReviewChanges) setSaveError('');
+	}, [hasReviewChanges]);
+	const [isSaving, setSaving] = useState(false);
+	const [saveError, setSaveError] = useState('');
+
+	const saveReview = useCallback(async () => {
+		setSaving(true);
+		setSaveError('');
+		try {
+			await http.send('PUT', `/movies/movie/${movieId}/`, {review});
+			markReviewSaved({review});
+			dispatch(savedNotification());
+		} catch {
+			setSaveError('Не удалось сохранить отзыв. Повторите сохранение.');
+		} finally {
+			setSaving(false);
+		}
+	}, [http, movieId, review, markReviewSaved, dispatch]);
 
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 	const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 
 	const setMovieStatus = useCallback(async (payload) => {
-		http.send('PUT', `/movies/movie/${movieId}/`, payload).catch(e => {
+		http.send('PUT', `/movies/movie/${movieId}/`, payload).then(() => {
+			dispatch(savedNotification());
+		}).catch(() => {
+			dispatch(saveFailedNotification());
 			fetchUserInfo();
 		});
-	}, [movieId]);
+	}, [movieId, dispatch]);
 
 	useEffect(() => {
 		setReview("");
@@ -228,7 +252,8 @@ export function MoviePage() {
 										<div className={bem.element('actions-rating')}>
 										<Rating
 											initialRating={userRate}
-											readonly={!user || (userStatus === "Не смотрел")}
+											readonly={!user}
+											disabled={!!user && userStatus === "Не смотрел"}
 											onChange={(score) => {
 												setUserRate(score);
 												setMovieStatus({ score: score });
@@ -242,6 +267,12 @@ export function MoviePage() {
 												className={bem.element('info-statuses')}
 												userStatus={userStatus}
 												onChangeStatus={(status) => {
+													if (status === "Не смотрел" && hasReviewChanges) {
+														if (!window.confirm(STATUS_RESET_MESSAGE)) {
+															return;
+														}
+														setReview(savedReview.review);
+													}
 													if (!user) {
 														dispatch(openModal(LoginForm));
 													} else {
@@ -249,15 +280,11 @@ export function MoviePage() {
 														const watchCount = status === "Посмотрел"
 															? Math.max(userWatchCount, 1)
 															: userWatchCount;
-														setUserWatchCount(status === "Не смотрел" ? 0 : watchCount);
+														setUserWatchCount(watchCount);
 														setMovieStatus({
 															status: status,
-															watch_count: status === "Не смотрел" ? 0 : watchCount,
+															watch_count: watchCount,
 														});
-														if (status === "Не смотрел") {
-															setReview("");
-															setUserRate(0);
-														}
 													}
 												}}
 											/>
@@ -393,27 +420,10 @@ export function MoviePage() {
 									<LoadingOverlay active={userInfoIsLoading && !isLoading} spinner text='Загрузка...'>
 										<div className={bem.element('review-body')} hidden={!user}>
 											<TextField
-												label={__('Ваш отзыв')}
 												value={review}
+												placeholder={userStatus === "Не смотрел" ? 'Выберите статус, чтобы написать отзыв' : 'Напишите отзыв…'}
+												disabled={isSaving || userStatus === "Не смотрел"}
 												onChange={(value) => setReview(value)}
-											/>
-											<Button
-												label={__('Сохранить')}
-												className={bem.element('button')}
-												disabled={!user || (userStatus === "Не смотрел")}
-												onClick={() => {
-													http.send('PUT', `/movies/movie/${movieId}/`, {
-														review: review,
-													}).then(() => {
-														markReviewSaved({review});
-														dispatch(showNotification('Отзыв сохранен!', 'success', {
-															position: 'top-right',
-															timeOut: 1000,
-														}));
-													}).catch(() => {
-														dispatch(showNotification('Не удалось сохранить отзыв', 'danger'));
-													});
-												}}
 											/>
 										</div>
 									</LoadingOverlay>
@@ -458,6 +468,12 @@ export function MoviePage() {
 
 							</div>
 						</div>
+						<SaveDock
+							visible={!!user && (hasReviewChanges || isSaving)}
+							isSaving={isSaving}
+							error={saveError}
+							onSave={saveReview}
+						/>
 					</div>
 				</div>
 			</LoadingOverlay>

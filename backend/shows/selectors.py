@@ -83,8 +83,7 @@ def get_show_social_payload(tmdb_id, user, request):
     except (Show.DoesNotExist, TypeError, ValueError):
         return {'user_info': None, 'friends_info': (), 'users_info': ()}
 
-    user_show = UserShow.objects.exclude(status=UserShow.STATUS_NOT_WATCHED) \
-        .filter(user=user, show=show).first()
+    user_show = UserShow.objects.filter(user=user, show=show).first()
     user_info = UserShowReadSerializer(user_show, context={'request': request}).data \
         if user_show is not None else None
 

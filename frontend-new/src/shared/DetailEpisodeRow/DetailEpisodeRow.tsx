@@ -14,6 +14,8 @@ function DetailEpisodeRow({
 	userWatchedShow,
 	setSaveEpisodes,
 	onCheckedChange,
+	checkedValue = undefined,
+	disabled = false,
 }) {
 	const bem = useBem('detail-episode-row');
 	const [userRate, setUserRate] = useState(0);
@@ -22,10 +24,15 @@ function DetailEpisodeRow({
 	useEffect(() => {
 		setUserRate(userInfo?.score);
 		setIsChecked(userInfo?.score > -1);
-		onCheckedChange?.(episode.id, userInfo?.score > -1);
+		if (checkedValue === undefined) {
+			onCheckedChange?.(episode.id, userInfo?.score > -1);
+		}
 	}, [userInfo]);
 
 	useEffect(() => {
+		if (checkedValue !== undefined) {
+			return;
+		}
 		if (checkAll === -1) {
 			setIsChecked(false);
 			onCheckedChange?.(episode.id, false);
@@ -63,13 +70,14 @@ function DetailEpisodeRow({
 			<input
 				type='checkbox'
 				id={`cbEpisode${episode.id}`}
-				checked={isChecked}
+				checked={checkedValue ?? isChecked}
+				disabled={disabled || !userWatchedShow}
 				onChange={(res) => {
 					setSaveEpisodes(true);
 					setIsChecked(res.target.checked);
 					onCheckedChange?.(episode.id, res.target.checked);
 				}}
-				hidden={!loggedIn || !userWatchedShow}
+				hidden={!loggedIn}
 				className={bem.element('checkbox')}
 			/>
 			<p className={bem.element('date')}>{parseDate(episode.air_date)}</p>
@@ -81,16 +89,21 @@ function DetailEpisodeRow({
 				<span className={bem.element('separator')}>•</span>
 				<span className={bem.element('episode-title')}>{episode.name}</span>
 			</a>
-			<div hidden={!loggedIn || !userWatchedShow} className={bem.element('rate')}>
+			<div hidden={!loggedIn} className={bem.element('rate')}>
 				<Rating
 					withEye={true}
-					readonly={!loggedIn}
+					readonly={!loggedIn || disabled}
+					disabled={!userWatchedShow}
 					initialRating={userRate}
-					onChange={(score) => {
-						setUserRate(score);
-						setIsChecked(score > -1);
-						onCheckedChange?.(episode.id, score > -1);
-						setEpisodeUserStatus(showID, { episodes: [{ tmdb_id: episode.id, score: score }] });
+					onChange={async (score) => {
+						try {
+							await setEpisodeUserStatus(showID, {episodes: [{tmdb_id: episode.id, score}]});
+							setUserRate(score);
+							setIsChecked(score > -1);
+							onCheckedChange?.(episode.id, score > -1);
+						} catch {
+							// Keep the previous rating and selection when saving fails.
+						}
 					}}
 				/>
 			</div>

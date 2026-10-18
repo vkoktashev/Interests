@@ -1,5 +1,6 @@
+import SaveDock from '../../shared/SaveDock';
 import useSavedValues from 'hooks/useSavedValues';
-import useUnsavedChanges from 'hooks/useUnsavedChanges';
+import useUnsavedChanges, {STATUS_RESET_MESSAGE} from 'hooks/useUnsavedChanges';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {SiThemoviedatabase} from 'react-icons/si';
@@ -23,8 +24,8 @@ import formatDuration from '../../shared/formatDuration';
 
 import "./show-page.scss";
 import LoginForm from '../../modals/LoginForm';
-import {showNotification} from '@steroidsjs/core/actions/notifications';
-import {Button, TextField} from '@steroidsjs/core/ui/form';
+import {TextField} from '@steroidsjs/core/ui/form';
+import {saveFailedNotification, savedNotification} from '../../shared/saveNotifications';
 
 /**
  * Основная страница приложения
@@ -37,11 +38,20 @@ function ShowPage(props) {
 	const user = useSelector(getUser);
 	const { showId } = useSelector(getRouteParams);
 	const [review, setReview] = useState("");
+	const [pendingEpisodes, setPendingEpisodes] = useState<any[]>([]);
+	const [savedEpisodes, setSavedEpisodes] = useState<any[]>([]);
+	const [isSaving, setSaving] = useState(false);
+	const [isCompleting, setCompleting] = useState(false);
+	const [saveError, setSaveError] = useState('');
+	const savingRef = useRef(false);
+	const sessionRef = useRef(0);
+	const reviewInitialized = useRef(false);
 	const [userStatus, setUserStatus] = useState("Не смотрел");
 	const [userRate, setUserRate] = useState(0);
 	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
 	const [isMobileViewport, setIsMobileViewport] = useState(false);
 	const [runtimeInfo, setRuntimeInfo] = useState<any>(null);
+	const [seasonsResetKey, setSeasonsResetKey] = useState(0);
 
     const showFetchConfig = useMemo(() => showId && ({
         url: `/shows/show/${showId}/`,
@@ -57,22 +67,55 @@ function ShowPage(props) {
 
     const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
 	const {savedValues: savedReview, markSaved: markReviewSaved} = useSavedValues({review: userInfo?.review || ''}, `${user?.id}:${showId}`);
-	useUnsavedChanges(review !== savedReview.review);
+	const hasReviewChanges = review !== savedReview.review;
+	const hasChanges = hasReviewChanges || pendingEpisodes.length > 0;
+	const isBusy = isSaving || isCompleting;
+	useUnsavedChanges(hasChanges || isBusy);
+	useEffect(() => {
+		if (!hasChanges) setSaveError('');
+	}, [hasChanges]);
+	const onEpisodesSaved = useCallback((episodes) => {
+		setSavedEpisodes(current => {
+			const saved = new Map(current.map(item => [String(item.tmdb_id), item]));
+			episodes.forEach(item => saved.set(String(item.tmdb_id), item));
+			return Array.from(saved.values());
+		});
+	}, []);
+	const onCompleteShow = useCallback(() => setSavedEpisodes([]), []);
 
     const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
     const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 
     const setShowStatus = useCallback(async (payload) => {
-        http.send('PUT', `/shows/show/${showId}/`, payload).catch(e => {
-            fetchUserInfo();
-        });
-    }, [showId]);
+        const session = sessionRef.current;
+        setCompleting(true);
+        try {
+            await http.send('PUT', `/shows/show/${showId}/`, payload);
+            dispatch(savedNotification());
+        } catch {
+            if (session === sessionRef.current) {
+                dispatch(saveFailedNotification());
+                fetchUserInfo();
+            }
+        } finally {
+            if (session === sessionRef.current) setCompleting(false);
+        }
+    }, [showId, http, dispatch, fetchUserInfo]);
 
 	useEffect(() => {
+        sessionRef.current += 1;
+        reviewInitialized.current = false;
+        savingRef.current = false;
+        setSaving(false);
+        setCompleting(false);
+        setSaveError('');
+        setPendingEpisodes([]);
+        setSavedEpisodes([]);
         setReview("");
         setUserStatus("Не смотрел");
         setUserRate(0);
-    }, [showId]);
+        return () => { sessionRef.current += 1; };
+    }, [showId, user?.id]);
 
 	useEffect(() => {
 		if (show?.name) {
@@ -99,16 +142,71 @@ function ShowPage(props) {
 	}, []);
 
 	useEffect(() => {
+        if (userInfoResponse && !reviewInitialized.current) {
+            reviewInitialized.current = true;
+            setReview(userInfo?.review || '');
+        }
         if (userInfo?.status) {
-            setReview(userInfo.review || '');
             setUserStatus(userInfo.status);
             setUserRate(userInfo.score);
         } else {
-            setReview("");
             setUserRate(0);
             setUserStatus("Не смотрел");
         }
-    }, [userInfo]);
+    }, [userInfo, userInfoResponse]);
+
+	const saveChanges = useCallback(async () => {
+		if (savingRef.current || isCompleting || !hasChanges) {
+			return;
+		}
+		savingRef.current = true;
+		setSaving(true);
+		setSaveError('');
+		const session = sessionRef.current;
+		const requests: Array<{label: string; save: () => Promise<any>; accept: () => void}> = [];
+		if (pendingEpisodes.length > 0) {
+			requests.push({
+				label: 'отметки серий',
+				save: () => http.send('PUT', `/shows/show/${showId}/episodes/`, {episodes: pendingEpisodes}),
+				accept: () => onEpisodesSaved(pendingEpisodes),
+			});
+		}
+		if (hasReviewChanges) {
+			requests.push({
+				label: 'отзыв',
+				save: () => http.send('PUT', `/shows/show/${showId}/`, {review}),
+				accept: () => markReviewSaved({review}),
+			});
+		}
+		const results = await Promise.all(requests.map(async request => {
+			try {
+				await request.save();
+				return true;
+			} catch {
+				return false;
+			}
+		}));
+		if (session !== sessionRef.current) {
+			return;
+		}
+		const succeeded: string[] = [];
+		const failed: string[] = [];
+		requests.forEach((request, index) => {
+			if (results[index]) {
+				request.accept();
+				succeeded.push(request.label);
+			} else {
+				failed.push(request.label);
+			}
+		});
+		if (failed.length > 0) {
+			setSaveError(`${succeeded.length ? `Сохранено: ${succeeded.join(', ')}. ` : ''}Не удалось сохранить: ${failed.join(', ')}. Повторите сохранение.`);
+		} else {
+			dispatch(savedNotification());
+		}
+		savingRef.current = false;
+		setSaving(false);
+	}, [isCompleting, hasChanges, pendingEpisodes, hasReviewChanges, review, showId, http, markReviewSaved, dispatch, onEpisodesSaved]);
 
 	const episodeRuntime = Number(show?.episode_run_time || runtimeInfo?.episodeRuntime || 0);
 	const totalRuntime = Number(runtimeInfo?.totalRuntime || 0);
@@ -269,7 +367,8 @@ function ShowPage(props) {
                                         <div className={bem.element('actions-rating')}>
 										<Rating
 											initialRating={userRate}
-											readonly={!user || (userStatus === "Не смотрел")}
+											readonly={isBusy || !user}
+											disabled={!!user && userStatus === "Не смотрел"}
 											onChange={(score) => {
 												if (!user) {
 													dispatch(openModal(LoginForm));
@@ -287,15 +386,21 @@ function ShowPage(props) {
 											className={bem.element('info-statuses')}
 											userStatus={userStatus}
 											onChangeStatus={(status) => {
+                                                if (isBusy) return;
+                                                if (status === "Не смотрел" && hasChanges) {
+                                                    if (!window.confirm(STATUS_RESET_MESSAGE)) {
+                                                        return;
+                                                    }
+                                                    setReview(savedReview.review);
+                                                    setPendingEpisodes([]);
+                                                    setSeasonsResetKey(key => key + 1);
+                                                }
 												if (!user) {
 													dispatch(openModal(LoginForm));
 												} else {
 													setUserStatus(status);
 													setShowStatus({ status: status });
-													if (status === "Не смотрел") {
-														setReview("");
-														setUserRate(0);
-													}
+
 												}
 											}}
 										/>
@@ -394,7 +499,13 @@ function ShowPage(props) {
                                 <section className={bem.element('content-card', {seasons: true})}>
                                     <h3 className={bem.element('seasons-header')}>Список серий</h3>
                                     <SeasonsBlock
-                                        key={showId}
+                                        key={`${showId}:${user?.id}:${seasonsResetKey}`}
+                                        onPendingEpisodesChange={setPendingEpisodes}
+                                        savedEpisodes={savedEpisodes}
+                                        onEpisodesSaved={onEpisodesSaved}
+                                        disabled={isBusy}
+                                        onBusyChange={setCompleting}
+                                        onCompleteShow={onCompleteShow}
                                         showId={showId}
                                         seasons={show?.seasons}
                                         userWatchedShow={userStatus !== "Не смотрел"}
@@ -412,29 +523,10 @@ function ShowPage(props) {
                                     >
                                         <div className={bem.element('review-body')}>
                                             <TextField
-                                                label={__('Ваш отзыв')}
                                                 value={review}
+                                                placeholder={userStatus === "Не смотрел" ? 'Выберите статус, чтобы написать отзыв' : 'Напишите отзыв…'}
+                                                disabled={isBusy || userStatus === "Не смотрел"}
                                                 onChange={(value) => setReview(value)}
-                                            />
-                                            <Button
-                                                label={__('Сохранить')}
-                                                className={bem.element('button')}
-                                                disabled={!user || (userStatus === "Не смотрел")}
-                                                onClick={() => {
-                                                    if (!user) {
-                                                        dispatch(openModal(LoginForm));
-                                                    } else {
-                                                        http.send('PUT', `/shows/show/${showId}/`, { review: review }).then(() => {
-                                                            markReviewSaved({review});
-                                                            dispatch(showNotification('Отзыв сохранен!', 'success', {
-                                                                position: 'top-right',
-                                                                timeOut: 1000,
-                                                            }));
-                                                        }).catch(() => {
-                                                            dispatch(showNotification('Не удалось сохранить отзыв', 'danger'));
-                                                        });
-                                                    }
-                                                }}
                                             />
                                         </div>
                                     </LoadingOverlay>
@@ -479,6 +571,13 @@ function ShowPage(props) {
 
                             </div>
                         </div>
+						<SaveDock
+							visible={hasChanges || isSaving}
+							isSaving={isSaving}
+							disabled={isBusy}
+							error={saveError}
+							onSave={saveChanges}
+						/>
 					</div>
 				</div>
 			</LoadingOverlay>

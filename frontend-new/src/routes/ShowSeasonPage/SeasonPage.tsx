@@ -1,6 +1,7 @@
+import SaveDock from '../../shared/SaveDock';
 import useUnsavedChanges from 'hooks/useUnsavedChanges';
 import useSavedValues from 'hooks/useSavedValues';
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {ResponsiveLine} from '@nivo/line';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
@@ -19,8 +20,9 @@ import LoginForm from '../../modals/LoginForm';
 import './season-page.scss';
 import {setSaveEpisodes} from '../../actions/modals';
 import {Loader} from '@steroidsjs/core/ui/layout';
-import {Button, TextField} from '@steroidsjs/core/ui/form';
+import {TextField} from '@steroidsjs/core/ui/form';
 import {nivoTheme} from '../UserPage/views/StatisticsBlock/chartConfig';
+import {saveFailedNotification, savedNotification} from '../../shared/saveNotifications';
 
 function SeasonPage() {
 	const bem = useBem('season-page');
@@ -31,9 +33,15 @@ function SeasonPage() {
 
 	const [review, setReview] = useState("");
 	const [userRate, setUserRate] = useState(0);
-	const [isChecked, setIsChecked] = useState(0);
 	const [isOverviewExpanded, setOverviewExpanded] = useState(false);
-	const [hasPendingEpisodeChanges, setHasPendingEpisodeChanges] = useState(false);
+	const [isSaving, setSaving] = useState(false);
+	const [isEpisodeSaving, setEpisodeSaving] = useState(false);
+	const isBusy = isSaving || isEpisodeSaving;
+	const savingRef = useRef(false);
+	const sessionRef = useRef(0);
+	const reviewInitialized = useRef(false);
+	const [saveError, setSaveError] = useState('');
+	const [savedEpisodeOverrides, setSavedEpisodeOverrides] = useState<Record<string, any>>({});
 	const [episodeCheckedOverrides, setEpisodeCheckedOverrides] = useState<Record<string, boolean>>({});
 
 	const showSeasonFetchConfig = useMemo(() => showId && ({
@@ -54,35 +62,39 @@ function SeasonPage() {
 
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
 	const {savedValues: savedReview, markSaved: markReviewSaved} = useSavedValues({review: userInfo?.review || ''}, `${user?.id}:${showId}:${showSeasonId}`);
-	useUnsavedChanges(review !== savedReview.review);
+	const hasReviewChanges = review !== savedReview.review;
 
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 	const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 	const userWatchedShow = useMemo(() => userInfoResponse?.user_watched_show, [userInfoResponse]);
 
 	const setShowSeasonStatus = useCallback(async (payload) => {
-		http.send('PUT', `/shows/show/${showId}/season/${showSeasonId}/`, payload).catch(e => {
+		http.send('PUT', `/shows/show/${showId}/season/${showSeasonId}/`, payload).then(() => {
+			dispatch(savedNotification());
+		}).catch(() => {
+			dispatch(saveFailedNotification());
 			fetchUserInfo();
 		});
-	}, [showId]);
+	}, [showId, showSeasonId, http, fetchUserInfo, dispatch]);
 
 	useEffect(() => {
+		sessionRef.current += 1;
+		reviewInitialized.current = false;
+		savingRef.current = false;
+		setSaving(false);
+		setEpisodeSaving(false);
+		setSaveError('');
+		setSavedEpisodeOverrides({});
 		setReview("");
 		setUserRate(0);
-		setIsChecked(0);
-		setHasPendingEpisodeChanges(false);
 		setEpisodeCheckedOverrides({});
-	}, [showId, showSeasonId]);
+		return () => { sessionRef.current += 1; };
+	}, [showId, showSeasonId, user?.id]);
 
 	useEffect(() => {
 		dispatch(setSaveEpisodes(false));
-		setHasPendingEpisodeChanges(false);
-		setEpisodeCheckedOverrides({});
-
 		return () => {
 			dispatch(setSaveEpisodes(false));
-			setHasPendingEpisodeChanges(false);
-			setEpisodeCheckedOverrides({});
 		};
 	}, [dispatch, showId, showSeasonId]);
 
@@ -125,72 +137,115 @@ function SeasonPage() {
 		[showSeason?.overview]
 	);
 	const canCollapseOverview = overviewPlainText.length > 420;
-	const hasPendingEpisodeSelectionChanges = useMemo(() => {
-		if (!showSeason?.episodes?.length || !userInfoResponse?.episodes_user_info) {
-			return false;
+	const episodeUserInfo = useMemo(() => {
+		const info = new Map<string, any>((userInfoResponse?.episodes_user_info || []).map(item => [String(item.tmdb_id), item]));
+		Object.entries(savedEpisodeOverrides).forEach(([id, item]) => info.set(id, item));
+		return info;
+	}, [userInfoResponse, savedEpisodeOverrides]);
+
+	const pendingEpisodes = useMemo(() => (showSeason?.episodes || []).flatMap(episode => {
+		const id = String(episode.id);
+		const persisted = episodeUserInfo.get(id)?.score > -1;
+		const checked = episodeCheckedOverrides[id] ?? persisted;
+		return checked === persisted ? [] : [{tmdb_id: episode.id, score: checked ? 0 : -1}];
+	}), [showSeason, episodeUserInfo, episodeCheckedOverrides]);
+	const allEpisodesChecked = !!showSeason?.episodes?.length && showSeason.episodes.every(episode => (
+		episodeCheckedOverrides[String(episode.id)] ?? (episodeUserInfo.get(String(episode.id))?.score > -1)
+	));
+	const hasChanges = pendingEpisodes.length > 0 || hasReviewChanges;
+	useUnsavedChanges(hasChanges || isBusy);
+	useEffect(() => {
+		if (!hasChanges) setSaveError('');
+	}, [hasChanges]);
+
+	useEffect(() => {
+		if (userInfoResponse && !reviewInitialized.current) {
+			reviewInitialized.current = true;
+			setReview(userInfo?.review || '');
 		}
+		setUserRate(userInfo?.score || 0);
+	}, [userInfoResponse, userInfo]);
 
-		const persistedMap = new Map(
-			(userInfoResponse.episodes_user_info || []).map(item => [String(item.tmdb_id), item?.score > -1])
-		);
-
-		return showSeason.episodes.some((episode) => {
-			const episodeId = String(episode.id);
-			const base = persistedMap.get(episodeId) || false;
-			const current = isChecked === 1
-				? true
-				: isChecked === -1
-					? false
-					: (episodeCheckedOverrides[episodeId] ?? base);
-			return current !== base;
-		});
-	}, [showSeason, userInfoResponse, isChecked, episodeCheckedOverrides]);
-
-	useUnsavedChanges(hasPendingEpisodeSelectionChanges);
-
-	useEffect(() => {
-		setHasPendingEpisodeChanges(hasPendingEpisodeSelectionChanges);
-	}, [hasPendingEpisodeSelectionChanges]);
-
-	useEffect(() => {
-		if (userInfo?.review) setReview(userInfo.review || '');
-		else setReview("");
-
-		if (userInfo?.score) setUserRate(userInfo.score);
-		else setUserRate(0);
-	}, [userInfo]);
-
-	function getEpisodeByID(episodes, id) {
-		for (let episode in episodes) if (episodes[episode].tmdb_id === id) return episodes[episode];
-	}
-
-	const setEpisodesStatus = useCallback(async (showId: string, episodesList: any) => {
-		await http.send(
-			'PUT',
-			`/shows/show/${showId}/episodes/`,
-			episodesList,
-		);
-	}, []);
-
-	const sendEpisodes = useCallback(async () => {
-		let episodes = [];
-		for (let episode of showSeason.episodes) {
-			let currentValue = userInfoResponse.episodes_user_info.find(info => info.tmdb_id === episode.id);
-			let cbValue = (document.getElementById(`cbEpisode${episode.id}`) as any).checked;
-			let currentStatus = currentValue?.score > -1;
-			if (cbValue !== currentStatus) {
-				episodes.push({
-					tmdb_id: episode.id,
-					score: cbValue ? 0 : -1,
+	const setEpisodesStatus = useCallback(async (currentShowId: string, payload: any) => {
+		const session = sessionRef.current;
+		setEpisodeSaving(true);
+		try {
+			await http.send('PUT', `/shows/show/${currentShowId}/episodes/`, payload);
+			dispatch(savedNotification());
+			if (session === sessionRef.current) {
+				setSavedEpisodeOverrides(current => {
+					const next = {...current};
+					payload.episodes.forEach(item => { next[String(item.tmdb_id)] = {...episodeUserInfo.get(String(item.tmdb_id)), ...item}; });
+					return next;
 				});
 			}
+		} catch (error) {
+			dispatch(saveFailedNotification());
+			throw error;
+		} finally {
+			if (session === sessionRef.current) setEpisodeSaving(false);
 		}
-		await setEpisodesStatus(showId, { episodes });
-		fetchUserInfo();
-		setHasPendingEpisodeChanges(false);
-		setEpisodeCheckedOverrides({});
-		dispatch(setSaveEpisodes(false));
-	}, [showSeason, userInfoResponse]);
+	}, [http, dispatch, episodeUserInfo]);
+
+	const saveChanges = useCallback(async () => {
+		if (savingRef.current || isEpisodeSaving || !hasChanges) {
+			return;
+		}
+		savingRef.current = true;
+		setSaving(true);
+		setSaveError('');
+		const session = sessionRef.current;
+		const requests: Array<{label: string; save: () => Promise<any>; accept: () => void}> = [];
+		if (pendingEpisodes.length > 0) {
+			requests.push({
+				label: 'отметки серий',
+				save: () => http.send('PUT', `/shows/show/${showId}/episodes/`, {episodes: pendingEpisodes}),
+				accept: () => {
+					setSavedEpisodeOverrides(current => {
+						const next = {...current};
+						pendingEpisodes.forEach(item => { next[String(item.tmdb_id)] = {...episodeUserInfo.get(String(item.tmdb_id)), ...item}; });
+						return next;
+					});
+					dispatch(setSaveEpisodes(false));
+				},
+			});
+		}
+		if (hasReviewChanges) {
+			requests.push({
+				label: 'отзыв',
+				save: () => http.send('PUT', `/shows/show/${showId}/season/${showSeasonId}/`, {review}),
+				accept: () => markReviewSaved({review}),
+			});
+		}
+		const results = await Promise.all(requests.map(async request => {
+			try {
+				await request.save();
+				return true;
+			} catch {
+				return false;
+			}
+		}));
+		if (session !== sessionRef.current) {
+			return;
+		}
+		const succeeded: string[] = [];
+		const failed: string[] = [];
+		requests.forEach((request, index) => {
+			if (results[index]) {
+				request.accept();
+				succeeded.push(request.label);
+			} else {
+				failed.push(request.label);
+			}
+		});
+		if (failed.length > 0) {
+			setSaveError(`${succeeded.length ? `Сохранено: ${succeeded.join(', ')}. ` : ''}Не удалось сохранить: ${failed.join(', ')}. Повторите сохранение.`);
+		} else {
+			dispatch(savedNotification());
+		}
+		savingRef.current = false;
+		setSaving(false);
+	}, [isEpisodeSaving, hasChanges, pendingEpisodes, hasReviewChanges, review, showId, showSeasonId, http, dispatch, episodeUserInfo, markReviewSaved]);
 
 	if (!showSeason) {
 		return <Loader />;
@@ -246,7 +301,7 @@ function SeasonPage() {
 								</div>
 							</div>
 
-							<div className={bem.element('actions')} hidden={!user || !userWatchedShow}>
+							<div className={bem.element('actions')} hidden={!user}>
 								<LoadingOverlay
 									active={userInfoIsLoading && !isLoading}
 									spinner
@@ -256,6 +311,8 @@ function SeasonPage() {
 										<div className={bem.element('actions-rating')}>
 										<Rating
 											initialRating={userRate}
+											readonly={isBusy}
+											disabled={!userWatchedShow}
 											onChange={(score) => {
 												if (!user) {
 													dispatch(openModal(LoginForm));
@@ -302,37 +359,18 @@ function SeasonPage() {
 								<section className={bem.element('content-card', {episodes: true})}>
 									<div className={bem.element('episodes-head')}>
 										<h3 className={bem.element('episodes-header')}>Список серий</h3>
-										<div className={bem.element('save-panel', {
-											inline: true,
-											placeholder: !hasPendingEpisodeChanges,
-										})}>
-											{hasPendingEpisodeChanges ? (
-												<>
-												<div className={bem.element('save-panel-text')}>Есть несохранённые изменения</div>
-												<Button
-													className={bem.element('save-panel-button')}
-													onClick={sendEpisodes}>
-													Сохранить
-												</Button>
-												</>
-											) : (
-												<>
-													<div className={bem.element('save-panel-text')}>Есть несохранённые изменения</div>
-													<Button className={bem.element('save-panel-button')} disabled>Сохранить</Button>
-												</>
-											)}
-										</div>
 									</div>
-									<div className={bem.element('episodes-body')}>
-										<div className={bem.element('check-all')} hidden={!user || !userWatchedShow}>
+									<fieldset disabled={isBusy} className={bem.element('episodes-body')}>
+										<div className={bem.element('check-all')} hidden={!user}>
 											Выбрать все&nbsp;
 											<input
 												className={bem.element('check-all-input')}
 												type='checkbox'
-												checked={isChecked > 0}
+												disabled={!userWatchedShow}
+												checked={allEpisodesChecked}
 												onChange={(res) => {
 													dispatch(setSaveEpisodes(true));
-													setIsChecked(res.target.checked ? 1 : -1);
+													setEpisodeCheckedOverrides(Object.fromEntries(showSeason.episodes.map(episode => [String(episode.id), res.target.checked])));
 												}}
 											/>
 										</div>
@@ -344,9 +382,11 @@ function SeasonPage() {
 															episode={episode}
 															showID={showId}
 															loggedIn={!!user}
-															userInfo={getEpisodeByID(userInfoResponse?.episodes_user_info, episode.id)}
+															userInfo={episodeUserInfo.get(String(episode.id))}
+															checkedValue={episodeCheckedOverrides[String(episode.id)] ?? (episodeUserInfo.get(String(episode.id))?.score > -1)}
+															disabled={isBusy}
 															setEpisodeUserStatus={setEpisodesStatus}
-															checkAll={isChecked}
+															checkAll={0}
 															userWatchedShow={userWatchedShow}
 															setSaveEpisodes={value => {
 																dispatch(setSaveEpisodes(value));
@@ -362,7 +402,7 @@ function SeasonPage() {
 												))
 												: ""}
 										</ul>
-									</div>
+									</fieldset>
 									<div hidden={chartData[0].data.length < 1} className={bem.element('rating-chart')}>
 										<ResponsiveLine
 											data={chartData}
@@ -399,29 +439,15 @@ function SeasonPage() {
 									</div>
 								</section>
 
-								<section className={bem.element('content-card', {review: true})} hidden={!user || !userWatchedShow}>
+								<section className={bem.element('content-card', {review: true})} hidden={!user}>
 									<h3 className={bem.element('review-header')}>Отзыв</h3>
 									<LoadingOverlay active={userInfoIsLoading && !isLoading} spinner text='Загрузка...'>
 										<div className={bem.element('review-body')}>
 											<TextField
-												label={__('Ваш отзыв')}
 												value={review}
+												placeholder={userWatchedShow ? 'Напишите отзыв…' : 'Выберите статус сериала, чтобы написать отзыв'}
+												disabled={isBusy || !userWatchedShow}
 												onChange={(value) => setReview(value)}
-											/>
-											<Button
-												className={bem.element('button')}
-												label={__('Сохранить')}
-												onClick={() => {
-													http.send('PUT', `/shows/show/${showId}/season/${showSeasonId}/`, { review }).then(() => {
-														markReviewSaved({review});
-														dispatch(showNotification('Отзыв сохранен!', 'success', {
-															position: 'top-right',
-															timeOut: 1000,
-														}));
-													}).catch(() => {
-														dispatch(showNotification('Не удалось сохранить отзыв', 'danger'));
-													});
-												}}
 											/>
 										</div>
 									</LoadingOverlay>
@@ -452,6 +478,13 @@ function SeasonPage() {
 							</section>
 						</div>
 						</div>
+						<SaveDock
+							visible={hasChanges || isSaving}
+							isSaving={isSaving}
+							disabled={isBusy}
+							error={saveError}
+							onSave={saveChanges}
+						/>
 					</div>
 				</div>
 			</LoadingOverlay>

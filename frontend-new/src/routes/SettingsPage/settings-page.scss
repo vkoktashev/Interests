@@ -45,6 +45,18 @@
         margin-bottom: 1.5rem;
     }
 
+    &__fields {
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+
+        &:disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+    }
+
     &__grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));

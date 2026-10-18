@@ -32,9 +32,7 @@ class UserMovieWriteSerializer(serializers.ModelSerializer):
         current_watch_count = self.instance.watch_count if self.instance is not None else 0
         watch_count = attrs.get('watch_count', current_watch_count)
 
-        if status == UserMovie.STATUS_NOT_WATCHED:
-            attrs['watch_count'] = 0
-        elif status == UserMovie.STATUS_WATCHED and watch_count == 0:
+        if status == UserMovie.STATUS_WATCHED and watch_count == 0:
             attrs['watch_count'] = 1
 
         return attrs

@@ -1,5 +1,5 @@
 import useSavedValues from 'hooks/useSavedValues';
-import useUnsavedChanges from 'hooks/useUnsavedChanges';
+import useUnsavedChanges, {STATUS_RESET_MESSAGE} from 'hooks/useUnsavedChanges';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {getUser} from '@steroidsjs/core/reducers/auth';
@@ -12,6 +12,7 @@ import {FaPencilAlt, FaTwitch, FaYoutube} from 'react-icons/fa';
 import {SiIgdb} from 'react-icons/si';
 import {GiTigerHead} from 'react-icons/gi';
 import {Loader} from '@steroidsjs/core/ui/layout'
+import SaveDock from '../../shared/SaveDock';
 import StatusButtonGroup from '../../shared/StatusButtonGroup';
 import FriendsActivity from '../../shared/FriendsActivity';
 import TimeToBeat from './views/TimeToBeat';
@@ -29,7 +30,8 @@ import {getGameReleaseStatusBadge} from '../../shared/mediaStatus';
 import {GAME_TYPE_LABELS} from '../SearchPage/views/searchTypes';
 import {IGamePricesResponse} from '../../interfaces/IGamePrice';
 import "./game-page.scss";
-import {Button, TextField} from '@steroidsjs/core/ui/form';
+import {TextField} from '@steroidsjs/core/ui/form';
+import {saveFailedNotification, savedNotification} from '../../shared/saveNotifications';
 
 const HLTB_REFRESH_POLL_INTERVAL_MS = 3000;
 const HLTB_REFRESH_MAX_POLLS = 20;
@@ -103,16 +105,42 @@ export function GamePage() {
 
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
 	const {savedValues: savedReview, markSaved: markReviewSaved} = useSavedValues({review: userInfo?.review || '', spentTime: Number(userInfo?.spent_time || 0)}, `${user?.id}:${gameId}`);
-	useUnsavedChanges(review !== savedReview.review || Number(spentTime || 0) !== savedReview.spentTime);
+	const hasChanges = review !== savedReview.review || Number(spentTime || 0) !== savedReview.spentTime;
+	useUnsavedChanges(hasChanges);
+	useEffect(() => {
+		if (!hasChanges) setSaveError('');
+	}, [hasChanges]);
+	const [isSaving, setSaving] = useState(false);
+	const [saveError, setSaveError] = useState('');
+
+	const saveChanges = useCallback(async () => {
+		setSaving(true);
+		setSaveError('');
+		try {
+			await http.send('PUT', `/games/game/${gameId}/`, {
+				review,
+				spent_time: spentTime,
+			});
+			markReviewSaved({review, spentTime: Number(spentTime || 0)});
+			dispatch(savedNotification());
+		} catch {
+			setSaveError('Не удалось сохранить отзыв и время прохождения. Повторите сохранение.');
+		} finally {
+			setSaving(false);
+		}
+	}, [http, gameId, review, spentTime, markReviewSaved, dispatch]);
 
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 	const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 
 	const setGameStatus = useCallback(async (payload) => {
-		http.send('PUT', `/games/game/${gameId}/`, payload).catch(e => {
+		http.send('PUT', `/games/game/${gameId}/`, payload).then(() => {
+			dispatch(savedNotification());
+		}).catch(() => {
+			dispatch(saveFailedNotification());
 			fetchUserInfo();
 		});
-	}, [fetchUserInfo, gameId, http]);
+	}, [fetchUserInfo, gameId, http, dispatch]);
 
 	useEffect(
 		() => {
@@ -492,7 +520,8 @@ export function GamePage() {
 									<div className={bem.element('actions-rating')}>
 										<Rating
 											initialRating={userRate}
-											readonly={!user || (userStatus === "Не играл")}
+											readonly={!user}
+											disabled={!!user && userStatus === "Не играл"}
 											onChange={(score) => {
 												setUserRate(score);
 												setGameStatus({ score });
@@ -506,15 +535,18 @@ export function GamePage() {
 											className={bem.element('info-statuses')}
 											userStatus={userStatus}
 											onChangeStatus={(status) => {
+												if (status === "Не играл" && hasChanges) {
+													if (!window.confirm(STATUS_RESET_MESSAGE)) {
+														return;
+													}
+													setReview(savedReview.review);
+													setSpentTime(savedReview.spentTime as any);
+												}
 												if (!user) {
 													dispatch(openModal(LoginForm));
 												} else {
 													setUserStatus(status);
 													setGameStatus({ status });
-													if (status === "Не играл") {
-														setReview("");
-														setUserRate(0);
-													}
 												}
 											}}
 										/>
@@ -565,8 +597,9 @@ export function GamePage() {
 									>
 										<div className={bem.element('review-body')} hidden={!user}>
 											<TextField
-												label={__('Ваш отзыв')}
 												value={review}
+												placeholder={userStatus === "Не играл" ? 'Выберите статус, чтобы написать отзыв' : 'Напишите отзыв…'}
+												disabled={isSaving || userStatus === "Не играл"}
 												onChange={(value) => setReview(value)}
 											/>
 
@@ -575,34 +608,13 @@ export function GamePage() {
 												<InputNumber
 													className='game-page__time-input'
 													value={spentTime}
+													disabled={isSaving || userStatus === "Не играл"}
 													min={0}
 													max={100000}
 													onChange={(value) => setSpentTime(value as any)}
 													dataList={hltbToDatalist(displayedGameTime || (game as any).hltb)}
 												/>
 											</div>
-											<Button
-												className={bem.element('button')}
-												label={__('Сохранить')}
-												disabled={!user || (userStatus === "Не играл")}
-												onClick={() => {
-													if (!user) {
-														dispatch(openModal(LoginForm));
-													} else {
-														http.send('PUT', `/games/game/${gameId}/`, {
-															review: review,
-															spent_time: spentTime,
-														}).then(() => {
-															markReviewSaved({review, spentTime: Number(spentTime || 0)});
-															dispatch(showNotification('Отзыв сохранен!', 'success', {
-																position: 'top-right',
-																timeOut: 1000,
-															}));
-														}).catch(() => {
-															dispatch(showNotification('Не удалось сохранить отзыв', 'danger'));
-														});
-													}
-													}} />
 											</div>
 										</LoadingOverlay>
 								</section>
@@ -638,6 +650,12 @@ export function GamePage() {
 							/>
 						</div>
 						</div>
+						<SaveDock
+							visible={!!user && (hasChanges || isSaving)}
+							isSaving={isSaving}
+							error={saveError}
+							onSave={saveChanges}
+						/>
 					</div>
 				</div>
 			</LoadingOverlay>

@@ -16,8 +16,9 @@ import LazyTrailersBlock from '../../shared/LazyTrailersBlock';
 import {ROUTE_SHOW, ROUTE_SHOW_SEASON} from '../index';
 import LoginForm from '../../modals/LoginForm';
 import "./episode-page.scss";
-import {showNotification} from '@steroidsjs/core/actions/notifications';
-import {Button, TextField} from '@steroidsjs/core/ui/form';
+import {TextField} from '@steroidsjs/core/ui/form';
+import SaveDock from '../../shared/SaveDock';
+import {saveFailedNotification, savedNotification} from '../../shared/saveNotifications';
 
 
 
@@ -46,17 +47,40 @@ function EpisodePage() {
 
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
 	const {savedValues: savedReview, markSaved: markReviewSaved} = useSavedValues({review: userInfo?.review || ''}, `${user?.id}:${showId}:${showSeasonId}:${showEpisodeId}`);
-	useUnsavedChanges(review !== savedReview.review);
+	const hasChanges = review !== savedReview.review;
+	useUnsavedChanges(hasChanges);
+	useEffect(() => {
+		if (!hasChanges) setSaveError('');
+	}, [hasChanges]);
+	const [isSaving, setSaving] = useState(false);
+	const [saveError, setSaveError] = useState('');
+
+	const saveChanges = useCallback(async () => {
+		setSaving(true);
+		setSaveError('');
+		try {
+			await http.send('PUT', `/shows/show/${showId}/episodes/`, {episodes: [{tmdb_id: showEpisode?.id, review}]});
+			markReviewSaved({review});
+			dispatch(savedNotification());
+		} catch {
+			setSaveError('Не удалось сохранить отзыв. Повторите сохранение.');
+		} finally {
+			setSaving(false);
+		}
+	}, [http, showId, showEpisode?.id, review, markReviewSaved, dispatch]);
 
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 	const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 	const userWatchedShow = useMemo(() => userInfoResponse?.user_watched_show, [userInfoResponse]);
 
 	const setEpisodesStatus = useCallback(async (payload) => {
-		http.send('PUT', `/shows/show/${showId}/episodes/`, payload).catch(e => {
+		http.send('PUT', `/shows/show/${showId}/episodes/`, payload).then(() => {
+			dispatch(savedNotification());
+		}).catch(() => {
+			dispatch(saveFailedNotification());
 			fetchUserInfo();
 		});
-	}, [showId]);
+	}, [showId, dispatch]);
 
 	useEffect(() => {
 		setReview("");
@@ -176,7 +200,7 @@ function EpisodePage() {
 								</div>
 							</div>
 
-							<div className={bem.element('actions')} hidden={!user || !userWatchedShow}>
+							<div className={bem.element('actions')} hidden={!user}>
 								<LoadingOverlay
 									active={userInfoIsLoading && !isLoading}
 									spinner
@@ -187,6 +211,7 @@ function EpisodePage() {
 										<Rating
 											withEye={true}
 											initialRating={userRate}
+											disabled={!userWatchedShow}
 											onChange={(score) => {
 												if (!user) {
 													dispatch(openModal(LoginForm));
@@ -230,33 +255,15 @@ function EpisodePage() {
 									</div>
 								</section>
 
-								<section className={bem.element('content-card', {review: true})} hidden={!user || !userWatchedShow}>
+								<section className={bem.element('content-card', {review: true})} hidden={!user}>
 									<h3 className={bem.element('review-header')}>Отзыв</h3>
 									<LoadingOverlay active={userInfoIsLoading && !isLoading} spinner text='Загрузка...'>
 										<div className={bem.element('review-body')}>
 											<TextField
-												label={__('Ваш отзыв')}
 												value={review}
+												placeholder={userWatchedShow ? 'Напишите отзыв…' : 'Выберите статус сериала, чтобы написать отзыв'}
+												disabled={isSaving || !userWatchedShow}
 												onChange={(value) => setReview(value)}
-											/>
-											<Button
-												label={__('Сохранить')}
-												className={bem.element('button')}
-												onClick={() => {
-													if (!user) {
-														dispatch(openModal(LoginForm));
-													} else {
-														http.send('PUT', `/shows/show/${showId}/episodes/`, { episodes: [{ tmdb_id: showEpisode?.id, review: review }] }).then(() => {
-															markReviewSaved({review});
-															dispatch(showNotification('Отзыв сохранен!', 'success', {
-																position: 'top-right',
-																timeOut: 1000,
-															}));
-														}).catch(() => {
-															dispatch(showNotification('Не удалось сохранить отзыв', 'danger'));
-														});
-													}
-												}}
 											/>
 										</div>
 									</LoadingOverlay>
@@ -287,6 +294,12 @@ function EpisodePage() {
 							</section>
 						</div>
 						</div>
+						<SaveDock
+							visible={!!user && !!userWatchedShow && (hasChanges || isSaving)}
+							isSaving={isSaving}
+							error={saveError}
+							onSave={saveChanges}
+						/>
 					</div>
 				</div>
 			</LoadingOverlay>

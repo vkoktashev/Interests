@@ -12,6 +12,7 @@ interface IInputNumberProps {
 	className?: string,
 	dataList?: Array<number | string>,
 	placeholder?: string,
+	disabled?: boolean,
 }
 
 function clamp(value: number, min?: number, max?: number) {
@@ -67,6 +68,7 @@ export function InputNumber({
 	className,
 	dataList = [],
 	placeholder,
+	disabled,
 }: IInputNumberProps) {
 	const bem = useBem('input-number');
 	const [inputValue, setInputValue] = useState<string>(formatDisplayValue(value));
@@ -104,7 +106,7 @@ export function InputNumber({
 				<button
 					type='button'
 					className={bem.element('button', {minus: true})}
-					disabled={!canDecrease}
+					disabled={disabled || !canDecrease}
 					onClick={() => commitNumericValue(numericValue - step)}
 				>
 					-
@@ -114,6 +116,7 @@ export function InputNumber({
 					type='text'
 					inputMode='decimal'
 					placeholder={placeholder}
+					disabled={disabled}
 					value={inputValue}
 					className={bem.element('input')}
 					onChange={(event) => {
@@ -148,7 +151,7 @@ export function InputNumber({
 				<button
 					type='button'
 					className={bem.element('button', {plus: true})}
-					disabled={!canIncrease}
+					disabled={disabled || !canIncrease}
 					onClick={() => commitNumericValue(numericValue + step)}
 				>
 					+
@@ -167,6 +170,7 @@ export function InputNumber({
 							<button
 								type='button'
 								key={`${data}-${counter}`}
+								disabled={disabled}
 								onClick={() => commitNumericValue(parsedValue)}
 								className={bem.element('hint')}
 							>

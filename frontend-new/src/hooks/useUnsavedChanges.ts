@@ -2,6 +2,7 @@ import {useCallback, useEffect, useRef} from 'react';
 import {useHistory} from 'react-router-dom';
 
 const MESSAGE = 'Есть несохранённые изменения. Если уйти со страницы, они будут потеряны. Уйти без сохранения?';
+export const STATUS_RESET_MESSAGE = 'Есть несохранённые изменения. Если сменить статус, они будут потеряны. Продолжить?';
 const guards = new Set<{current: boolean}>();
 let stopBlocking: (() => void) | undefined;
 

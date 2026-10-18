@@ -90,8 +90,7 @@ def _get_game_social_payload(slug, user):
     if game is None:
         return {'user_info': None, 'friends_info': (), 'users_info': ()}
 
-    user_game = UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED) \
-        .filter(user=user, game=game).first()
+    user_game = UserGame.objects.filter(user=user, game=game).first()
     user_info = UserGameSerializer(user_game).data if user_game is not None else None
 
     followed_user_ids = UserFollow.objects.filter(

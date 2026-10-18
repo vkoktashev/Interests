@@ -59,8 +59,7 @@ def get_movie_social_payload(tmdb_id, user, request):
     except (Movie.DoesNotExist, TypeError, ValueError):
         return {'user_info': None, 'friends_info': (), 'users_info': ()}
 
-    user_movie = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED) \
-        .filter(user=user, movie=movie).first()
+    user_movie = UserMovie.objects.filter(user=user, movie=movie).first()
     user_info = UserMovieReadSerializer(user_movie, context={'request': request}).data \
         if user_movie is not None else None
 
