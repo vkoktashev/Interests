@@ -17,6 +17,7 @@ import StatusButtonGroup from '../../shared/StatusButtonGroup';
 import FriendsActivity from '../../shared/FriendsActivity';
 import TimeToBeat from './views/TimeToBeat';
 import ScoreBlock from '../../shared/ScoreBlock';
+import AgeRatingBlock from '../../shared/AgeRatingBlock';
 import Rating from '../../shared/Rating';
 import InputNumber from '../../shared/InputNumber';
 import GameStores from "../../shared/GameStores";
@@ -449,6 +450,11 @@ export function GamePage() {
 										mediaType='game'
 										objectId={game.id}
 										mediaName={game.name}
+									/>
+									<AgeRatingBlock
+										rating={game.pegi_rating}
+										text='PEGI'
+										className={bem.element('info-score')}
 									/>
 									<ScoreBlock
 										score={game.metacritic}

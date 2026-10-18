@@ -8,6 +8,7 @@ import SaveDock from '../../shared/SaveDock';
 import StatusButtonGroup from '../../shared/StatusButtonGroup';
 import FriendsActivity from '../../shared/FriendsActivity';
 import ScoreBlock from '../../shared/ScoreBlock';
+import AgeRatingBlock from '../../shared/AgeRatingBlock';
 import Rating from '../../shared/Rating';
 import TmdbRecommendationsBlock from '../../shared/TmdbRecommendationsBlock/TmdbRecommendationsBlock';
 import LazyTrailersBlock from '../../shared/LazyTrailersBlock';
@@ -201,6 +202,7 @@ export function MoviePage() {
 										objectId={movie.object_id}
 										mediaName={movie.name}
 									/>
+									<AgeRatingBlock rating={movie?.age_rating} className={bem.element('info-score')} />
 									<ScoreBlock score={movie?.score} text='TMDB score' className={bem.element('info-score')} />
 								</div>
 							</div>

@@ -20,6 +20,7 @@ class Movie(models.Model):
     tmdb_overview = models.TextField(blank=True)
     tmdb_overview_en = models.TextField(blank=True, default='')
     tmdb_score = models.IntegerField(null=True)
+    tmdb_age_rating = models.CharField(max_length=20, blank=True, default='')
     tmdb_tagline = models.TextField(blank=True)
     tmdb_production_companies = models.TextField(blank=True)
     tmdb_last_update = models.DateTimeField(null=True)

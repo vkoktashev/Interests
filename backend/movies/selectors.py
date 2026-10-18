@@ -41,6 +41,7 @@ def get_movie_payload(movie, request):
         'release_date': _format_date(movie.tmdb_release_date),
         'digital_release_date': _format_date(movie.tmdb_digital_release_date),
         'score': movie.tmdb_score,
+        'age_rating': movie.tmdb_age_rating,
         'tagline': movie.tmdb_tagline,
         'backdrop_path': get_proxy_url(request, movie.tmdb_backdrop_path),
         'poster_path': get_proxy_url(request, movie.tmdb_poster_path),
