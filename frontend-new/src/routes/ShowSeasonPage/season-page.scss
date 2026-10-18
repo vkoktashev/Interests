@@ -38,7 +38,7 @@
     margin-left: auto;
     margin-right: auto;
     border-radius: 16px;
-    overflow: hidden;
+    overflow: clip;
   }
 
   &__header {
@@ -351,41 +351,11 @@
     color: $newText3;
   }
 
-  &__save-panel {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 44px;
-    padding: 6px 8px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background:
-      linear-gradient(180deg, rgba($newAccent2, 0.07), rgba($newAccent1, 0.03)),
-      rgba($newBackground2, 0.92);
-    backdrop-filter: blur(8px);
-
-    &_inline {
-      margin-left: auto;
-      flex-shrink: 0;
-    }
-
-    &_placeholder {
-      visibility: hidden;
-      pointer-events: none;
-    }
-  }
-
-  &__save-panel-text {
-    color: $newText2;
-    font-size: 0.82rem;
-    line-height: 1.2;
-    white-space: nowrap;
-  }
-
-  &__save-panel-button {
-    width: fit-content;
-    min-width: 120px;
-    height: 32px;
+  &__episodes-body {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
   }
 
   @media (max-width: 1024px) {
@@ -444,12 +414,6 @@
       flex-direction: column;
       align-items: stretch;
       min-height: 0;
-    }
-
-    &__save-panel_inline {
-      width: 100%;
-      margin-left: 0;
-      justify-content: space-between;
     }
 
     &__body {

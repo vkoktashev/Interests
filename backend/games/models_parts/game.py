@@ -35,6 +35,7 @@ class Game(models.Model):
     igdb_videos_count = models.IntegerField(null=True, blank=True)
     igdb_screenshots_count = models.IntegerField(null=True, blank=True)
     igdb_url = models.URLField(max_length=500, blank=True)
+    igdb_pegi_rating = models.CharField(max_length=10, blank=True, default='')
     igdb_last_update = models.DateTimeField(null=True, blank=True)
     # howlongtobeat
     hltb_name = models.CharField(max_length=200, blank=True)

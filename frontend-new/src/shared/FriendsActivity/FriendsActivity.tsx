@@ -19,9 +19,10 @@ interface IFriendActivityInfo {
 
 interface IFriendsActivityProps {
 	info?: IFriendActivityInfo[],
+	isEpisode?: boolean,
 }
 
-export function FriendsActivity({info}: IFriendsActivityProps) {
+export function FriendsActivity({info, isEpisode = false}: IFriendsActivityProps) {
 	const bem = useBem('friends-activity');
 
 	if (!info?.length) {
@@ -33,6 +34,7 @@ export function FriendsActivity({info}: IFriendsActivityProps) {
 			{info?.map((friendInfo) => (
 				<FriendActivity
 					info={friendInfo}
+					isEpisode={isEpisode}
 					key={friendInfo.user.id}
 					className={bem.element('element')}
 				/>

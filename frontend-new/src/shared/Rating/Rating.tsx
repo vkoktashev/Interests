@@ -1,8 +1,9 @@
 import React from "react";
 import { FaStar, FaRegStar, FaEyeSlash, FaEye } from "react-icons/fa";
 import Rating from "react-rating";
+import "./rating.scss";
 
-export function RatingBlock({ initialRating, readonly, onChange, className, withEye }: any) {
+export function RatingBlock({ initialRating, readonly, disabled, onChange, className, withEye }: any) {
 	return (
 		// @ts-ignore
 		<Rating
@@ -11,7 +12,7 @@ export function RatingBlock({ initialRating, readonly, onChange, className, with
 			emptySymbol={(withEye? [<FaEyeSlash />] : []).concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaRegStar title={n.toString()} />))}
 			fullSymbol={(withEye ? [<FaEye />] : []).concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <FaStar title={n.toString()} />))}
 			initialRating={initialRating}
-			readonly={readonly}
+			readonly={readonly || disabled}
 			onClick={(value) => {
 				if (value !== initialRating) {
 					onChange(value);
@@ -19,7 +20,7 @@ export function RatingBlock({ initialRating, readonly, onChange, className, with
 					onChange(0);
 				}
 			}}
-			className={className}
+			className={[className, disabled && 'rating-block_disabled'].filter(Boolean).join(' ')}
 			quiet
 		/>
 	);

@@ -41,6 +41,7 @@ def get_movie_payload(movie, request):
         'release_date': _format_date(movie.tmdb_release_date),
         'digital_release_date': _format_date(movie.tmdb_digital_release_date),
         'score': movie.tmdb_score,
+        'age_rating': movie.tmdb_age_rating,
         'tagline': movie.tmdb_tagline,
         'backdrop_path': get_proxy_url(request, movie.tmdb_backdrop_path),
         'poster_path': get_proxy_url(request, movie.tmdb_poster_path),
@@ -59,8 +60,7 @@ def get_movie_social_payload(tmdb_id, user, request):
     except (Movie.DoesNotExist, TypeError, ValueError):
         return {'user_info': None, 'friends_info': (), 'users_info': ()}
 
-    user_movie = UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED) \
-        .filter(user=user, movie=movie).first()
+    user_movie = UserMovie.objects.filter(user=user, movie=movie).first()
     user_info = UserMovieReadSerializer(user_movie, context={'request': request}).data \
         if user_movie is not None else None
 

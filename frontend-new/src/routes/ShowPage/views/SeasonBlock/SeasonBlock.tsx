@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 
 import DetailEpisodeRow from '../../../../shared/DetailEpisodeRow';
@@ -10,6 +10,7 @@ import {getUser} from '@steroidsjs/core/reducers/auth';
 import {openModal} from '@steroidsjs/core/actions/modal';
 import loginForm from '../../../../modals/LoginForm';
 import {setSaveEpisodes} from '../../../../actions/modals';
+import {saveFailedNotification, savedNotification} from '../../../../shared/saveNotifications';
 
 function SeasonBlock({
 	showID,
@@ -19,14 +20,22 @@ function SeasonBlock({
 	onSeasonLoad,
 	onSeasonUserInfoLoad,
 	dataVersion,
-	onEpisodesDirtyChange,
+	onPendingChange,
+	savedEpisodes,
+	onEpisodesSaved,
+	onBusyChange,
+	disabled,
 }) {
 	const bem = useBem('season-block');
+	const mounted = useRef(true);
+	useEffect(() => {
+		mounted.current = true;
+		return () => { mounted.current = false; };
+	}, []);
 	const dispatch = useDispatch();
 	const {http} = useComponents();
 	const user = useSelector(getUser);
 
-	const [isChecked, setIsChecked] = useState(0);
 	const [userRate, setUserRate] = useState(0);
 	const [episodeCheckedOverrides, setEpisodeCheckedOverrides] = useState<Record<string, boolean>>({});
 
@@ -47,64 +56,42 @@ function SeasonBlock({
 	const {data: showUserInfo, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
 
 	const totalEpisodesCount = showSeason?.episodes?.length || 0;
-	const watchedEpisodesCount = useMemo(() => {
-		if (isChecked === 1) {
-			return totalEpisodesCount;
-		}
-		if (isChecked === -1) {
-			return 0;
-		}
-
-		const persistedMap = new Map(
-			(showUserInfo?.episodes_user_info || []).map(item => [String(item.tmdb_id), item?.score > -1])
-		);
-		const allEpisodeIds = (showSeason?.episodes || []).map(item => String(item.id));
-		let count = 0;
-
-		allEpisodeIds.forEach((episodeId) => {
-			const override = episodeCheckedOverrides[episodeId];
-			const base = persistedMap.get(episodeId) || false;
-			if ((override ?? base) === true) {
-				count += 1;
-			}
-		});
-
-		return count;
-	}, [isChecked, totalEpisodesCount, showSeason, showUserInfo, episodeCheckedOverrides]);
-	const hasPendingEpisodeSelectionChanges = useMemo(() => {
-		if (!showSeason?.episodes?.length) {
-			return false;
-		}
-
-		const persistedMap = new Map(
-			(showUserInfo?.episodes_user_info || []).map(item => [String(item.tmdb_id), item?.score > -1])
-		);
-
-		return showSeason.episodes.some((episode) => {
-			const episodeId = String(episode.id);
-			const base = persistedMap.get(episodeId) || false;
-			const current = isChecked === 1
-				? true
-				: isChecked === -1
-					? false
-					: (episodeCheckedOverrides[episodeId] ?? base);
-			return current !== base;
-		});
-	}, [showSeason, showUserInfo, isChecked, episodeCheckedOverrides]);
+	const episodeInfo = useMemo(() => {
+		const info = new Map<string, any>((showUserInfo?.episodes_user_info || []).map(item => [String(item.tmdb_id), item]));
+		savedEpisodes.forEach(item => info.set(String(item.tmdb_id), {...info.get(String(item.tmdb_id)), ...item}));
+		return info;
+	}, [showUserInfo, savedEpisodes]);
+	const watchedEpisodesCount = (showSeason?.episodes || []).filter(episode => (
+		episodeCheckedOverrides[String(episode.id)] ?? (episodeInfo.get(String(episode.id))?.score > -1)
+	)).length;
+	const pendingEpisodes = useMemo(() => (showSeason?.episodes || []).flatMap(episode => {
+		const persisted = episodeInfo.get(String(episode.id))?.score > -1;
+		const checked = episodeCheckedOverrides[String(episode.id)] ?? persisted;
+		return persisted === checked ? [] : [{tmdb_id: episode.id, score: checked ? 0 : -1}];
+	}), [showSeason, episodeInfo, episodeCheckedOverrides]);
 
 	const setSeasonStatus = useCallback(async (payload) => {
-		http.send('PUT', `/shows/show/${showID}/season/${seasonNumber}/`, payload).catch(e => {
+		http.send('PUT', `/shows/show/${showID}/season/${seasonNumber}/`, payload).then(() => {
+			dispatch(savedNotification());
+		}).catch(() => {
+			dispatch(saveFailedNotification());
 			fetchUserInfo();
 		});
-	}, [showID, seasonNumber]);
+	}, [showID, seasonNumber, dispatch]);
 
-	const setEpisodesStatus = useCallback((showId: string, episodesList: any[]) => {
-		http.send(
-			'PUT',
-			`/shows/show/${showId}/episodes/`,
-			episodesList,
-		)
-	}, []);
+	const setEpisodesStatus = useCallback(async (showId: string, payload: any) => {
+		onBusyChange(true);
+		try {
+			await http.send('PUT', `/shows/show/${showId}/episodes/`, payload);
+			dispatch(savedNotification());
+			if (mounted.current) onEpisodesSaved(payload.episodes);
+		} catch (error) {
+			dispatch(saveFailedNotification());
+			throw error;
+		} finally {
+			if (mounted.current) onBusyChange(false);
+		}
+	}, [http, dispatch, onEpisodesSaved, onBusyChange]);
 
 	useEffect(() => {
 		if (showUserInfo?.user_info?.score) {
@@ -120,13 +107,10 @@ function SeasonBlock({
 		}
 	}, [dataVersion]);
 
+
 	useEffect(() => {
 		setEpisodeCheckedOverrides({});
-	}, [showSeason?.id, showUserInfo]);
-
-	function getEpisodeByID(episodes, id) {
-		for (let episode in episodes) if (episodes[episode].tmdb_id === id) return episodes[episode];
-	}
+	}, [dataVersion]);
 
 	const setSaveEpisodesLocal = useCallback((value: boolean) => {
 		dispatch(setSaveEpisodes(value));
@@ -152,8 +136,8 @@ function SeasonBlock({
 	}, [showUserInfo]);
 
 	useEffect(() => {
-		onEpisodesDirtyChange?.(hasPendingEpisodeSelectionChanges);
-	}, [hasPendingEpisodeSelectionChanges, onEpisodesDirtyChange]);
+		onPendingChange(seasonNumber, pendingEpisodes);
+	}, [seasonNumber, pendingEpisodes, onPendingChange]);
 
 	if (showSeasonError || (!showSeasonIsLoading && !showSeason) || (showSeason && !showSeason.episodes?.length)) {
 		return null;
@@ -181,9 +165,11 @@ function SeasonBlock({
 						</div>
 					</div>
 
-					<div hidden={!user || !userWatchedShow} className={bem.element('rate')}>
+					<div hidden={!user} className={bem.element('rate')}>
 						<Rating
 							initialRating={userRate}
+							readonly={disabled}
+							disabled={!userWatchedShow}
 							onChange={(score) => {
 								if (!user) {
 									dispatch(openModal(loginForm));
@@ -198,15 +184,16 @@ function SeasonBlock({
 
 				<details className={bem.element('episodes')}>
 					<summary className={bem.element('summary')}>Список серий</summary>
-					<div hidden={!user || !userWatchedShow} className={bem.element('check-all')}>
+					<div hidden={!user} className={bem.element('check-all')}>
 						Выбрать все&nbsp;
 						<input
 							className={bem.element('check-all-input')}
 							type='checkbox'
-							checked={isChecked > 0}
+							disabled={disabled || userInfoIsLoading || !userWatchedShow}
+							checked={totalEpisodesCount > 0 && watchedEpisodesCount === totalEpisodesCount}
 							onChange={(res) => {
 								setSaveEpisodesLocal(true);
-								setIsChecked(res.target.checked ? 1 : -1);
+								setEpisodeCheckedOverrides(Object.fromEntries(showSeason.episodes.map(episode => [String(episode.id), res.target.checked])));
 							}}
 						/>
 					</div>
@@ -218,9 +205,11 @@ function SeasonBlock({
 										episode={episode}
 										showID={showID}
 										loggedIn={!!user}
-										userInfo={getEpisodeByID(showUserInfo?.episodes_user_info, episode?.id)}
+										userInfo={episodeInfo.get(String(episode.id))}
+										checkedValue={episodeCheckedOverrides[String(episode.id)] ?? (episodeInfo.get(String(episode.id))?.score > -1)}
+										disabled={disabled || userInfoIsLoading}
 										setEpisodeUserStatus={setEpisodesStatus}
-										checkAll={isChecked}
+										checkAll={0}
 										userWatchedShow={userWatchedShow}
 										setSaveEpisodes={setSaveEpisodesLocal}
 										onCheckedChange={handleEpisodeCheckedChange}

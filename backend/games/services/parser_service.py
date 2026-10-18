@@ -128,6 +128,7 @@ async def parse_game_from_db(game: Game, hltb_game=None):
         'game_status': game.igdb_game_status,
         'overview': game.igdb_summary,
         'metacritic': score_value,
+        'pegi_rating': game.igdb_pegi_rating,
         'genres': objects_to_str(genres),
         'developers': objects_to_str(developers),
         'publishers': objects_to_str(publishers),

@@ -1,4 +1,5 @@
 from datetime import datetime
+from itertools import chain
 
 from django.contrib.postgres.search import TrigramSimilarity
 from django.core.paginator import Paginator
@@ -83,8 +84,7 @@ def get_show_social_payload(tmdb_id, user, request):
     except (Show.DoesNotExist, TypeError, ValueError):
         return {'user_info': None, 'friends_info': (), 'users_info': ()}
 
-    user_show = UserShow.objects.exclude(status=UserShow.STATUS_NOT_WATCHED) \
-        .filter(user=user, show=show).first()
+    user_show = UserShow.objects.filter(user=user, show=show).first()
     user_info = UserShowReadSerializer(user_show, context={'request': request}).data \
         if user_show is not None else None
 
@@ -387,7 +387,17 @@ def _get_last_watched_at_by_show(user, shows_info):
     ).exclude(action_result__startswith='-').values('show__tmdb_id').annotate(
         last_watched_at=Max('created')
     )
-    for row in bulk_rows:
+    status_labels = dict(UserShow.STATUS_CHOICES)
+    status_rows = ShowLog.objects.filter(
+        user=user,
+        action_type=ShowLog.ACTION_TYPE_STATUS,
+        action_result__in=(
+            status_labels[UserShow.STATUS_WATCHING],
+            status_labels[UserShow.STATUS_WATCHED],
+        ),
+        show__tmdb_id__in=show_tmdb_ids,
+    ).values('show__tmdb_id').annotate(last_watched_at=Max('created'))
+    for row in chain(bulk_rows, status_rows):
         current = result.get(row['show__tmdb_id'])
         if current is None or row['last_watched_at'] > current:
             result[row['show__tmdb_id']] = row['last_watched_at']

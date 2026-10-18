@@ -1,4 +1,5 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import {isEqual} from 'lodash-es';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 import SeasonBlock from "../SeasonBlock";
 
@@ -34,15 +35,31 @@ function SeasonsBlock({
 	userWatchedShow,
 	defaultEpisodeRuntime,
 	onRuntimeInfoChange,
+	onPendingEpisodesChange,
+	savedEpisodes,
+	onEpisodesSaved,
+	disabled,
+	onBusyChange,
+	onCompleteShow,
 }) {
 	const {http} = useComponents();
+	const mounted = useRef(true);
+	useEffect(() => {
+		mounted.current = true;
+		return () => { mounted.current = false; };
+	}, []);
 	const user = useSelector(getUser);
     const dispatch = useDispatch();
 	const [dataVersion, setDataVersion] = useState(0);
 	const [showSeasons, setShowSeasons] = useState([]);
 	const [showSeasonsUserInfo, setShowSeasonsUserInfo] = useState<any>({});
-	const [seasonDirtyMap, setSeasonDirtyMap] = useState<Record<string, boolean>>({});
-	const hasPendingChanges = useMemo(() => Object.values(seasonDirtyMap).some(Boolean), [seasonDirtyMap]);
+	const [pendingBySeason, setPendingBySeason] = useState<Record<string, any[]>>({});
+	const pendingEpisodes = useMemo(() => Object.values(pendingBySeason).flat(), [pendingBySeason]);
+	const onPendingChange = useCallback((seasonNumber, episodes) => {
+		setPendingBySeason(current => isEqual(current[seasonNumber], episodes) ? current : {...current, [seasonNumber]: episodes});
+	}, []);
+	useEffect(() => { onPendingEpisodesChange(pendingEpisodes); }, [pendingEpisodes, onPendingEpisodesChange]);
+
 	const runtimeInfo = useMemo(() => {
 		const regularSeasonNumbers = (seasons || [])
 			.map(season => Number(season.season_number))
@@ -100,67 +117,25 @@ function SeasonsBlock({
 		};
 	}, [defaultEpisodeRuntime, seasons, showSeasons, showSeasonsUserInfo, user]);
 
-	const getEpisodeByID = useCallback((episodes, id) => {
-		for (let episode in episodes) {
-			if (episodes[episode].tmdb_id === id) {
-				return episodes[episode];
-			}
-		}
-	} ,[]);
-
-	const setEpisodesStatus = useCallback(async (episodesList: any) => {
-		await http.send(
-			'PUT',
-			`/shows/show/${showId}/episodes/`,
-			episodesList,
-		);
-	}, [showId]);
-
-	const sendEpisodes = useCallback(async () => {
-		let episodes = [];
-		let seasons = [];
-		for (const season of showSeasons) {
-			for (const episode of season.episodes) {
-				let currentValue = getEpisodeByID(showSeasonsUserInfo[season.season_number].episodes_user_info, episode.id);
-				let cbValue = (document.getElementById(`cbEpisode${episode.id}`) as any).checked;
-				let currentStatus = currentValue?.score > -1;
-				if (cbValue !== currentStatus) {
-					episodes.push({
-						tmdb_id: episode.id,
-						score: cbValue ? 0 : -1,
-					});
-					if (seasons.indexOf(season) === -1) {
-						seasons.push(season);
-					}
-				}
-			}
-		}
-		await setEpisodesStatus({ episodes });
-		setDataVersion(prevState => prevState + 1);
-		setSeasonDirtyMap({});
-		dispatch(setSaveEpisodes(false));
-	}, [showSeasons, showSeasonsUserInfo]);
-
 	const sendAllEpisodes = useCallback(async () => {
-		await http.send(
-			'PUT',
-			`/shows/show/${showId}/complete/`,
-		);
-		setDataVersion(prevState => prevState + 1);
-		setSeasonDirtyMap({});
-		dispatch(showNotification('Сериал отмечен просмотренным'));
-		dispatch(setSaveEpisodes(false));
-	}, [showSeasons]);
-
-	useEffect(() => {
-		dispatch(setSaveEpisodes(false));
-		setSeasonDirtyMap({});
-
-		return () => {
-			dispatch(setSaveEpisodes(false));
-			setSeasonDirtyMap({});
+		if (disabled || !userWatchedShow) {
+			return;
 		}
-	}, [dispatch]);
+		onBusyChange(true);
+		try {
+			await http.send('PUT', `/shows/show/${showId}/complete/`);
+			if (!mounted.current) return;
+			onCompleteShow();
+			setDataVersion(current => current + 1);
+			setPendingBySeason({});
+			dispatch(showNotification('Сериал отмечен просмотренным'));
+			dispatch(setSaveEpisodes(false));
+		} catch {
+			dispatch(showNotification('Не удалось отметить сериал просмотренным', 'danger'));
+		} finally {
+			if (mounted.current) onBusyChange(false);
+		}
+	}, [disabled, userWatchedShow, http, showId, dispatch, onBusyChange, onCompleteShow]);
 
 	useEffect(() => {
 		onRuntimeInfoChange(runtimeInfo);
@@ -191,31 +166,16 @@ function SeasonsBlock({
 
 	return (
 	<div className='seasons-block'>
-			<div className='seasons-block__actions'>
-				<Button
-					className='seasons-block__all-button'
-					hidden={!user || !userWatchedShow}
-					onClick={sendAllEpisodes}>
-					Посмотрел весь сериал
-				</Button>
-				<div className={`seasons-block__save-panel${hasPendingChanges ? '' : ' seasons-block__save-panel_placeholder'}`}>
-					{hasPendingChanges ? (
-						<>
-						<div className='seasons-block__save-panel-text'>Есть несохранённые изменения по сериям</div>
-						<Button
-							className='seasons-block__save-episodes-button'
-							onClick={sendEpisodes}>
-							Сохранить
-						</Button>
-						</>
-					) : (
-						<>
-							<div className='seasons-block__save-panel-text'>Есть несохранённые изменения по сериям</div>
-							<Button className='seasons-block__save-episodes-button' disabled>Сохранить</Button>
-						</>
-					)}
+			{user && (
+				<div className='seasons-block__actions'>
+					<Button
+						className='seasons-block__all-button'
+						disabled={disabled || !userWatchedShow}
+						onClick={sendAllEpisodes}>
+						Посмотрел весь сериал
+					</Button>
 				</div>
-			</div>
+			)}
 			{seasons
 				?.map((season) => <SeasonBlock
 					className='seasons-block__season-block'
@@ -226,18 +186,11 @@ function SeasonsBlock({
 					onSeasonLoad={addSeason}
 					onSeasonUserInfoLoad={addSeasonUserInfo}
 					dataVersion={dataVersion}
-					onEpisodesDirtyChange={(hasChanges: boolean) => {
-						setSeasonDirtyMap(prev => {
-							const key = String(season.season_number);
-							if (prev[key] === hasChanges) {
-								return prev;
-							}
-							return {
-								...prev,
-								[key]: hasChanges,
-							};
-						});
-					}}
+					onPendingChange={onPendingChange}
+					savedEpisodes={savedEpisodes}
+					onEpisodesSaved={onEpisodesSaved}
+					onBusyChange={onBusyChange}
+					disabled={disabled}
 				/>)
 				.reverse()}
 		</div>

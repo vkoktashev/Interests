@@ -701,6 +701,7 @@ def calculate_time_distribution_last_year(user: User) -> dict:
         user=user,
         movie_id__in=watched_movie_ids_last_year,
     ) \
+        .exclude(status=UserMovie.STATUS_NOT_WATCHED) \
         .aggregate(total_time_spent=Sum(F('movie__tmdb_runtime') * F('watch_count'))) \
         .get('total_time_spent') or 0
 

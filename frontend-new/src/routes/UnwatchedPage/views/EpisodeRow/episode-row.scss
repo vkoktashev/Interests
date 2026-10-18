@@ -82,6 +82,10 @@
         }
     }
 
+    & &__name {
+        border-radius: 0;
+    }
+
     &__rate {
         display: inline-flex;
         align-items: center;

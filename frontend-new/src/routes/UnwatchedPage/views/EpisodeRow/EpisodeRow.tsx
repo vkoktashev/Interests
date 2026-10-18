@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useRef, useState} from 'react';
 import {Link} from '@steroidsjs/core/ui/nav';
 import {useBem} from '@steroidsjs/core/hooks';
 import {CheckboxField} from '@steroidsjs/core/ui/form';
@@ -34,6 +34,22 @@ function EpisodeRow({
 	loggedIn,
 }: IEpisodeRowProps) {
 	const bem = useBem('episode-row');
+	const [rate, setRate] = useState(-1);
+	const savedRate = useRef(-1);
+
+	const onRateChange = (score: number) => {
+		setRate(score);
+		setShowEpisodeUserStatus(String(showID), {
+			episodes: [{
+				tmdb_id: episode.tmdb_id,
+				score,
+			}],
+		}).then(() => {
+			savedRate.current = score;
+		}).catch(() => {
+			setRate(savedRate.current);
+		});
+	};
 
 	return (
 		<div className={bem.block()}>
@@ -70,15 +86,8 @@ function EpisodeRow({
 					<Rating
 						withEye
 						readonly={!loggedIn}
-						initialRating={-1}
-						onChange={score => {
-							setShowEpisodeUserStatus(String(showID), {
-								episodes: [{
-									tmdb_id: episode.tmdb_id,
-									score,
-								}],
-							});
-						}}
+						initialRating={rate}
+						onChange={onRateChange}
 					/>
 				</div>
 			)}

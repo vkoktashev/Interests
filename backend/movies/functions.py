@@ -13,6 +13,14 @@ from utils.functions import get_english_translation_data
 
 
 TMDB_DIGITAL_RELEASE_TYPE = 4
+TMDB_AGE_RATING_COUNTRIES = ('RU', 'US')
+TMDB_US_AGE_RATINGS = {
+    'G': '0+',
+    'PG': '6+',
+    'PG-13': '13+',
+    'R': '17+',
+    'NC-17': '18+',
+}
 
 
 def get_digital_release_date(tmdb_release_dates):
@@ -30,6 +38,30 @@ def get_digital_release_date(tmdb_release_dates):
             digital_release_dates.append(release_date)
 
     return min(digital_release_dates, default=None)
+
+
+def get_age_rating(tmdb_release_dates):
+    certifications = {}
+
+    for country in (tmdb_release_dates or {}).get('results') or []:
+        certification = next(
+            (
+                (release.get('certification') or '').strip()
+                for release in country.get('release_dates') or []
+                if (release.get('certification') or '').strip()
+            ),
+            '',
+        )
+        if certification:
+            certifications[country.get('iso_3166_1')] = certification
+
+    if 'US' in certifications:
+        certifications['US'] = TMDB_US_AGE_RATINGS.get(certifications['US'].upper(), '')
+
+    for country_code in TMDB_AGE_RATING_COUNTRIES:
+        if certifications.get(country_code):
+            return certifications[country_code]
+    return ''
 
 
 def get_movie_new_fields(tmdb_movie, tmdb_release_dates=None):
@@ -51,6 +83,7 @@ def get_movie_new_fields(tmdb_movie, tmdb_release_dates=None):
         'tmdb_overview': tmdb_movie.get('overview') or '',
         'tmdb_overview_en': english_translation.get('overview') or '',
         'tmdb_score': int(tmdb_movie['vote_average'] * 10) if tmdb_movie.get('vote_average') else None,
+        'tmdb_age_rating': get_age_rating(tmdb_release_dates),
         'tmdb_tagline': tmdb_movie.get('tagline') or '',
         'tmdb_production_companies': ', '.join(company.get('name', '') for company in (tmdb_movie.get('production_companies') or []) if company.get('name')),
         'tmdb_last_update': timezone.now()

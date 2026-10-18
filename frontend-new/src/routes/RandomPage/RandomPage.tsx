@@ -341,12 +341,14 @@ function RandomPage() {
                 {winner?.tmdb_poster_path && (
                     <img src={winner?.tmdb_poster_path}
                            onLoad={() => setImageLoaded(true)}
+                           onError={() => setImageLoaded(true)}
                            style={{width: 0, height: 0}} />
                 )}
                 {winner?.poster_path && !winner?.tmdb_poster_path && (
                     <img
                         src={winner?.poster_path}
                         onLoad={() => setImageLoaded(true)}
+                        onError={() => setImageLoaded(true)}
                         style={{width: 0, height: 0}}
                         alt=''
                     />

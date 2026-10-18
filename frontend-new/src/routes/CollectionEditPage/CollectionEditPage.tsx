@@ -1,3 +1,5 @@
+import {isEqual} from 'lodash-es';
+import useUnsavedChanges from 'hooks/useUnsavedChanges';
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {Button, DropDownField, Form, InputField, TextField} from '@steroidsjs/core/ui/form';
 import {Loader} from '@steroidsjs/core/ui/layout';
@@ -47,6 +49,7 @@ function CollectionEditPage() {
 	const {collectionId} = useSelector(getRouteParams);
 	const formValues = useSelector(state => getFormValues(state, FORM_ID));
 	const [items, setItems] = useState<ICollectionItem[]>([]);
+	const [savedItems, setSavedItems] = useState<ICollectionItem[]>([]);
 	const [isSaving, setSaving] = useState(false);
 	const [isAddingItem, setAddingItem] = useState(false);
 	const [removingItemKey, setRemovingItemKey] = useState('');
@@ -61,9 +64,17 @@ function CollectionEditPage() {
 	const title = formValues?.title?.trim() || '';
 	const displayMode = (formValues?.display_mode || collection?.display_mode) as TDisplayMode;
 
+	const clearUnsavedChanges = useUnsavedChanges(isOwner && !!collection && (
+		(!!formValues && !isEqual(formValues, {
+			title: collection.title, description: collection.description || '',
+			display_mode: collection.display_mode, privacy: collection.privacy,
+		})) || !isEqual(items, savedItems)
+	));
+
 	useEffect(() => {
 		if (collection?.ordered_items) {
 			setItems(collection.ordered_items);
+			setSavedItems(collection.ordered_items);
 		}
 	}, [collection?.id, collection?.updated_at]);
 
@@ -82,6 +93,7 @@ function CollectionEditPage() {
 				object_id: item.order_id,
 			});
 			setItems(currentItems => [...currentItems, item]);
+			setSavedItems(currentItems => [...currentItems, item]);
 		} catch (requestError) {
 			const responseData = requestError?.response?.data;
 			setError(
@@ -109,6 +121,9 @@ function CollectionEditPage() {
 				object_id: item.order_id,
 			});
 			setItems(currentItems => currentItems.filter(currentItem => (
+				currentItem.type !== item.type || currentItem.order_id !== item.order_id
+			)));
+			setSavedItems(currentItems => currentItems.filter(currentItem => (
 				currentItem.type !== item.type || currentItem.order_id !== item.order_id
 			)));
 			dispatch(showNotification('Элемент удалён из подборки', 'success'));
@@ -164,9 +179,10 @@ function CollectionEditPage() {
 			setSaving(false);
 		}
 
+		clearUnsavedChanges();
 		dispatch(showNotification('Подборка обновлена!', 'success'));
 		dispatch(goToRoute(ROUTE_COLLECTION, {collectionId: collection.id}));
-	}, [collection, dispatch, http, isOwner, items]);
+	}, [clearUnsavedChanges, collection, dispatch, http, isOwner, items]);
 
 	if (isLoading && !collection) {
 		return <Loader />;
@@ -202,6 +218,7 @@ function CollectionEditPage() {
 					onSubmit={onSubmit}
 					className={bem.element('form')}
 					useRedux
+					autoDestroy
 				>
 					<div className={bem.element('fields')}>
 						<div className={bem.element('wide-field')}>

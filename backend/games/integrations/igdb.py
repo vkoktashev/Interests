@@ -79,6 +79,9 @@ IGDB_RELEASE_DATE_FIELDS = (
     'release_dates.y,release_dates.m,release_dates.d,release_dates.release_region'
 )
 
+IGDB_AGE_RATING_FIELDS = 'age_ratings.organization,age_ratings.rating_category.rating'
+IGDB_PEGI_ORGANIZATION_ID = 2
+
 IGDB_RUSSIAN_MONTHS = {
     1: 'январь',
     2: 'февраль',
@@ -620,7 +623,7 @@ def query_igdb_game_by_id(igdb_id: int) -> Optional[dict[str, Any]]:
         f'involved_companies.developer,involved_companies.publisher,'
         f'involved_companies.company.id,involved_companies.company.name,'
         f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height,'
-        f'websites.id,websites.url,websites.category; '
+        f'websites.id,websites.url,websites.category,{IGDB_AGE_RATING_FIELDS}; '
         f'where id = {int(igdb_id)}; '
         f'limit 1;'
     )
@@ -638,7 +641,7 @@ def query_igdb_game_by_slug(slug: str) -> Optional[dict[str, Any]]:
         f'involved_companies.developer,involved_companies.publisher,'
         f'involved_companies.company.id,involved_companies.company.name,'
         f'videos.name,videos.video_id,screenshots.id,screenshots.url,screenshots.width,screenshots.height,'
-        f'websites.id,websites.url,websites.category; '
+        f'websites.id,websites.url,websites.category,{IGDB_AGE_RATING_FIELDS}; '
         f'where slug = "{safe_slug}"; '
         f'limit 1;'
     )
@@ -674,6 +677,16 @@ def resolve_igdb_game_details(game: Optional[Game], requested_slug: str) -> Opti
     return None
 
 
+def _get_igdb_pegi_rating(igdb_game: dict[str, Any]) -> str:
+    for age_rating in igdb_game.get('age_ratings') or []:
+        if age_rating.get('organization') != IGDB_PEGI_ORGANIZATION_ID:
+            continue
+        rating = ((age_rating.get('rating_category') or {}).get('rating') or '').strip()
+        if rating:
+            return rating
+    return ''
+
+
 def get_igdb_game_new_fields(igdb_game: dict[str, Any]) -> dict[str, Any]:
     platforms = objects_to_str(igdb_game.get('platforms') or [])
     release_info = _get_igdb_release_info(igdb_game)
@@ -702,6 +715,7 @@ def get_igdb_game_new_fields(igdb_game: dict[str, Any]) -> dict[str, Any]:
         'igdb_videos_count': videos_count,
         'igdb_screenshots_count': screenshots_count,
         'igdb_url': igdb_game.get('url') or '',
+        'igdb_pegi_rating': _get_igdb_pegi_rating(igdb_game),
         'igdb_last_update': timezone.now(),
     }
 

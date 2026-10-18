@@ -1,3 +1,4 @@
+import useUnsavedChanges from 'hooks/useUnsavedChanges';
 import React, {useCallback, useState} from 'react';
 import {Button, DropDownField, Form, InputField, TextField} from '@steroidsjs/core/ui/form';
 import {useBem, useComponents, useDispatch, useSelector} from '@steroidsjs/core/hooks';
@@ -36,6 +37,12 @@ function CollectionCreatePage() {
 	const title = formValues?.title?.trim() || '';
 	const displayMode = formValues?.display_mode || 'mixed';
 
+	const clearUnsavedChanges = useUnsavedChanges(Boolean(user?.id) && (
+		!!formValues?.title || !!formValues?.description || items.length > 0
+		|| (formValues?.display_mode || 'mixed') !== 'mixed'
+		|| (formValues?.privacy || 'public') !== 'public'
+	));
+
 	const openProfileCollections = useCallback(() => {
 		if (!user?.id) {
 			return;
@@ -63,6 +70,7 @@ function CollectionCreatePage() {
 					caption: item.caption || '',
 				})),
 			});
+			clearUnsavedChanges();
 			dispatch(formReset(FORM_ID));
 			dispatch(showNotification('Подборка создана!', 'success'));
 			openProfileCollections();
@@ -77,7 +85,7 @@ function CollectionCreatePage() {
 		} finally {
 			setLoading(false);
 		}
-	}, [dispatch, http, items, openProfileCollections]);
+	}, [clearUnsavedChanges, dispatch, http, items, openProfileCollections]);
 
 	return (
 		<div className={bem.block()}>
@@ -109,6 +117,7 @@ function CollectionCreatePage() {
 						onSubmit={onSubmit}
 						className={bem.element('form')}
 						useRedux
+						autoDestroy
 					>
 						<div className={bem.element('field-group')}>
 							<div className={bem.element('wide-field')}>
