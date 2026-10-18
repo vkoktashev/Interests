@@ -1,3 +1,6 @@
+import {isEqual} from 'lodash-es';
+import useSavedValues from 'hooks/useSavedValues';
+import useUnsavedChanges from 'hooks/useUnsavedChanges';
 import React, {useState, useMemo, useCallback} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
@@ -75,15 +78,19 @@ function SettingsPage() {
 	const [isGoogleActionLoading, setGoogleActionLoading] = useState(false);
 	const email = settings?.email || user?.email;
 
+	const {savedValues, markSaved} = useSavedValues(settings, String(user?.id));
+	useUnsavedChanges(isAuthorized && !!formValues && !!savedValues && !isEqual(formValues, savedValues));
+
 	const patchSettings = useCallback(async (values) => {
-		http.send('PATCH', '/users/user/user_settings/', values)
+		return http.send('PATCH', '/users/user/user_settings/', values)
 			.then(() => {
+				markSaved({...values});
 				dispatch(showNotification('Настройки сохранены!'));
 			})
 			.catch(() => {
 				dispatch(showNotification('Ошибка сохранения!', 'danger'));
 			});
-	}, []);
+	}, [http, dispatch, markSaved]);
 
 	const onGoogleLink = useCallback(async (credential: string) => {
 		setGoogleActionLoading(true);
@@ -167,6 +174,7 @@ function SettingsPage() {
 						initialValues={settings}
 						onSubmit={patchSettings}
 						useRedux
+						autoDestroy
 					>
 						<div className={bem.element('grid')}>
 							<section className={bem.element('card')}>

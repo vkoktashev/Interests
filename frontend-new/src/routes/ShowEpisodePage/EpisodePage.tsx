@@ -1,3 +1,5 @@
+import useSavedValues from 'hooks/useSavedValues';
+import useUnsavedChanges from 'hooks/useUnsavedChanges';
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {Loader} from '@steroidsjs/core/ui/layout';
@@ -43,6 +45,9 @@ function EpisodePage() {
 	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
 
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
+	const {savedValues: savedReview, markSaved: markReviewSaved} = useSavedValues({review: userInfo?.review || ''}, `${user?.id}:${showId}:${showSeasonId}:${showEpisodeId}`);
+	useUnsavedChanges(review !== savedReview.review);
+
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 	const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 	const userWatchedShow = useMemo(() => userInfoResponse?.user_watched_show, [userInfoResponse]);
@@ -70,7 +75,7 @@ function EpisodePage() {
 
 	useEffect(() => {
 		if (userInfo?.review) {
-			setReview(userInfo.review);
+			setReview(userInfo.review || '');
 		} else {
 			setReview("");
 		}
@@ -241,13 +246,15 @@ function EpisodePage() {
 													if (!user) {
 														dispatch(openModal(LoginForm));
 													} else {
-														setEpisodesStatus({ episodes: [{ tmdb_id: showEpisode?.id, review: review }] })
-															.then(() => {
-																dispatch(showNotification('Отзыв сохранен!', 'success', {
-																	position: 'top-right',
-																	timeOut: 1000,
-																}));
-															});
+														http.send('PUT', `/shows/show/${showId}/episodes/`, { episodes: [{ tmdb_id: showEpisode?.id, review: review }] }).then(() => {
+															markReviewSaved({review});
+															dispatch(showNotification('Отзыв сохранен!', 'success', {
+																position: 'top-right',
+																timeOut: 1000,
+															}));
+														}).catch(() => {
+															dispatch(showNotification('Не удалось сохранить отзыв', 'danger'));
+														});
 													}
 												}}
 											/>

@@ -1,3 +1,4 @@
+import useUnsavedChanges from 'hooks/useUnsavedChanges';
 import React, {useCallback, useMemo, useState} from 'react';
 import LoadingOverlay from 'react-loading-overlay';
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
@@ -27,6 +28,8 @@ function UnwatchedPage() {
 	const checkedKeys = useMemo(() => Object.entries(formValues).filter(([, value]) => Boolean(value)), [formValues]);
 	const checkedCount = checkedKeys.length;
 	const hasCheckedEpisodes = checkedCount > 0;
+
+	useUnsavedChanges(isAuthorized && hasCheckedEpisodes);
 
 	const fetchConfig = useMemo(() => (isAuthorized ? {
 		url: '/shows/show/unwatched_episodes/',
@@ -73,13 +76,13 @@ function UnwatchedPage() {
 		try {
 			await Promise.all(
 				Array.from(showsMap.entries()).map(([showId, episodes]) =>
-					setEpisodesStatus(showId, {episodes}).catch(error => {
-						dispatch(showNotification(String(error), 'error'));
-					})
+					setEpisodesStatus(showId, {episodes})
 				)
 			);
 			dispatch(formReset(FORM_ID));
 			fetch();
+		} catch (error) {
+			dispatch(showNotification('Не удалось сохранить все отметки. Повторите сохранение.', 'danger'));
 		} finally {
 			setButtonLoading(false);
 		}
@@ -115,6 +118,7 @@ function UnwatchedPage() {
 				formId={FORM_ID}
 				onSubmit={onSubmit}
 				useRedux
+				autoDestroy
 			>
 				<section className={bem.element('hero')}>
 					<div>

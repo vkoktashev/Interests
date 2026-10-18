@@ -1,3 +1,4 @@
+import useUnsavedChanges from 'hooks/useUnsavedChanges';
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 
 import SeasonBlock from "../SeasonBlock";
@@ -43,6 +44,8 @@ function SeasonsBlock({
 	const [showSeasonsUserInfo, setShowSeasonsUserInfo] = useState<any>({});
 	const [seasonDirtyMap, setSeasonDirtyMap] = useState<Record<string, boolean>>({});
 	const hasPendingChanges = useMemo(() => Object.values(seasonDirtyMap).some(Boolean), [seasonDirtyMap]);
+	useUnsavedChanges(hasPendingChanges);
+
 	const runtimeInfo = useMemo(() => {
 		const regularSeasonNumbers = (seasons || [])
 			.map(season => Number(season.season_number))

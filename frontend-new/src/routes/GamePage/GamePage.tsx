@@ -1,3 +1,5 @@
+import useSavedValues from 'hooks/useSavedValues';
+import useUnsavedChanges from 'hooks/useUnsavedChanges';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {getUser} from '@steroidsjs/core/reducers/auth';
@@ -100,6 +102,9 @@ export function GamePage() {
 	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
 
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
+	const {savedValues: savedReview, markSaved: markReviewSaved} = useSavedValues({review: userInfo?.review || '', spentTime: Number(userInfo?.spent_time || 0)}, `${user?.id}:${gameId}`);
+	useUnsavedChanges(review !== savedReview.review || Number(spentTime || 0) !== savedReview.spentTime);
+
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 	const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 
@@ -221,7 +226,7 @@ export function GamePage() {
 	useEffect(
 		() => {
 			if (userInfo?.status) {
-				setReview(userInfo.review);
+				setReview(userInfo.review || '');
 				setSpentTime(userInfo.spent_time);
 				setUserStatus(userInfo.status);
 				setUserRate(userInfo.score);
@@ -584,14 +589,17 @@ export function GamePage() {
 													if (!user) {
 														dispatch(openModal(LoginForm));
 													} else {
-														setGameStatus({
+														http.send('PUT', `/games/game/${gameId}/`, {
 															review: review,
 															spent_time: spentTime,
 														}).then(() => {
+															markReviewSaved({review, spentTime: Number(spentTime || 0)});
 															dispatch(showNotification('Отзыв сохранен!', 'success', {
 																position: 'top-right',
 																timeOut: 1000,
 															}));
+														}).catch(() => {
+															dispatch(showNotification('Не удалось сохранить отзыв', 'danger'));
 														});
 													}
 													}} />

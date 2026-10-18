@@ -1,3 +1,5 @@
+import useSavedValues from 'hooks/useSavedValues';
+import useUnsavedChanges from 'hooks/useUnsavedChanges';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {SiThemoviedatabase} from 'react-icons/si';
@@ -49,6 +51,9 @@ export function MoviePage() {
 	}), [movieId, user]);
 	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
+	const {savedValues: savedReview, markSaved: markReviewSaved} = useSavedValues({review: userInfo?.review || ''}, `${user?.id}:${movieId}`);
+	useUnsavedChanges(review !== savedReview.review);
+
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 	const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 
@@ -100,7 +105,7 @@ export function MoviePage() {
 	useEffect(
 		() => {
 			if (userInfo?.status) {
-				setReview(userInfo.review);
+				setReview(userInfo.review || '');
 				setUserStatus(userInfo.status);
 				setUserRate(userInfo.score);
 				setUserWatchCount(userInfo.watch_count || 0);
@@ -397,13 +402,16 @@ export function MoviePage() {
 												className={bem.element('button')}
 												disabled={!user || (userStatus === "Не смотрел")}
 												onClick={() => {
-													setMovieStatus({
+													http.send('PUT', `/movies/movie/${movieId}/`, {
 														review: review,
 													}).then(() => {
+														markReviewSaved({review});
 														dispatch(showNotification('Отзыв сохранен!', 'success', {
 															position: 'top-right',
 															timeOut: 1000,
 														}));
+													}).catch(() => {
+														dispatch(showNotification('Не удалось сохранить отзыв', 'danger'));
 													});
 												}}
 											/>

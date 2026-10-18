@@ -1,3 +1,5 @@
+import useUnsavedChanges from 'hooks/useUnsavedChanges';
+import useSavedValues from 'hooks/useSavedValues';
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {ResponsiveLine} from '@nivo/line';
@@ -51,6 +53,9 @@ function SeasonPage() {
 	} = useFetch(userInfoFetchConfig);
 
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
+	const {savedValues: savedReview, markSaved: markReviewSaved} = useSavedValues({review: userInfo?.review || ''}, `${user?.id}:${showId}:${showSeasonId}`);
+	useUnsavedChanges(review !== savedReview.review);
+
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 	const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 	const userWatchedShow = useMemo(() => userInfoResponse?.user_watched_show, [userInfoResponse]);
@@ -141,12 +146,14 @@ function SeasonPage() {
 		});
 	}, [showSeason, userInfoResponse, isChecked, episodeCheckedOverrides]);
 
+	useUnsavedChanges(hasPendingEpisodeSelectionChanges);
+
 	useEffect(() => {
 		setHasPendingEpisodeChanges(hasPendingEpisodeSelectionChanges);
 	}, [hasPendingEpisodeSelectionChanges]);
 
 	useEffect(() => {
-		if (userInfo?.review) setReview(userInfo.review);
+		if (userInfo?.review) setReview(userInfo.review || '');
 		else setReview("");
 
 		if (userInfo?.score) setUserRate(userInfo.score);
@@ -405,13 +412,15 @@ function SeasonPage() {
 												className={bem.element('button')}
 												label={__('Сохранить')}
 												onClick={() => {
-													setShowSeasonStatus({ review })
-														.then(() => {
-															dispatch(showNotification('Отзыв сохранен!', 'success', {
-																position: 'top-right',
-																timeOut: 1000,
-															}));
-														});
+													http.send('PUT', `/shows/show/${showId}/season/${showSeasonId}/`, { review }).then(() => {
+														markReviewSaved({review});
+														dispatch(showNotification('Отзыв сохранен!', 'success', {
+															position: 'top-right',
+															timeOut: 1000,
+														}));
+													}).catch(() => {
+														dispatch(showNotification('Не удалось сохранить отзыв', 'danger'));
+													});
 												}}
 											/>
 										</div>
