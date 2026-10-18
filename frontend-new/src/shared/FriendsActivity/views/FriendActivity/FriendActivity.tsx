@@ -27,9 +27,10 @@ interface IFriendActivityInfo {
 interface IFriendActivityProps {
 	info: IFriendActivityInfo,
 	className?: string,
+	isEpisode?: boolean,
 }
 
-export function FriendActivity({info, className}: IFriendActivityProps) {
+export function FriendActivity({info, className, isEpisode = false}: IFriendActivityProps) {
 	const bem = useBem('friend-activity');
 	const dispatch = useDispatch();
 	const avatarUrl = info?.user?.avatar
@@ -79,10 +80,16 @@ export function FriendActivity({info, className}: IFriendActivityProps) {
 							<span className={bem.element('value')}>{info.status}</span>
 						</p>
 					)}
-					<p className={bem.element('updated')} hidden={!formattedLastUpdated}>
-						<span className={bem.element('label')}>Обновлено</span>
-						<span className={bem.element('value')}>{formattedLastUpdated}</span>
-					</p>
+					{isEpisode ? (
+						<p className={bem.element('status')}>
+							<span className={bem.element('label')}>Просмотрено</span>
+						</p>
+					) : (
+						<p className={bem.element('updated')} hidden={!formattedLastUpdated}>
+							<span className={bem.element('label')}>Обновлено</span>
+							<span className={bem.element('value')}>{formattedLastUpdated}</span>
+						</p>
+					)}
 				</div>
 
 				<div className={bem.element('score-area')}>

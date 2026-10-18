@@ -260,7 +260,7 @@ function EpisodePage() {
 								<section className={bem.element('content-card', {friends: true})} hidden={!user}>
 									<h4 className={bem.element('friends-header')}>Отзывы друзей</h4>
 									{friendsInfo?.length > 0 ? (
-										<FriendsActivity info={friendsInfo} />
+										<FriendsActivity info={friendsInfo} isEpisode />
 									) : (
 										<div className={bem.element('friends-empty')}>
 										Никто из друзей ещё не смотрел эту серию
@@ -271,7 +271,7 @@ function EpisodePage() {
 							<section className={bem.element('content-card', {friends: true})} hidden={!user}>
 								<h4 className={bem.element('friends-header')}>Отзывы пользователей</h4>
 								{usersInfo?.length > 0 ? (
-									<FriendsActivity info={usersInfo} />
+									<FriendsActivity info={usersInfo} isEpisode />
 								) : (
 									<div className={bem.element('friends-empty')}>
 										Другие пользователи ещё не смотрели эту серию
