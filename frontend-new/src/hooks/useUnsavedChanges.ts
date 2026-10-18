@@ -38,6 +38,5 @@ export default function useUnsavedChanges(isDirty: boolean) {
         };
     }, [history]);
 
-    // Clear synchronously before navigating after a successful save.
     return useCallback(() => { dirty.current = false; }, []);
 }

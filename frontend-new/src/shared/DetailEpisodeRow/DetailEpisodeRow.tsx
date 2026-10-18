@@ -102,7 +102,7 @@ function DetailEpisodeRow({
 							setIsChecked(score > -1);
 							onCheckedChange?.(episode.id, score > -1);
 						} catch {
-							// Keep the previous rating and selection when saving fails.
+							// Тост об ошибке показывает setEpisodeUserStatus; оценку и галочку не меняем
 						}
 					}}
 				/>

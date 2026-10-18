@@ -1,11 +1,11 @@
 import useUnsavedChanges from 'hooks/useUnsavedChanges';
-import React, {useCallback, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import LoadingOverlay from 'react-loading-overlay';
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getFormValues} from '@steroidsjs/core/reducers/form';
 import {Button, Form} from '@steroidsjs/core/ui/form';
-import {formReset, formSubmit} from '@steroidsjs/core/actions/form';
+import {formChange, formSubmit} from '@steroidsjs/core/actions/form';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
 import {openModal} from '@steroidsjs/core/actions/modal';
 
@@ -13,6 +13,7 @@ import ShowBlock from './views/ShowBlock';
 import {ISetEpisodesPayload, IUnwatchedShow} from './views/types';
 import pluralizeRu from './views/pluralizeRu';
 import LoginForm from '../../modals/LoginForm';
+import {saveFailedNotification, savedNotification} from '../../shared/saveNotifications';
 import './unwatched-page.scss';
 
 const FORM_ID = 'unwatchedEpisodesForm';
@@ -35,21 +36,62 @@ function UnwatchedPage() {
 		url: '/shows/show/unwatched_episodes/',
 		method: 'get',
 	} : null), [isAuthorized]);
-	const {data, isLoading, fetch} = useFetch(fetchConfig);
+	const {data, isLoading} = useFetch(fetchConfig);
 	const unwatchedShows = (Array.isArray(data) ? data : []) as IUnwatchedShow[];
+	const [markedEpisodeIds, setMarkedEpisodeIds] = useState<Set<number>>(() => new Set());
+
+	useEffect(() => {
+		setMarkedEpisodeIds(new Set());
+	}, [data]);
+
+	const visibleShows = useMemo(() => unwatchedShows.flatMap(show => {
+		let markedCount = 0;
+		const seasons = (show.seasons || []).flatMap(season => {
+			const episodes = (season.episodes || []).filter(episode => !markedEpisodeIds.has(episode.tmdb_id));
+			markedCount += (season.episodes?.length || 0) - episodes.length;
+			return episodes.length > 0 ? [{...season, episodes}] : [];
+		});
+		if (seasons.length === 0) {
+			return [];
+		}
+		return markedCount > 0
+			? [{...show, seasons, watched_episodes_count: Number(show.watched_episodes_count || 0) + markedCount}]
+			: [show];
+	}), [unwatchedShows, markedEpisodeIds]);
 
 	const stats = useMemo(() => {
-		return unwatchedShows.reduce((acc, show) => {
+		return visibleShows.reduce((acc, show) => {
 			acc.shows += 1;
 			acc.seasons += show.seasons?.length || 0;
 			acc.episodes += show.seasons?.reduce((sum, season) => sum + (season.episodes?.length || 0), 0) || 0;
 			return acc;
 		}, {shows: 0, seasons: 0, episodes: 0});
-	}, [unwatchedShows]);
+	}, [visibleShows]);
 
 	const setEpisodesStatus = useCallback(async (showId: string, payload: ISetEpisodesPayload) => {
 		await http.send('PUT', `/shows/show/${showId}/episodes/`, payload);
 	}, [http]);
+
+	const hideWatchedEpisodes = useCallback((showId: string, payload: ISetEpisodesPayload) => {
+		const watchedEpisodes = payload.episodes.filter(episode => episode.score > -1);
+		watchedEpisodes.forEach(episode => dispatch(formChange(FORM_ID, [showId, episode.tmdb_id].join('_'), false)));
+		setMarkedEpisodeIds(prev => {
+			const next = new Set(prev);
+			watchedEpisodes.forEach(episode => next.add(episode.tmdb_id));
+			return next;
+		});
+	}, [dispatch]);
+
+	const setEpisodeScore = useCallback(async (showId: string, payload: ISetEpisodesPayload) => {
+		try {
+			await setEpisodesStatus(showId, payload);
+			dispatch(savedNotification());
+			hideWatchedEpisodes(showId, payload);
+		} catch (error) {
+			dispatch(saveFailedNotification());
+			throw error;
+		}
+	}, [dispatch, setEpisodesStatus, hideWatchedEpisodes]);
 
 	const onSubmit = useCallback(async (values: Record<string, boolean>) => {
 		setButtonLoading(true);
@@ -73,20 +115,24 @@ function UnwatchedPage() {
 			showsMap.set(showId, list);
 		});
 
-		try {
-			await Promise.all(
-				Array.from(showsMap.entries()).map(([showId, episodes]) =>
-					setEpisodesStatus(showId, {episodes})
-				)
-			);
-			dispatch(formReset(FORM_ID));
-			fetch();
-		} catch (error) {
+		const results = await Promise.all(
+			Array.from(showsMap.entries()).map(async ([showId, episodes]) => {
+				try {
+					await setEpisodesStatus(showId, {episodes});
+					hideWatchedEpisodes(showId, {episodes});
+					return true;
+				} catch {
+					return false;
+				}
+			})
+		);
+		if (results.includes(false)) {
 			dispatch(showNotification('Не удалось сохранить все отметки. Повторите сохранение.', 'danger'));
-		} finally {
-			setButtonLoading(false);
+		} else {
+			dispatch(savedNotification());
 		}
-	}, [dispatch, fetch, setEpisodesStatus]);
+		setButtonLoading(false);
+	}, [dispatch, setEpisodesStatus, hideWatchedEpisodes]);
 
 	if (!isAuthorized) {
 		return (
@@ -150,12 +196,12 @@ function UnwatchedPage() {
 				</section>
 
 				<LoadingOverlay active={isLoading} spinner text='Загрузка...'>
-					{unwatchedShows.length > 0 ? (
+					{visibleShows.length > 0 ? (
 						<div className={bem.element('shows')}>
-							{unwatchedShows.map(show => (
+							{visibleShows.map(show => (
 								<ShowBlock
 									show={show}
-									setShowEpisodeUserStatus={setEpisodesStatus}
+									setShowEpisodeUserStatus={setEpisodeScore}
 									loggedIn={isAuthorized}
 									key={show.tmdb_id}
 									className={bem.element('show-block')}

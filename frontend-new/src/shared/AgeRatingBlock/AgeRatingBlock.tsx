@@ -31,7 +31,6 @@ export function AgeRatingBlock({rating, text, className}: IAgeRatingBlockProps) 
 			>
 				<p>{formattedValue}</p>
 			</div>
-			{/* Пустая подпись держит высоту вровень с соседними блоками */}
 			<p className={bem.element('text')}>{text || ' '}</p>
 		</div>
 	);
