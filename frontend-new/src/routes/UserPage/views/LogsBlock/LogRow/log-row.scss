@@ -104,10 +104,20 @@
     }
 
     &__details {
+        display: grid;
+        grid-template-rows: 1fr auto 1fr;
+        align-self: stretch;
+        min-width: 0;
+    }
+
+    &__details > .log-reactions {
+        grid-row: 3;
+        align-self: start;
         min-width: 0;
     }
 
     &__content {
+        grid-row: 2;
         min-width: 0;
         color: $newText2;
         font-size: 16px;
@@ -221,6 +231,11 @@
 
         &__media {
             width: 56px;
+        }
+
+        &__details {
+            display: block;
+            align-self: start;
         }
 
         &__content {

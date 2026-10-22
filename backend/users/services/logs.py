@@ -1,6 +1,7 @@
 from itertools import chain
 
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import Q
 
 from games.models import GameLog
@@ -14,6 +15,7 @@ from shows.models import EpisodeLog, SeasonLog, ShowLog
 from shows.serializers import EpisodeLogSerializer, SeasonLogSerializer, ShowLogSerializer
 from users.models import User, UserLog
 from users.serializers import UserLogSerializer
+from users.services.reactions import get_log_reactions
 from utils.constants import (
     TYPE_EPISODE,
     TYPE_GAME,
@@ -34,7 +36,7 @@ class LogNotFoundError(Exception):
     pass
 
 
-def delete_user_log(user, log_id, log_type):
+def get_log_model(log_type):
     model = {
         TYPE_GAME: GameLog,
         TYPE_MOVIE: MovieLog,
@@ -46,15 +48,22 @@ def delete_user_log(user, log_id, log_type):
     }.get(log_type)
     if model is None:
         raise InvalidLogTypeError
+    return model
 
+
+@transaction.atomic
+def delete_user_log(user, log_id, log_type):
+    model = get_log_model(log_type)
     try:
-        entry = model.objects.get(id=log_id, user=user)
+        entry = model.objects.select_for_update().get(id=log_id, user=user)
     except model.DoesNotExist as error:
         raise LogNotFoundError from error
     entry.delete()
 
 
 def serialize_logs(logs, request=None):
+    logs = list(logs)
+    reactions = get_log_reactions(logs, current_user=getattr(request, 'user', None))
     results = []
     for entry in logs:
         if isinstance(entry, GameLog):
@@ -73,6 +82,7 @@ def serialize_logs(logs, request=None):
             serializer = UserLogSerializer(entry)
         data = serializer.data
         data['cover_url'] = get_log_cover_url(entry, request)
+        data['reactions'] = reactions[(type(entry), entry.pk)]
         results.append(data)
     return results
 

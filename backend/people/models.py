@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.utils import timezone
 
@@ -90,6 +91,7 @@ class PersonLog(models.Model):
     created = models.DateTimeField(default=timezone.now)
     action_result = models.CharField(max_length=5)
     action_type = models.CharField(max_length=30, choices=ACTION_TYPE_CHOICES)
+    reactions = GenericRelation('users.LogReaction')
 
     class Meta:
         indexes = (

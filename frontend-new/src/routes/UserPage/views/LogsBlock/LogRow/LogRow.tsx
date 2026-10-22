@@ -14,6 +14,7 @@ import {
 	ROUTE_USER
 } from '../../../../index';
 import {getUser} from '@steroidsjs/core/reducers/auth';
+import LogReactions from '../LogReactions/LogReactions';
 
 function LogRow({ log, grouped = false, onDeleteLog, className }) {
 	const bem = useBem('log-row');
@@ -54,6 +55,7 @@ function LogRow({ log, grouped = false, onDeleteLog, className }) {
 						</>
 					)}
 				</div>
+				<LogReactions log={log} />
 			</div>
 			<button
 				className={bem.element('delete-button', {hidden: !isOwnLog})}

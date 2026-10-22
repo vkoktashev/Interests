@@ -14,14 +14,22 @@ from users.selectors import (
     get_release_calendar,
     get_user_profile_payload,
 )
-from users.serializers import MyTokenRefreshSerializer, SettingsSerializer, UserSerializer
+from users.serializers import (
+    LogReactionSerializer,
+    LogReactionUsersSerializer,
+    MyTokenRefreshSerializer,
+    SettingsSerializer,
+    UserSerializer,
+)
 from users.services.logs import (
     InvalidLogTypeError,
     LogNotFoundError,
     delete_user_log,
     get_logs,
+    get_log_model,
     get_user_by_id,
 )
+from users.services.reactions import get_log_reaction_users, set_log_reaction
 from users.services.tracking import update_follow, update_user_settings
 from utils.constants import (
     CANNOT_DELETE_ANOTHER_USER_LOG,
@@ -59,6 +67,29 @@ class MyTokenRefreshView(TokenRefreshView):
 class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     serializer_class = UserSerializer
     queryset = User.objects.all()
+
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def log_reaction_users(self, request):
+        serializer = LogReactionUsersSerializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        try:
+            model = get_log_model(data['type'])
+        except InvalidLogTypeError:
+            return Response({ERROR: WRONG_LOG_TYPE}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(get_log_reaction_users(model, data['id'], request.user, data['emoji'], data['page']))
+
+    @action(detail=False, methods=['put'], permission_classes=[IsAuthenticated])
+    def log_reaction(self, request):
+        serializer = LogReactionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        try:
+            model = get_log_model(data['type'])
+        except InvalidLogTypeError:
+            return Response({ERROR: WRONG_LOG_TYPE}, status=status.HTTP_400_BAD_REQUEST)
+        reactions = set_log_reaction(model, data['id'], request.user, data['emoji'])
+        return Response({'reactions': reactions})
 
     @action(detail=True, methods=['get', 'delete'])
     def log(self, request, **kwargs):

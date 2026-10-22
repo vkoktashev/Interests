@@ -1,0 +1,189 @@
+@import "style/colors";
+@import "style/breakpoints";
+
+.reaction-pill {
+    display: inline-flex;
+    align-items: stretch;
+    flex-shrink: 0;
+    min-height: 30px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background-color: rgba($newBackground3, 0.45);
+    color: $newText2;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+        border-color: rgba($newText2, 0.45);
+        background-color: $newBackground3;
+    }
+
+    &_selected,
+    &_selected:hover {
+        border-color: rgba($newAccent2, 0.8);
+        background-color: rgba($newAccent2, 0.24);
+        color: $newText3;
+    }
+
+    &__button,
+    &__more {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        background-color: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+
+        &:focus-visible {
+            outline: 2px solid $newAccent2;
+            outline-offset: 1px;
+        }
+    }
+
+    &__button {
+        gap: 5px;
+        padding: 3px 9px;
+        border-radius: inherit;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+
+        &:disabled {
+            cursor: wait;
+        }
+    }
+
+    &__emoji {
+        font-size: 17px;
+        line-height: 1;
+    }
+
+    &__count {
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__popover {
+        position: fixed;
+        z-index: 1100;
+        width: 248px;
+        max-width: calc(100vw - 24px);
+        max-height: min(320px, calc(100vh - 24px));
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+        padding: 6px;
+        border: 1px solid $newBackground3;
+        border-radius: 14px;
+        background-color: $newBackground2;
+        color: $newText3;
+        box-shadow: 0 8px 28px rgba($newBackground1, 0.6);
+
+        &:focus-visible {
+            outline: 2px solid $newAccent2;
+        }
+    }
+
+    &__heading {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 9px 10px;
+        font-size: 20px;
+        line-height: 1.2;
+
+        span {
+            color: $newText2;
+            font-size: 13px;
+        }
+    }
+
+    &__users {
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    &__user {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-height: 42px;
+        padding: 6px 9px;
+        border-radius: 9px;
+        color: $newText3;
+        text-decoration: none;
+
+        &:hover,
+        &:focus-visible {
+            background-color: $newBackground3;
+            color: $newText3;
+        }
+
+        &:focus-visible {
+            outline: 2px solid $newAccent2;
+            outline-offset: -2px;
+        }
+    }
+
+    &__avatar {
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background-color: $newBackground3;
+    }
+
+    &__username {
+        flex: 1;
+        min-width: 0;
+        font-size: 14px;
+        line-height: 1.3;
+        overflow-wrap: anywhere;
+    }
+
+    &__time {
+        flex-shrink: 0;
+        margin-left: auto;
+        color: $newText2;
+        font-size: 11px;
+        line-height: 1.3;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    &__message {
+        padding: 8px 9px;
+        color: $newText2;
+        font-size: 13px;
+        line-height: 1.4;
+    }
+
+    &__more {
+        width: 100%;
+        padding: 10px 9px;
+        border-radius: 9px;
+        color: $newText3;
+        font-size: 13px;
+
+        &:hover {
+            background-color: $newBackground3;
+        }
+    }
+
+    @media (max-width: $mobile-width) {
+        min-height: 36px;
+
+        &__button {
+            min-height: 34px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+}

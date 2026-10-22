@@ -5,6 +5,7 @@ import {DropDownField, Form, InputField} from '@steroidsjs/core/ui/form';
 import {formChange, formSubmit} from '@steroidsjs/core/actions/form';
 import Pagination from '@steroidsjs/core/ui/list/Pagination/Pagination';
 import {getFormValues} from '@steroidsjs/core/reducers/form';
+import {getUser} from '@steroidsjs/core/reducers/auth';
 import LogsByDay from "./LogsByDay/LogsByDay";
 import useWindowDimensions from '../../../../hooks/useWindowDimensions';
 import "./LogsBlock.scss";
@@ -21,6 +22,7 @@ interface ILogsBlockProps {
 function LogsBlock(props: ILogsBlockProps) {
 	const bem = useBem('LogsBlock');
 	const dispatch = useDispatch();
+	const currentUserId = useSelector(state => getUser(state)?.id);
 	const formValues = useSelector(state => getFormValues(state, props.formId));
 	const logsRef = useRef<HTMLDivElement | null>(null);
 	const [collapse, setCollapse] = useState(true);
@@ -32,7 +34,7 @@ function LogsBlock(props: ILogsBlockProps) {
 
 	useEffect(() => {
 		dispatch(formSubmit(props.formId));
-	}, []);
+	}, [dispatch, props.formId, currentUserId]);
 
 	const submitForm = useCallback(() => {
 		dispatch(formSubmit(props.formId));
