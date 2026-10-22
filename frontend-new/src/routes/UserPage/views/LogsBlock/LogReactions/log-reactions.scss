@@ -1,0 +1,123 @@
+@import "style/colors";
+@import "style/breakpoints";
+
+.log-reactions {
+    margin-top: 7px;
+
+    &__list {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    &__add,
+    &__option {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border: 1px solid transparent;
+        color: $newText2;
+        font: inherit;
+        cursor: pointer;
+        transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+
+        &:focus-visible {
+            outline: 2px solid $newAccent2;
+            outline-offset: 2px;
+        }
+
+        &:disabled {
+            cursor: wait;
+        }
+    }
+
+    &__add {
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border-radius: 50%;
+        background-color: transparent;
+        font-size: 19px;
+
+        &:hover,
+        &_open {
+            background-color: $newBackground3;
+            color: $newText3;
+        }
+    }
+
+    &__picker {
+        position: fixed;
+        z-index: 1100;
+        display: grid;
+        grid-template-columns: repeat(10, minmax(0, 1fr));
+        gap: 2px;
+        width: 438px;
+        max-width: calc(100vw - 24px);
+        box-sizing: border-box;
+        padding: 8px;
+        border: 1px solid $newBackground3;
+        border-radius: 18px;
+        background-color: $newBackground2;
+        box-shadow: 0 8px 28px rgba($newBackground1, 0.6);
+    }
+
+    &__option {
+        height: 40px;
+        padding: 0;
+        border-radius: 11px;
+        background-color: transparent;
+        font-size: 26px;
+        line-height: 1;
+
+        &:hover {
+            background-color: $newBackground3;
+            transform: translateY(-2px);
+        }
+
+        &_selected {
+            border-color: $newAccent2;
+            background-color: rgba($newAccent2, 0.24);
+        }
+    }
+
+    &__error {
+        margin-top: 5px;
+        color: $newText2;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    @media (max-width: $mobile-width) {
+        &__add {
+            min-height: 36px;
+        }
+
+        &__add {
+            width: 36px;
+        }
+
+        &__picker {
+            width: 268px;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 4px;
+        }
+
+        &__option {
+            height: 46px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        &__add,
+        &__option {
+            transition: none;
+        }
+
+        &__option:hover {
+            transform: none;
+        }
+    }
+}

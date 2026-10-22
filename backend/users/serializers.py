@@ -10,10 +10,21 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, Toke
 from games.models import Game
 from movies.models import Movie
 from shows.models import Show
-from users.models import User, UserFollow, UserLog
+from users.models import LogReaction, User, UserFollow, UserLog
 from utils.constants import USER_USERNAME_EXISTS, USER_EMAIL_EXISTS, USERNAME_CONTAINS_ILLEGAL_CHARACTERS, \
     WRONG_BACKDROP_PATH, TYPE_USER
 from utils.serializers import ChoicesField
+
+
+class LogReactionSerializer(serializers.Serializer):
+    type = serializers.CharField(max_length=20)
+    id = serializers.IntegerField(min_value=1)
+    emoji = serializers.ChoiceField(choices=LogReaction.EMOJI_CHOICES, allow_null=True)
+
+
+class LogReactionUsersSerializer(LogReactionSerializer):
+    emoji = serializers.ChoiceField(choices=LogReaction.EMOJI_CHOICES)
+    page = serializers.IntegerField(min_value=1, default=1)
 
 
 class UserSerializer(ModelSerializer):

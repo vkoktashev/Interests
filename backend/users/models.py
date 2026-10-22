@@ -1,6 +1,8 @@
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models.functions import Lower
@@ -121,6 +123,7 @@ class UserLogAbstract(models.Model):
     created = models.DateTimeField(default=timezone.now)
     action_result = models.CharField(max_length=3000)
     action_type = models.CharField(max_length=30, choices=ACTION_TYPE_CHOICES)
+    reactions = GenericRelation('users.LogReaction')
 
     class Meta:
         abstract = True
@@ -138,6 +141,7 @@ class UserLog(models.Model):
     action_result = models.CharField(max_length=300)
     action_type = models.CharField(max_length=30, choices=ACTION_TYPE_CHOICES)
     followed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_user')
+    reactions = GenericRelation('users.LogReaction')
 
     class Meta:
         indexes = (
@@ -145,6 +149,42 @@ class UserLog(models.Model):
         )
         verbose_name = 'лог подписки'
         verbose_name_plural = 'логи подписок'
+
+
+class LogReaction(models.Model):
+    EMOJI_CHOICES = (
+        ('👍', 'Нравится'),
+        ('❤️', 'Любовь'),
+        ('🔥', 'Огонь'),
+        ('😂', 'Смешно'),
+        ('😮', 'Удивление'),
+        ('😢', 'Грусть'),
+        ('👏', 'Аплодисменты'),
+        ('🤔', 'Задумался'),
+        ('💩', 'Какашка'),
+        ('🤮', 'Тошнит'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='log_reactions')
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveBigIntegerField()
+    content_object = GenericForeignKey()
+    emoji = models.CharField(max_length=8, choices=EMOJI_CHOICES)
+    reacted_at = models.DateTimeField(default=timezone.now, null=True, blank=True)
+
+    class Meta:
+        constraints = (
+            models.UniqueConstraint(
+                fields=('content_type', 'object_id', 'user'),
+                name='unique_user_log_reaction',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(emoji__in=('👍', '❤️', '🔥', '😂', '😮', '😢', '👏', '🤔', '💩', '🤮')),
+                name='valid_log_reaction_emoji',
+            ),
+        )
+        verbose_name = 'реакция на лог'
+        verbose_name_plural = 'реакции на логи'
 
 
 class UserFollow(models.Model):
