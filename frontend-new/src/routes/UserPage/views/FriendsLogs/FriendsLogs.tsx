@@ -14,7 +14,7 @@ const USER_FRIENDS_LOGS_FORM = 'user_friends_logs_form';
 function FriendsLogs(props: IUserLogsProps) {
     const bem = useBem('FriendsLogs');
     const {http} = useComponents();
-    const [logs, setLogs] = useState<any>({count: 0, log: []});
+    const [logs, setLogs] = useState<any>({count: 0, log: [], compact_feed: false});
     const requestIdRef = useRef(0);
     const lastAppliedRef = useRef(0);
 

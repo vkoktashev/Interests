@@ -80,6 +80,10 @@
         gap: 0.5rem;
     }
 
+    &__tooltip-option {
+        width: fit-content;
+    }
+
     &__warning {
         margin-top: 0.75rem;
         padding: 0.75rem 0.9rem;

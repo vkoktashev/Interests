@@ -12,7 +12,8 @@
     }
 
     &__add,
-    &__option {
+    &__option,
+    &__quick-option {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -64,6 +65,10 @@
         box-shadow: 0 8px 28px rgba($newBackground1, 0.6);
     }
 
+    &__quick-picker {
+        display: none;
+    }
+
     &__option {
         height: 40px;
         padding: 0;
@@ -83,11 +88,69 @@
         }
     }
 
+    &__quick-option {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        border-radius: 9px;
+        background-color: transparent;
+        font-size: 22px;
+        line-height: 1;
+
+        &:hover {
+            background-color: $newBackground3;
+            transform: translateY(-2px);
+        }
+
+        &_selected {
+            border-color: $newAccent2;
+            background-color: rgba($newAccent2, 0.24);
+        }
+    }
+
     &__error {
         margin-top: 5px;
         color: $newText2;
         font-size: 12px;
         line-height: 1.4;
+    }
+
+    @media (min-width: 541px) and (hover: hover) and (pointer: fine) {
+        display: inline-flex;
+        margin: 0 0 0 6px;
+        vertical-align: middle;
+
+        &_empty {
+            margin-left: 0;
+        }
+
+        &__list {
+            display: inline-flex;
+            vertical-align: middle;
+        }
+
+        &__add {
+            display: none;
+        }
+
+        &__quick-picker {
+            position: absolute;
+            right: 10px;
+            bottom: calc(100% - 4px);
+            z-index: 20;
+            display: flex;
+            gap: 2px;
+            padding: 6px;
+            border: 1px solid $newBackground3;
+            border-radius: 14px;
+            background-color: $newBackground2;
+            box-shadow: 0 8px 28px rgba($newBackground1, 0.6);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(4px);
+            transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+        }
     }
 
     @media (max-width: $mobile-width) {
@@ -112,12 +175,25 @@
 
     @media (prefers-reduced-motion: reduce) {
         &__add,
-        &__option {
+        &__option,
+        &__quick-option,
+        &__quick-picker {
             transition: none;
         }
 
-        &__option:hover {
+        &__option:hover,
+        &__quick-option:hover {
             transform: none;
         }
+    }
+}
+
+@media (min-width: 541px) and (hover: hover) and (pointer: fine) {
+    .log-row:hover .log-reactions:not(.log-reactions_users) .log-reactions__quick-picker,
+    .log-row:focus-within .log-reactions:not(.log-reactions_users) .log-reactions__quick-picker {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateY(0);
     }
 }

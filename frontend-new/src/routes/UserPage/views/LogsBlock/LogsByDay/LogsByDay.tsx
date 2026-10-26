@@ -75,7 +75,7 @@ function formatEventsCount(count) {
 	return `${count} событий`;
 }
 
-function UserLogs({ logs, showUsername, onDeleteLog }) {
+function UserLogs({ logs, showUsername, compactFeed, onDeleteLog }) {
 	const bem = useBem('logs-by-day');
 	const dispatch = useDispatch();
 	const [logsByDay, setLogsByDay] = useState([]);
@@ -119,13 +119,13 @@ function UserLogs({ logs, showUsername, onDeleteLog }) {
 	}
 
 	return (
-		<div className={bem.block({grouped: showUsername})}>
+		<div className={bem.block({grouped: showUsername && !compactFeed, compact: compactFeed})}>
 			{logsByDay.map(dayLog => (
 				<div key={getDayKey(dayLog.date)} className={bem.element('day')}>
 					<div className={bem.element('date')}>
 						{formatDay(dayLog.date)}
 					</div>
-					{showUsername ? (
+					{showUsername && !compactFeed ? (
 						<div className={bem.element('author-groups')}>
 							{groupLogsByAuthor(dayLog.logs).map(authorGroup => (
 								<div key={authorGroup.userId ?? authorGroup.username} className={bem.element('author-group')}>
@@ -158,6 +158,7 @@ function UserLogs({ logs, showUsername, onDeleteLog }) {
 											<LogRow
 												log={log}
 												grouped
+												compact={compactFeed}
 												key={`${log.type}:${log.id}:${log.created}`}
 												onDeleteLog={onDeleteLog}
 												className={bem.element('author-log')}
@@ -172,6 +173,8 @@ function UserLogs({ logs, showUsername, onDeleteLog }) {
 							{dayLog.logs.map(log => (
 								<LogRow
 									log={log}
+									compact={compactFeed}
+									showUsername={showUsername}
 									key={`${log.type}:${log.id}:${log.created}`}
 									onDeleteLog={onDeleteLog}
 									className={bem.element('log')}

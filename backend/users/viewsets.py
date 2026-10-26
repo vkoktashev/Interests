@@ -108,7 +108,11 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
                 request.query_params.getlist('filters[]', DEFAULT_LOG_FILTERS),
                 request=request,
             )
-            return Response({'log': results, 'count': count})
+            return Response({
+                'log': results,
+                'count': count,
+                'compact_feed': bool(getattr(request.user, 'compact_feed', False)),
+            })
 
         if request.user != user:
             return Response({ERROR: CANNOT_DELETE_ANOTHER_USER_LOG}, status=status.HTTP_403_FORBIDDEN)
@@ -136,7 +140,11 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             request.query_params.getlist('filters[]', DEFAULT_LOG_FILTERS),
             request=request,
         )
-        return Response({'log': results, 'count': count})
+        return Response({
+            'log': results,
+            'count': count,
+            'compact_feed': request.user.compact_feed,
+        })
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def release_calendar(self, request):

@@ -141,6 +141,44 @@
         font-weight: 400;
     }
 
+    &_compact {
+        gap: 14px;
+    }
+
+    &_compact &__day {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: start;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background-color: rgba(25, 26, 27, 0.6);
+        box-shadow: inset 0 0 0 1px rgba(63, 64, 65, 0.35);
+    }
+
+    &_compact &__date {
+        height: fit-content;
+        margin: 0;
+        padding: 6px 12px;
+        border-radius: 10px;
+        background-color: $newBackground2;
+        font-size: 15px;
+        line-height: 1.2;
+        letter-spacing: 0.3px;
+
+        &::after {
+            display: none;
+        }
+    }
+
+    &_compact &__logs {
+        gap: 8px;
+
+        &::before {
+            display: none;
+        }
+    }
+
     @media (max-width: $mobile-width) {
         gap: 16px;
 
@@ -164,6 +202,16 @@
 
         &__author-logs {
             margin-left: 46px;
+        }
+
+        &_compact &__day {
+            grid-template-columns: 1fr;
+            gap: 8px;
+            padding: 8px 10px;
+        }
+
+        &_compact &__date {
+            width: fit-content;
         }
     }
 

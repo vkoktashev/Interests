@@ -16,7 +16,7 @@ import {
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import LogReactions from '../LogReactions/LogReactions';
 
-function LogRow({ log, grouped = false, onDeleteLog, className }) {
+function LogRow({ log, grouped = false, compact = false, showUsername = false, onDeleteLog, className }) {
 	const bem = useBem('log-row');
 	const isOwnLog = useSelector(state => getUser(state)?.username === log.user);
 	const gender = normalizeGender(log.user_gender);
@@ -24,6 +24,7 @@ function LogRow({ log, grouped = false, onDeleteLog, className }) {
 	const actionText = translateActionType(log.action_type, log.action_result, log.type, gender);
 	const typeText = translateType(log.type, log.action_type, log.action_result);
 	const targetNode = nameToLink(log.target, log.type, log.target_id, bem);
+	const userNode = compact && showUsername ? userToLink(log.user, log.user_id, bem) : null;
 	const timeText = formatTime(log.created);
 	const resultNode = actionResultToStr(log.action_type, log.action_result, log.type, bem);
 	const showSeparator = !(
@@ -36,11 +37,16 @@ function LogRow({ log, grouped = false, onDeleteLog, className }) {
 	);
 
 	return (
-		<div className={bem(bem.block({grouped}), className)}>
+		<div className={bem(bem.block({grouped, compact}), className)}>
 			<div className={bem.element('time')}>{timeText}</div>
-			<LogMedia log={log} bem={bem} />
+			{!compact && <LogMedia log={log} bem={bem} />}
 			<div className={bem.element('details')}>
 				<div className={bem.element('content')}>
+					{userNode && (
+						<>
+							<span className={bem.element('user')}>{userNode}</span>{' '}
+						</>
+					)}
 					<span className={bem.element('action')}>{actionText}</span>
 					{typeText && (
 						<>
@@ -406,6 +412,19 @@ function nameToLink(name, type, id, bem) {
 		default:
 			return name;
 	}
+}
+
+function userToLink(username, userID, bem) {
+	return (
+		<Link
+			toRoute={ROUTE_USER}
+			toRouteParams={{
+				userId: userID,
+			}}
+			className={bem.element('link')}>
+			{username}
+		</Link>
+	);
 }
 
 function actionResultToStr(actionType, actionResult, target, bem) {

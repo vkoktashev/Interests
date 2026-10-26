@@ -68,6 +68,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     google_sub = models.CharField(max_length=255, null=True, blank=True, unique=True)
     google_email = models.EmailField(null=True, blank=True)
     use_image_proxy = models.BooleanField(default=True)
+    compact_feed = models.BooleanField(default=False)
     steam_account_region = models.CharField(
         max_length=8,
         choices=STEAM_ACCOUNT_REGION_CHOICES,

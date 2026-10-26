@@ -64,6 +64,7 @@ def delete_user_log(user, log_id, log_type):
 def serialize_logs(logs, request=None):
     logs = list(logs)
     reactions = get_log_reactions(logs, current_user=getattr(request, 'user', None))
+    compact_feed = bool(getattr(getattr(request, 'user', None), 'compact_feed', False))
     results = []
     for entry in logs:
         if isinstance(entry, GameLog):
@@ -81,7 +82,7 @@ def serialize_logs(logs, request=None):
         else:
             serializer = UserLogSerializer(entry)
         data = serializer.data
-        data['cover_url'] = get_log_cover_url(entry, request)
+        data['cover_url'] = '' if compact_feed else get_log_cover_url(entry, request)
         data['reactions'] = reactions[(type(entry), entry.pk)]
         results.append(data)
     return results
