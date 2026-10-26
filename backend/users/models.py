@@ -156,12 +156,16 @@ class LogReaction(models.Model):
     EMOJI_CHOICES = (
         ('👍', 'Нравится'),
         ('❤️', 'Любовь'),
+        ('🤤', 'Пускаю слюни'),
         ('🔥', 'Огонь'),
         ('😂', 'Смешно'),
         ('😮', 'Удивление'),
+        ('😱', 'Жуть'),
         ('😢', 'Грусть'),
+        ('🥹', 'Мило'),
         ('👏', 'Аплодисменты'),
         ('🤔', 'Задумался'),
+        ('🥱', 'Скучно'),
         ('💩', 'Какашка'),
         ('🤮', 'Тошнит'),
     )
@@ -180,7 +184,7 @@ class LogReaction(models.Model):
                 name='unique_user_log_reaction',
             ),
             models.CheckConstraint(
-                condition=models.Q(emoji__in=('👍', '❤️', '🔥', '😂', '😮', '😢', '👏', '🤔', '💩', '🤮')),
+                condition=models.Q(emoji__in=('👍', '❤️', '🤤', '🔥', '😂', '😮', '😱', '😢', '🥹', '👏', '🤔', '🥱', '💩', '🤮')),
                 name='valid_log_reaction_emoji',
             ),
         )

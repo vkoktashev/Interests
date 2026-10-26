@@ -18,6 +18,10 @@ const REACTIONS = [
         label: 'Любовь',
     },
     {
+        emoji: '🤤',
+        label: 'Пускаю слюни',
+    },
+    {
         emoji: '🔥',
         label: 'Огонь',
     },
@@ -30,8 +34,16 @@ const REACTIONS = [
         label: 'Удивление',
     },
     {
+        emoji: '😱',
+        label: 'Жуть',
+    },
+    {
         emoji: '😢',
         label: 'Грусть',
+    },
+    {
+        emoji: '🥹',
+        label: 'Мило',
     },
     {
         emoji: '👏',
@@ -40,6 +52,10 @@ const REACTIONS = [
     {
         emoji: '🤔',
         label: 'Задумался',
+    },
+    {
+        emoji: '🥱',
+        label: 'Скучно',
     },
     {
         emoji: '💩',
