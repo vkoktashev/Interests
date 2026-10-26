@@ -265,6 +265,22 @@ function SettingsPage() {
 								</section>
 								<section className={bem.element('card')}>
 									<h3 className={bem.element('subheader')}>
+										Лента
+									</h3>
+									<div className={bem.element('option-list')}>
+										<div
+											className={bem.element('tooltip-option')}
+											title='Показывает записи без обложек в более плотном виде. В ленте друзей автор указан прямо в строке записи.'
+										>
+											<CheckboxField
+												attribute="compact_feed"
+												label={__('Компактный вид ленты')}
+											/>
+										</div>
+									</div>
+								</section>
+								<section className={bem.element('card')}>
+									<h3 className={bem.element('subheader')}>
 										Steam
 									</h3>
 									<p className={bem.element('section-text')}>

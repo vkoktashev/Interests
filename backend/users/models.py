@@ -68,6 +68,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     google_sub = models.CharField(max_length=255, null=True, blank=True, unique=True)
     google_email = models.EmailField(null=True, blank=True)
     use_image_proxy = models.BooleanField(default=True)
+    compact_feed = models.BooleanField(default=False)
     steam_account_region = models.CharField(
         max_length=8,
         choices=STEAM_ACCOUNT_REGION_CHOICES,
@@ -155,12 +156,16 @@ class LogReaction(models.Model):
     EMOJI_CHOICES = (
         ('👍', 'Нравится'),
         ('❤️', 'Любовь'),
+        ('🤤', 'Пускаю слюни'),
         ('🔥', 'Огонь'),
         ('😂', 'Смешно'),
         ('😮', 'Удивление'),
+        ('😱', 'Жуть'),
         ('😢', 'Грусть'),
+        ('🥹', 'Мило'),
         ('👏', 'Аплодисменты'),
         ('🤔', 'Задумался'),
+        ('🥱', 'Скучно'),
         ('💩', 'Какашка'),
         ('🤮', 'Тошнит'),
     )
@@ -179,7 +184,7 @@ class LogReaction(models.Model):
                 name='unique_user_log_reaction',
             ),
             models.CheckConstraint(
-                condition=models.Q(emoji__in=('👍', '❤️', '🔥', '😂', '😮', '😢', '👏', '🤔', '💩', '🤮')),
+                condition=models.Q(emoji__in=('👍', '❤️', '🤤', '🔥', '😂', '😮', '😱', '😢', '🥹', '👏', '🤔', '🥱', '💩', '🤮')),
                 name='valid_log_reaction_emoji',
             ),
         )

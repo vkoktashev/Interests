@@ -17,7 +17,7 @@ function UserLogs(props: IUserLogsProps) {
     const bem = useBem('UserLogs');
     const {http} = useComponents();
     const dispatch = useDispatch();
-    const [logs, setLogs] = useState<any>({count: 0, log: []});
+    const [logs, setLogs] = useState<any>({count: 0, log: [], compact_feed: false});
     const requestIdRef = useRef(0);
     const lastAppliedRef = useRef(0);
 

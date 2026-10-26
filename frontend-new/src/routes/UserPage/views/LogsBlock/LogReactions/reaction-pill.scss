@@ -187,3 +187,22 @@
         transition: none;
     }
 }
+
+@media (min-width: 541px) and (hover: hover) and (pointer: fine) {
+    .log-row_compact .reaction-pill {
+        min-height: 24px;
+
+        &__button {
+            gap: 4px;
+            padding: 2px 7px;
+        }
+
+        &__emoji {
+            font-size: 15px;
+        }
+
+        &__count {
+            font-size: 11px;
+        }
+    }
+}

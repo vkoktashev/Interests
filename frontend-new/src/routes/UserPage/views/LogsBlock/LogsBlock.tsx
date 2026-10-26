@@ -11,7 +11,7 @@ import useWindowDimensions from '../../../../hooks/useWindowDimensions';
 import "./LogsBlock.scss";
 
 interface ILogsBlockProps {
-	logs: {count: 0, log: []},
+	logs: {count: number, log: any[], compact_feed?: boolean},
 	showUsername?: boolean,
 	onDeleteLog: (logType: string, logId: number) => void,
 	formId: string,
@@ -101,6 +101,7 @@ function LogsBlock(props: ILogsBlockProps) {
 				<LogsByDay
 					logs={props.logs}
 					showUsername={!!props.showUsername}
+					compactFeed={Boolean(props.logs.compact_feed)}
 					onDeleteLog={props.onDeleteLog}
 				/>
 			</div>

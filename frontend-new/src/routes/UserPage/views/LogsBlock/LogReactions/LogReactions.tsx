@@ -18,6 +18,10 @@ const REACTIONS = [
         label: 'Любовь',
     },
     {
+        emoji: '🤤',
+        label: 'Пускаю слюни',
+    },
+    {
         emoji: '🔥',
         label: 'Огонь',
     },
@@ -30,8 +34,16 @@ const REACTIONS = [
         label: 'Удивление',
     },
     {
+        emoji: '😱',
+        label: 'Жуть',
+    },
+    {
         emoji: '😢',
         label: 'Грусть',
+    },
+    {
+        emoji: '🥹',
+        label: 'Мило',
     },
     {
         emoji: '👏',
@@ -40,6 +52,10 @@ const REACTIONS = [
     {
         emoji: '🤔',
         label: 'Задумался',
+    },
+    {
+        emoji: '🥱',
+        label: 'Скучно',
     },
     {
         emoji: '💩',
@@ -184,7 +200,10 @@ function LogReactions({log}: ILogReactionsProps) {
     return (
         <div
             ref={rootRef}
-            className={bem.block()}
+            className={bem.block({
+                empty: reactions.length === 0,
+                users: Boolean(usersEmoji),
+            })}
         >
             <div
                 className={bem.element('list')}
@@ -229,6 +248,29 @@ function LogReactions({log}: ILogReactionsProps) {
                 >
                     <MdAddReaction aria-hidden='true' />
                 </button>
+            </div>
+            <div
+                className={bem.element('quick-picker')}
+                role='group'
+                aria-label='Выбрать реакцию'
+                aria-busy={isSaving}
+            >
+                {REACTIONS.map(option => (
+                    <button
+                        key={option.emoji}
+                        type='button'
+                        className={bem.element('quick-option', {
+                            selected: reactions.some(reaction => reaction.emoji === option.emoji && reaction.selected),
+                        })}
+                        aria-label={option.label}
+                        aria-pressed={reactions.some(reaction => reaction.emoji === option.emoji && reaction.selected)}
+                        title={option.label}
+                        disabled={isSaving}
+                        onClick={() => onReact(option.emoji)}
+                    >
+                        <span aria-hidden='true'>{option.emoji}</span>
+                    </button>
+                ))}
             </div>
             {error && (
                 <div
