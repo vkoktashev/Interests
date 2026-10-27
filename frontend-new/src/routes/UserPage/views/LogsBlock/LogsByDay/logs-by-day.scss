@@ -147,9 +147,9 @@
 
     &_compact &__day {
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr);
         align-items: start;
-        gap: 12px;
+        gap: 8px;
         padding: 10px 12px;
         border-radius: 12px;
         background-color: rgba(25, 26, 27, 0.6);
@@ -157,6 +157,7 @@
     }
 
     &_compact &__date {
+        width: fit-content;
         height: fit-content;
         margin: 0;
         padding: 6px 12px;
@@ -210,9 +211,6 @@
             padding: 8px 10px;
         }
 
-        &_compact &__date {
-            width: fit-content;
-        }
     }
 
     @media (max-width: 390px) {

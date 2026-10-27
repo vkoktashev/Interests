@@ -1,19 +1,63 @@
 @import "colors";
+@import "breakpoints";
 
-.Toastify {
-    &__toast-container, &__toast {
-        border-radius: 8px !important;
+.NotificationsView {
+    width: min(460px, calc(100vw - 32px));
+    min-width: 0;
+    pointer-events: none;
+
+    &.NotificationsView_top-right {
+        top: 76px;
+        right: 16px;
     }
 
-    &__toast--info {
-        background: $newAccent3 !important;
+    @media (max-width: $mobile-width) {
+        width: calc(100vw - 16px);
+
+        &.NotificationsView_top-right {
+            top: 72px;
+            right: 8px;
+        }
+    }
+}
+
+.NotificationsItemView {
+    width: 100%;
+    pointer-events: auto;
+}
+
+.NotificationsItemView .AlertView {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 14px 16px;
+    color: $newText3;
+    background:
+        linear-gradient(135deg, rgba($newAccent2, 0.16), transparent 70%),
+        rgba($newBackground2, 0.98);
+    border: 1px solid rgba($newAccent2, 0.48);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba($newBackground1, 0.7);
+    backdrop-filter: blur(10px);
+
+    &_error {
+        background:
+            linear-gradient(135deg, rgba($newAccent1, 0.22), transparent 70%),
+            rgba($newBackground2, 0.98);
+        border-color: rgba($newAccent1, 0.62);
     }
 
-    &__toast--success {
-        background: $newAccent2 !important;
+    .AlertView__text-block {
+        color: $newText3;
     }
 
-    &__toast--error {
-        background: $newAccent3 !important;
+    .AlertView__message {
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+
+    .AlertView__icon-close {
+        margin-left: 12px;
+        opacity: 0.72;
+        filter: invert(1);
     }
 }

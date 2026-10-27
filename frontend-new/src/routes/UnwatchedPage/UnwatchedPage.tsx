@@ -13,6 +13,7 @@ import ShowBlock from './views/ShowBlock';
 import {ISetEpisodesPayload, IUnwatchedShow} from './views/types';
 import pluralizeRu from './views/pluralizeRu';
 import LoginForm from '../../modals/LoginForm';
+import {isSessionExpiredError} from '../../components/SafeJwtHttpComponent';
 import {saveFailedNotification, savedNotification} from '../../shared/saveNotifications';
 import './unwatched-page.scss';
 
@@ -23,6 +24,7 @@ function UnwatchedPage() {
 	const dispatch = useDispatch();
 	const {http} = useComponents();
 	const [buttonIsLoading, setButtonLoading] = useState(false);
+	const [pendingFormValues, setPendingFormValues] = useState<Record<string, boolean> | null>(null);
 	const user = useSelector(getUser);
 	const isAuthorized = Boolean(user?.id);
 	const formValues = useSelector(state => getFormValues(state, FORM_ID) || {});
@@ -88,7 +90,8 @@ function UnwatchedPage() {
 			dispatch(savedNotification());
 			hideWatchedEpisodes(showId, payload);
 		} catch (error) {
-			dispatch(saveFailedNotification());
+			if (!isSessionExpiredError(error))
+				dispatch(saveFailedNotification());
 			throw error;
 		}
 	}, [dispatch, setEpisodesStatus, hideWatchedEpisodes]);
@@ -120,15 +123,30 @@ function UnwatchedPage() {
 				try {
 					await setEpisodesStatus(showId, {episodes});
 					hideWatchedEpisodes(showId, {episodes});
-					return true;
-				} catch {
-					return false;
+					return {showId, episodes, status: 'saved'};
+				} catch (error) {
+					return {
+						showId,
+						episodes,
+						status: isSessionExpiredError(error) ? 'sessionExpired' : 'failed',
+					};
 				}
 			})
 		);
-		if (results.includes(false)) {
-			dispatch(showNotification('Не удалось сохранить все отметки. Повторите сохранение.', 'danger'));
+		if (results.some(result => result.status === 'sessionExpired')) {
+			const failedValues = results.reduce((result, showResult) => {
+				if (showResult.status !== 'saved')
+					showResult.episodes.forEach(episode => {
+						result[[showResult.showId, episode.tmdb_id].join('_')] = true;
+					});
+
+				return result;
+			}, {} as Record<string, boolean>);
+			setPendingFormValues(failedValues);
+		} else if (results.some(result => result.status === 'failed')) {
+			dispatch(showNotification('Не удалось сохранить все отметки. Повторите сохранение.', 'error'));
 		} else {
+			setPendingFormValues(null);
 			dispatch(savedNotification());
 		}
 		setButtonLoading(false);
@@ -162,6 +180,7 @@ function UnwatchedPage() {
 			<Form
 				className={bem.element('body')}
 				formId={FORM_ID}
+				initialValues={pendingFormValues || undefined}
 				onSubmit={onSubmit}
 				useRedux
 				autoDestroy

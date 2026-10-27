@@ -91,8 +91,10 @@ function LogReactions({log}: ILogReactionsProps) {
     const pickerRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
     const savingRef = useRef(false);
+    const hoverCloseTimeoutRef = useRef<number | null>(null);
     const [reactions, setReactions] = useState<ILogReaction[]>(log.reactions || []);
     const [isOpen, setOpen] = useState(false);
+    const [isPickerOpenedByHover, setPickerOpenedByHover] = useState(false);
     const [usersEmoji, setUsersEmoji] = useState<string | null>(null);
     const [isSaving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -117,9 +119,11 @@ function LogReactions({log}: ILogReactionsProps) {
             left: Math.max(12, Math.min(anchor.left, window.innerWidth - picker.width - 12)),
             top: Math.max(12, Math.min(top, window.innerHeight - picker.height - 12)),
         });
-        const selectedButton = pickerRef.current.querySelector<HTMLButtonElement>('[aria-pressed="true"]');
-        (selectedButton || pickerRef.current.querySelector('button'))?.focus({preventScroll: true});
-    }, [isOpen]);
+        if (!isPickerOpenedByHover) {
+            const selectedButton = pickerRef.current.querySelector<HTMLButtonElement>('[aria-pressed="true"]');
+            (selectedButton || pickerRef.current.querySelector('button'))?.focus({preventScroll: true});
+        }
+    }, [isOpen, isPickerOpenedByHover]);
 
     useEffect(() => {
         if (!isOpen) {
@@ -150,6 +154,12 @@ function LogReactions({log}: ILogReactionsProps) {
         };
     }, [isOpen]);
 
+    useEffect(() => () => {
+        if (hoverCloseTimeoutRef.current !== null) {
+            window.clearTimeout(hoverCloseTimeoutRef.current);
+        }
+    }, []);
+
     const requireLogin = () => {
         if (user?.id) {
             return false;
@@ -179,6 +189,7 @@ function LogReactions({log}: ILogReactionsProps) {
         setReactions(optimistic);
         if (isOpen) {
             setOpen(false);
+            setPickerOpenedByHover(false);
             triggerRef.current?.focus();
         }
         try {
@@ -194,6 +205,36 @@ function LogReactions({log}: ILogReactionsProps) {
         } finally {
             savingRef.current = false;
             setSaving(false);
+        }
+    };
+
+    const isFinePointer = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+    const cancelPickerClose = () => {
+        if (hoverCloseTimeoutRef.current !== null) {
+            window.clearTimeout(hoverCloseTimeoutRef.current);
+            hoverCloseTimeoutRef.current = null;
+        }
+    };
+
+    const closePickerAfterHover = () => {
+        cancelPickerClose();
+        hoverCloseTimeoutRef.current = window.setTimeout(() => {
+            setOpen(false);
+            setPickerOpenedByHover(false);
+            hoverCloseTimeoutRef.current = null;
+        }, 150);
+    };
+
+    const openPickerOnHover = () => {
+        if (isFinePointer()) {
+            cancelPickerClose();
+            if (!isOpen) {
+                setPosition(null);
+            }
+            setUsersEmoji(null);
+            setPickerOpenedByHover(true);
+            setOpen(true);
         }
     };
 
@@ -237,12 +278,25 @@ function LogReactions({log}: ILogReactionsProps) {
                     aria-controls={isOpen ? pickerId : undefined}
                     aria-haspopup='dialog'
                     disabled={isSaving}
-                    onClick={() => {
+                    onMouseEnter={() => {
+                        openPickerOnHover();
+                    }}
+                    onMouseLeave={() => {
+                        if (isFinePointer()) {
+                            closePickerAfterHover();
+                        }
+                    }}
+                    onClick={event => {
+                        if (isFinePointer() && event.detail > 0) {
+                            return;
+                        }
                         if (requireLogin()) {
                             return;
                         }
+                        cancelPickerClose();
                         setPosition(null);
                         setUsersEmoji(null);
+                        setPickerOpenedByHover(false);
                         setOpen(!isOpen);
                     }}
                 >
@@ -288,6 +342,14 @@ function LogReactions({log}: ILogReactionsProps) {
                     aria-label='Выбрать реакцию'
                     className={bem.element('picker')}
                     style={position || {visibility: 'hidden'}}
+                    onMouseEnter={() => {
+                        cancelPickerClose();
+                    }}
+                    onMouseLeave={() => {
+                        if (isPickerOpenedByHover) {
+                            closePickerAfterHover();
+                        }
+                    }}
                     onBlur={event => {
                         const target = event.relatedTarget as Node;
                         if (!event.currentTarget.contains(target) && !rootRef.current?.contains(target)) {

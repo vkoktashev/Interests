@@ -37,7 +37,9 @@ function LogRow({ log, grouped = false, compact = false, showUsername = false, o
 	);
 
 	return (
-		<div className={bem(bem.block({grouped, compact}), className)}>
+		<div
+			className={bem(bem.block({grouped, compact}), className)}
+		>
 			<div className={bem.element('time')}>{timeText}</div>
 			{!compact && <LogMedia log={log} bem={bem} />}
 			<div className={bem.element('details')}>

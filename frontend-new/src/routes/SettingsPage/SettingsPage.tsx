@@ -119,7 +119,7 @@ function SettingsPage() {
 			dispatch(showNotification('Google аккаунт привязан!'));
 		} catch (e) {
 			const errorMessage = e?.response?.data?.error || 'Не удалось привязать Google аккаунт';
-			dispatch(showNotification(errorMessage, 'danger'));
+			dispatch(showNotification(errorMessage, 'error'));
 		} finally {
 			setGoogleActionLoading(false);
 		}
@@ -133,7 +133,7 @@ function SettingsPage() {
 			dispatch(showNotification('Google аккаунт отвязан.'));
 		} catch (e) {
 			const errorMessage = e?.response?.data?.error || 'Не удалось отвязать Google аккаунт';
-			dispatch(showNotification(errorMessage, 'danger'));
+			dispatch(showNotification(errorMessage, 'error'));
 		} finally {
 			setGoogleActionLoading(false);
 		}
@@ -317,7 +317,7 @@ function SettingsPage() {
 												className={bem.element('google-link')}
 												disabled={isGoogleActionLoading || isGoogleLinkStatusLoading}
 												onCredential={onGoogleLink}
-												onError={(message) => dispatch(showNotification(message, 'danger'))}
+												onError={(message) => dispatch(showNotification(message, 'error'))}
 											/>
 										)}
 
