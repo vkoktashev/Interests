@@ -227,7 +227,7 @@ function CollectionPage() {
 				responseData?.error
 					|| responseData?.detail
 					|| 'Не удалось склонировать подборку',
-				'danger',
+				'error',
 			));
 		} finally {
 			setCloning(false);
@@ -259,7 +259,7 @@ function CollectionPage() {
 					|| (isSubscribed
 						? 'Не удалось отписаться от подборки'
 						: 'Не удалось подписаться на подборку'),
-				'danger',
+				'error',
 			));
 		} finally {
 			setSubscribing(false);
@@ -288,7 +288,7 @@ function CollectionPage() {
 				responseData?.error
 					|| responseData?.detail
 					|| 'Не удалось удалить подборку',
-				'danger',
+				'error',
 			));
 			setDeleting(false);
 		}

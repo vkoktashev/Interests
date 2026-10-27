@@ -5,4 +5,4 @@ export const savedNotification = () => showNotification('Сохранено', 's
     timeOut: 1000,
 });
 
-export const saveFailedNotification = () => showNotification('Не удалось сохранить', 'danger');
+export const saveFailedNotification = () => showNotification('Не удалось сохранить', 'error');

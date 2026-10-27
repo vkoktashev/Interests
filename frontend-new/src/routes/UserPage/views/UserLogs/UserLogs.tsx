@@ -33,7 +33,7 @@ function UserLogs(props: IUserLogsProps) {
     const onDeleteLog = useCallback((logType: string, logId: number) => {
         http.delete(`/users/user/${props.userId}/log/`, { type: logType, id: logId })
             .catch(e => {
-                dispatch(showNotification('Не удалось удалить лог', 'danger'));
+                dispatch(showNotification('Не удалось удалить лог', 'error'));
             })
             .finally(() => {
                 dispatch(formSubmit(USER_LOGS_FORM));

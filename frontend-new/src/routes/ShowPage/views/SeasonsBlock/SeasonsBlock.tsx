@@ -131,7 +131,7 @@ function SeasonsBlock({
 			dispatch(showNotification('Сериал отмечен просмотренным'));
 			dispatch(setSaveEpisodes(false));
 		} catch {
-			dispatch(showNotification('Не удалось отметить сериал просмотренным', 'danger'));
+			dispatch(showNotification('Не удалось отметить сериал просмотренным', 'error'));
 		} finally {
 			if (mounted.current) onBusyChange(false);
 		}

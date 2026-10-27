@@ -121,7 +121,7 @@ function RandomPage() {
                     }
                 })
                 .catch(e => {
-                    dispatch(showNotification(`Ошибка сервера ${e.response.data?.error}`, 'danger'));
+                    dispatch(showNotification(`Ошибка сервера ${e.response.data?.error}`, 'error'));
                     setLoading(false);
                     setReelPhase('done');
                 });
