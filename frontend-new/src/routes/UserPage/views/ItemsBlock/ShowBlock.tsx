@@ -7,16 +7,16 @@ function ShowBlock({ shows }) {
 			formId='showsBlock'
 			items={shows?.map((show) => {
 				const watchedEpisodes = Number(show.watched_episodes_count || 0);
-				const totalEpisodes = Number(show.show.tmdb_number_of_episodes || 0);
+				const totalEpisodes = Number(show.episodes_count || 0);
 
 				return {
-					key: String(show.show.tmdb_id),
-					link: window.location.origin + "/show/" + show.show.tmdb_id,
-					name: show.show.tmdb_name,
+					key: String(show.tmdb_id),
+					link: window.location.origin + "/show/" + show.tmdb_id,
+					name: show.name,
 					status: show.status,
 					score: show.score,
 					review: show.review,
-					poster: show.show.tmdb_backdrop_path,
+					poster: show.poster,
 					spent_time: show.spent_time,
 					progress: `${watchedEpisodes}/${totalEpisodes > 0 ? totalEpisodes : '?'}`,
 				};

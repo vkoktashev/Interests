@@ -12,7 +12,11 @@ from users.selectors import (
     get_random_entries,
     get_random_partners,
     get_release_calendar,
+    get_user_games_list,
+    get_user_movies_list,
     get_user_profile_payload,
+    get_user_shows_list,
+    get_user_tracked_people,
 )
 from users.serializers import (
     LogReactionSerializer,
@@ -163,6 +167,22 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
             return error_response
         return Response(get_user_profile_payload(request, user))
 
+    @action(detail=True, methods=['get'])
+    def games(self, request, **kwargs):
+        return _available_user_response(request, kwargs.get('pk'), get_user_games_list)
+
+    @action(detail=True, methods=['get'])
+    def movies(self, request, **kwargs):
+        return _available_user_response(request, kwargs.get('pk'), lambda user: get_user_movies_list(request, user))
+
+    @action(detail=True, methods=['get'])
+    def shows(self, request, **kwargs):
+        return _available_user_response(request, kwargs.get('pk'), lambda user: get_user_shows_list(request, user))
+
+    @action(detail=True, methods=['get'])
+    def people(self, request, **kwargs):
+        return _available_user_response(request, kwargs.get('pk'), lambda user: get_user_tracked_people(request, user))
+
     @action(detail=True, methods=['put'])
     def follow(self, request, **kwargs):
         user, error_response = _resolve_user(kwargs.get('pk'), request.user)
@@ -217,6 +237,15 @@ class UserViewSet(GenericViewSet, mixins.RetrieveModelMixin):
         except InvalidRandomCountError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(entries, status=status.HTTP_200_OK)
+
+
+def _available_user_response(request, user_id, get_data):
+    user, error_response = _resolve_user(user_id, request.user)
+    if error_response is not None:
+        return error_response
+    if not is_user_available(request.user, user):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+    return Response(get_data(user))
 
 
 def _resolve_user(user_id, current_user):

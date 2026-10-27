@@ -59,17 +59,6 @@ class UserEpisodeInSeasonSerializer(UserEpisodeSerializer):
         return user_episode.episode.tmdb_id
 
 
-class ShowStatsSerializer(UserShowReadSerializer):
-    spent_time = serializers.DecimalField(max_digits=7, decimal_places=1)
-    watched_episodes_time = serializers.IntegerField()
-    watched_episodes_count = serializers.IntegerField()
-
-    class Meta:
-        model = UserShow
-        exclude = ('id', 'user', 'updated_at')
-        depth = 1
-
-
 class ShowLogSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField('get_username')
     user_id = serializers.SerializerMethodField('get_user_id')

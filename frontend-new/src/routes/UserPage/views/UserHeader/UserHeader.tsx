@@ -13,7 +13,7 @@ interface IUserHeaderProps {
 export function UserHeader(props: IUserHeaderProps) {
 	const bem = useBem('user-header');
 	const {user, lastActivity, isCurrentUser, onToggleFollow} = props;
-	const totalItems = (user?.games?.length || 0) + (user?.movies?.length || 0) + (user?.shows?.length || 0);
+	const totalItems = user?.items_count || 0;
 	const defaultAvatarUrl = getDefaultAvatarUrl(user?.username || user?.id || 'user', user?.gender);
 	const avatarUrl = user?.avatar || user?.image || defaultAvatarUrl;
 

@@ -46,13 +46,6 @@ class UserMovieWriteSerializer(serializers.ModelSerializer):
         }
 
 
-class MovieStatsSerializer(UserMovieReadSerializer):
-    class Meta:
-        model = UserMovie
-        exclude = ('id', 'user', 'updated_at')
-        depth = 1
-
-
 class FollowedUserMovieSerializer(UserMovieReadSerializer):
     user = FollowedUserSerializer()
     movie = None

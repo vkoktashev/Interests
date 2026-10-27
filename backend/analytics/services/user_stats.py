@@ -802,6 +802,8 @@ def calculate_activity_stats(user: User, user_timezone=None) -> dict:
 
     current_streak = 0
     day_cursor = today
+    if day_cursor not in active_dates:
+        day_cursor -= timedelta(days=1)
     while day_cursor in active_dates:
         current_streak += 1
         day_cursor -= timedelta(days=1)

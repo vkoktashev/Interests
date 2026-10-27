@@ -7,15 +7,15 @@ function GameBlock({ games }) {
 			formId='gameBlock'
 			items={games?.map((game) => {
 				return {
-					key: game.game.slug,
-					link: window.location.origin + "/game/" + game.game.slug,
-					name: game.game.name,
+					key: game.slug,
+					link: window.location.origin + "/game/" + game.slug,
+					name: game.name,
 					status: game.status,
 					score: game.score,
 					review: game.review,
 					spent_time: parseFloat(game.spent_time),
-					poster: game.game.poster_path || game.game.backdrop_path,
-					game_status: game.game.game_status,
+					poster: game.poster,
+					game_status: game.game_status,
 				};
 			})}
 			statuses={[

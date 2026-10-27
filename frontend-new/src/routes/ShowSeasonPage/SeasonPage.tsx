@@ -1,6 +1,7 @@
 import SaveDock from '../../shared/SaveDock';
 import useUnsavedChanges from 'hooks/useUnsavedChanges';
 import useSavedValues from 'hooks/useSavedValues';
+import useSerialUpdates from 'hooks/useSerialUpdates';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {ResponsiveLine} from '@nivo/line';
@@ -57,7 +58,6 @@ function SeasonPage() {
 	const {
 		data: userInfoResponse,
 		isLoading: userInfoIsLoading,
-		fetch: fetchUserInfo,
 	} = useFetch(userInfoFetchConfig);
 
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
@@ -68,14 +68,20 @@ function SeasonPage() {
 	const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 	const userWatchedShow = useMemo(() => userInfoResponse?.user_watched_show, [userInfoResponse]);
 
-	const setShowSeasonStatus = useCallback(async (payload) => {
-		http.send('PUT', `/shows/show/${showId}/season/${showSeasonId}/`, payload).then(() => {
-			dispatch(savedNotification());
-		}).catch(() => {
-			dispatch(saveFailedNotification());
-			fetchUserInfo();
-		});
-	}, [showId, showSeasonId, http, fetchUserInfo, dispatch]);
+	const confirmedRate = useRef(0);
+	const {sendUpdate, pickFromSnapshot} = useSerialUpdates(`/shows/show/${showId}/season/${showSeasonId}/`, {
+		onSettled: ({data}) => {
+			if (data) {
+				confirmedRate.current = data.score || 0;
+				markReviewSaved({review: data.review || ''});
+			}
+			setUserRate(confirmedRate.current);
+		},
+	});
+
+	const setShowSeasonStatus = useCallback((payload) => {
+		sendUpdate(payload, {notify: true}).catch(() => {});
+	}, [sendUpdate]);
 
 	useEffect(() => {
 		sessionRef.current += 1;
@@ -159,12 +165,14 @@ function SeasonPage() {
 	}, [hasChanges]);
 
 	useEffect(() => {
+		confirmedRate.current = userInfo?.score || 0;
+		const values = pickFromSnapshot({score: confirmedRate.current, review: userInfo?.review || ''});
+		if ('score' in values) setUserRate(values.score);
 		if (userInfoResponse && !reviewInitialized.current) {
 			reviewInitialized.current = true;
-			setReview(userInfo?.review || '');
+			if ('review' in values) setReview(values.review);
 		}
-		setUserRate(userInfo?.score || 0);
-	}, [userInfoResponse, userInfo]);
+	}, [userInfoResponse, userInfo, pickFromSnapshot]);
 
 	const setEpisodesStatus = useCallback(async (currentShowId: string, payload: any) => {
 		const session = sessionRef.current;
@@ -213,7 +221,7 @@ function SeasonPage() {
 		if (hasReviewChanges) {
 			requests.push({
 				label: 'отзыв',
-				save: () => http.send('PUT', `/shows/show/${showId}/season/${showSeasonId}/`, {review}),
+				save: () => sendUpdate({review}),
 				accept: () => markReviewSaved({review}),
 			});
 		}
@@ -245,7 +253,7 @@ function SeasonPage() {
 		}
 		savingRef.current = false;
 		setSaving(false);
-	}, [isEpisodeSaving, hasChanges, pendingEpisodes, hasReviewChanges, review, showId, showSeasonId, http, dispatch, episodeUserInfo, markReviewSaved]);
+	}, [isEpisodeSaving, hasChanges, pendingEpisodes, hasReviewChanges, review, showId, http, sendUpdate, dispatch, episodeUserInfo, markReviewSaved]);
 
 	if (!showSeason) {
 		return <Loader />;

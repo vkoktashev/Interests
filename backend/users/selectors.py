@@ -8,13 +8,13 @@ from django.db.models import Case, Count, DecimalField, ExpressionWrapper, F, In
 from django.db.models.functions import Coalesce
 
 from games.models import Game, UserGame
-from games.serializers import GameSerializer, GameStatsSerializer, TypedGameSerializer
+from games.serializers import GameSerializer, TypedGameSerializer
 from movies.models import Movie, MoviePerson, UserMovie
-from movies.serializers import MovieSerializer, MovieStatsSerializer, TypedMovieSerializer
+from movies.serializers import MovieSerializer, TypedMovieSerializer
 from people.models import UserPerson
 from proxy.functions import get_proxy_url
 from shows.models import Episode, EpisodePerson, SeasonPerson, Show, ShowPerson, UserShow
-from shows.serializers import EpisodeShowSerializer, ShowStatsSerializer, TypedShowSerializer
+from shows.serializers import EpisodeShowSerializer, TypedShowSerializer
 from users.functions import is_user_available
 from users.models import User, UserFollow
 from users.serializers import UserInfoSerializer, UserSerializer
@@ -39,41 +39,84 @@ def get_user_profile_payload(request, user):
     except (UserFollow.DoesNotExist, TypeError):
         is_followed = False
 
-    user_games = UserGame.objects.select_related('game') \
-        .exclude(status=UserGame.STATUS_NOT_PLAYED) \
-        .filter(user=user).order_by('-updated_at')
-    user_movies = UserMovie.objects.select_related('movie') \
-        .exclude(status=UserMovie.STATUS_NOT_WATCHED) \
-        .filter(user=user).order_by('-updated_at')
-    user_shows = _get_user_shows(user)
-
-    viewer_movies = []
-    viewer_shows = []
-    if request.user.is_authenticated:
-        if request.user == user:
-            viewer_movies = user_movies
-            viewer_shows = user_shows
-        else:
-            viewer_movies = UserMovie.objects.select_related('movie') \
-                .exclude(status=UserMovie.STATUS_NOT_WATCHED) \
-                .filter(user=request.user).order_by('-updated_at')
-            viewer_shows = UserShow.objects.select_related('show') \
-                .exclude(status=UserShow.STATUS_NOT_WATCHED) \
-                .filter(user=request.user).order_by('-updated_at')
-
     payload = {
         'is_available': True,
         'is_followed': is_followed,
         'followed_users': User.objects.filter(
             id__in=UserFollow.objects.filter(user=user, is_following=True).values('followed_user')
         ).values('id', 'username', 'gender'),
-        'tracked_people': _get_tracked_people(request, user, viewer_movies, viewer_shows),
-        'games': GameStatsSerializer(user_games, many=True).data,
-        'movies': MovieStatsSerializer(user_movies, many=True, context={'request': request}).data,
-        'shows': ShowStatsSerializer(user_shows, many=True, context={'request': request}).data,
+        'items_count': _get_user_games(user).count() + _get_user_movies(user).count()
+        + _get_user_shows_base(user).count(),
     }
     payload.update(UserInfoSerializer(user).data)
     return payload
+
+
+def get_user_games_list(user):
+    statuses = dict(UserGame.STATUS_CHOICES)
+    return [
+        {
+            'slug': row['game__igdb_slug'] or '',
+            'name': row['game__igdb_name'],
+            'poster': row['game__igdb_cover_url'],
+            'game_status': row['game__igdb_game_status'],
+            'status': statuses.get(row['status']),
+            'score': row['score'],
+            'review': row['review'],
+            'spent_time': row['spent_time'],
+        }
+        for row in _get_user_games(user).values(
+            'status', 'score', 'review', 'spent_time',
+            'game__igdb_slug', 'game__igdb_name', 'game__igdb_cover_url', 'game__igdb_game_status',
+        )
+    ]
+
+
+def get_user_movies_list(request, user):
+    statuses = dict(UserMovie.STATUS_CHOICES)
+    return [
+        {
+            'tmdb_id': row['movie__tmdb_id'],
+            'name': row['movie__tmdb_name'],
+            'poster': get_proxy_url(request, row['movie__tmdb_backdrop_path']),
+            'status': statuses.get(row['status']),
+            'score': row['score'],
+            'review': row['review'],
+        }
+        for row in _get_user_movies(user).values(
+            'status', 'score', 'review', 'movie__tmdb_id', 'movie__tmdb_name', 'movie__tmdb_backdrop_path',
+        )
+    ]
+
+
+def get_user_shows_list(request, user):
+    statuses = dict(UserShow.STATUS_CHOICES)
+    return [
+        {
+            'tmdb_id': row['show__tmdb_id'],
+            'name': row['show__tmdb_name'],
+            'poster': get_proxy_url(request, row['show__tmdb_backdrop_path']),
+            'status': statuses.get(row['status']),
+            'score': row['score'],
+            'review': row['review'],
+            'spent_time': row['spent_time'],
+            'watched_episodes_count': row['watched_episodes_count'],
+            'episodes_count': row['show__tmdb_number_of_episodes'],
+        }
+        for row in _get_user_shows(user).values(
+            'status', 'score', 'review', 'spent_time', 'watched_episodes_count',
+            'show__tmdb_id', 'show__tmdb_name', 'show__tmdb_backdrop_path', 'show__tmdb_number_of_episodes',
+        )
+    ]
+
+
+def get_user_tracked_people(request, user):
+    viewer_movies = []
+    viewer_shows = []
+    if request.user.is_authenticated:
+        viewer_movies = _get_user_movies(request.user).select_related('movie')
+        viewer_shows = _get_user_shows_base(request.user).select_related('show')
+    return _get_tracked_people(request, user, viewer_movies, viewer_shows)
 
 
 def get_release_calendar(request, user=None):
@@ -193,10 +236,23 @@ def get_random_partners(user, query=''):
     ]
 
 
+def _get_user_games(user):
+    return UserGame.objects.exclude(status=UserGame.STATUS_NOT_PLAYED) \
+        .filter(user=user).order_by('-updated_at')
+
+
+def _get_user_movies(user):
+    return UserMovie.objects.exclude(status=UserMovie.STATUS_NOT_WATCHED) \
+        .filter(user=user).order_by('-updated_at')
+
+
+def _get_user_shows_base(user):
+    return UserShow.objects.exclude(status=UserShow.STATUS_NOT_WATCHED) \
+        .filter(user=user).order_by('-updated_at')
+
+
 def _get_user_shows(user):
-    return UserShow.objects.select_related('show') \
-        .exclude(status=UserShow.STATUS_NOT_WATCHED) \
-        .filter(user=user).order_by('-updated_at') \
+    return _get_user_shows_base(user) \
         .annotate(watched_episodes_count=Coalesce(
             Count(
                 'show__season__episode__userepisode__id',
