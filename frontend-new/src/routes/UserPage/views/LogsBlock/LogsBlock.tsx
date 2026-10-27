@@ -40,6 +40,18 @@ function LogsBlock(props: ILogsBlockProps) {
 		dispatch(formSubmit(props.formId));
 	}, [dispatch, props.formId]);
 
+	const formValuesRef = useRef(formValues);
+	formValuesRef.current = formValues;
+
+	// DropDownField also calls onChange when it syncs its initial value on mount,
+	// so submit only when the value differs from the one rendered before the change.
+	const submitOnDropDownChange = useCallback((attribute: string, value: any) => {
+		const normalize = (item: any) => JSON.stringify(Array.isArray(item) && !item.length ? null : item ?? null);
+		if (normalize(value) !== normalize(formValuesRef.current?.[attribute])) {
+			submitForm();
+		}
+	}, [submitForm]);
+
 	return (
 		<div className={bem(bem.block(), props.className)}>
 			<Form
@@ -85,7 +97,7 @@ function LogsBlock(props: ILogsBlockProps) {
 							multiple
 							showReset
 							fieldLayoutClassName={bem.element('dropdown', {hidden: collapse && width < 540})}
-							onChange={submitForm}
+							onChange={value => submitOnDropDownChange('filters', value)}
 						/>
 					</div>
 					<DropDownField
@@ -93,7 +105,7 @@ function LogsBlock(props: ILogsBlockProps) {
 						label={__('Записей на странице')}
 						items={[5, 10, 25, 50, 100].map(item => ({id: item, label: item}))}
 						fieldLayoutClassName={bem.element('dropdown', {hidden: collapse && width < 540})}
-						onChange={submitForm}
+						onChange={value => submitOnDropDownChange('page_size', value)}
 					/>
 				</div>
 			</Form>

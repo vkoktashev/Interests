@@ -1,8 +1,9 @@
+from collections import defaultdict
 from itertools import chain
 
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import IntegerField, Q, Value
 
 from games.models import GameLog
 from games.serializers import GameLogSerializer
@@ -108,51 +109,66 @@ def get_log_cover_url(entry, request=None):
     return get_proxy_url(request, path) if request is not None else path
 
 
+# (model, select_related, fields matched by the search query)
+FEED_LOG_SOURCES = {
+    TYPE_GAME: (
+        (GameLog, ('user', 'game'), ('game__igdb_name',)),
+    ),
+    TYPE_MOVIE: (
+        (MovieLog, ('user', 'movie'), ('movie__tmdb_name', 'movie__tmdb_original_name')),
+    ),
+    TYPE_SHOW: (
+        (ShowLog, ('user', 'show'), ('show__tmdb_name', 'show__tmdb_original_name')),
+        (SeasonLog, ('user', 'season__tmdb_show'),
+         ('season__tmdb_show__tmdb_name', 'season__tmdb_show__tmdb_original_name')),
+        (EpisodeLog, ('user', 'episode__tmdb_season__tmdb_show'),
+         ('episode__tmdb_season__tmdb_show__tmdb_name', 'episode__tmdb_season__tmdb_show__tmdb_original_name')),
+    ),
+    TYPE_USER: (
+        (UserLog, ('user', 'followed_user'), ('followed_user__username',)),
+    ),
+    TYPE_PERSON: (
+        (PersonLog, ('user', 'person'), ('person__name',)),
+    ),
+}
+
+
 def get_logs(user_query, page_size, page_number, search_query, filters, request=None):
     page_size = get_page_size(page_size)
-    page = page_number
 
-    game_logs = movie_logs = show_logs = season_logs = episode_logs = user_logs = person_logs = []
+    sources = list(chain.from_iterable(FEED_LOG_SOURCES[key] for key in FEED_LOG_SOURCES if key in filters))
+    if not sources:
+        return [], 0
 
-    for user_filter in filters:
-        if user_filter == TYPE_GAME:
-            game_logs = GameLog.objects.select_related('user', 'game') \
-                .filter(user__in=user_query) \
-                .filter(Q(game__igdb_name__icontains=search_query))
-        elif user_filter == TYPE_MOVIE:
-            movie_logs = MovieLog.objects.select_related('user', 'movie').filter(user__in=user_query) \
-                .filter(Q(movie__tmdb_name__icontains=search_query) |
-                        Q(movie__tmdb_original_name__icontains=search_query))
-        elif user_filter == TYPE_SHOW:
-            show_logs = ShowLog.objects.select_related('user', 'show').filter(user__in=user_query) \
-                .filter(Q(show__tmdb_name__icontains=search_query) |
-                        Q(show__tmdb_original_name__icontains=search_query))
-            season_logs = SeasonLog.objects.select_related('user', 'season__tmdb_show').filter(user__in=user_query) \
-                .filter(Q(season__tmdb_show__tmdb_name__icontains=search_query) |
-                        Q(season__tmdb_show__tmdb_original_name__icontains=search_query))
-            episode_logs = EpisodeLog.objects.select_related(
-                'user', 'episode', 'episode__tmdb_season',
-                'episode__tmdb_season__tmdb_show'
-            ).filter(user__in=user_query) \
-                .filter(Q(episode__tmdb_season__tmdb_show__tmdb_name__icontains=search_query) |
-                        Q(episode__tmdb_season__tmdb_show__tmdb_original_name__icontains=search_query))
-        elif user_filter == TYPE_USER:
-            user_logs = UserLog.objects.select_related('user', 'followed_user').filter(user__in=user_query) \
-                .filter(followed_user__username__icontains=search_query)
-        elif user_filter == TYPE_PERSON:
-            person_logs = PersonLog.objects.select_related('user', 'person').filter(user__in=user_query) \
-                .filter(person__name__icontains=search_query)
+    # Sort and paginate lightweight (source, id, created) rows in the database,
+    # then load full objects only for the requested page.
+    keys_querysets = []
+    for index, (model, _, search_fields) in enumerate(sources):
+        queryset = model.objects.filter(user__in=user_query)
+        if search_query:
+            search = Q()
+            for field in search_fields:
+                search |= Q(**{f'{field}__icontains': search_query})
+            queryset = queryset.filter(search)
+        keys_querysets.append(
+            queryset.annotate(source=Value(index, output_field=IntegerField())).values_list('id', 'created', 'source')
+        )
+    union_keys = keys_querysets[0].union(*keys_querysets[1:], all=True).order_by('-created', 'source', '-id')
 
-    union_logs = sorted(chain(
-        game_logs, movie_logs, show_logs, season_logs, episode_logs, user_logs, person_logs,
-    ),
-                        key=lambda obj: obj.created, reverse=True)
+    paginator = Paginator(union_keys, page_size)
+    page_keys = list(paginator.get_page(page_number).object_list)
 
-    paginator = Paginator(union_logs, page_size)
-    paginator_page = paginator.get_page(page)
+    ids_by_source = defaultdict(list)
+    for log_id, _, source in page_keys:
+        ids_by_source[source].append(log_id)
+    entries = {}
+    for source, ids in ids_by_source.items():
+        model, select_related, _ = sources[source]
+        for log_id, entry in model.objects.select_related(*select_related).in_bulk(ids).items():
+            entries[(source, log_id)] = entry
+    logs = [entries[(source, log_id)] for log_id, _, source in page_keys if (source, log_id) in entries]
 
-    results = serialize_logs(paginator_page.object_list, request=request)
-    return results, paginator.count
+    return serialize_logs(logs, request=request), paginator.count
 
 
 def get_user_by_id(user_id, current_user):
