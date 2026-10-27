@@ -11,6 +11,7 @@ import {savedNotification} from '../../../../shared/saveNotifications';
 interface IUserLogsProps {
     className?: string,
     userId: number,
+    onLoad?: () => void,
 }
 
 const USER_LOGS_FORM = 'user_logs_form';
@@ -33,8 +34,9 @@ function UserLogs(props: IUserLogsProps) {
         if (requestId > lastAppliedRef.current) {
             lastAppliedRef.current = requestId;
             setLogs(response);
+            props.onLoad?.();
         }
-    }, []);
+    }, [props.onLoad]);
 
     const visibleLogs = useMemo(() => {
         const log = (logs.log || []).filter(item => !deletedLogKeys.has(getLogKey(item.type, item.id)));

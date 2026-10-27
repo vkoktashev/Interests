@@ -90,15 +90,6 @@ class GameSerializer(ModelSerializer):
         )
 
 
-class GameStatsSerializer(ModelSerializer):
-    game = GameSerializer(read_only=True)
-    status = ChoicesField(choices=UserGame.STATUS_CHOICES, required=False)
-
-    class Meta:
-        model = UserGame
-        exclude = ('id', 'user', 'updated_at')
-
-
 # todo: rework
 class FollowedUserGameSerializer(UserGameSerializer):
     user = FollowedUserSerializer()
