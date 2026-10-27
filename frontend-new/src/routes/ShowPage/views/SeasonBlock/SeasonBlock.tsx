@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
+import useSerialUpdates from 'hooks/useSerialUpdates';
 
 import DetailEpisodeRow from '../../../../shared/DetailEpisodeRow';
 import Rating from '../../../../shared/Rating';
@@ -70,14 +71,17 @@ function SeasonBlock({
 		return persisted === checked ? [] : [{tmdb_id: episode.id, score: checked ? 0 : -1}];
 	}), [showSeason, episodeInfo, episodeCheckedOverrides]);
 
-	const setSeasonStatus = useCallback(async (payload) => {
-		http.send('PUT', `/shows/show/${showID}/season/${seasonNumber}/`, payload).then(() => {
-			dispatch(savedNotification());
-		}).catch(() => {
-			dispatch(saveFailedNotification());
-			fetchUserInfo();
-		});
-	}, [showID, seasonNumber, dispatch]);
+	const confirmedRate = useRef(0);
+	const {sendUpdate, pickFromSnapshot} = useSerialUpdates(`/shows/show/${showID}/season/${seasonNumber}/`, {
+		onSettled: ({data}) => {
+			if (data) confirmedRate.current = data.score || 0;
+			setUserRate(confirmedRate.current);
+		},
+	});
+
+	const setSeasonStatus = useCallback((payload) => {
+		sendUpdate(payload, {notify: true}).catch(() => {});
+	}, [sendUpdate]);
 
 	const setEpisodesStatus = useCallback(async (showId: string, payload: any) => {
 		onBusyChange(true);
@@ -94,12 +98,10 @@ function SeasonBlock({
 	}, [http, dispatch, onEpisodesSaved, onBusyChange]);
 
 	useEffect(() => {
-		if (showUserInfo?.user_info?.score) {
-			setUserRate(showUserInfo.user_info.score);
-		} else {
-			setUserRate(0);
-		}
-	}, [showUserInfo]);
+		confirmedRate.current = showUserInfo?.user_info?.score || 0;
+		const values = pickFromSnapshot({score: confirmedRate.current});
+		if ('score' in values) setUserRate(values.score);
+	}, [showUserInfo, pickFromSnapshot]);
 
 	useEffect(() => {
 		if (dataVersion > 0) {

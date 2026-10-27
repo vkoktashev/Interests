@@ -1,5 +1,6 @@
 import useSavedValues from 'hooks/useSavedValues';
 import useUnsavedChanges, {STATUS_RESET_MESSAGE} from 'hooks/useUnsavedChanges';
+import useSerialUpdates from 'hooks/useSerialUpdates';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {SiThemoviedatabase} from 'react-icons/si';
@@ -18,21 +19,19 @@ import AddToCollectionButton from '../../shared/AddToCollectionButton';
 import ItemCollectionsBlock from '../../shared/ItemCollectionsBlock';
 
 import "./movie-page.scss";
-import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
+import {useBem, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getRouteParam} from '@steroidsjs/core/reducers/router';
 import {Loader} from '@steroidsjs/core/ui/layout';
 import {openModal} from '@steroidsjs/core/actions/modal';
 import LoginForm from '../../modals/LoginForm';
 import {TextField} from '@steroidsjs/core/ui/form';
-import {saveFailedNotification, savedNotification} from '../../shared/saveNotifications';
 
 export function MoviePage() {
 	const bem = useBem('movie-page');
 	const pageRef = useRef<HTMLDivElement>(null);
 	const user = useSelector(getUser);
 	const dispatch = useDispatch();
-	const {http} = useComponents();
 	const movieId = useSelector(state => getRouteParam(state, 'movieId'));
 	const [review, setReview] = useState("");
 	const [userStatus, setUserStatus] = useState("Не смотрел");
@@ -51,9 +50,21 @@ export function MoviePage() {
 		url: `/movies/movie/${movieId}/user_info/`,
 		method: 'get',
 	}), [movieId, user]);
-	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
+	const {data: userInfoResponse, isLoading: userInfoIsLoading} = useFetch(userInfoFetchConfig);
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
 	const {savedValues: savedReview, markSaved: markReviewSaved} = useSavedValues({review: userInfo?.review || ''}, `${user?.id}:${movieId}`);
+	const confirmedState = useRef({status: 'Не смотрел', score: 0, watchCount: 0});
+	const {sendUpdate, pickFromSnapshot} = useSerialUpdates(`/movies/movie/${movieId}/`, {
+		onSettled: ({data}) => {
+			if (data) {
+				confirmedState.current = {status: data.status, score: data.score, watchCount: data.watch_count || 0};
+				markReviewSaved({review: data.review || ''});
+			}
+			setUserStatus(confirmedState.current.status);
+			setUserRate(confirmedState.current.score);
+			setUserWatchCount(confirmedState.current.watchCount);
+		},
+	});
 	const hasReviewChanges = review !== savedReview.review;
 	useUnsavedChanges(hasReviewChanges);
 	useEffect(() => {
@@ -66,27 +77,21 @@ export function MoviePage() {
 		setSaving(true);
 		setSaveError('');
 		try {
-			await http.send('PUT', `/movies/movie/${movieId}/`, {review});
+			await sendUpdate({review}, {notify: true});
 			markReviewSaved({review});
-			dispatch(savedNotification());
 		} catch {
 			setSaveError('Не удалось сохранить отзыв. Повторите сохранение.');
 		} finally {
 			setSaving(false);
 		}
-	}, [http, movieId, review, markReviewSaved, dispatch]);
+	}, [sendUpdate, review, markReviewSaved]);
 
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 	const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 
-	const setMovieStatus = useCallback(async (payload) => {
-		http.send('PUT', `/movies/movie/${movieId}/`, payload).then(() => {
-			dispatch(savedNotification());
-		}).catch(() => {
-			dispatch(saveFailedNotification());
-			fetchUserInfo();
-		});
-	}, [movieId, dispatch]);
+	const setMovieStatus = useCallback((payload) => {
+		sendUpdate(payload, {notify: true}).catch(() => {});
+	}, [sendUpdate]);
 
 	useEffect(() => {
 		setReview("");
@@ -129,17 +134,15 @@ export function MoviePage() {
 
 	useEffect(
 		() => {
-			if (userInfo?.status) {
-				setReview(userInfo.review || '');
-				setUserStatus(userInfo.status);
-				setUserRate(userInfo.score);
-				setUserWatchCount(userInfo.watch_count || 0);
-			} else {
-				setReview("");
-				setUserRate(0);
-				setUserStatus("Не смотрел");
-				setUserWatchCount(0);
-			}
+			const snapshot = userInfo?.status
+				? {status: userInfo.status, score: userInfo.score, watch_count: userInfo.watch_count || 0, review: userInfo.review || ''}
+				: {status: 'Не смотрел', score: 0, watch_count: 0, review: ''};
+			confirmedState.current = {status: snapshot.status, score: snapshot.score, watchCount: snapshot.watch_count};
+			const values = pickFromSnapshot(snapshot);
+			if ('status' in values) setUserStatus(values.status);
+			if ('score' in values) setUserRate(values.score);
+			if ('watch_count' in values) setUserWatchCount(values.watch_count);
+			if ('review' in values) setReview(values.review);
 		},
 		// eslint-disable-next-line
 		[userInfo]

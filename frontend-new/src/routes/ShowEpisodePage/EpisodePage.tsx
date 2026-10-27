@@ -1,9 +1,10 @@
 import useSavedValues from 'hooks/useSavedValues';
 import useUnsavedChanges from 'hooks/useUnsavedChanges';
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import useSerialUpdates, {mergeEpisodesPayload} from 'hooks/useSerialUpdates';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {Loader} from '@steroidsjs/core/ui/layout';
-import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
+import {useBem, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getRouteParams} from '@steroidsjs/core/reducers/router';
 import {Link} from '@steroidsjs/core/ui/nav';
@@ -18,14 +19,18 @@ import LoginForm from '../../modals/LoginForm';
 import "./episode-page.scss";
 import {TextField} from '@steroidsjs/core/ui/form';
 import SaveDock from '../../shared/SaveDock';
-import {saveFailedNotification, savedNotification} from '../../shared/saveNotifications';
 
 
+
+const episodeFields = ({episodes: [episode]}) => {
+	const fields = {...episode};
+	delete fields.tmdb_id;
+	return fields;
+};
 
 function EpisodePage() {
 	const bem = useBem('episode-page');
 	const dispatch = useDispatch();
-	const {http} = useComponents();
 	const user = useSelector(getUser);
 
 	const { showId, showSeasonId, showEpisodeId } = useSelector(getRouteParams);
@@ -43,9 +48,22 @@ function EpisodePage() {
 		url: `/shows/show/${showId}/season/${showSeasonId}/episode/${showEpisodeId}/user_info/`,
 		method: 'get',
 	}), [showId, showSeasonId, showEpisodeId, user]);
-	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
+	const {data: userInfoResponse, isLoading: userInfoIsLoading} = useFetch(userInfoFetchConfig);
 
 	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
+	const confirmedRate = useRef(-1);
+	const sentRate = useRef<number>();
+	const {sendUpdate, pickFromSnapshot} = useSerialUpdates(`/shows/show/${showId}/episodes/`, {
+		key: `/shows/show/${showId}/episodes/${showEpisodeId}`,
+		merge: mergeEpisodesPayload,
+		toFields: episodeFields,
+		// The episodes endpoint returns no body, so a successful burst confirms what was sent
+		onSettled: ({failed}) => {
+			if (!failed && sentRate.current !== undefined) confirmedRate.current = sentRate.current;
+			sentRate.current = undefined;
+			setUserRate(confirmedRate.current);
+		},
+	});
 	const {savedValues: savedReview, markSaved: markReviewSaved} = useSavedValues({review: userInfo?.review || ''}, `${user?.id}:${showId}:${showSeasonId}:${showEpisodeId}`);
 	const hasChanges = review !== savedReview.review;
 	useUnsavedChanges(hasChanges);
@@ -59,32 +77,28 @@ function EpisodePage() {
 		setSaving(true);
 		setSaveError('');
 		try {
-			await http.send('PUT', `/shows/show/${showId}/episodes/`, {episodes: [{tmdb_id: showEpisode?.id, review}]});
+			await sendUpdate({episodes: [{tmdb_id: showEpisode?.id, review}]}, {notify: true});
 			markReviewSaved({review});
-			dispatch(savedNotification());
 		} catch {
 			setSaveError('Не удалось сохранить отзыв. Повторите сохранение.');
 		} finally {
 			setSaving(false);
 		}
-	}, [http, showId, showEpisode?.id, review, markReviewSaved, dispatch]);
+	}, [sendUpdate, showEpisode?.id, review, markReviewSaved]);
 
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 	const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 	const userWatchedShow = useMemo(() => userInfoResponse?.user_watched_show, [userInfoResponse]);
 
-	const setEpisodesStatus = useCallback(async (payload) => {
-		http.send('PUT', `/shows/show/${showId}/episodes/`, payload).then(() => {
-			dispatch(savedNotification());
-		}).catch(() => {
-			dispatch(saveFailedNotification());
-			fetchUserInfo();
-		});
-	}, [showId, dispatch]);
+	const setEpisodeScore = useCallback((score) => {
+		sentRate.current = score;
+		sendUpdate({episodes: [{tmdb_id: showEpisode?.id, score}]}, {notify: true}).catch(() => {});
+	}, [sendUpdate, showEpisode?.id]);
 
 	useEffect(() => {
 		setReview("");
 		setUserRate(-1);
+		sentRate.current = undefined;
 	}, [showId, showSeasonId, showEpisodeId]);
 
 	useEffect(() => {
@@ -98,18 +112,11 @@ function EpisodePage() {
 	}, [showId, showSeasonId, showEpisodeId]);
 
 	useEffect(() => {
-		if (userInfo?.review) {
-			setReview(userInfo.review || '');
-		} else {
-			setReview("");
-		}
-
-		if (userInfo?.score > -1) {
-			setUserRate(userInfo.score);
-		} else {
-			setUserRate(-1);
-		}
-	}, [userInfo]);
+		confirmedRate.current = userInfo?.score > -1 ? userInfo.score : -1;
+		const values = pickFromSnapshot({score: confirmedRate.current, review: userInfo?.review || ''});
+		if ('score' in values) setUserRate(values.score);
+		if ('review' in values) setReview(values.review);
+	}, [userInfo, pickFromSnapshot]);
 
 	const infoRows = useMemo(() => ([
 		{label: 'Дата выхода', value: showEpisode?.air_date},
@@ -217,7 +224,7 @@ function EpisodePage() {
 													dispatch(openModal(LoginForm));
 												} else {
 													setUserRate(score);
-													setEpisodesStatus({ episodes: [{ tmdb_id: showEpisode?.id, score: score }] });
+													setEpisodeScore(score);
 												}
 											}}
 											className={bem.element('rating')}

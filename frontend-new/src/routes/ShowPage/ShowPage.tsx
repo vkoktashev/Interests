@@ -1,6 +1,7 @@
 import SaveDock from '../../shared/SaveDock';
 import useSavedValues from 'hooks/useSavedValues';
 import useUnsavedChanges, {STATUS_RESET_MESSAGE} from 'hooks/useUnsavedChanges';
+import useSerialUpdates from 'hooks/useSerialUpdates';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {SiThemoviedatabase} from 'react-icons/si';
@@ -25,7 +26,7 @@ import formatDuration from '../../shared/formatDuration';
 import "./show-page.scss";
 import LoginForm from '../../modals/LoginForm';
 import {TextField} from '@steroidsjs/core/ui/form';
-import {saveFailedNotification, savedNotification} from '../../shared/saveNotifications';
+import {savedNotification} from '../../shared/saveNotifications';
 
 /**
  * Основная страница приложения
@@ -63,10 +64,21 @@ function ShowPage(props) {
         url: `/shows/show/${showId}/user_info/`,
         method: 'get',
     }), [showId, user]);
-    const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
+    const {data: userInfoResponse, isLoading: userInfoIsLoading} = useFetch(userInfoFetchConfig);
 
     const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
 	const {savedValues: savedReview, markSaved: markReviewSaved} = useSavedValues({review: userInfo?.review || ''}, `${user?.id}:${showId}`);
+	const confirmedState = useRef({status: 'Не смотрел', score: 0});
+	const {sendUpdate, pickFromSnapshot} = useSerialUpdates(`/shows/show/${showId}/`, {
+		onSettled: ({data}) => {
+			if (data) {
+				confirmedState.current = {status: data.status, score: data.score};
+				markReviewSaved({review: data.review || ''});
+			}
+			setUserStatus(confirmedState.current.status);
+			setUserRate(confirmedState.current.score);
+		},
+	});
 	const hasReviewChanges = review !== savedReview.review;
 	const hasChanges = hasReviewChanges || pendingEpisodes.length > 0;
 	const isBusy = isSaving || isCompleting;
@@ -86,21 +98,9 @@ function ShowPage(props) {
     const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
     const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 
-    const setShowStatus = useCallback(async (payload) => {
-        const session = sessionRef.current;
-        setCompleting(true);
-        try {
-            await http.send('PUT', `/shows/show/${showId}/`, payload);
-            dispatch(savedNotification());
-        } catch {
-            if (session === sessionRef.current) {
-                dispatch(saveFailedNotification());
-                fetchUserInfo();
-            }
-        } finally {
-            if (session === sessionRef.current) setCompleting(false);
-        }
-    }, [showId, http, dispatch, fetchUserInfo]);
+    const setShowStatus = useCallback((payload) => {
+        sendUpdate(payload, {notify: true}).catch(() => {});
+    }, [sendUpdate]);
 
 	useEffect(() => {
         sessionRef.current += 1;
@@ -142,18 +142,21 @@ function ShowPage(props) {
 	}, []);
 
 	useEffect(() => {
-        if (userInfoResponse && !reviewInitialized.current) {
+        if (!userInfoResponse) return;
+        const snapshot = {
+            status: userInfo?.status || 'Не смотрел',
+            score: userInfo?.status ? userInfo.score : 0,
+            review: userInfo?.review || '',
+        };
+        confirmedState.current = {status: snapshot.status, score: snapshot.score};
+        const values = pickFromSnapshot(snapshot);
+        if ('status' in values) setUserStatus(values.status);
+        if ('score' in values) setUserRate(values.score);
+        if (!reviewInitialized.current) {
             reviewInitialized.current = true;
-            setReview(userInfo?.review || '');
+            if ('review' in values) setReview(values.review);
         }
-        if (userInfo?.status) {
-            setUserStatus(userInfo.status);
-            setUserRate(userInfo.score);
-        } else {
-            setUserRate(0);
-            setUserStatus("Не смотрел");
-        }
-    }, [userInfo, userInfoResponse]);
+    }, [userInfo, userInfoResponse, pickFromSnapshot]);
 
 	const saveChanges = useCallback(async () => {
 		if (savingRef.current || isCompleting || !hasChanges) {
@@ -174,7 +177,7 @@ function ShowPage(props) {
 		if (hasReviewChanges) {
 			requests.push({
 				label: 'отзыв',
-				save: () => http.send('PUT', `/shows/show/${showId}/`, {review}),
+				save: () => sendUpdate({review}),
 				accept: () => markReviewSaved({review}),
 			});
 		}
@@ -206,7 +209,7 @@ function ShowPage(props) {
 		}
 		savingRef.current = false;
 		setSaving(false);
-	}, [isCompleting, hasChanges, pendingEpisodes, hasReviewChanges, review, showId, http, markReviewSaved, dispatch, onEpisodesSaved]);
+	}, [isCompleting, hasChanges, pendingEpisodes, hasReviewChanges, review, showId, http, sendUpdate, markReviewSaved, dispatch, onEpisodesSaved]);
 
 	const episodeRuntime = Number(show?.episode_run_time || runtimeInfo?.episodeRuntime || 0);
 	const totalRuntime = Number(runtimeInfo?.totalRuntime || 0);

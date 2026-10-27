@@ -1,11 +1,12 @@
 import useSavedValues from 'hooks/useSavedValues';
 import useUnsavedChanges, {STATUS_RESET_MESSAGE} from 'hooks/useUnsavedChanges';
+import useSerialUpdates from 'hooks/useSerialUpdates';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LoadingOverlay from "react-loading-overlay";
 import {getUser} from '@steroidsjs/core/reducers/auth';
 import {getRouteParam} from '@steroidsjs/core/reducers/router';
 import {openModal} from '@steroidsjs/core/actions/modal';
-import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
+import {useBem, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
 import _uniq from 'lodash/uniq';
 import {FaPencilAlt, FaTwitch, FaYoutube} from 'react-icons/fa';
@@ -32,7 +33,6 @@ import {GAME_TYPE_LABELS} from '../SearchPage/views/searchTypes';
 import {IGamePricesResponse} from '../../interfaces/IGamePrice';
 import "./game-page.scss";
 import {TextField} from '@steroidsjs/core/ui/form';
-import {saveFailedNotification, savedNotification} from '../../shared/saveNotifications';
 
 const HLTB_REFRESH_POLL_INTERVAL_MS = 3000;
 const HLTB_REFRESH_MAX_POLLS = 20;
@@ -46,10 +46,15 @@ function HltbIcon(props: {className?: string}) {
 }
 
 export function GamePage() {
+	const user = useSelector(getUser);
+	const gameId = useSelector(state => getRouteParam(state, 'gameId'));
+	return <GamePageContent key={`${user?.id}:${gameId}`} />;
+}
+
+function GamePageContent() {
 	const bem = useBem('game-page');
 	const user = useSelector(getUser);
 	const dispatch = useDispatch();
-	const {http} = useComponents();
 	const gameId = useSelector(state => getRouteParam(state, 'gameId'));
 
 	const [review, setReview] = useState("");
@@ -101,11 +106,28 @@ export function GamePage() {
 	const userInfoFetchConfig = useMemo(() => gameId && user && ({
 		url: `/games/game/${gameId}/user_info/`,
 		method: 'get',
-	}), [gameId]);
-	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo} = useFetch(userInfoFetchConfig);
+	}), [gameId, user?.id]);
+	const {data: userInfoResponse, isLoading: userInfoIsLoading, fetch: fetchUserInfo, axiosError: userInfoError} = useFetch(userInfoFetchConfig);
+	const [isUserInfoReady, setUserInfoReady] = useState(false);
+	const isMounted = useRef(true);
+	useEffect(() => {
+		isMounted.current = true;
+		return () => { isMounted.current = false; };
+	}, []);
 
-	const userInfo = useMemo(() => userInfoResponse?.user_info, [userInfoResponse]);
+	const [userInfo, setUserInfo] = useState<any>(null);
 	const {savedValues: savedReview, markSaved: markReviewSaved} = useSavedValues({review: userInfo?.review || '', spentTime: Number(userInfo?.spent_time || 0)}, `${user?.id}:${gameId}`);
+	const confirmedState = useRef({status: 'Не играл', score: 0});
+	const {sendUpdate, pickFromSnapshot} = useSerialUpdates(`/games/game/${gameId}/`, {
+		onSettled: ({data}) => {
+			if (data) {
+				confirmedState.current = {status: data.status, score: data.score};
+				markReviewSaved({review: data.review || '', spentTime: Number(data.spent_time || 0)});
+			}
+			setUserStatus(confirmedState.current.status);
+			setUserRate(confirmedState.current.score);
+		},
+	});
 	const hasChanges = review !== savedReview.review || Number(spentTime || 0) !== savedReview.spentTime;
 	useUnsavedChanges(hasChanges);
 	useEffect(() => {
@@ -115,33 +137,33 @@ export function GamePage() {
 	const [saveError, setSaveError] = useState('');
 
 	const saveChanges = useCallback(async () => {
+		if (isSaving || !isUserInfoReady) return;
 		setSaving(true);
 		setSaveError('');
 		try {
-			await http.send('PUT', `/games/game/${gameId}/`, {
+			await sendUpdate({
 				review,
 				spent_time: spentTime,
-			});
-			markReviewSaved({review, spentTime: Number(spentTime || 0)});
-			dispatch(savedNotification());
+			}, {notify: true});
+			if (isMounted.current) markReviewSaved({review, spentTime: Number(spentTime || 0)});
 		} catch {
-			setSaveError('Не удалось сохранить отзыв и время прохождения. Повторите сохранение.');
+			if (isMounted.current) {
+				setSaveError('Не удалось сохранить отзыв и время прохождения. Повторите сохранение.');
+			}
 		} finally {
-			setSaving(false);
+			if (isMounted.current) setSaving(false);
 		}
-	}, [http, gameId, review, spentTime, markReviewSaved, dispatch]);
+	}, [sendUpdate, review, spentTime, markReviewSaved, isSaving, isUserInfoReady]);
 
 	const friendsInfo = useMemo(() => userInfoResponse?.friends_info, [userInfoResponse]);
 	const usersInfo = useMemo(() => userInfoResponse?.users_info, [userInfoResponse]);
 
-	const setGameStatus = useCallback(async (payload) => {
-		http.send('PUT', `/games/game/${gameId}/`, payload).then(() => {
-			dispatch(savedNotification());
-		}).catch(() => {
-			dispatch(saveFailedNotification());
-			fetchUserInfo();
-		});
-	}, [fetchUserInfo, gameId, http, dispatch]);
+	const setGameStatus = useCallback((payload) => {
+		if (!isUserInfoReady) return;
+		if (payload.status !== undefined) setUserStatus(payload.status);
+		if (payload.score !== undefined) setUserRate(payload.score);
+		sendUpdate(payload, {notify: true}).catch(() => {});
+	}, [sendUpdate, isUserInfoReady]);
 
 	useEffect(
 		() => {
@@ -254,16 +276,24 @@ export function GamePage() {
 
 	useEffect(
 		() => {
-			if (userInfo?.status) {
-				setReview(userInfo.review || '');
-				setSpentTime(userInfo.spent_time);
-				setUserStatus(userInfo.status);
-				setUserRate(userInfo.score);
-			} else {
-				setClearUI();
-			}
+			if (!userInfoResponse || isUserInfoReady) return;
+			const initialUserInfo = userInfoResponse.user_info;
+			const snapshot = {
+				status: initialUserInfo?.status || 'Не играл',
+				score: initialUserInfo?.status ? initialUserInfo.score : 0,
+				review: initialUserInfo?.review || '',
+				spent_time: initialUserInfo?.spent_time ?? '',
+			};
+			confirmedState.current = {status: snapshot.status, score: snapshot.score};
+			setUserInfo(initialUserInfo);
+			const values = pickFromSnapshot(snapshot);
+			if ('status' in values) setUserStatus(values.status);
+			if ('score' in values) setUserRate(values.score);
+			if ('review' in values) setReview(values.review);
+			if ('spent_time' in values) setSpentTime(values.spent_time);
+			setUserInfoReady(true);
 		},
-		[userInfo]
+		[userInfoResponse, isUserInfoReady, pickFromSnapshot]
 	);
 
 	function setClearUI() {
@@ -518,7 +548,7 @@ export function GamePage() {
 							</div>
 
 							<LoadingOverlay
-								active={userInfoIsLoading && !isLoading}
+								active={userInfoIsLoading && !isUserInfoReady && !isLoading}
 								spinner
 								text='Загрузка...'
 							>
@@ -527,9 +557,8 @@ export function GamePage() {
 										<Rating
 											initialRating={userRate}
 											readonly={!user}
-											disabled={!!user && userStatus === "Не играл"}
+											disabled={!!user && (!isUserInfoReady || userStatus === "Не играл")}
 											onChange={(score) => {
-												setUserRate(score);
 												setGameStatus({ score });
 											}}
 											className='game-page__rating'
@@ -540,7 +569,9 @@ export function GamePage() {
 											statuses={["Не играл", "Буду играть", "Играю", "Дропнул", "Прошел"]}
 											className={bem.element('info-statuses')}
 											userStatus={userStatus}
+											disabled={!!user && !isUserInfoReady}
 											onChangeStatus={(status) => {
+												if (user && (!isUserInfoReady || status === userStatus)) return;
 												if (status === "Не играл" && hasChanges) {
 													if (!window.confirm(STATUS_RESET_MESSAGE)) {
 														return;
@@ -551,7 +582,6 @@ export function GamePage() {
 												if (!user) {
 													dispatch(openModal(LoginForm));
 												} else {
-													setUserStatus(status);
 													setGameStatus({ status });
 												}
 											}}
@@ -559,6 +589,12 @@ export function GamePage() {
 									</div>
 								</div>
 							</LoadingOverlay>
+							{userInfoError && !isUserInfoReady && (
+								<div role='alert'>
+									Не удалось загрузить ваши данные.{' '}
+									<button type='button' onClick={() => fetchUserInfo()}>Повторить</button>
+								</div>
+							)}
 						</div>
 					</div>
 					<MediaGalleryBlock
@@ -659,6 +695,7 @@ export function GamePage() {
 						<SaveDock
 							visible={!!user && (hasChanges || isSaving)}
 							isSaving={isSaving}
+							disabled={!isUserInfoReady}
 							error={saveError}
 							onSave={saveChanges}
 						/>

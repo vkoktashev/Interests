@@ -2,7 +2,7 @@ import React from "react";
 import {useBem} from '@steroidsjs/core/hooks';
 import "./status-button-group.scss";
 
-export function StatusButtonGroup({ statuses, onChangeStatus, userStatus, className }) {
+export function StatusButtonGroup({ statuses, onChangeStatus, userStatus, className, disabled = false }) {
 	const bem = useBem('status-button-group');
 	const count = Math.max(statuses?.length || 0, 1);
 	const activeIndex = Math.max(statuses?.indexOf(userStatus) || 0, 0);
@@ -23,6 +23,7 @@ export function StatusButtonGroup({ statuses, onChangeStatus, userStatus, classN
 					className={bem.element('item', {active: userStatus === status})}
 					key={status}
 					type="button"
+					disabled={disabled}
 					onClick={() => {
 						onChangeStatus(status);
 					}}>
