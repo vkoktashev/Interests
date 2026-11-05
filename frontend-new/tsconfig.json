@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     "jsx": "react",
+    "module": "esnext",
+    "moduleResolution": "node",
     "experimentalDecorators": true,
     "esModuleInterop": true,
     "baseUrl": "./src/",
