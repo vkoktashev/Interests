@@ -1,3 +1,4 @@
+import logging
 from datetime import date
 from decimal import Decimal
 
@@ -7,6 +8,8 @@ from requests.exceptions import ConnectionError
 
 from games.functions import get_hltb_game_key
 from utils.constants import CACHE_TIMEOUT
+
+logger = logging.getLogger(__name__)
 
 
 def get_game_release_year(value):
@@ -59,6 +62,9 @@ def get_hltb_game(game_name: str, release_year: int):
             hltb_game = None
             cache.set(key, hltb_game, CACHE_TIMEOUT)
         except (ConnectionError, AttributeError):
+            hltb_game = None
+        except Exception:
+            logger.exception('get_hltb_game: HLTB search failed for %r', game_name)
             hltb_game = None
 
     add_hltb_gameplay_fields(hltb_game)
