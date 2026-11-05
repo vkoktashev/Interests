@@ -179,7 +179,7 @@ if not DEBUG:
             },
             'mail_admins': {
                 'level': 'ERROR',
-                'class': 'django.utils.log.AdminEmailHandler',
+                'class': 'utils.error_digest.ErrorDigestHandler',
             },
         },
         'loggers': {
@@ -190,6 +190,8 @@ if not DEBUG:
         },
     }
 
+DEFAULT_EXCEPTION_REPORTER = 'utils.exception_reporter.ConnectionSafeExceptionReporter'
+
 ADMINS = [('Jenya', 'kononkov98@mail.ru')]
 
 EMAIL_USE_TLS = True
@@ -197,6 +199,7 @@ EMAIL_HOST = 'smtp.mail.ru'
 EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
 EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 EMAIL_PORT = 25
+SERVER_EMAIL = EMAIL_HOST_USER
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=float(os.environ['ACCESS_TOKEN_LIFETIME_MINUTES']),
@@ -232,6 +235,8 @@ else:
             'LOCATION': CACHE_URL,
         },
     }
+
+ERROR_DIGEST_REDIS_URL = CACHE_URL
 
 CACHES['images'] = {
     'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',

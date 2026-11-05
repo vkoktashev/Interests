@@ -31,6 +31,11 @@ PERIODIC_TASKS = {
         'hour': 5,
         'minute': 0,
     },
+    'send_error_digest': {
+        'task': 'config.tasks.send_error_digest',
+        'hour': 9,
+        'minute': 30,
+    },
 }
 
 

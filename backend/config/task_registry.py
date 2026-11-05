@@ -46,6 +46,12 @@ TASK_DEFINITIONS = {
         'schedule': get_periodic_task_schedule_label('sync_kinopoisk_top250'),
         'task_path': 'content_collections.tasks.sync_kinopoisk_top250',
     },
+    'send_error_digest': {
+        'name': 'Сводка ошибок сервера',
+        'description': 'Отправляет администраторам письмо с ошибками, накопленными с прошлой сводки, и очищает их.',
+        'schedule': get_periodic_task_schedule_label('send_error_digest'),
+        'task_path': 'config.tasks.send_error_digest',
+    },
 }
 
 
