@@ -185,7 +185,7 @@
 
     @media (min-width: 541px) and (hover: hover) and (pointer: fine) {
         .log-row_compact:hover &__add,
-        .log-row_compact:focus-within &__add,
+        .log-row_compact:has(:focus-visible) &__add,
         .log-row_compact &__add_open {
             opacity: 1;
             visibility: visible;

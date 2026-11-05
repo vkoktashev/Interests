@@ -9,7 +9,7 @@ drf-nested-routers>=0.94,<0.95
 drf-yasg>=1.21.8,<1.22
 fabric>=3.2,<4
 gunicorn>=23,<24
-howlongtobeatpy==1.0.22
+howlongtobeatpy>=1.0.24,<2
 Pillow>=12,<13
 psycopg2>=2.9.10,<3
 redis>=5,<8
