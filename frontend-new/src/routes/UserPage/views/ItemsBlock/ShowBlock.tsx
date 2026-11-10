@@ -4,7 +4,6 @@ import ItemBlock from "./ItemBlock";
 function ShowBlock({ shows }) {
 	return (
 		<ItemBlock
-			formId='showsBlock'
 			items={shows?.map((show) => {
 				const watchedEpisodes = Number(show.watched_episodes_count || 0);
 				const totalEpisodes = Number(show.episodes_count || 0);
@@ -22,10 +21,10 @@ function ShowBlock({ shows }) {
 				};
 			})}
 			statuses={[
-				{ id: "Буду смотреть", label: "Буду смотреть" },
-				{ id: "Смотрю", label: "Смотрю" },
-				{ id: "Дропнул", label: "Дропнул" },
-				{ id: "Посмотрел", label: "Посмотрел" },
+				{ id: "planned", label: "Буду смотреть" },
+				{ id: "in_progress", label: "Смотрю" },
+				{ id: "dropped", label: "Дропнул" },
+				{ id: "completed", label: "Посмотрел" },
 			]}
 			fields={[
 				{ label: "Ссылка", key: "link" },

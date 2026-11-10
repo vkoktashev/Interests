@@ -152,20 +152,20 @@ class SettingsSerializer(ModelSerializer):
 
 
 class UserInfoSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'gender', 'last_activity', 'backdrop_path')
+
+
+class CurrentUserInfoSerializer(UserInfoSerializer):
     permissions = SerializerMethodField('get_permissions')
 
     @staticmethod
     def get_permissions(user):
         return sorted(user.get_all_permissions())
 
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'gender', 'last_activity', 'backdrop_path', 'permissions', 'is_staff')
-
-
-class CurrentUserInfoSerializer(UserInfoSerializer):
     class Meta(UserInfoSerializer.Meta):
-        fields = UserInfoSerializer.Meta.fields + ('email',)
+        fields = UserInfoSerializer.Meta.fields + ('email', 'permissions', 'is_staff')
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):

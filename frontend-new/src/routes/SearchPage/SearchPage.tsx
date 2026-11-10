@@ -103,6 +103,13 @@ const CATEGORY_LOADING_TEXT: Record<TSearchCategory, string> = {
 	Пользователи: 'Ищем пользователей...',
 };
 
+function getSearchErrorText(error: any): string {
+	if (error?.response?.status === 503) {
+		return 'Поиск временно недоступен: внешний сервис не отвечает. Попробуйте чуть позже.';
+	}
+	return 'Не удалось выполнить поиск. Попробуйте ещё раз.';
+}
+
 function normalizeQuery(value: unknown): string {
 	if (!value) {
 		return '';
@@ -364,6 +371,7 @@ function SearchPage() {
 	]);
 	const [results, setResults] = useState<ISearchResultsState>(getInitialResults());
 	const [totals, setTotals] = useState<Record<TSearchCategory, number>>(getInitialTotals());
+	const [searchError, setSearchError] = useState<string | null>(null);
 	const requestIdRef = useRef(0);
 
 	const clearResults = useCallback(() => {
@@ -503,12 +511,14 @@ function SearchPage() {
 		if (!nextQuery) {
 			requestIdRef.current += 1;
 			clearResults();
+			setSearchError(null);
 			setLoading(false);
 			return;
 		}
 
 		const requestId = ++requestIdRef.current;
 		setLoading(true);
+		setSearchError(null);
 
 		try {
 			if (nextCategory === 'Игры') {
@@ -525,6 +535,12 @@ function SearchPage() {
 			}
 			if (nextCategory === 'Пользователи') {
 				await searchUsers(nextQuery, nextPage, requestId);
+			}
+		} catch (error) {
+			if (requestId === requestIdRef.current) {
+				setResults(prev => ({...prev, [nextCategory]: []}));
+				setTotals(prev => ({...prev, [nextCategory]: 0}));
+				setSearchError(getSearchErrorText(error));
 			}
 		} finally {
 			if (requestId === requestIdRef.current) {
@@ -622,6 +638,14 @@ function SearchPage() {
 			);
 		}
 
+		if (searchError) {
+			return (
+				<div className='search-page__empty-state search-page__empty-state_error'>
+					{searchError}
+				</div>
+			);
+		}
+
 		if (activeCategory === 'Игры') {
 			return <GameCards games={results['Игры']} />;
 		}
@@ -635,7 +659,7 @@ function SearchPage() {
 			return <PersonCards people={results['Люди']} />;
 		}
 		return <UserCards users={results['Пользователи']} />;
-	}, [activeCategory, normalizedQuery, results]);
+	}, [activeCategory, normalizedQuery, results, searchError]);
 
 	const totalForActiveCategory = totals[activeCategory] || 0;
 	const showPagination = normalizedQuery.length > 0 && totalForActiveCategory > PAGE_SIZE;

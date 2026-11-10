@@ -218,5 +218,11 @@
         background: rgba(255, 255, 255, 0.02);
         text-align: center;
         font-size: 1rem;
+
+        &_error {
+            border-color: rgba($metacriticRed, 0.4);
+            color: $newText3;
+            background: rgba($metacriticRed, 0.06);
+        }
     }
 }

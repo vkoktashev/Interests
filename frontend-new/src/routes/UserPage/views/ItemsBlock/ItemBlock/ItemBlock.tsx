@@ -1,98 +1,103 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {useMemo, useRef, useState} from "react";
 import { CSVLink } from "react-csv";
-import { FaAngleDown, FaAngleUp, FaStar, FaClock, FaArrowsAltV } from "react-icons/fa";
+import { FaAngleDown, FaAngleUp, FaStar, FaClock, FaArrowsAltV, FaArrowDown, FaArrowUp } from "react-icons/fa";
 import { LuLetterText } from "react-icons/lu";
-import {useBem, useDispatch} from '@steroidsjs/core/hooks';
+import {useBem} from '@steroidsjs/core/hooks';
 import Pagination from '@steroidsjs/core/ui/list/Pagination/Pagination';
+import {useQueryParams} from 'use-query-params';
 
 import ItemRow from "../ItemRow/ItemRow";
 import useWindowDimensions from '../../../../../hooks/useWindowDimensions';
+import {DEFAULT_PAGE_SIZE, LIST_QUERY_PARAMS, PAGE_SIZES} from '../listQuery';
 
 import "./item-block.scss";
-import {DropDownField, Form, InputField} from '@steroidsjs/core/ui/form';
-import {formChange} from '@steroidsjs/core/actions/form';
+import {DropDownField, InputField} from '@steroidsjs/core/ui/form';
 
-function ItemBlock({ items, statuses, fields, name, formId }) {
-	const dispatch = useDispatch();
+const SORT_OPTIONS = [
+	{field: 'score', type: 'number', isDescFirst: true, icon: <FaStar/>, title: 'Сортировать по оценке'},
+	{field: 'spent_time', type: 'number', isDescFirst: true, icon: <FaClock/>, title: 'Сортировать по времени'},
+	{field: 'name', type: 'string', isDescFirst: false, icon: <LuLetterText/>, title: 'Сортировать по названию'},
+];
+
+function ItemBlock({ items, statuses, fields, name }) {
 	const bem = useBem('item-block');
 	const rowsRef = useRef<HTMLDivElement | null>(null);
-	const previousListSettingsRef = useRef({
-		pageSize: 25,
-		query: '',
-		statusFilters: '[]',
-	});
-	const [formValues, setFormValues] = useState<any>({
-		page: 1,
-		pageSize: 25,
-		query: '',
-	});
-	const [filteredItems, setFilteredItems] = useState([]);
 	const [collapse, setCollapse] = useState(true);
 	const { width } = useWindowDimensions();
-	const statusFilters = JSON.stringify(formValues.statusFilters || []);
+	const [urlQuery, setUrlQuery] = useQueryParams(LIST_QUERY_PARAMS);
+
+	const statusFilters = useMemo(
+		() => (urlQuery.status || []).filter(status => statuses.some(item => item.id === status)),
+		[urlQuery.status, statuses],
+	);
+	const query = urlQuery.q || '';
+	const pageSize = PAGE_SIZES.includes(urlQuery.size) ? urlQuery.size : DEFAULT_PAGE_SIZE;
+	const page = urlQuery.page > 0 ? urlQuery.page : 1;
+	const sortOptions = SORT_OPTIONS.filter(option => fields.some(field => field.key === option.field));
+	const sortField = urlQuery.sort?.replace(/^-/, '');
+	const sortOption = sortOptions.find(option => option.field === sortField);
+	const sort = sortOption
+		? {field: sortOption.field, type: sortOption.type, isAsc: !urlQuery.sort.startsWith('-')}
+		: null;
 
 	const toggleCollapse = () => {
 		setCollapse(!collapse);
 	};
 
-	useEffect(
-		() => {
-			setFilteredItems(
-				items
-					?.filter((item) => item.name
-						.toLowerCase()
-						.includes(formValues.query?.toLowerCase()
-						) && (formValues.statusFilters?.includes(item.status) || !formValues.statusFilters?.length))
-					.sort((a, b) => {
-						let field1, field2;
-						if (formValues.sort?.type === "number") {
-							field1 = parseFloat(a[formValues.sort?.field]);
-							field2 = parseFloat(b[formValues.sort?.field]);
-						} else {
-							field1 = a[formValues.sort?.field];
-							field2 = b[formValues.sort?.field];
-						}
+	const filteredItems = useMemo(() => {
+		const statusLabels = statuses
+			.filter(status => statusFilters.includes(status.id))
+			.map(status => status.label);
+		const normalizedQuery = query.toLowerCase();
 
-						if (field1 > field2) return formValues.sort.isAsc ? 1 : -1;
-						if (field1 < field2) return formValues.sort.isAsc ? -1 : 1;
-						return 0;
-					})
-			);
-		},
-		// eslint-disable-next-line
-		[items, formValues]
-	);
+		return (items || [])
+			.filter(item => item.name.toLowerCase().includes(normalizedQuery)
+				&& (!statusLabels.length || statusLabels.includes(item.status)))
+			.sort((a, b) => {
+				if (!sort) {
+					return 0;
+				}
+				let field1, field2;
+				if (sort.type === "number") {
+					field1 = parseFloat(a[sort.field]);
+					field2 = parseFloat(b[sort.field]);
+				} else {
+					field1 = a[sort.field];
+					field2 = b[sort.field];
+				}
 
-	useEffect(() => {
-		const previousListSettings = previousListSettingsRef.current;
-		const listSettingsChanged = previousListSettings.pageSize !== formValues.pageSize
-			|| previousListSettings.query !== formValues.query
-			|| previousListSettings.statusFilters !== statusFilters;
+				if (field1 > field2) return sort.isAsc ? 1 : -1;
+				if (field1 < field2) return sort.isAsc ? -1 : 1;
+				return 0;
+			});
+	}, [items, statuses, statusFilters, query, sort?.field, sort?.type, sort?.isAsc]);
 
-		previousListSettingsRef.current = {
-			pageSize: formValues.pageSize,
-			query: formValues.query,
-			statusFilters,
-		};
+	const toggleSort = (option: typeof SORT_OPTIONS[number]) => {
+		const firstSort = option.isDescFirst ? `-${option.field}` : option.field;
+		const secondSort = option.isDescFirst ? option.field : `-${option.field}`;
+		let nextSort = firstSort;
+		if (sort?.field === option.field) {
+			nextSort = urlQuery.sort === firstSort ? secondSort : undefined;
+		}
+		setUrlQuery({sort: nextSort}, 'replaceIn');
+	};
 
-		if (listSettingsChanged && formValues.page !== 1)
-			dispatch(formChange(formId, 'page', 1));
-	}, [dispatch, formId, formValues.page, formValues.pageSize, formValues.query, statusFilters]);
+	const renderSortIcon = (field: string) => {
+		if (sort?.field !== field) {
+			return <FaArrowsAltV/>;
+		}
+		return sort.isAsc ? <FaArrowUp/> : <FaArrowDown/>;
+	};
 
 	return (
 		<div className={bem.block()}>
-			<Form
-				formId={formId}
-				onChange={setFormValues}
-				onBeforeSubmit={() => false}
-				initialValues={formValues}
-				useRedux
-			>
+			<div>
 				<div className='item-block__header'>
 					<div className={bem.element('row')}>
 						<div className={bem.element('row')}>
 							<InputField
-								attribute="query"
+								value={query}
+								onChange={value => setUrlQuery({q: value || undefined, page: undefined}, 'replaceIn')}
 								placeholder="Поиск"
 								label={__('Поиск')}
 								className={bem.element('input')}
@@ -102,7 +107,11 @@ function ItemBlock({ items, statuses, fields, name, formId }) {
 							</button>
 						</div>
 						<DropDownField
-							attribute="statusFilters"
+							value={statusFilters}
+							onChange={value => setUrlQuery({
+								status: Array.isArray(value) ? value : [],
+								page: undefined,
+							}, 'replaceIn')}
 							label={__('Статус')}
 							items={statuses}
 							multiple
@@ -111,60 +120,39 @@ function ItemBlock({ items, statuses, fields, name, formId }) {
 							fieldLayoutClassName={bem.element('field-layout', {hidden: collapse && width <= 540})}
 						/>
 						<div className={bem.element('sort-buttons', {hidden: collapse && width <= 540})}>
-							<button
-								className="item-block__sort-button"
-								hidden={!fields.some((field) => field.key === 'score')}
-								onClick={() => {
-									dispatch(formChange(formId, 'sort', {
-										field: 'score',
-										type: 'number',
-										isAsc: !formValues.sort?.isAsc
-									}));
-								}}
-							>
-								<FaStar/> <FaArrowsAltV/>
-							</button>
-							<button
-								className="item-block__sort-button"
-								hidden={!fields.some((field) => field.key === 'spent_time')}
-								onClick={() => {
-									dispatch(formChange(formId, 'sort', {
-										field: 'spent_time',
-										type: 'number',
-										isAsc: !formValues.sort?.isAsc
-									}));
-								}}>
-								<FaClock/> <FaArrowsAltV/>
-							</button>
-							<button
-								className="item-block__sort-button"
-								hidden={!fields.some((field) => field.key === 'name')}
-								onClick={() => {
-									dispatch(formChange(formId, 'sort', {
-										field: 'name',
-										type: 'string',
-										isAsc: !formValues.sort?.isAsc
-									}));
-								}}>
-								<LuLetterText/> <FaArrowsAltV/>
-							</button>
+							{sortOptions.map(option => (
+								<button
+									key={option.field}
+									type='button'
+									className={bem.element('sort-button', {active: sort?.field === option.field})}
+									title={option.title}
+									aria-pressed={sort?.field === option.field}
+									onClick={() => toggleSort(option)}
+								>
+									{option.icon} {renderSortIcon(option.field)}
+								</button>
+							))}
 						</div>
 					</div>
 					<div className={bem.element('row', {hidden: collapse && width <= 515})}>
 						<DropDownField
-							attribute="pageSize"
+							value={pageSize}
+							onChange={value => setUrlQuery({
+								size: value && value !== DEFAULT_PAGE_SIZE ? value : undefined,
+								page: undefined,
+							}, 'replaceIn')}
 							label={__('Записей на странице')}
-							items={[5, 10, 25, 50, 100].map(item => ({id: item, label: item}))}
+							items={PAGE_SIZES.map(item => ({id: item, label: item}))}
 						/>
 					</div>
 				</div>
-			</Form>
+			</div>
 			<div ref={rowsRef} className="item-block__rows">
 				{
-					filteredItems?.slice(
-						(formValues.page - 1) * formValues.pageSize,
-						formValues.page * formValues.pageSize,
-					).map((item, counter) => (
+					filteredItems.slice(
+						(page - 1) * pageSize,
+						page * pageSize,
+					).map(item => (
 						<ItemRow data={item} fields={fields} key={item.key}/>
 					))
 				}
@@ -174,12 +162,12 @@ function ItemBlock({ items, statuses, fields, name, formId }) {
 					showSteps
 					aroundCount={3}
 					list={{
-						total: filteredItems?.length,
-						page: formValues.page,
-						pageSize: formValues.pageSize,
+						total: filteredItems.length,
+						page,
+						pageSize,
 					}}
-					onChange={page => {
-						dispatch(formChange(formId, 'page', page));
+					onChange={nextPage => {
+						setUrlQuery({page: nextPage > 1 ? nextPage : undefined}, 'pushIn');
 						rowsRef.current?.scrollIntoView({
 							behavior: 'smooth',
 							block: 'start',

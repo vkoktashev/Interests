@@ -280,7 +280,7 @@ function CollectionPage() {
 			dispatch(showNotification('Подборка удалена', 'success'));
 			dispatch(goToRoute(ROUTE_USER, {
 				userId: currentUser.id,
-				сategory: 'Подборки',
+				tab: 'collections',
 			}, false, true));
 		} catch (requestError) {
 			const responseData = requestError?.response?.data;
