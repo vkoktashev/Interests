@@ -4,7 +4,6 @@ import ItemBlock from "./ItemBlock";
 function GameBlock({ games }) {
 	return (
 		<ItemBlock
-			formId='gameBlock'
 			items={games?.map((game) => {
 				return {
 					key: game.slug,
@@ -19,10 +18,10 @@ function GameBlock({ games }) {
 				};
 			})}
 			statuses={[
-				{ id: "Буду играть", label: "Буду играть" },
-				{ id: "Играю", label: "Играю" },
-				{ id: "Дропнул", label: "Дропнул" },
-				{ id: "Прошел", label: "Прошел" },
+				{ id: "planned", label: "Буду играть" },
+				{ id: "in_progress", label: "Играю" },
+				{ id: "dropped", label: "Дропнул" },
+				{ id: "completed", label: "Прошел" },
 			]}
 			fields={[
 				{ label: "Ссылка", key: "link" },

@@ -2,7 +2,7 @@ import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import { FaLock } from "react-icons/fa";
 import LoadingOverlay from "react-loading-overlay";
 import {useBem, useComponents, useDispatch, useFetch, useSelector} from '@steroidsjs/core/hooks';
-import { useQueryParam, StringParam, withDefault } from "use-query-params";
+import {useQueryParams, StringParam} from "use-query-params";
 
 import GameBlock from './views/ItemsBlock/GameBlock';
 import FriendBlock from '../../shared/FriendBlock';
@@ -22,13 +22,22 @@ import FriendsLogs from './views/FriendsLogs/FriendsLogs';
 import UserHeader from './views/UserHeader';
 import {showNotification} from '@steroidsjs/core/actions/notifications';
 import {isSessionExpiredError} from '../../components/SafeJwtHttpComponent';
+import {EMPTY_LIST_QUERY, LIST_QUERY_PARAMS} from './views/ItemsBlock/listQuery';
 
-const LIST_KEYS_BY_CATEGORY: Record<string, string> = {
-	'Игры': 'games',
-	'Фильмы': 'movies',
-	'Сериалы': 'shows',
-	'Люди': 'people',
-};
+const TABS = [
+	{key: 'feed', label: 'Лента'},
+	{key: 'games', label: 'Игры'},
+	{key: 'movies', label: 'Фильмы'},
+	{key: 'shows', label: 'Сериалы'},
+	{key: 'collections', label: 'Подборки'},
+	{key: 'people', label: 'Люди'},
+	{key: 'stats', label: 'Статистика'},
+	{key: 'friends', label: 'Друзья'},
+];
+const DEFAULT_TAB = 'feed';
+const LIST_TABS = ['games', 'movies', 'shows', 'people'];
+
+const getTabKey = (value?: string | null) => TABS.find(tab => tab.key === value || tab.label === value)?.key;
 
 /**
  * Основная страница приложения
@@ -40,7 +49,35 @@ function UserPage() {
 	const dispatch = useDispatch();
 	const {userId} = useSelector(getRouteParams);
 
-	const [activeCategory, setActiveCategory] = useQueryParam("сategory", withDefault(StringParam, "Лента"));
+	const [urlQuery, setUrlQuery] = useQueryParams({
+		tab: StringParam,
+		// Old profile links used a Cyrillic "с" in the parameter name and Russian tab labels as values.
+		сategory: StringParam,
+		...LIST_QUERY_PARAMS,
+	});
+	const activeTab = getTabKey(urlQuery.tab) || DEFAULT_TAB;
+	const activeCategory = TABS.find(tab => tab.key === activeTab).label;
+
+	useEffect(() => {
+		if (urlQuery.сategory !== undefined) {
+			const legacyTab = getTabKey(urlQuery.сategory);
+			setUrlQuery({
+				tab: legacyTab && legacyTab !== DEFAULT_TAB ? legacyTab : undefined,
+				сategory: undefined,
+			}, 'replaceIn');
+		}
+	}, [urlQuery.сategory]);
+
+	const setActiveCategory = useCallback((label: string) => {
+		const tabKey = getTabKey(label);
+		if (tabKey === activeTab) {
+			return;
+		}
+		setUrlQuery({
+			tab: tabKey === DEFAULT_TAB ? undefined : tabKey,
+			...EMPTY_LIST_QUERY,
+		}, 'pushIn');
+	}, [activeTab, setUrlQuery]);
 	const [lastActivity, setLastActivity] = useState("");
 
 	const userFetchConfig = useMemo(() => userId && ({
@@ -60,7 +97,7 @@ function UserPage() {
 	const loadingListsRef = useRef<Set<string>>(new Set());
 	const userIdRef = useRef(userId);
 	userIdRef.current = userId;
-	const activeListKey = LIST_KEYS_BY_CATEGORY[activeCategory];
+	const activeListKey = LIST_TABS.includes(activeTab) ? activeTab : undefined;
 
 	useEffect(() => {
 		setLists({});
@@ -101,14 +138,14 @@ function UserPage() {
 
 	const isVisibleContentLoaded = activeListKey
 		? Boolean(lists[activeListKey])
-		: activeCategory !== 'Лента' || isFeedLoaded;
+		: activeTab !== DEFAULT_TAB || isFeedLoaded;
 
 	useEffect(() => {
 		if (!isAvailable || !isVisibleContentLoaded || isPrefetchStarted) {
 			return;
 		}
 		setIsPrefetchStarted(true);
-		Object.values(LIST_KEYS_BY_CATEGORY)
+		LIST_TABS
 			.filter(key => !lists[key])
 			.forEach(key => loadList(key, true));
 	}, [isAvailable, isVisibleContentLoaded, isPrefetchStarted, lists, loadList]);
@@ -176,7 +213,7 @@ function UserPage() {
 
 					<CategoriesTab
 						className={bem.element('tabs')}
-						categories={["Лента", "Игры", "Фильмы", "Сериалы", "Подборки", "Люди", "Статистика", "Друзья"]}
+						categories={TABS.map(tab => tab.label)}
 						activeCategory={activeCategory}
 						onChangeCategory={setActiveCategory}
 					>

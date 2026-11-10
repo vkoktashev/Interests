@@ -4,7 +4,6 @@ import ItemBlock from "./ItemBlock";
 function MovieBlock({ movies }) {
 	return (
 		<ItemBlock
-			formId='movieBlock'
 			items={movies?.map((movie) => {
 				return {
 					key: String(movie.tmdb_id),
@@ -17,9 +16,9 @@ function MovieBlock({ movies }) {
 				};
 			})}
 			statuses={[
-				{ id: "Буду смотреть", label: "Буду смотреть" },
-				{ id: "Дропнул", label: "Дропнул" },
-				{ id: "Посмотрел", label: "Посмотрел" },
+				{ id: "planned", label: "Буду смотреть" },
+				{ id: "dropped", label: "Дропнул" },
+				{ id: "completed", label: "Посмотрел" },
 			]}
 			fields={[
 				{ label: "Ссылка", key: "link" },

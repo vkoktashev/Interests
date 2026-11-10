@@ -69,7 +69,7 @@ export function Sidebar(props: {className?: string}) {
 	const openFriends = useCallback(() => {
 		dispatch(goToRouteWithParams(ROUTE_USER, {
 			userId: user?.id,
-			сategory: 'Друзья',
+			tab: 'friends',
 		}));
 		closeSidebarOnMobile();
 	}, [closeSidebarOnMobile, dispatch, user?.id]);
@@ -109,7 +109,7 @@ export function Sidebar(props: {className?: string}) {
 			title: 'Друзья',
 			icon: <FaUserFriends />,
 			onClick: openFriends,
-			href: `/user/${user?.id || ''}?${new URLSearchParams({сategory: 'Друзья'} as any).toString()}`,
+			href: `/user/${user?.id || ''}?tab=friends`,
 		},
 		{key: 'unwatched', title: 'Непросмотренное', icon: <MdLiveTv />, onClick: () => openRoute(ROUTE_UNWATCHED), href: '/unwatched'},
 		{key: 'calendar', title: 'Календарь', icon: <FaCalendar />, onClick: () => openRoute(ROUTE_CALENDAR), href: '/calendar'},

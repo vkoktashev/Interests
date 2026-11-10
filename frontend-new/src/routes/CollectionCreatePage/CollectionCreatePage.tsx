@@ -50,7 +50,7 @@ function CollectionCreatePage() {
 
 		dispatch(goToRoute(ROUTE_USER, {
 			userId: user.id,
-			сategory: 'Подборки',
+			tab: 'collections',
 		}, false, true));
 	}, [dispatch, user?.id]);
 
