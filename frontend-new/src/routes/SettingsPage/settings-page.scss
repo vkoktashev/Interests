@@ -27,6 +27,17 @@
         color: $newText2;
         font-size: 0.95rem;
         line-height: 1.4;
+
+        &_spaced {
+            margin-top: 1.25rem;
+        }
+    }
+
+    &__hint {
+        margin: 0.5rem 0 0;
+        color: $newText2;
+        font-size: 0.85rem;
+        line-height: 1.35;
     }
 
     &__dropdown {
@@ -107,6 +118,10 @@
                 linear-gradient(180deg, rgba(64, 196, 142, 0.06), rgba(64, 196, 142, 0.02)),
                 rgba(7, 8, 12, 0.22);
         }
+
+        & + & {
+            margin-top: 0.75rem;
+        }
     }
 
     &__integration-header {
@@ -153,7 +168,13 @@
     &__integration-actions {
         margin-top: 0.9rem;
         display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
         justify-content: flex-start;
+
+        &:empty {
+            display: none;
+        }
     }
 
     &__unlink-button {

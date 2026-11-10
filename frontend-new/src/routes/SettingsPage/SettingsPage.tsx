@@ -16,6 +16,7 @@ import {getFormValues} from '@steroidsjs/core/reducers/form';
 import GoogleSignInButton from '../../shared/auth/GoogleSignInButton';
 import LoginForm from '../../modals/LoginForm';
 import {savedNotification} from '../../shared/saveNotifications';
+import TelegramIntegration, {ITelegramLinkStatus} from './views/TelegramIntegration';
 
 const privacyItems = [
 	{
@@ -79,6 +80,19 @@ function SettingsPage() {
 		isLoading: isGoogleLinkStatusLoading,
 	} = useFetch(googleLinkStatusFetchConfig);
 	const [isGoogleActionLoading, setGoogleActionLoading] = useState(false);
+	const telegramLinkStatusFetchConfig = useMemo(() => isAuthorized ? ({
+		url: '/users/auth/telegram_link_status/',
+		method: 'get',
+	}) : null, [isAuthorized]);
+	const {
+		data: telegramLinkStatus,
+		fetch: fetchTelegramLinkStatus,
+	} = useFetch<ITelegramLinkStatus>(telegramLinkStatusFetchConfig);
+	const isTelegramAvailable = !!telegramLinkStatus?.is_available;
+	const isTelegramLinked = !!telegramLinkStatus?.is_linked;
+	const hasNoChannels = isTelegramAvailable
+		&& !formValues?.notify_by_email
+		&& !(formValues?.notify_by_telegram && isTelegramLinked);
 	const email = settings?.email || user?.email;
 
 	const {savedValues, markSaved} = useSavedValues(settings, String(user?.id));
@@ -223,8 +237,39 @@ function SettingsPage() {
 								</section>
 								<section className={bem.element('card')}>
 									<h3 className={bem.element('subheader')}>
-										Подписка на почтовые уведомления
+										Уведомления о релизах
 									</h3>
+									{isTelegramAvailable && (
+										<>
+											<p className={bem.element('section-text')}>
+												Куда присылать
+											</p>
+											<div className={bem.element('option-list')}>
+												<CheckboxField
+													attribute="notify_by_email"
+													label={__('на почту')}
+												/>
+												<CheckboxField
+													attribute="notify_by_telegram"
+													label={__('в Telegram')}
+													disabled={!isTelegramLinked}
+												/>
+											</div>
+											{!isTelegramLinked && (
+												<p className={bem.element('hint')}>
+													Чтобы получать уведомления в Telegram, подключите его в разделе «Связанные аккаунты».
+												</p>
+											)}
+											{hasNoChannels && (
+												<div className={bem.element('warning')}>
+													Не выбран ни один канал, уведомления приходить не будут.
+												</div>
+											)}
+											<p className={bem.element('section-text', {spaced: true})}>
+												О чём уведомлять
+											</p>
+										</>
+									)}
 									<div className={bem.element('option-list')}>
 										<CheckboxField
 											attribute="receive_games_releases"
@@ -335,6 +380,10 @@ function SettingsPage() {
 											</div>
 										)}
 									</div>
+									<TelegramIntegration
+										status={telegramLinkStatus}
+										onStatusRefresh={fetchTelegramLinkStatus}
+									/>
 								</section>
 							</div>
 						</fieldset>
