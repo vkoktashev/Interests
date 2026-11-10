@@ -9,7 +9,6 @@ from difflib import SequenceMatcher
 from typing import Any, Optional
 from urllib.parse import urlparse
 
-from igdb.wrapper import IGDBWrapper
 from django.utils import timezone
 
 from games.functions import format_game_release_date
@@ -32,6 +31,7 @@ from utils.functions import objects_to_str, update_fields_if_needed_async
 from videos.models import Video
 
 TWITCH_TOKEN_URL = 'https://id.twitch.tv/oauth2/token'
+IGDB_API_URL = 'https://api.igdb.com/v4/'
 IGDB_API_TIMEOUT = 8
 IGDB_GAME_TYPE_IDS = frozenset(range(15))
 IGDB_LEGACY_GAME_STATUSES = {
@@ -172,12 +172,32 @@ def get_igdb_access_token() -> str:
     return access_token
 
 
-def get_igdb_wrapper() -> IGDBWrapper:
+class IgdbClient:
+    def __init__(self, client_id: str, access_token: str) -> None:
+        self.client_id = client_id
+        self.access_token = access_token
+
+    def api_request(self, endpoint: str, query: str) -> bytes:
+        response = external_request(
+            'igdb',
+            'POST',
+            f'{IGDB_API_URL}{endpoint}',
+            headers={
+                'Client-ID': self.client_id,
+                'Authorization': f'Bearer {self.access_token}',
+            },
+            data=query,
+            timeout=IGDB_API_TIMEOUT,
+        )
+        return response.content
+
+
+def get_igdb_wrapper() -> IgdbClient:
     client_id = _get_env('IGDB_CLIENT_ID', 'TWITCH_CLIENT_ID')
     if not client_id:
         raise RuntimeError('IGDB client id is missing: set IGDB_CLIENT_ID in .env')
     access_token = get_igdb_access_token()
-    return IGDBWrapper(client_id, access_token)
+    return IgdbClient(client_id, access_token)
 
 
 def _request_igdb(endpoint, body):
