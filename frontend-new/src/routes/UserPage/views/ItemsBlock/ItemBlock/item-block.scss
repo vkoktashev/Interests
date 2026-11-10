@@ -59,6 +59,12 @@
         padding: 4px 8px;
         font-size: 20px;
         height: 38px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+
+        &_active {
+            background-color: $newAccent2;
+        }
     }
     &__label {
         margin-right: 0.5rem;

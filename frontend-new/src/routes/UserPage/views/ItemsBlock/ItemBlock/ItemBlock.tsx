@@ -1,6 +1,6 @@
 import React, {useMemo, useRef, useState} from "react";
 import { CSVLink } from "react-csv";
-import { FaAngleDown, FaAngleUp, FaStar, FaClock, FaArrowsAltV } from "react-icons/fa";
+import { FaAngleDown, FaAngleUp, FaStar, FaClock, FaArrowsAltV, FaArrowDown, FaArrowUp } from "react-icons/fa";
 import { LuLetterText } from "react-icons/lu";
 import {useBem} from '@steroidsjs/core/hooks';
 import Pagination from '@steroidsjs/core/ui/list/Pagination/Pagination';
@@ -13,11 +13,11 @@ import {DEFAULT_PAGE_SIZE, LIST_QUERY_PARAMS, PAGE_SIZES} from '../listQuery';
 import "./item-block.scss";
 import {DropDownField, InputField} from '@steroidsjs/core/ui/form';
 
-const SORT_TYPES: Record<string, 'number' | 'string'> = {
-	score: 'number',
-	spent_time: 'number',
-	name: 'string',
-};
+const SORT_OPTIONS = [
+	{field: 'score', type: 'number', isDescFirst: true, icon: <FaStar/>, title: 'Сортировать по оценке'},
+	{field: 'spent_time', type: 'number', isDescFirst: true, icon: <FaClock/>, title: 'Сортировать по времени'},
+	{field: 'name', type: 'string', isDescFirst: false, icon: <LuLetterText/>, title: 'Сортировать по названию'},
+];
 
 function ItemBlock({ items, statuses, fields, name }) {
 	const bem = useBem('item-block');
@@ -33,9 +33,11 @@ function ItemBlock({ items, statuses, fields, name }) {
 	const query = urlQuery.q || '';
 	const pageSize = PAGE_SIZES.includes(urlQuery.size) ? urlQuery.size : DEFAULT_PAGE_SIZE;
 	const page = urlQuery.page > 0 ? urlQuery.page : 1;
+	const sortOptions = SORT_OPTIONS.filter(option => fields.some(field => field.key === option.field));
 	const sortField = urlQuery.sort?.replace(/^-/, '');
-	const sort = SORT_TYPES[sortField] && fields.some(field => field.key === sortField)
-		? {field: sortField, type: SORT_TYPES[sortField], isAsc: !urlQuery.sort.startsWith('-')}
+	const sortOption = sortOptions.find(option => option.field === sortField);
+	const sort = sortOption
+		? {field: sortOption.field, type: sortOption.type, isAsc: !urlQuery.sort.startsWith('-')}
 		: null;
 
 	const toggleCollapse = () => {
@@ -70,8 +72,21 @@ function ItemBlock({ items, statuses, fields, name }) {
 			});
 	}, [items, statuses, statusFilters, query, sort?.field, sort?.type, sort?.isAsc]);
 
-	const toggleSort = (field: string) => {
-		setUrlQuery({sort: sort?.isAsc ? `-${field}` : field}, 'replaceIn');
+	const toggleSort = (option: typeof SORT_OPTIONS[number]) => {
+		const firstSort = option.isDescFirst ? `-${option.field}` : option.field;
+		const secondSort = option.isDescFirst ? option.field : `-${option.field}`;
+		let nextSort = firstSort;
+		if (sort?.field === option.field) {
+			nextSort = urlQuery.sort === firstSort ? secondSort : undefined;
+		}
+		setUrlQuery({sort: nextSort}, 'replaceIn');
+	};
+
+	const renderSortIcon = (field: string) => {
+		if (sort?.field !== field) {
+			return <FaArrowsAltV/>;
+		}
+		return sort.isAsc ? <FaArrowUp/> : <FaArrowDown/>;
 	};
 
 	return (
@@ -105,25 +120,18 @@ function ItemBlock({ items, statuses, fields, name }) {
 							fieldLayoutClassName={bem.element('field-layout', {hidden: collapse && width <= 540})}
 						/>
 						<div className={bem.element('sort-buttons', {hidden: collapse && width <= 540})}>
-							<button
-								className="item-block__sort-button"
-								hidden={!fields.some((field) => field.key === 'score')}
-								onClick={() => toggleSort('score')}
-							>
-								<FaStar/> <FaArrowsAltV/>
-							</button>
-							<button
-								className="item-block__sort-button"
-								hidden={!fields.some((field) => field.key === 'spent_time')}
-								onClick={() => toggleSort('spent_time')}>
-								<FaClock/> <FaArrowsAltV/>
-							</button>
-							<button
-								className="item-block__sort-button"
-								hidden={!fields.some((field) => field.key === 'name')}
-								onClick={() => toggleSort('name')}>
-								<LuLetterText/> <FaArrowsAltV/>
-							</button>
+							{sortOptions.map(option => (
+								<button
+									key={option.field}
+									type='button'
+									className={bem.element('sort-button', {active: sort?.field === option.field})}
+									title={option.title}
+									aria-pressed={sort?.field === option.field}
+									onClick={() => toggleSort(option)}
+								>
+									{option.icon} {renderSortIcon(option.field)}
+								</button>
+							))}
 						</div>
 					</div>
 					<div className={bem.element('row', {hidden: collapse && width <= 515})}>
