@@ -146,7 +146,7 @@ class SettingsSerializer(ModelSerializer):
         model = User
         fields = ('email', 'receive_games_releases', 'receive_movies_releases', 'receive_movies_digital_releases',
                   'receive_episodes_releases', 'receive_people_releases', 'receive_show_status_changes',
-                  'backdrop_path', 'privacy', 'gender', 'use_image_proxy', 'compact_feed',
+                  'notify_by_email', 'notify_by_telegram', 'backdrop_path', 'privacy', 'gender', 'use_image_proxy', 'compact_feed',
                   'steam_account_region')
         read_only_fields = ('email',)
 

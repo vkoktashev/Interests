@@ -36,7 +36,8 @@ TASK_DEFINITIONS = {
     },
     'send_release_emails': {
         'name': 'Рассылка уведомлений о релизах',
-        'description': 'Отправляет подписчикам письма о сегодняшних релизах. Повторный запуск повторит рассылку.',
+        'description': 'Отправляет подписчикам уведомления о сегодняшних релизах на почту и в Telegram. '
+                       'Повторный запуск повторит рассылку.',
         'schedule': get_periodic_task_schedule_label('send_release_emails'),
         'task_path': 'users.tasks.send_release_emails',
     },

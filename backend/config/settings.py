@@ -201,6 +201,10 @@ EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 EMAIL_PORT = 25
 SERVER_EMAIL = EMAIL_HOST_USER
 
+TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
+TELEGRAM_API_URL = os.environ.get('TELEGRAM_API_URL', 'https://api.telegram.org')
+TELEGRAM_WEBHOOK_SECRET = os.environ.get('TELEGRAM_WEBHOOK_SECRET')
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=float(os.environ['ACCESS_TOKEN_LIFETIME_MINUTES']),
                                        days=float(os.environ['ACCESS_TOKEN_LIFETIME_DAYS'])),
