@@ -1,0 +1,92 @@
+@import "style/colors";
+@import "style/project-fonts";
+
+.media-filters {
+    @include body2;
+    margin-top: 12px;
+    border: 1px solid $newBackground3;
+    border-radius: 12px;
+    background: $newBackground2;
+    color: $newText3;
+
+    &__summary {
+        box-sizing: border-box;
+        min-height: 44px;
+        padding: 10px 12px;
+        cursor: pointer;
+    }
+
+    &__count {
+        margin-left: 0.35rem;
+        color: $newText2;
+    }
+
+    &__form {
+        padding: 12px;
+        border-top: 1px solid $newBackground3;
+    }
+
+    &__fields {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+        gap: 12px;
+    }
+
+    &__field {
+        display: grid;
+        min-width: 0;
+        gap: 4px;
+        color: $newText2;
+    }
+
+    &__control {
+        box-sizing: border-box;
+        min-height: 44px;
+        width: 100%;
+        padding: 6px 8px;
+        border: 1px solid $newBackground3;
+        border-radius: 8px;
+        background: $newBackground1;
+        color: $newText3;
+        color-scheme: dark;
+        font: inherit;
+        font-size: 1rem;
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    &__apply,
+    &__secondary {
+        min-height: 44px;
+        padding: 0 12px;
+        border: 1px solid $newBackground3;
+        border-radius: 8px;
+        background: transparent;
+        color: $newText3;
+        font: inherit;
+        cursor: pointer;
+
+        &:hover {
+            border-color: $newAccent2;
+        }
+    }
+
+    &__apply {
+        border-color: $newAccent2;
+        background: $newAccent2;
+
+        &:hover {
+            background: $newAccent1;
+        }
+    }
+
+    &__hint {
+        margin: 8px 0 0;
+        color: $newText2;
+    }
+}
