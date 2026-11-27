@@ -3,12 +3,13 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from integrations.tmdb import TmdbIntegrationError
+from integrations.tmdb_search import TmdbSearchParams, get_tmdb_genres, search_tmdb_media
 from movies.selectors import (
     get_database_movie_search_results,
     get_tmdb_movie_search_payload,
 )
 from movies.serializers import MovieSerializer
-from movies.services.discovery import TmdbUnavailableError, search_tmdb_movies
 from utils.constants import DEFAULT_PAGE_SIZE, TMDB_UNAVAILABLE
 from utils.functions import get_page_size
 from utils.openapi_params import DEFAULT_PAGE_NUMBER
@@ -19,11 +20,8 @@ class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
     serializer_class = MovieSerializer
 
     @swagger_auto_schema(
-        operation_description='Search for movies using the TMDB API.',
-        manual_parameters=[
-            openapi.Parameter('query', openapi.IN_QUERY, type=openapi.TYPE_STRING),
-            openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, default=DEFAULT_PAGE_NUMBER),
-        ],
+        operation_description='Search TMDB by title and year, or discover movies without a title query.',
+        query_serializer=TmdbSearchParams,
         responses={
             200: openapi.Response('OK'),
             503: openapi.Response('TMDB unavailable'),
@@ -31,12 +29,11 @@ class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
     )
     @action(detail=False, methods=['get'])
     def tmdb(self, request, *args, **kwargs):
+        params = TmdbSearchParams(data=request.query_params)
+        params.is_valid(raise_exception=True)
         try:
-            payload = search_tmdb_movies(
-                request.GET.get('query', ''),
-                request.GET.get('page', DEFAULT_PAGE_NUMBER),
-            )
-        except TmdbUnavailableError:
+            payload = search_tmdb_media('movie', params.validated_data)
+        except TmdbIntegrationError:
             return Response(
                 {'error': TMDB_UNAVAILABLE},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -45,6 +42,13 @@ class SearchMoviesViewSet(GenericViewSet, mixins.ListModelMixin):
             get_tmdb_movie_search_payload(payload, request.user, request),
             status=status.HTTP_200_OK,
         )
+
+    @action(detail=False, methods=['get'])
+    def genres(self, request, *args, **kwargs):
+        try:
+            return Response(get_tmdb_genres('movie'))
+        except TmdbIntegrationError:
+            return Response({'error': TMDB_UNAVAILABLE}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     @swagger_auto_schema(
         manual_parameters=[

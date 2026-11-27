@@ -107,6 +107,7 @@ export interface ITmdbMediaItem {
 export interface ITmdbSearchResponse {
 	results?: ITmdbMediaItem[];
 	total_results?: number;
+	total_pages?: number;
 }
 
 export interface IPersonSearchItem {

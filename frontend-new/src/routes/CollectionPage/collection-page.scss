@@ -6,6 +6,25 @@
 .collection-page {
     @include default-page;
 
+    &__back {
+        @include body2;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-height: 40px;
+        margin-bottom: 0.75rem;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: $newText2;
+        cursor: pointer;
+
+        &:hover,
+        &:focus-visible {
+            color: $newText3;
+        }
+    }
+
     &__header {
         display: flex;
         align-items: flex-end;
@@ -161,6 +180,11 @@
         .ButtonView__text {
             display: contents;
             color: inherit;
+        }
+
+        &:hover,
+        &:focus-within {
+            z-index: 3;
         }
 
         &:hover {

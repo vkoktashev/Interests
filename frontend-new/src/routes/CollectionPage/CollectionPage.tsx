@@ -1,4 +1,5 @@
 import React, {useCallback, useMemo, useState} from 'react';
+import {useHistory} from 'react-router-dom';
 import {Button} from '@steroidsjs/core/ui/form';
 import {Loader} from '@steroidsjs/core/ui/layout';
 import {Link} from '@steroidsjs/core/ui/nav';
@@ -17,6 +18,7 @@ import {
 	ROUTE_COLLECTION_EDIT,
 	ROUTE_GAME,
 	ROUTE_MOVIE,
+	ROUTE_ROOT,
 	ROUTE_SHOW,
 	ROUTE_USER,
 } from '../index';
@@ -184,6 +186,7 @@ function CollectionItemCard({item}: {item: ICollectionItem}) {
 
 function CollectionPage() {
 	const bem = useBem('collection-page');
+	const history = useHistory();
 	const dispatch = useDispatch();
 	const {http} = useComponents();
 	const currentUser = useSelector(getUser);
@@ -294,6 +297,22 @@ function CollectionPage() {
 		}
 	}, [collection, currentUser?.id, dispatch, http, isDeleting, isOwner]);
 
+	const backButton = (
+		<button
+			type='button'
+			className={bem.element('back')}
+			onClick={() => {
+				if (history.length > 1) {
+					history.goBack();
+				} else {
+					dispatch(goToRoute(ROUTE_ROOT));
+				}
+			}}
+		>
+			<span aria-hidden='true'>←</span> Назад
+		</button>
+	);
+
 	if (isLoading && !collection) {
 		return <Loader />;
 	}
@@ -301,6 +320,7 @@ function CollectionPage() {
 	if (axiosError || !collection) {
 		return (
 			<div className={bem.block()}>
+				{backButton}
 				<div className={bem.element('state')}>Не удалось загрузить подборку</div>
 			</div>
 		);
@@ -314,6 +334,7 @@ function CollectionPage() {
 
 	return (
 		<div className={bem.block()}>
+			{backButton}
 			<header className={bem.element('header')}>
 				<div className={bem.element('heading')}>
 					<div className={bem.element('eyebrow')}>Подборка</div>

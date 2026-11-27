@@ -3,6 +3,7 @@ import LoadingOverlay from 'react-loading-overlay';
 import {Form, InputField} from '@steroidsjs/core/ui/form';
 import Pagination from '@steroidsjs/core/ui/list/Pagination/Pagination';
 import {formChange} from '@steroidsjs/core/actions/form';
+import {getFormValues} from '@steroidsjs/core/reducers/form';
 import {getRouteParams} from '@steroidsjs/core/reducers/router';
 import {useComponents, useDispatch, useSelector} from '@steroidsjs/core/hooks';
 import {push, replace} from 'connected-react-router';
@@ -13,6 +14,16 @@ import PersonCards from './views/PersonCards';
 import ShowCards from './views/ShowCards';
 import UserCards from './views/UserCards';
 import GameFilters from './GameFilters';
+import MediaFilters from './MediaFilters';
+import {
+	EMPTY_MEDIA_FILTERS,
+	getMediaFilterEntries,
+	IMediaSearchFilters,
+	isMediaSearchCategory,
+	MEDIA_SEARCH_PATHS,
+	readMediaFilters,
+	TMediaSearchCategory,
+} from './views/mediaSearchFilters';
 import {
 	DEFAULT_GAME_TYPE_IDS,
 	DEFAULT_PLATFORM_IDS,
@@ -33,6 +44,8 @@ import {
 import './search-page.scss';
 
 const PAGE_SIZE = 12;
+const TMDB_PAGE_SIZE = 20;
+const TMDB_MAX_PAGES = 500;
 const SEARCH_PAGE_FORM = 'search_page_form';
 const GAME_TYPES_STORAGE_KEY = 'search.gameTypes';
 const PLATFORMS_STORAGE_KEY = 'search.platforms';
@@ -43,6 +56,7 @@ interface ISearchFormValues {
 	activeCategory: TSearchCategory;
 	gameTypes: number[];
 	platformIds: number[];
+	mediaFilters: IMediaSearchFilters;
 }
 
 interface ISearchResultsState {
@@ -72,15 +86,6 @@ function getInitialTotals(): Record<TSearchCategory, number> {
 		Пользователи: 0,
 	};
 }
-
-const INITIAL_FORM_VALUES: ISearchFormValues = {
-	query: '',
-	page: 1,
-	activeCategory: SEARCH_CATEGORIES[0],
-	gameTypes: [...DEFAULT_GAME_TYPE_IDS],
-	platformIds: [...DEFAULT_PLATFORM_IDS],
-};
-
 
 const CATEGORY_SLUGS: Record<TSearchCategory, string> = {
 	Игры: 'games',
@@ -328,8 +333,13 @@ function buildSearchUrl(values: ISearchFormValues): string {
 	if (query || activeCategory !== SEARCH_CATEGORIES[0]) {
 		params.set('category', CATEGORY_SLUGS[activeCategory]);
 	}
-	if (query && page > 1) {
-		params.set('page', String(page));
+	if ((query || isMediaSearchCategory(activeCategory)) && page > 1) {
+		params.set('page', String(isMediaSearchCategory(activeCategory) ? Math.min(page, TMDB_MAX_PAGES) : page));
+	}
+	if (isMediaSearchCategory(activeCategory)) {
+		for (const [field, value] of getMediaFilterEntries(values.mediaFilters, Boolean(query))) {
+			params.set(field, value);
+		}
 	}
 	if (!areDefaultGameTypes(gameTypes)) {
 		params.set('game_types', gameTypes.length > 0 ? gameTypes.join(',') : 'none');
@@ -360,10 +370,24 @@ function SearchPage() {
 	const routeParams = useSelector(getRouteParams) || {};
 	const queryFromRoute = normalizeQuery(decodeQueryParam(routeParams.query));
 	const activeCategory = getCategoryBySlug(routeParams.category);
-	const currentPage = getPage(routeParams.page);
+	const isMediaCategory = isMediaSearchCategory(activeCategory);
+	const page = getPage(routeParams.page);
+	const currentPage = isMediaCategory ? Math.min(page, TMDB_MAX_PAGES) : page;
 	const selectedGameTypes = useMemo(() => getGameTypes(routeParams.game_types), [routeParams.game_types]);
 	const selectedPlatformIds = useMemo(() => getPlatformIds(routeParams.platforms), [routeParams.platforms]);
-	const normalizedQuery = queryFromRoute;
+	const {year, genre, original_language, min_rating, sort} = routeParams;
+	const mediaFilters = useMemo(() => readMediaFilters({year, genre, original_language, min_rating, sort}),
+		[year, genre, original_language, min_rating, sort]);
+	const queryInput = useSelector(state => getFormValues(state, SEARCH_PAGE_FORM)?.query) ?? queryFromRoute;
+	const hasSearch = isMediaCategory || Boolean(queryFromRoute);
+	const searchValues = useMemo(() => ({
+		query: queryFromRoute,
+		page: currentPage,
+		activeCategory,
+		gameTypes: selectedGameTypes,
+		platformIds: selectedPlatformIds,
+		mediaFilters,
+	}), [activeCategory, currentPage, queryFromRoute, selectedGameTypes, selectedPlatformIds, mediaFilters]);
 
 	const [isLoading, setLoading] = useState(false);
 	const [platforms, setPlatforms] = useState<IGamePlatform[]>([
@@ -415,26 +439,25 @@ function SearchPage() {
 		updateCategoryResults('Игры', items, total, requestId);
 	}, [http, updateCategoryResults]);
 
-	const searchMovies = useCallback(async (query: string, page: number, requestId: number) => {
-		const response = (await http.get('/movies/search/tmdb/', {
+	const searchMedia = useCallback(async (
+		category: TMediaSearchCategory,
+		query: string,
+		page: number,
+		filters: IMediaSearchFilters,
+		requestId: number,
+	) => {
+		const response = (await http.get(`${MEDIA_SEARCH_PATHS[category]}/tmdb/`, {
 			query,
 			page,
-			page_size: PAGE_SIZE,
+			...Object.fromEntries(getMediaFilterEntries(filters, Boolean(query))),
 		})) as ITmdbSearchResponse;
 		const items = Array.isArray(response?.results) ? response.results : [];
-		const total = Number(response?.total_results) || resolveTotalWithoutMeta(items.length, page);
-		updateCategoryResults('Фильмы', items, total, requestId);
-	}, [http, updateCategoryResults]);
-
-	const searchShows = useCallback(async (query: string, page: number, requestId: number) => {
-		const response = (await http.get('/shows/search/tmdb/', {
-			query,
-			page,
-			page_size: PAGE_SIZE,
-		})) as ITmdbSearchResponse;
-		const items = Array.isArray(response?.results) ? response.results : [];
-		const total = Number(response?.total_results) || resolveTotalWithoutMeta(items.length, page);
-		updateCategoryResults('Сериалы', items, total, requestId);
+		const lastPage = Math.min(response?.total_pages ?? TMDB_MAX_PAGES, TMDB_MAX_PAGES);
+		const total = Math.min(
+			response?.total_results ?? (page - 1) * TMDB_PAGE_SIZE + items.length,
+			lastPage * TMDB_PAGE_SIZE,
+		);
+		updateCategoryResults(category, items, total, requestId);
 	}, [http, updateCategoryResults]);
 
 	const searchPeople = useCallback(async (query: string, page: number, requestId: number) => {
@@ -508,7 +531,7 @@ function SearchPage() {
 		const nextPage = getPage(values.page);
 		const nextCategory = getCategory(values.activeCategory);
 
-		if (!nextQuery) {
+		if (!nextQuery && !isMediaSearchCategory(nextCategory)) {
 			requestIdRef.current += 1;
 			clearResults();
 			setSearchError(null);
@@ -524,11 +547,8 @@ function SearchPage() {
 			if (nextCategory === 'Игры') {
 				await searchGames(nextQuery, nextPage, values.gameTypes, values.platformIds, requestId);
 			}
-			if (nextCategory === 'Фильмы') {
-				await searchMovies(nextQuery, nextPage, requestId);
-			}
-			if (nextCategory === 'Сериалы') {
-				await searchShows(nextQuery, nextPage, requestId);
+			if (isMediaSearchCategory(nextCategory)) {
+				await searchMedia(nextCategory, nextQuery, nextPage, values.mediaFilters, requestId);
 			}
 			if (nextCategory === 'Люди') {
 				await searchPeople(nextQuery, nextPage, requestId);
@@ -547,7 +567,7 @@ function SearchPage() {
 				setLoading(false);
 			}
 		}
-	}, [clearResults, searchGames, searchMovies, searchPeople, searchShows, searchUsers]);
+	}, [clearResults, searchGames, searchMedia, searchPeople, searchUsers]);
 
 	const navigateToSearch = useCallback((values: ISearchFormValues, isReplace = false) => {
 		const action = isReplace ? replace : push;
@@ -555,16 +575,10 @@ function SearchPage() {
 	}, [dispatch]);
 
 	const submitQuery = useCallback((query: string) => {
-		navigateToSearch({
-			query,
-			activeCategory,
-			page: 1,
-			gameTypes: selectedGameTypes,
-			platformIds: selectedPlatformIds,
-		});
-	}, [activeCategory, navigateToSearch, selectedGameTypes, selectedPlatformIds]);
+		navigateToSearch({...searchValues, query, page: 1});
+	}, [navigateToSearch, searchValues]);
 
-	const submitSearch = useCallback((values: ISearchFormValues) => {
+	const submitSearch = useCallback((values: Pick<ISearchFormValues, 'query'>) => {
 		submitQuery(values.query);
 	}, [submitQuery]);
 
@@ -582,13 +596,11 @@ function SearchPage() {
 
 		saveGameTypes(nextGameTypes);
 		navigateToSearch({
-			query: queryFromRoute,
-			activeCategory,
+			...searchValues,
 			page: 1,
 			gameTypes: nextGameTypes,
-			platformIds: selectedPlatformIds,
 		}, true);
-	}, [activeCategory, navigateToSearch, queryFromRoute, selectedGameTypes, selectedPlatformIds]);
+	}, [navigateToSearch, searchValues, selectedGameTypes]);
 
 	const changePlatforms = useCallback((platformIds: number[]) => {
 		const nextPlatformIds = normalizePlatformIds(platformIds);
@@ -601,13 +613,11 @@ function SearchPage() {
 
 		savePlatformIds(nextPlatformIds);
 		navigateToSearch({
-			query: queryFromRoute,
-			activeCategory,
+			...searchValues,
 			page: 1,
-			gameTypes: selectedGameTypes,
 			platformIds: nextPlatformIds,
 		}, true);
-	}, [activeCategory, navigateToSearch, queryFromRoute, selectedGameTypes, selectedPlatformIds]);
+	}, [navigateToSearch, searchValues, selectedPlatformIds]);
 
 	useEffect(() => {
 		dispatch(formChange(SEARCH_PAGE_FORM, {
@@ -620,17 +630,11 @@ function SearchPage() {
 	}, [activeCategory, currentPage, dispatch, queryFromRoute, selectedGameTypes, selectedPlatformIds]);
 
 	useEffect(() => {
-		runSearch({
-			query: queryFromRoute,
-			page: currentPage,
-			activeCategory,
-			gameTypes: selectedGameTypes,
-			platformIds: selectedPlatformIds,
-		});
-	}, [activeCategory, currentPage, queryFromRoute, runSearch, selectedGameTypes, selectedPlatformIds]);
+		void runSearch(searchValues);
+	}, [runSearch, searchValues]);
 
 	const content = useMemo(() => {
-		if (!normalizedQuery) {
+		if (!hasSearch) {
 			return (
 				<div className='search-page__empty-state'>
 					Введите запрос, чтобы начать поиск
@@ -659,10 +663,11 @@ function SearchPage() {
 			return <PersonCards people={results['Люди']} />;
 		}
 		return <UserCards users={results['Пользователи']} />;
-	}, [activeCategory, normalizedQuery, results, searchError]);
+	}, [activeCategory, hasSearch, results, searchError]);
 
 	const totalForActiveCategory = totals[activeCategory] || 0;
-	const showPagination = normalizedQuery.length > 0 && totalForActiveCategory > PAGE_SIZE;
+	const pageSize = isMediaCategory ? TMDB_PAGE_SIZE : PAGE_SIZE;
+	const showPagination = hasSearch && totalForActiveCategory > pageSize;
 
 	return (
 		<div className='search-page'>
@@ -671,7 +676,6 @@ function SearchPage() {
 					formId={SEARCH_PAGE_FORM}
 					className='search-page__form'
 					initialValues={{
-						...INITIAL_FORM_VALUES,
 						query: queryFromRoute,
 						page: currentPage,
 						activeCategory,
@@ -703,6 +707,24 @@ function SearchPage() {
 							onTypeChange={changeGameType}
 						/>
 					)}
+					{isMediaSearchCategory(activeCategory) && (
+						<MediaFilters
+							key={activeCategory}
+							category={activeCategory}
+							hasTitleQuery={Boolean(normalizeQuery(queryInput))}
+							filters={mediaFilters}
+							onApply={filters => navigateToSearch({
+								...searchValues,
+								query: normalizeQuery(queryInput),
+								page: 1,
+								mediaFilters: readMediaFilters(filters),
+							})}
+							onBrowse={() => {
+								dispatch(formChange(SEARCH_PAGE_FORM, {query: ''}));
+								submitQuery('');
+							}}
+						/>
+					)}
 				</Form>
 
 				<CategoriesTab
@@ -711,12 +733,14 @@ function SearchPage() {
 					activeCategory={activeCategory}
 					onChangeCategory={(category: string) => {
 						const normalizedCategory = getCategory(category);
+						if (normalizedCategory === activeCategory) {
+							return;
+						}
 						navigateToSearch({
-							query: queryFromRoute,
+							...searchValues,
 							activeCategory: normalizedCategory,
 							page: 1,
-							gameTypes: selectedGameTypes,
-							platformIds: selectedPlatformIds,
+							mediaFilters: EMPTY_MEDIA_FILTERS,
 						}, true);
 					}}
 				>
@@ -736,15 +760,12 @@ function SearchPage() {
 								list={{
 									total: totalForActiveCategory,
 									page: currentPage,
-									pageSize: PAGE_SIZE,
+									pageSize,
 								}}
 								onChange={page => {
 									navigateToSearch({
-										query: queryFromRoute,
-										activeCategory,
+										...searchValues,
 										page,
-										gameTypes: selectedGameTypes,
-										platformIds: selectedPlatformIds,
 									}, true);
 								}}
 							/>
